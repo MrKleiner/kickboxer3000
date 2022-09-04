@@ -1,8 +1,8 @@
 {
-  "name": "pvned",
-  "productName": "pvned",
+  "name": "app",
+  "productName": "app",
   "version": "1.0.0",
-  "description": "BlenderFoil app",
+  "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
     "start": "electron-forge start",
@@ -24,7 +24,7 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "pvned"
+            "name": "app"
           }
         },
         {
@@ -45,17 +45,14 @@
     }
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0",
-    "pathlib-js": "^1.4.2",
-    "python-shell": "^3.0.0",
-    "wavefile": "^11.0.0"
+    "electron-squirrel-startup": "^1.0.0"
   },
   "devDependencies": {
-    "@electron-forge/cli": "^6.0.0-beta.61",
-    "@electron-forge/maker-deb": "^6.0.0-beta.61",
-    "@electron-forge/maker-rpm": "^6.0.0-beta.61",
-    "@electron-forge/maker-squirrel": "^6.0.0-beta.61",
-    "@electron-forge/maker-zip": "^6.0.0-beta.61",
-    "electron": "15.0.0"
+    "@electron-forge/cli": "^6.0.0-beta.65",
+    "@electron-forge/maker-deb": "^6.0.0-beta.65",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.65",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.65",
+    "@electron-forge/maker-zip": "^6.0.0-beta.65",
+    "electron": "20.1.1"
   }
 }
