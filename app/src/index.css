@@ -1,70 +1,9 @@
 
-/*todo: also generate this automatically ?*/
+/*Fonts*/
+@import url('modules/core/fonts.css');
 
-/* fonts */
-@import url('mods/core/fonts_link.css');
+/*Core*/
+@import url('modules/core/core.css');
 
-/* Panorama/cubemap viewer */
-@import url('apis/panellum/pannellum.css');
-
-/* app core */
-@import url('mods/core/base_style.css');
-
-/* menus */
-@import url('mods/core/simple_menus_style.css');
-
-/* dropdowns */
-@import url('mods/core/dropdowns.css');
-
-/* Checkboxes */
-@import url('mods/core/checkboxes_style.css');
-
-/* UILists */
-@import url('mods/core/ui_lists_style.css');
-
-/* Buttons */
-@import url('mods/core/buttons.css');
-
-/* Skyboxer */
-@import url('mods/skyboxer/skyboxer_style.css');
-
-/* Mod Maker */
-@import url('mods/modmaker/modmaker_style.css');
-
-/* Dashboard */
-@import url('mods/dashboard/dashboard_style.css');
-
-/* Gameinfo */
-@import url('mods/game_config_gameinfo/gameinfo_style.css');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/*welcome screen*/
+@import url('modules/welcome/welcome.css');

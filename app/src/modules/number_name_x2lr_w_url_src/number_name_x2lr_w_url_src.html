@@ -1,0 +1,58 @@
+
+
+<div id="number_name_x2lr_w_url_src">
+	<div id="info_display_dynamic" regular_box>
+		<xmlstatus>Update Status: Idle...</xmlstatus>
+
+		<left>
+			<text><span style="color: gray; user-select: none">Not Initialized</span></text>
+			<delimeter>|</delimeter>
+			<number><span style="color: gray; user-select: none">Not Initialized</span></number>
+		</left>
+
+		<middle><span style="color: gray; user-select: none">Not Initialized</span></middle>
+
+		<right>
+			<text><span style="color: gray; user-select: none">Not Initialized</span></text>
+			<delimeter>|</delimeter>
+			<number><span style="color: gray; user-select: none">Not Initialized</span></number>
+		</right>
+	</div>
+
+	<properties regular_box>
+		<prmrow>
+			<input placeholder="Interval In Seconds. Expressions Supported (e.g. 60*17)" interval type="text">
+			<sysbtn btname="save_interval" onclick="save_interval()">Save</sysbtn>
+		</prmrow>
+
+		<prmrow>
+			<rowlabel>Spawn-Set Target Title:</rowlabel>
+			<input placeholder="Absolute Path to a XAML file (gtzip works too)" tgt_title type="text">
+			<sysbtn btname="spawn_title" onclick="mkinput()">Spawn</sysbtn>
+			<sysbtn btname="change_title" onclick="change_input_title()">Change</sysbtn>
+		</prmrow>
+
+		<prmrow>
+			<rowlabel>Set Title Name (cosmetic, but required)</rowlabel>
+			<input placeholder="Anything, any length, dots allowed. No collisions allowed" tgt_title_name type="text">
+			<sysbtn btname="set_title_name" onclick="set_title_name()">Set Name</sysbtn>
+		</prmrow>
+		<input style="align-self: flex-start;" type="checkbox" cbox_is_testing>
+	</properties>
+
+	<timer regular_box></timer>
+
+
+
+
+	<div id="ctrl_btns">
+		<vmixbtn upd onclick="x2lr_update_coefficients(this)">Update</vmixbtn>
+		<vmixbtn trigger_onn onclick="trigger_onn(this)">Trigger</vmixbtn>
+		<vmixbtn forceoff onclick="force_off(this)">Force Off</vmixbtn>
+
+		<br>
+		<vmixbtn do_period onclick="init_period(this)">Period</vmixbtn>
+		<vmixbtn break_period onclick="period_break()">Break</vmixbtn>
+	</div>
+
+</div>

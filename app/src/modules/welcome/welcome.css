@@ -1,0 +1,66 @@
+#starting_page
+{
+	display: flex;
+	flex-grow: 1;
+	flex-direction: column;
+}
+
+#welcome_screen
+{
+	user-select: none;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	flex-grow: 1;
+}
+
+#welcome_screen_title
+{
+	font-size: 50px;
+	text-align: center;
+}
+
+#welcome_screen img
+{
+	object-fit: contain;
+	object-position: center;
+	width: 250px;
+}
+
+
+#welcome_enter_info input, #welcome_screen button
+{
+	color: black;
+}
+
+
+#system_selector
+{
+	padding: 30px;
+	display: flex;
+	flex-direction: row;
+}
+
+
+.vmix_preset_system
+{
+	user-select: none;
+	display: flex;
+	padding: 10px;
+	background: rgba(255, 255, 255, 0.08);
+	outline: 1px solid rgb(100, 100, 100);
+	font-size: 15px;
+}
+
+.vmix_preset_system:hover
+{
+	background: rgba(255, 255, 255, 0.15);
+	outline: 1px solid rgb(120, 120, 120);
+}
+
+.vmix_preset_system:active
+{
+	outline-color: lime;
+	background-color: rgba(200, 255, 255, 0.15)
+}

@@ -1,0 +1,706 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"backgr",
+				"background-image\tproperty"
+			],
+			[
+				"obj",
+				"object-fit\tproperty"
+			],
+			[
+				"outer",
+				"outerHTML"
+			],
+			[
+				"align",
+				"align-self\tproperty"
+			],
+			[
+				"oveflow",
+				"overflow-y\tproperty"
+			],
+			[
+				"background-",
+				"background-image\tproperty"
+			],
+			[
+				"conten",
+				"contents"
+			],
+			[
+				"query",
+				"querySelector"
+			],
+			[
+				"imgco",
+				"imgcont_media_unit"
+			],
+			[
+				"scroll",
+				"scrollIntoView"
+			],
+			[
+				"remove",
+				"removeAttribute"
+			],
+			[
+				"box",
+				"boxtext"
+			],
+			[
+				"previ",
+				"preview_mode"
+			],
+			[
+				"duc",
+				"document"
+			],
+			[
+				"class",
+				"class"
+			],
+			[
+				"cons",
+				"console"
+			],
+			[
+				"current",
+				"current_id"
+			],
+			[
+				"querySe",
+				"querySelector"
+			],
+			[
+				"querySele",
+				"querySelectorAll"
+			],
+			[
+				"radio",
+				"radiogroup"
+			],
+			[
+				"qury",
+				"querySelectorAll"
+			],
+			[
+				"setA",
+				"setAttribute"
+			],
+			[
+				"raw",
+				"rawbtn"
+			],
+			[
+				"content",
+				"contenteditable"
+			],
+			[
+				"ob",
+				"object-fit\tproperty"
+			],
+			[
+				"flex",
+				"flex-direction\tproperty"
+			],
+			[
+				"margin",
+				"margin-left\tproperty"
+			],
+			[
+				"background",
+				"background-position\tproperty"
+			],
+			[
+				"alig",
+				"align-self\tproperty"
+			],
+			[
+				"font",
+				"font-weight\tproperty"
+			],
+			[
+				"font-s",
+				"font-size\tproperty"
+			],
+			[
+				"ali",
+				"align-items\tproperty"
+			],
+			[
+				"obje",
+				"object-fit\tproperty"
+			],
+			[
+				"padding",
+				"padding\tproperty"
+			],
+			[
+				"out",
+				"outline\tproperty"
+			],
+			[
+				"marg",
+				"margin\tproperty"
+			],
+			[
+				"fle",
+				"flex-shrink\tproperty"
+			],
+			[
+				"inde",
+				"indexed_actions"
+			],
+			[
+				"get",
+				"getAttribute"
+			],
+			[
+				"backgo",
+				"background\tproperty"
+			],
+			[
+				"margi",
+				"margin\tproperty"
+			],
+			[
+				"border",
+				"border\tproperty"
+			],
+			[
+				"padd",
+				"padding\tproperty"
+			],
+			[
+				"si",
+				"sides_payload"
+			],
+			[
+				"def",
+				"def\tFunction"
+			],
+			[
+				"ex",
+				"except"
+			],
+			[
+				"isla",
+				"island_index"
+			],
+			[
+				"backgro",
+				"background-image\tproperty"
+			],
+			[
+				"bor",
+				"border-top\tproperty"
+			],
+			[
+				"align-",
+				"align-items\tproperty"
+			],
+			[
+				"for",
+				"for\tfor (…) {…}"
+			],
+			[
+				"outline",
+				"outline-color\tproperty"
+			],
+			[
+				"trans",
+				"transition\tproperty"
+			],
+			[
+				"in",
+				"input\tTag"
+			],
+			[
+				"text",
+				"text-align\tproperty"
+			],
+			[
+				"tex",
+				"text-align\tproperty"
+			],
+			[
+				"backgrou",
+				"background-image\tproperty"
+			],
+			[
+				"flex-",
+				"flex-direction\tproperty"
+			],
+			[
+				"lizardvmf",
+				"lizardvmf_entity"
+			],
+			[
+				"lizard",
+				"lizardvmf_connections"
+			],
+			[
+				"output",
+				"output_name"
+			],
+			[
+				"vertices",
+				"vertices_plus"
+			],
+			[
+				"gro",
+				"groupid"
+			],
+			[
+				"try",
+				"try\tTry/Except"
+			],
+			[
+				"is",
+				"isinstance"
+			],
+			[
+				"visgroup",
+				"visgroupshown"
+			],
+			[
+				"selt",
+				"seltix_orbit"
+			],
+			[
+				"w",
+				"win32"
+			],
+			[
+				"wi",
+				"win32"
+			],
+			[
+				"hyper",
+				"hyper_u"
+			],
+			[
+				"location",
+				"location_id"
+			],
+			[
+				"toggle",
+				"toggleClass"
+			],
+			[
+				"comment",
+				"comments"
+			],
+			[
+				"config",
+				"config_path"
+			],
+			[
+				"conf",
+				"config_path"
+			],
+			[
+				"confg",
+				"config_path"
+			],
+			[
+				"active",
+				"active_evid"
+			],
+			[
+				"ove",
+				"overflow-y\tproperty"
+			],
+			[
+				"cate",
+				"category"
+			],
+			[
+				"e",
+				"etgt"
+			],
+			[
+				"plain",
+				"plaintext"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "/E/!webdesign/kickboxer/kickboxer3000/app/src/index.css",
+			"settings":
+			{
+				"buffer_size": 161,
+				"line_ending": "Windows"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: Install Package",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 0.0
+	},
+	"console":
+	{
+		"height": 186.0,
+		"history":
+		[
+			"view.settings().get('font_face')"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/E/!webdesign/kickboxer/kickboxer3000",
+		"/E/!webdesign/kickboxer/kickboxer3000/app",
+		"/E/!webdesign/kickboxer/kickboxer3000/app/src"
+	],
+	"file_history":
+	[
+		"/E/!webdesign/source_tricks/source_tricks/install/compile.py",
+		"/E/!webdesign/source_tricks/source_tricks/install/compiler.cmd",
+		"/E/!!!hl-stuff/thehallofsouls/sekira/texture/sekira.tbscene",
+		"/E/!webdesign/source_tricks/source_tricks/mng.py",
+		"/E/!webdesign/source_tricks/source_tricks/install/test.py",
+		"/E/!webdesign/source_tricks/source_tricks/install/compiler.bat",
+		"/E/!webdesign/source_tricks/source_tricks/starter.cmd",
+		"/E/!webdesign/source_tricks/source_tricks/toolbox.js",
+		"/C/Users/DrHax/Desktop/test.cpp",
+		"/E/!webdesign/source_tricks/source_tricks/htbin/fbi.js",
+		"/E/!webdesign/source_tricks/source_tricks/style.css",
+		"/E/!webdesign/source_tricks/source_tricks/test.js",
+		"/E/!webdesign/source_tricks/source_tricks/htbin/modules.py",
+		"/E/!webdesign/source_tricks/source_tricks/htbin/__init__.py",
+		"/E/!webdesign/sorter/htbin/__init__.py",
+		"/E/!!!!!opforce2/web_solution/ctrl/modules/engines/engines.js",
+		"/E/!!!!!opforce2/web_solution/ctrl/base.js",
+		"/E/!webdesign/sorter/htbin/file_sorter_saveload.py",
+		"/E/!!!!!opforce2/web_solution/ctrl/modules/journal/devournal.js",
+		"/E/!!!!!opforce2/web_solution/ctrl/htbin/gallery/gtw.py",
+		"/E/!webdesign/sorter/htbin/filesorter_save",
+		"/E/!!!!!opforce2/web_solution/ctrl/htbin/gallery/gallery_main.py",
+		"/E/!webdesign/pixiv/pix.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/utils/lizard_tail/reconstructor.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/utils/lizard_tail/lizard_tail.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/utils/shared.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/installer.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/utils/lizard_vmf/lizardvmf.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/mods/vmf_export/entity_maker.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/mods/vmf_export/brush_ents.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/mods/vmf_export/do_export.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/mods/vmf_export/vmf_exporter.py",
+		"/E/!!Blend_Projects/scripts/sockets/socket_client.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/mods/skyboxer/skybox_maker.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/__init__.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/utils/lizard_scales/lizard_scales.py",
+		"/E/!!Blend_Projects/scripts/wallworm4blender/blender_foil/dev/blpe_maker.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/app/src/app/foil_utils.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/ui.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/utils/lizard_vmf/reconstructor.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/utils/lizard_vmf/parser.py",
+		"/E/!!Blend_Projects/scripts/wallworm4blender/blender_foil/blender_foil/vtfimge.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/subproj/blfoil_addon.sublime-project",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil_old/logic.py",
+		"/E/!!Blend_Projects/scripts/wallworm4blender/blender_foil/other/dev/lizardvmf.py",
+		"/E/!webdesign/source_tricks/source_tricks/assets/tmp/style.css",
+		"/E/!webdesign/source_tricks/source_tricks/assets/tmp/script.js",
+		"/E/!webdesign/source_tricks/source_tricks/assets/tmp/sp.html",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/2.92/scripts/addons/MSPlugin/__init__.py",
+		"/E/!!Blend_Projects/scripts/wallworm4blender/blender_foil/blender_foil/mods/vmf_export/vmf_exporter.py",
+		"/C/Users/DrHax/AppData/Local/Programs/Python/Python39/Lib/site-packages/fgd_parser/fgd_classes.py",
+		"/C/Users/DrHax/AppData/Local/Programs/Python/Python39/Lib/site-packages/fgd_parser/fgd_parser.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/configs/newtr.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/blender_foil/configs/lol.json",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.1/scripts/addons/img_to_clp/__init__.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/2.93/scripts/addons/audacity_tools_for_blender-main/startup_handler.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/2.93/scripts/addons/audacity_tools_for_blender-main/pipe_utilities.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/2.93/scripts/addons/audacity_tools_for_blender-main/__init__.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/2.93/scripts/addons/audacity_tools_for_blender-main/properties.py",
+		"/E/!webdesign/source_tricks/source_tricks/script.js",
+		"/E/!webdesign/gameboard/famous_board_game/index.html",
+		"/E/!webdesign/gameboard/famous_board_game/style.css",
+		"/E/!webdesign/gameboard/famous_board_game/script.js",
+		"/E/!webdesign/boardg/script.js",
+		"/E/!webdesign/boardg/style.css",
+		"/E/!webdesign/boardg/index.html",
+		"/E/!!Blend_Projects/scripts/map_parser/example_map.vmf",
+		"/E/!webdesign/pyvid/sub_proj/pvned.sublime-project",
+		"/E/!!Blend_Projects/scripts/classer/obj.py",
+		"/C/Program Files (x86)/Steam/steamapps/common/GarrysMod/garrysmod/screenshots/engi_bucket/take_manager.py",
+		"/E/!!Blend_Projects/scripts/map_parser/mkxml.py",
+		"/E/!!Blend_Projects/scripts/wallworm4blender/blender_foil/blender_foil/lizardvmf.py",
+		"/E/!!Blend_Projects/scripts/wallworm4blender/blender_foil/blender_foil/dynamic_enum.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/3.0/scripts/addons/img_to_clp.py",
+		"/E/!!Blend_Projects/scripts/map_parser/mkxml_add.py",
+		"/E/!!Blend_Projects/scripts/map_parser/splitter.py",
+		"/C/Users/DrHax/AppData/Roaming/Blender Foundation/Blender/2.93/scripts/addons/vtfimge.py",
+		"/E/!!!!!opforce2/web_service/sublimeft",
+		"/E/!!!!!opforce2/web_service/sftp-config.json",
+		"/E/!webdesign/pyvid/pvned/src/script.js",
+		"/E/!webdesign/vtf_flags/flags - Copy.vtf",
+		"/E/!webdesign/pyvid/pvned/src/app/bae_64_lizzy.txt",
+		"/E/!webdesign/pyvid/pvned/src/index.js",
+		"/E/!webdesign/pyvid/pvned/src/app/readline.py",
+		"/E/!webdesign/pyvid/pvned/src/app/delete.py",
+		"/E/!webdesign/pyvid/pvned/src/app/tst.py",
+		"/E/!webdesign/pyvid/pvned/src/app/app_folder_loader_init.py",
+		"/E/!webdesign/lizdb/previews.liz",
+		"/E/!webdesign/pyvid/pvned/src/index.html"
+	],
+	"find":
+	{
+		"height": 32.0
+	},
+	"find_in_files":
+	{
+		"height": 114.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "/E/!webdesign/kickboxer/kickboxer3000/app/src/index.css",
+					"semi_transient": true,
+					"settings":
+					{
+						"buffer_size": 161,
+						"regions":
+						{
+						},
+						"selection":
+						[
+						],
+						"settings":
+						{
+							"bracket_highlighter.busy": false,
+							"bracket_highlighter.locations":
+							{
+								"close":
+								{
+								},
+								"icon":
+								{
+								},
+								"open":
+								{
+								},
+								"unmatched":
+								{
+								}
+							},
+							"bracket_highlighter.regions":
+							[
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_default_content",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_square_content",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_double_quote_content",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_angle_content",
+								"bh_c_define",
+								"bh_c_define_center",
+								"bh_c_define_open",
+								"bh_c_define_close",
+								"bh_c_define_content",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_curly_content",
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_regex_content",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_unmatched_content",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close",
+								"bh_single_quote_content",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_tag_content",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_round_content"
+							],
+							"incomplete_sync": null,
+							"remote_loading": false,
+							"synced": false,
+							"syntax": "Packages/CSS/CSS.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 32.0
+	},
+	"input":
+	{
+		"height": 50.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.SFTP":
+	{
+		"height": 0.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "kickboxer.sublime-project",
+	"replace":
+	{
+		"height": 60.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 305.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

@@ -1,0 +1,15 @@
+@font-face
+{
+	font-family: 'tahoma';
+	font-weight: 400;
+	font-style: normal;
+	src: url('../../assets/fonts/tahoma.ttf');
+}
+
+@font-face
+{
+	font-family: 'tahoma_bold';
+	font-weight: 400;
+	/*font-style: italic;*/
+	src: url('../../assets/fonts/tahomabd.ttf');
+}

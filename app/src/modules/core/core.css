@@ -1,0 +1,136 @@
+
+*
+{
+	padding: 0px;
+	margin: 0px;
+	scrollbar-color: black transparent;
+	scrollbar-width: thin;
+	color: white;
+	font-family: 'tahoma';
+	/*font-weight: 200;*/
+	/*font-style: bold;*/
+	/*font-size: 15px;*/
+}
+
+html
+{
+	background: #1E2328;
+}
+
+body
+{
+	display: flex;
+}
+
+
+body::-moz-scrollbar {
+  width: 1em;
+  background: gray;
+}
+ 
+body::-moz-scrollbar-track {
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+}
+ 
+body::-moz-scrollbar-thumb {
+  background-color: black;
+  /* outline: 1px solid slategrey; */
+  
+}
+
+#app_sys
+{
+	display: flex;
+	flex-grow: 1;
+}
+
+
+vmixbtn
+{
+	user-select: none;
+	display: flex;
+	flex-grow: 0;
+	background: #de817a;
+	margin: 10px;
+	width: 100px;
+	height: 100px;
+	text-align: center;
+	align-items: center;
+	justify-content: center;
+}
+
+vmixbtn:hover
+{
+	background: #9e6560;
+}
+
+vmixbtn:active
+{
+	color: lime;
+	outline: 3px solid cyan;
+}
+
+.vmixbtn_locked
+{
+	user-select: none !important;
+	pointer-events: none !important;
+	filter: grayscale(1);
+}
+
+sysbtn
+{
+	user-select: none;
+	display: flex;
+	padding: 3px;
+	font-size: 15px;
+	color: white;
+	outline: 1px solid rgb(100, 100, 100);
+	background: #252A2F;
+	align-items: center;
+	justify-content: center;
+}
+
+sysbtn:hover
+{
+	background: #3B4147;
+	outline-color: rgb(120, 120, 120);
+}
+
+sysbtn:active
+{
+	outline-color: lime;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+[regular_box]
+{
+	background: rgba(0, 0, 0, 0.5);
+	padding: 10px;
+	outline: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+input:not(input[type="file"], input[type="checkbox"])
+{
+	all: unset;
+	color: white;
+	background: #1D1D22;
+	outline: 1px solid rgb(100, 100, 100);
+	padding: 3px;
+	font-size: 13px;
+}
+
+input:focus
+{
+	outline-color: #468058 !important;
+}

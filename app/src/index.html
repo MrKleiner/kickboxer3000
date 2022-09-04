@@ -1,82 +1,39 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 	<head>
 		<meta charset="UTF-8">
-		<title>Blender Foil</title>
+		<title>KickBoxer3000</title>
 		<link rel="stylesheet" href="index.css">
 	</head>
-	<body>
-		<!-- <script src="./apis/crypto_js/3_1_2/aes.js" integrity="sha256-/H4YS+7aYb9kJ5OKhFYPUjSJdrtV6AeyJOtTkw6X72o=" crossorigin="anonymous"></script> -->
-		<script src='./apis/crypto_js/4_1_1/crypto-js.min.js'></script>
-		<script src='./apis/wavesurfer/6_2_0/wavesurfer.js'></script>
-		<script src='./apis/wavesurfer/6_2_0/regions_plugin.js'></script>
-		<script src='./mods/core/lizard_toybox.js'></script>
 
-		<div id="app_top_toolbar">
-			<div class="app_top_toolbar_category">
-				<div apptoolbarctg="preferences" class="app_top_toolbar_category_entry"></div>
-				<div apptoolbarctg="tools" class="app_top_toolbar_category_entry"></div>
+
+	<body>
+
+		<div id="app_sys">
+			<div id="starting_page">
+				<div id="welcome_screen">
+					<div id="welcome_screen_title">Welcome to Kickboxer3000</div>
+					<img draggable="false" src="assets/kickboxer.webp">
+					<div id="welcome_screen_title_2">Initializing...</div>
+				</div>
+				<div style="display: none" id="system_selector">
+					<sysbtn onclick="sys_load('number_name_x2lr_w_url_src/number_name_x2lr_w_url_src.html')" style="padding: 10px;">Number-Name x2(LR) w/ URL SRC</sysbtn>
+				</div>
 			</div>
 		</div>
 
-		<div id="modules_cont">
-			<!-- <img style="width: 600px; height: 600px; object-fit: contain; align-self: center; margin-left: 300px;" src="assets/hello.png"> -->
-			<!-- lizard sex -->
-			<video 
-				style="
-					width: 600px; 
-					height: 600px; 
-					object-fit: contain; 
-					align-self: center; 
-					margin-left: 300px;
-				" 
-				src="assets/alum.mp4" 
-				muted 
-				loop="true" 
-				autoplay="true"
-			>
-			</video>
-		</div>
 
+		<script src="./apis/jquery/3_6_0/jquery.min.js"></script>
+		<script src="./apis/crypto_js/4_1_1/crypto-js.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/gh/MrKleiner/liz3_toybox_webtools@latest/sex_toys/shared/toolbox.js"></script>
+		<script src="./sys/kickboxer.js"></script>
+
+		<!-- x2lr -->
+		<script src="./modules/number_name_x2lr_w_url_src/script.js"></script>
+
+		<style id="module_styling" type="text/css"></style>
 
 	</body>
-  
-	<script src='./apis/jquery/3_6_0/jquery.min.js'></script>
-	<!-- panorama and cubemap viewer -->
-	<script src='./apis/panellum/panellum.js'></script>
-	<!-- <script src='https://cdn.jsdelivr.net/gh/MrKleiner/liz3_toybox_webtools@latest/sex_toys/shared/toolbox.js'></script> -->
-	<!-- <script src='./script.js'></script> -->
-
-	<!-- First load core and right after that - event listeners -->
-	<script src='./mods/core/blfoil_core.js'></script>
-	<script src='./mods/core/core_event_listeners.js'></script>
-
-	<!-- Now, core apis -->
-	<script src='./mods/core/dropdowns.js'></script>
-	<script src='./mods/core/simple_menus.js'></script>
-	<script src='./mods/core/tooltips.js'></script>
-	<script src='./mods/core/ui_lists.js'></script>
-	<script src='./mods/core/buttons.js'></script>
-	<script src='./mods/core/checkboxes.js'></script>
-
-
-
-	<!-- Modules -->
-
-
-	<!-- Dashboard -->
-	<script src='./mods/dashboard/dashboard_main.js'></script>
-
-	<!-- Modmaker -->
-	<script src='./mods/modmaker/modmaker_main.js'></script>
-
-	<!-- Skyboxer -->
-	<script src='./mods/skyboxer/skyboxer_main.js'></script>
-
-	<!-- Game Info Manager -->
-	<script src='./mods/game_config_gameinfo/gameinfo_main.js'></script>
-	<script src='./mods/game_config_gameinfo/content_mount.js'></script>
-
 
 
 </html>
