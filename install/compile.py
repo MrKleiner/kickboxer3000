@@ -1,5 +1,5 @@
 # I should've done this LONG ago !
-import subprocess, os, shutil, sys, base64
+import subprocess, os, shutil, sys, base64, json
 from pathlib import Path
 
 # application_path = os.path.dirname(sys.executable)
@@ -28,7 +28,7 @@ for sz in sizedict:
 		str(magix),
 		# input path
 		str(iconsrc),
-		# clamp tp max size
+		# clamp to max size
 		'-resize', str(sz),
 
 		# output path
@@ -131,10 +131,90 @@ subprocess.call(zip_prms)
 
 
 
+
 # ========================================
 #           Create giga binary
 # ========================================
 
+# first 8192 bytes are reserved for a base 64 of a json containing file info
+
+# json is a dict
+# Key: file name, Value: file info:
+# name: string
+# offset: int
+# length: int
+
+packfiles = [
+	{
+		'path': (project / 'install' / '7z' / '7z.exe'),
+		'name': '7z_exe'
+	},
+	{
+		'path': (project / 'install' / '7z' / '7z.dll'),
+		'name': '7z_dll'
+	},
+	{
+		'path': (project / 'install' / 'boxer.7z'),
+		'name': 'app'
+	}
+]
+
+
+
+destination = (project / 'release' / 'install_bin.pootis')
+
+rawbin = destination.with_suffix('.nohead')
+rawbin.write_bytes(b'')
+
+header = {}
+
+destination.unlink(missing_ok=True)
+for fl in packfiles:
+	src =  Path(fl['path'])
+
+	offset = rawbin.stat().st_size
+	dat = src.read_bytes()
+	length = len(dat)
+
+	# write data
+	with open(str(rawbin), 'ab') as giga:
+		giga.write(dat)
+
+	# update header
+	# header.append({
+	# 	'name': fl['name'],
+	# 	'offset': offset,
+	# 	'length': length
+	# })
+
+	header[fl['name']] = {
+		'offset': offset,
+		'length': length
+	}
+
+
+# write header
+with open(str(destination), 'wb') as chad:
+	head_data = base64.b64encode(json.dumps(header).encode())
+	padding = head_data + ((8192 - len(head_data))*'!').encode()
+	chad.write(padding)
+	#
+	# Write data
+	#
+	chad.write(rawbin.read_bytes())
+
+# delete nohead bin
+rawbin.unlink(missing_ok=True)
+
+
+
+
+
+
+# ========================================
+#           Binary - old system
+# ========================================
+"""
 # todo: make it cooler with chunks... ????
 (project / 'release' / 'install_bin.pootis').unlink(missing_ok=True)
 with open(str(project / 'release' / 'install_bin.pootis'), 'ab') as giga:
@@ -146,6 +226,15 @@ with open(str(project / 'release' / 'install_bin.pootis'), 'ab') as giga:
 	giga.write('\n'.encode())
 	# write archive
 	giga.write(base64.b64encode((project / 'app' / 'out' / 'KickBoxer3000-win32-x64.7z').read_bytes()))
+"""
+
+
+
+
+
+
+
+
 
 
 
