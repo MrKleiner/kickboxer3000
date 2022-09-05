@@ -1,12 +1,59 @@
 
-// window.context = {}
-// window.vmix = {}
-// window.context.vmix_ip = '192.168.0.10'
-// window.context.vmix_port = '8088'
-// window.vmix.app_context.vmix_ip
+// ============================================================
+// ------------------------------------------------------------
+//                   Core info and functions
+// ------------------------------------------------------------
+// ============================================================
+
+
+// Electron File System Access
+const fs = require('fs');
+
+// Python-like pathlib
+const pathlib = require('pathlib-js').default;
+// app root path
+var got_root = new pathlib(__dirname)
+while (true) {
+	var exs = got_root.join('roothook.lizard').isFileSync()
+	if (exs == true){
+		window.sysroot = got_root
+		break
+	}
+	got_root = got_root.parent()
+}
+
+
+// Jquery
+window.$ = window.jQuery = require('./apis/jquery/3_6_0/jquery.min.js');
+
+//
+// python shite
+//
+const {PythonShell} = require('python-shell');
+window.py_common_opts = {
+	mode: 'binary',
+	pythonPath: str(window.sysroot.join('bins', 'python', 'bin', 'python.exe')),
+	pythonOptions: [],
+	scriptPath: str(window.sysroot.join('py'))
+};
+
+function shell_end_c(err,code,signal)
+{
+	if (err) throw err;
+	console.log('The exit code was: ' + code);
+	console.log('The exit signal was: ' + signal);
+	console.log('finished');
+}
+
+
+
+
+
+
+
 window.mein_sleep = {}
 
-window.$ = window.jQuery = require('./apis/jquery/3_6_0/jquery.min.js');
+
 
 // ============================================================
 // ------------------------------------------------------------
@@ -82,6 +129,16 @@ class fbi_logger
 
 	}
 
+	warn_critical(msg=''){
+		$('#logs_place').append(`
+			<div class="warning_critical">
+				<msg>${msg}</msg>
+				<sysbtn onclick="close_warnings()"><span style="font-style: italic">I swear I will not ignore this error and do what was asked</span></sysbtn>
+			</div>
+		`);
+		$('#logs_place').css('visibility', 'visible')
+	}
+
 }
 window.fbi = new fbi_logger();
 
@@ -91,9 +148,7 @@ window.fbi = new fbi_logger();
 // ctrl + r
 //
 document.addEventListener('keydown', kvt => {
-    // console.log('keypress');
     app_reload_refresh(kvt)
-    // todo: this really is a core feature...
     if (kvt.altKey && kvt.keyCode == 87 && window.current_app_module != 'main_dashboard'){
     	dashboard_app_loader()
     }
@@ -240,16 +295,16 @@ class vmix_app_talker
 
 			fetch(`http://${window.vmix.app_context.vmix_ip}:${window.vmix.app_context.vmix_port}/API/?${prms.toString()}`, {
 			    'headers': {
-			        // 'accept': '*/*',
-			        // 'cache-control': 'no-cache',
-			        // 'pragma': 'no-cache',
-			        // 'Access-Control-Allow-Origin': '*',
+			        'accept': '*/*',
+			        'cache-control': 'no-cache',
+			        'pragma': 'no-cache',
+			        'Access-Control-Allow-Origin': '*'
 			        // 'Access-Control-Allow-Methods': 'DELETE, POST, GET, OPTIONS',
 			        // 'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
 			    },
-			    'method': 'GET'
-			    // 'mode': 'cors',
-			    // 'credentials': 'omit'
+			    'method': 'GET',
+			    'mode': 'cors',
+			    'credentials': 'omit'
 			})
 			.then(function(response) {
 				log('vmix_talk', rnd_id, 'Status:', response.status)
@@ -285,134 +340,31 @@ class vmix_app_talker
 	// Takes payload
 	// A dict of parameters
 	// And the type of data to receive: bytes/text/json
-	async py_send(pl='', prms={}, tp='text')
+	async py_talk(act='', pl={})
 	{
 		return new Promise(function(resolve, reject){
-
-			// parse URL parameters
-			var url_prms = new URLSearchParams(prms)
-
-			// create data blob
-			var blob = new Blob([pl], {type: '*/*'});
-
-			// execute request
-			fetch(`htbin/logicman.py/?${url_prms.toString()}`, {
-			    'headers': {
-			        // 'accept': '*/*',
-			        // 'cache-control': 'no-cache',
-			        // 'pragma': 'no-cache',
-			        // 'Access-Control-Allow-Origin': '*',
-			        // 'Access-Control-Allow-Methods': 'DELETE, POST, GET, OPTIONS',
-			        // 'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
-			    },
-			    'method': 'POST',
-			    'body': blob
-			    // 'mode': 'cors',
-			    // 'credentials': 'omit'
+			let shell = new PythonShell('gateway.py', window.py_common_opts);
+			var dtstorage = null
+			var mkpayload = JSON.stringify({
+				'action': act,
+				'payload': pl
 			})
-			.then(function(response) {
-				log('python_sender', 'Executed Dialogue, response status:', response.status)
+			print(mkpayload)
+			shell.send(mkpayload);
 
-				// if it's text - get bytes from the response and decode them into text
-				if (tp == 'text'){
-					response.arrayBuffer().then(function(data) {
-						resolve(lizard.UTF8ArrToStr(new Uint8Array(data)))
-					});
-				}
-
-				// if it's json - let the javascript do shit for us
-				if (tp == 'json'){
-					response.json().then(function(data) {
-						resolve(data)
-					});
-				}
-
-				// if it's array buffer - return raw array buffer
-				if (tp == 'buffer'){
-					response.arrayBuffer().then(function(data) {
-						resolve(data)
-					});
-				}
-
-			})
-			.catch((error) => {
-				resolve(false)
+			shell.stdout.on('data', function (message) {
+			    dtstorage = message
+			});
+			shell.end(function (err,code,signal) {
+				// shell_end_c(err,code,signal)
+				// print(lizard.UTF8ArrToStr(window.sexmsg))
+				print(dtstorage)
+				var converted = lizard.UTF8ArrToStr(dtstorage)
+				// print(converted)
+				resolve(converted)
 			});
 		});
 	}
-
-
-
-
-
-
-
-	// ============================================================
-	// ------------------------------------------------------------
-	//                       Python Requester
-	// ------------------------------------------------------------
-	// ============================================================
-
-	// Takes payload
-	// A dict of parameters
-	// And the type of data to receive: bytes/text/json
-	async py_get(prms={}, tp='text')
-	{
-		return new Promise(function(resolve, reject){
-
-			// parse URL parameters
-			var url_prms = new URLSearchParams(prms)
-
-			// execute request
-			log('python_sender', 'Get from python:', `htbin/logicman.py/?${url_prms.toString()}`)
-			fetch(`htbin/logicman.py/?${url_prms.toString()}`, {
-			    'headers': {
-					// 'accept': '*/*',
-					// 'cache-control': 'no-cache',
-					// 'pragma': 'no-cache',
-					// 'Access-Control-Allow-Origin': '*',
-					// 'Access-Control-Allow-Methods': 'DELETE, POST, GET, OPTIONS',
-					// 'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
-			    },
-			    'method': 'GET',
-			    'mode': 'no-cors',
-			    // 'credentials': 'omit'
-			})
-			.then(function(response) {
-				log('python_sender', 'Executed Dialogue, response status:', response.status)
-
-				// if it's text - get bytes from the response and decode them into text
-				if (tp == 'text'){
-					response.arrayBuffer().then(function(data) {
-						resolve(lizard.UTF8ArrToStr(new Uint8Array(data)))
-					});
-				}
-
-				// if it's json - let the javascript do shit for us
-				if (tp == 'josn'){
-					response.json().then(function(data) {
-						resolve(data)
-					});
-				}
-
-				// if it's array buffer - return raw array buffer
-				if (tp == 'buffer'){
-					response.arrayBuffer().then(function(data) {
-						resolve(data)
-					});
-				}
-
-			})
-			.catch((error) => {
-				resolve(false)
-			});
-		});
-	}
-
-
-
-
-
 
 
 
@@ -527,70 +479,24 @@ class vmix_context_manager
 
 	// save to disk
 	async save(){
-		return new Promise(function(resolve, reject){
-			var prms = new URLSearchParams({
-				'action': 'save_context'
-			})
-			print('Talking to', `htbin/logicman.py?${prms.toString()}`)
-
-			var blob = new Blob([JSON.stringify(window.vmix.app_context)], {type: 'text/plain'});
-
-			// fetch(`http://${window.vmix.app_context.vmix_ip}:3186/htbin/logicman.py?${prms.toString()}`, {
-			fetch(`htbin/logicman.py?${prms.toString()}`, {
-			    'headers': {
-			    	'accept': '*/*',
-			    	'cache-control': 'no-cache',
-			    	'pragma': 'no-cache',
-			    	'Access-Control-Allow-Origin': '*'
-			    },
-			    'body': blob,
-			    'mode': 'no-cors',
-			    'method': 'POST'
-			})
-			.then(function(response) {
-			    print(response.status);
-			    response.arrayBuffer().then(function(data) {
-			    	var rs = lizard.UTF8ArrToStr(new Uint8Array(data))
-			    	print(rs)
-			    	resolve(rs)
-			    });
-			});
+		return new Promise(async function(resolve, reject){
+			var rsp = await talker.py_talk('save_context', window.vmix.app_context)
+	    	// var resp = lizard.UTF8ArrToStr(new Uint8Array(rsp))
+	    	print('save response:', rsp)
+	    	resolve(rsp)
 		});
 	}
 
 
 	async pull(){
-		return
-		return new Promise(function(resolve, reject){
-			var prms = new URLSearchParams({
-				'action': 'load_context'
-			})
-			print('Talking to', `htbin/logicman.py?${prms.toString()}`)
-
-			// fetch(`http://${window.vmix.app_context.vmix_ip}:3186/htbin/logicman.py?${prms.toString()}`, {
-			fetch(`htbin/logicman.py?${prms.toString()}`, {
-			    'headers': {
-			    	'accept': '*/*',
-			    	'cache-control': 'no-cache',
-			    	'pragma': 'no-cache',
-			    	'Access-Control-Allow-Origin': '*'
-			    },
-			    'mode': 'no-cors',
-			    'method': 'GET'
-			})
-			.then(function(response) {
-			    print(response.status);
-			    response.json().then(function(data) {
-			    	// var rs = lizard.UTF8ArrToStr(new Uint8Array(data))
-			    	print(data)
-			    	window.vmix.app_context = data
-			    	resolve(data)
-			    });
-			});
+		return new Promise(async function(resolve, reject){
+			var rsp = await talker.py_talk('load_context', null)
+	    	var resp = JSON.parse(rsp)
+	    	print(resp)
+	    	window.vmix.app_context = resp
+	    	resolve(resp)
 		});
 	}
-
-
 }
 window.context = new vmix_context_manager();
 
@@ -697,14 +603,20 @@ $(document).ready(function(){
 // if reachable - load module
 async function app_init()
 {
+
 	var loadlast = await context.pull()
+	print('LOADLAST', loadlast)
+	print('context read before warning', context.read['been_warned'])
+	if (context.read['been_warned'] != true){
+		fbi.warn_critical('Do not forget to turn on alpha channel on the required outputs (sdi/ndi)!')
+	}
 
 	var reach = await talker.ping()
 	if (reach == false){
 		$('#welcome_screen_title_2').text('VMIX is unreachable: Bad ip/port. Please enter valid ip/port to proceed.')
 		$('#welcome_screen').append(`
 			<div id="welcome_enter_info">
-				<input style="color: white" type="text" placeholder="IP" ip>:<input style="color: white" type="number" placeholder="Port" port>
+				<input style="color: white" type="text" placeholder="IP (absolute)" ip>:<input style="color: white" type="number" placeholder="Port" port>
 			</div>
 			<sysbtn style="margin-top: 10px" onclick="save_creds_from_welcome()" id="welcome_apply_creds">Apply</sysbtn>
 		`)
@@ -716,11 +628,11 @@ async function app_init()
 }
 
 
-function save_creds_from_welcome()
+async function save_creds_from_welcome()
 {
 	context.prm('vmix_ip', $('#welcome_enter_info [ip]').val(), false)
 	context.prm('vmix_port', $('#welcome_enter_info [port]').val(), false)
-	context.save()
+	print(await context.save())
 	window.location.reload()
 }
 
@@ -733,7 +645,12 @@ function save_creds_from_welcome()
 
 
 
-
+function close_warnings()
+{
+	$('#logs_place').css('visibility', 'hidden')
+	$('#logs_place').empty()
+	context.prm('been_warned', true)
+}
 
 
 

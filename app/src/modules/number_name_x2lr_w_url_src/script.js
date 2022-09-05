@@ -59,7 +59,7 @@ async function x2lr_update_coefficients(btn)
 {
 	btn.vmixbtn(false)
 	$('xmlstatus').text('Loading fresh XML...')
-	var fucking_proxy = await talker.py_get({'action': 'load_xml', 'testing': ($('input[cbox_is_testing]')[0].checked ? '1': '0')})
+	var fucking_proxy = await talker.py_talk('load_xml', {'testing': ($('input[cbox_is_testing]')[0].checked ? '1': '0')})
 	print(fucking_proxy)
 	var xml_info = $($.parseXML(fucking_proxy))
 	$('xmlstatus').text('Loaded and evaluated XML...')
@@ -206,12 +206,16 @@ async function mkinput()
 	}
 	var fullpath = get_fullpath
 	if (get_fullpath == '[built-in]'){
-		var fullpath = await talker.py_get({'action': 'builtin_title_double_path'})
+		var fullpath = await talker.py_talk({'action': 'builtin_title_double_path'})
 	}
 
 	context.prm('title_path', fullpath, false);
 	await context.prm('title_name', fullpath.split('\\').at(-1));
 	$('input[tgt_title_name]').val(fullpath.split('\\').at(-1));
+	await talker.vmix_talk({
+		'Function': 'AddInput',
+		'Value': `Colour|00000000`
+	})
 	await talker.vmix_talk({
 		'Function': 'AddInput',
 		'Value': `Xaml|${str(fullpath).trim()}`

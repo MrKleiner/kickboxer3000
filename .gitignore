@@ -1,2 +1,6 @@
 ﻿app/out
 app/node_modules
+testing
+release/KickBoxer3000-win32-x64
+app/src/bins/python
+__pycache__

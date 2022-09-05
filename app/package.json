@@ -1,9 +1,10 @@
 {
-  "name": "app",
-  "productName": "app",
-  "version": "1.0.0",
-  "description": "My Electron application description",
+  "name": "KickBoxer3000",
+  "productName": "KickBoxer3000",
+  "version": "1.0.7",
+  "description": "KickBoxer3000",
   "main": "src/index.js",
+  "icon": "E:/!webdesign/source_tricks/source_tricks/assets/pink_panther.png",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",

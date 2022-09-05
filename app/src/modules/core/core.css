@@ -14,7 +14,9 @@
 
 html
 {
-	background: #1E2328;
+	/*background: #1E2328;*/
+	background: url('../../assets/bg.png');
+	background-attachment: fixed;
 }
 
 body
@@ -36,6 +38,48 @@ body::-moz-scrollbar-thumb {
   background-color: black;
   /* outline: 1px solid slategrey; */
   
+}
+
+#logs_place
+{
+	/*z-index: 2147483640 !important;*/
+	z-index: 65535 !important;
+	display: flex;
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	visibility: hidden;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.4);
+}
+
+#logs_place msg
+{
+	font-size: 50px;
+	color: red;
+	text-align: center;
+	display: flex;
+	text-align: center;
+}
+.warning_critical
+{
+	display: flex;
+	flex-direction: column;
+}
+#logs_place sysbtn
+{
+	flex-grow: 0;
+	flex-shrink: 1;
+	width: fit-content;
+	align-self: center;
+	margin-top: 10px;
+	font-size: 20px;
+}
+
+#logs_place[critical]
+{
+	background: rgba(0, 0, 0, 0.4);
 }
 
 #app_sys

@@ -1,38 +1,3 @@
-from pathlib import Path
-import json, hashlib, base64, sys, cgi, os, shutil
-# from rr import *
-from random import seed
-from random import random
-# from font_inst import install_font
-
-#
-# Get server root
-#
-server = Path(__file__)
-for pr in server.parents:
-	if (pr / 'roothook.lizard').is_file():
-		server = pr
-		break
-
-# =============================================
-#					Setup
-# =============================================
-
-# parse url params into a dict, if any
-get_cgi_params = cgi.parse()
-url_params = {}
-for it in get_cgi_params:
-	url_params[it] = ''.join(get_cgi_params[it])
-
-# read body content, if any
-byte_data = b''
-try:
-	byte_data = sys.stdin.buffer.read()
-except:
-	pass
-
-sys.stdout.buffer.write(b'Content-Type: application/octet-stream\n\n')
-
 
 
 """
@@ -71,17 +36,34 @@ class mainman:
 		pass
 """
 
-def save_context():
-	(server / 'db' / 'context' / 'context.ct').write_bytes(byte_data)
+def whereserver(fl):
+	from pathlib import Path
+	#
+	# Get server root
+	#
+	server = Path(fl)
+	for pr in server.parents:
+		if (pr / 'roothook.lizard').is_file():
+			server = pr
+			break
+	return server
 
-	return json.dumps({'status': 'success', 'details': 'saved context'})
 
+def save_context(pl):
+	import json
+	from pathlib import Path
+	try:
+		(whereserver(__file__) / 'db' / 'context' / 'context.ct').write_text(json.dumps(pl))
+		return json.dumps({'status': 'success', 'details': [str(pl)]}).encode()
+	except Exception as e:
+		return str(e).encode()
+	
 
-def load_context():
-	return (server / 'db' / 'context' / 'context.ct').read_bytes()
+def load_context(pl):
+	return (whereserver(__file__) / 'db' / 'context' / 'context.ct').read_bytes()
 
 # words cannot express how much I fucking hate CORS gay retarded nigger shit
-def load_xml():
+def load_xml(pl):
 	import requests
 	rq_url = 'https://feed.pm/api/v1/event/collection-xml/xsport_feed'
 	url_prms = {
@@ -93,7 +75,7 @@ def load_xml():
 	do_request = requests.get(url=rq_url, params=url_prms, headers=headerz)
 	data = do_request.content
 
-	if url_params.get('testing') == '1':
+	if pl.get('testing') == '1':
 		data = """<response>
 		<name>Катовіце - Регле</name>
 		<p1>Катовіце</p1>
@@ -116,28 +98,4 @@ def load_xml():
 		</response>""".encode()
 
 	return data
-
-
-
-# do match
-match url_params['action']:
-	case 'save_context':
-		sys.stdout.buffer.write(save_context().encode())
-	case 'load_context':
-		sys.stdout.buffer.write(load_context())
-	case 'load_xml':
-		sys.stdout.buffer.write(load_xml())
-	case 'builtin_title_double_path':
-		sys.stdout.buffer.write(builtin_title_double_path())
-	case _:
-		# sys.stdout.buffer.write(json.dumps({'error': 'unknown_action'}).encode())
-		pass
-
-
-
-
-
-
-
-
 
