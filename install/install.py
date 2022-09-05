@@ -5,22 +5,35 @@ import subprocess
 import base64
 import shutil
 import win32com.client
+import math
 
 application_path = os.path.dirname(sys.executable)
 server = Path(application_path).absolute()
+
+def pretty(tgt='', sym='-', length=55):
+	length = length - 2
+	result = ''
+	result += math.ceil((length - len(tgt))/2)*sym
+	result += ' '
+	result += tgt
+	result += ' '
+	result += math.floor((length - len(tgt))/2)*sym
+	return result
+
 
 print("""
 
 =======================================================
 =======================================================
-			   KICKBOXER 300 INSTALLING
+              KICKBOXER 300 INSTALLING
 =======================================================
 =======================================================
 
 
----------------- Spinning Earth..... ------------------
 
 """)
+
+print(pretty('Spinning Earth...'))
 
 # get binaries
 binaries = (server / 'install_bin.pootis').read_text().split('\n')
@@ -38,7 +51,15 @@ with open(str(server / 'unpk' / '7z.exe'), 'wb') as arch:
 with open(str(server / 'unpk' / '7z.dll'), 'wb') as arch:
 	arch.write(base64.b64decode(binaries[1].encode()))
 
-
+print('')
+print('')
+print('')
+print('')
+print(pretty('Chuck Norris can divide by zero...'))
+print('')
+print('')
+print('')
+print('')
 
 # unpack with created 7z
 eprms = [
@@ -58,8 +79,16 @@ shutil.rmtree(server / 'unpk')
 # delete temp file
 (server / 'input.7z').unlink()
 
-print('--------------------- Finalizing ----------------------')
 
+print('')
+print('')
+print('')
+print('')
+print(pretty('Finalizing'))
+print('')
+print('')
+print('')
+print('')
 
 
 desktop = str(server) # path to where you want to put the .lnk
@@ -67,13 +96,18 @@ path = os.path.join(desktop, 'KickBoxer3000.lnk')
 target = str(server / 'KickBoxer3000-win32-x64' / 'KickBoxer3000.exe')
 # icon = r'C:\path\to\icon\resource.ico'
 
-shell = win32com.client.Dispatch("WScript.Shell")
+shell = win32com.client.Dispatch('WScript.Shell')
 shortcut = shell.CreateShortCut(path)
 shortcut.Targetpath = target
-# shortcut.IconLocation = icon
+# shortcut.IconLocation = str(server / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'assets' / 'pink_panther.ico')
 # shortcut.WindowStyle = 7
 shortcut.save()
 
 
 
-print('------------------------ DONE ------------------------')
+print(pretty('Done'))
+
+
+# refresh icons
+# this is honestly extremely fucking irritating
+subprocess.call([r'C:\Windows\System32\ie4uinit.exe', '-show'])

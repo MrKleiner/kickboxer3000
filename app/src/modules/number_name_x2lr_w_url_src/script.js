@@ -51,6 +51,8 @@ async function pull_cached_data()
 	$('input[tgt_title_name]').val(context.read.title_name)
 	// expression
 	$('input[interval]').val(context.read.interval_exp)
+	// xml src
+	$('input[xml_link]').val(context.read.xml_url)
 }
 
 
@@ -59,7 +61,10 @@ async function x2lr_update_coefficients(btn)
 {
 	btn.vmixbtn(false)
 	$('xmlstatus').text('Loading fresh XML...')
-	var fucking_proxy = await talker.py_talk('load_xml', {'testing': ($('input[cbox_is_testing]')[0].checked ? '1': '0')})
+	var fucking_proxy = await talker.py_talk('load_xml', {
+		'testing': ($('input[cbox_is_testing]')[0].checked ? '1': '0'),
+		'xml_url': context.read['xml_url']
+	})
 	print(fucking_proxy)
 	var xml_info = $($.parseXML(fucking_proxy))
 	$('xmlstatus').text('Loaded and evaluated XML...')
@@ -244,4 +249,9 @@ async function save_interval()
 
 	context.prm('interval_exp', interval_fix, false);
 	await context.prm('interval', eval(interval_fix) * 1000);
+}
+
+async function set_title_xml_src()
+{
+	await context.prm('xml_url', $('prmrow input[xml_link]').val().trim());
 }

@@ -65,7 +65,8 @@ def load_context(pl):
 # words cannot express how much I fucking hate CORS gay retarded nigger shit
 def load_xml(pl):
 	import requests
-	rq_url = 'https://feed.pm/api/v1/event/collection-xml/xsport_feed'
+	# rq_url = 'https://feed.pm/api/v1/event/collection-xml/xsport_feed'
+	rq_url = pl.get('xml_url')
 	url_prms = {
 		'Accept': '*/*'
 	}

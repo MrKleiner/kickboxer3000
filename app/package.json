@@ -4,7 +4,7 @@
   "version": "1.0.7",
   "description": "KickBoxer3000",
   "main": "src/index.js",
-  "icon": "E:/!webdesign/source_tricks/source_tricks/assets/pink_panther.png",
+  "icon": "icon.png",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",

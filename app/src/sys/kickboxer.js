@@ -133,7 +133,7 @@ class fbi_logger
 		$('#logs_place').append(`
 			<div class="warning_critical">
 				<msg>${msg}</msg>
-				<sysbtn onclick="close_warnings()"><span style="font-style: italic">I swear I will not ignore this error and do what was asked</span></sysbtn>
+				<sysbtn onclick="close_warnings()"><span style="font-style: italic">I swear I will not ignore this warning and do what was asked</span></sysbtn>
 			</div>
 		`);
 		$('#logs_place').css('visibility', 'visible')
@@ -449,17 +449,22 @@ class vmix_context_manager
 	};
 
 	// set OR get parameter
-	async prm(key=null, value=undefined, dosave=true){
+	prm(key=null, value=undefined, dosave=true){
 
 		// if value is undefined, then it means that we're only getting a parameter
 		if (value == undefined){
 			return window.vmix.app_context[key]
 		}
-
+		var remap_this = this;
 		// if defined - set and maybe save
 		window.vmix.app_context[key] = value;
 		if (dosave == true){
-			return await this.save()
+			return new Promise(function(resolve, reject){
+				remap_this.save()
+				.then(function(response) {
+					resolve(response)
+				});
+			});
 		}
 	}
 
@@ -651,6 +656,24 @@ function close_warnings()
 	$('#logs_place').empty()
 	context.prm('been_warned', true)
 }
+
+
+
+
+function wipe_context()
+{
+	context.prm('vmix_ip', '', false)
+	context.prm('vmix_port', '', false)
+	context.prm('title_name', '', false)
+	context.prm('title_path', '', false)
+	context.prm('interval', '', false)
+	context.prm('interval_exp', '', false)
+	context.prm('xml_url', 'https://feed.pm/api/v1/event/collection-xml/xsport_feed', false)
+	context.prm('been_warned', false)
+}
+
+
+
 
 
 

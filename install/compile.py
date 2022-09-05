@@ -1,17 +1,142 @@
 # I should've done this LONG ago !
-import subprocess
-import os
+import subprocess, os, shutil, sys, base64
 from pathlib import Path
-import shutil
-import sys
-import base64
 
 # application_path = os.path.dirname(sys.executable)
 project = Path(__file__).parent.parent
 
+
+# ========================================
+# 			      Icon Shit
+# ========================================
+
+# magick path
+magix = Path(r'C:\custom\imgmagick\magick.exe')
+
+# rcedit path
+rcedit = (project / 'install' / 'icon' / 'rcedit_simple.exe')
+
+# Icon original image
+iconsrc = (project / 'app' / 'src' / 'assets' / 'pink_panther.png')
+
+# create 4 different versions
+sizedict = [128, 64, 32, 32]
+collapse = []
+for sz in sizedict:
+	resized_path = project / 'install' / 'icon' / 'icon_res' / ('ic_' + str(sz) + '.png')
+	magix_prms = [
+		str(magix),
+		# input path
+		str(iconsrc),
+		# clamp tp max size
+		'-resize', str(sz),
+
+		# output path
+		str(resized_path)
+	]
+
+	# convert to required size
+	print(subprocess.run(magix_prms, capture_output=True).stdout)
+
+	collapse.append(resized_path)
+
+
 #
-# Create giga binary
+# collapse 4 versions into one
 #
+collapse_prms = [
+	str(magix),
+
+	# input path
+	str(collapse[0]), str(collapse[1]), str(collapse[2]), str(collapse[3]),
+
+	# output path
+	str(project / 'install' / 'icon' / 'icon_res' / 'favicon.ico')
+]
+print(subprocess.run(magix_prms, capture_output=True).stdout)
+
+
+#
+# Use rcedit to set new icon
+#
+rc_prms = [
+	str(rcedit),
+
+	# input exe
+	str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64' / 'KickBoxer3000.exe'),
+
+	# set icon
+	'--set-icon',
+
+	# icon path
+	str(project / 'install' / 'icon' / 'icon_res' / 'favicon.ico')
+]
+print(subprocess.run(rc_prms, capture_output=True).stdout)
+
+
+
+
+
+# ========================================
+# 			     Pack Folder
+# ========================================
+
+# 7z exe
+zipper = (project / 'install' / '7z' / '7z.exe')
+
+# delete previous archive, if any
+(project / 'app' / 'out' / 'KickBoxer3000-win32-x64.7z').unlink(missing_ok=True)
+
+zip_prms = [
+	# executable
+	str(zipper),
+
+	# param to create an archive
+	'a',
+
+	# path to resulting archive
+	str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64.7z'),
+
+	# archive params
+	'-ssw',
+
+	# path to folder to pack
+	str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64'),
+
+	#zip parameters
+	
+	# method. LZMA2, the coolset one
+	'-m0=LZMA2',
+	# Compression rate. 9 = max
+	'-mx=9',
+	# some sort of analysis which affects compression rate... 9 = max
+	'-myx=9',
+	# iteration passes, the more the better. 64 = 2 times more thatn default
+	'-mmc=64',
+	# Dict size. 12 MB
+	'-md=12m',
+	# word size. 273
+	'-mfb=273',
+	# solid block size. 2 GB
+	'-ms=2g'
+]
+# print(subprocess.run(zip_prms, capture_output=True).stdout)
+subprocess.call(zip_prms)
+
+
+
+
+
+
+
+
+
+# ========================================
+#           Create giga binary
+# ========================================
+
+# todo: make it cooler with chunks... ????
+(project / 'release' / 'install_bin.pootis').unlink(missing_ok=True)
 with open(str(project / 'release' / 'install_bin.pootis'), 'ab') as giga:
 	# write 7z exe
 	giga.write(base64.b64encode((project / 'install' / '7z' / '7z.exe').read_bytes()))
@@ -25,9 +150,12 @@ with open(str(project / 'release' / 'install_bin.pootis'), 'ab') as giga:
 
 
 
-#
-# Compile python exe
-#
+
+
+
+# ========================================
+# 			 Compile python exe
+# ========================================
 cmpileprms = [
 	str(project / 'app'/ 'src' / 'bins' / 'python' / 'bin' / 'python.exe'),
 	'-m',

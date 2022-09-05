@@ -51,7 +51,7 @@ body::-moz-scrollbar-thumb {
 	visibility: hidden;
 	align-items: center;
 	justify-content: center;
-	background: rgba(0, 0, 0, 0.4);
+	background: rgba(0, 0, 0, 0.8);
 }
 
 #logs_place msg
