@@ -147,6 +147,18 @@ async function force_off(btn)
 	// lock this button
 	btn.vmixbtn(false)
 
+
+	// break
+	period_break()
+
+	// lock everything
+	var all = btns.pool
+	all.upd.vmixbtn(false)
+	all.trigger_onn.vmixbtn(false)
+	all.forceoff.vmixbtn(false)
+	all.do_period.vmixbtn(false)
+	all.break_period.vmixbtn(false)
+
 	// clear all timeouts
 	clearTimeout(window.mein_sleep['main_title_timeout'])
 	clearTimeout(window.mein_sleep['wait_for_off'])
@@ -157,11 +169,18 @@ async function force_off(btn)
 		'Duration': '1'
 	})
 	// wait for fade to complete
-	await jsleep(1000)
+	await jsleep(2000)
 	// unlock trigger button
 	$('vmixbtn[trigger_onn]')[0].vmixbtn(true)
 	// unlock this button
 	btn.vmixbtn(true)
+
+	// unlock everything
+	all.upd.vmixbtn(true)
+	all.trigger_onn.vmixbtn(true)
+	all.forceoff.vmixbtn(true)
+	all.do_period.vmixbtn(true)
+	all.break_period.vmixbtn(true)
 }
 
 // seconds only, for now
@@ -183,6 +202,9 @@ async function init_period(btn)
 {
 	// lock this button
 	btn.vmixbtn(false)
+	// lock trigger button
+	btns.pool.trigger_onn.vmixbtn(false)
+
 	await force_off($('vmixbtn[forceoff]')[0])
 	window.period_title = true
 	while (window.period_title == true){
@@ -194,11 +216,13 @@ async function init_period(btn)
 }
 
 
-async function period_break()
+function period_break()
 {
 	// unlock period
 	$('vmixbtn[do_period]')[0].vmixbtn(true)
 	window.period_title = false
+	// unlock trigger button
+	btns.pool.trigger_onn.vmixbtn(true)
 }
 
 
@@ -254,4 +278,17 @@ async function save_interval()
 async function set_title_xml_src()
 {
 	await context.prm('xml_url', $('prmrow input[xml_link]').val().trim());
+}
+
+
+async function change_input_title()
+{
+	var input = document.createElement('input');
+	input.type = 'file';
+	input.addEventListener('change', ch => {
+		$('properties input[tgt_title]').val(input.files[0].path)
+		input.remove()
+		input = null
+	});
+	input.click();
 }

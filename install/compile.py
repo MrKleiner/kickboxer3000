@@ -5,6 +5,7 @@ from pathlib import Path
 # application_path = os.path.dirname(sys.executable)
 project = Path(__file__).parent.parent
 
+print('Project Path:', str(project))
 
 # ========================================
 # 			      Icon Shit
@@ -15,9 +16,11 @@ magix = Path(r'C:\custom\imgmagick\magick.exe')
 
 # rcedit path
 rcedit = (project / 'install' / 'icon' / 'rcedit_simple.exe')
+print('Rcedit Path:', str(rcedit))
 
 # Icon original image
 iconsrc = (project / 'app' / 'src' / 'assets' / 'pink_panther.png')
+print('src icon path:', str(iconsrc))
 
 # create 4 different versions
 sizedict = [128, 64, 32, 32]
@@ -53,8 +56,8 @@ collapse_prms = [
 	# output path
 	str(project / 'install' / 'icon' / 'icon_res' / 'favicon.ico')
 ]
-print(subprocess.run(magix_prms, capture_output=True).stdout)
-
+print(subprocess.run(collapse_prms, capture_output=True).stdout)
+print('resulting icon path:', collapse_prms[-1])
 
 #
 # Use rcedit to set new icon
@@ -154,20 +157,24 @@ packfiles = [
 		'name': '7z_dll'
 	},
 	{
-		'path': (project / 'install' / 'boxer.7z'),
+		'path': (project / 'app' / 'out' / 'KickBoxer3000-win32-x64.7z'),
 		'name': 'app'
 	}
 ]
 
 
-
+# resulting file path after all manipulations
 destination = (project / 'release' / 'install_bin.pootis')
 
+# temp file to store raw bytes without header
+# this is needed, because header only becomes complete AFTER writing bytes
 rawbin = destination.with_suffix('.nohead')
 rawbin.write_bytes(b'')
 
+# store header info here
 header = {}
 
+# make sure the destination file is clear
 destination.unlink(missing_ok=True)
 for fl in packfiles:
 	src =  Path(fl['path'])
@@ -206,7 +213,8 @@ with open(str(destination), 'wb') as chad:
 # delete nohead bin
 rawbin.unlink(missing_ok=True)
 
-
+# delete archive
+(project / 'app' / 'out' / 'KickBoxer3000-win32-x64.7z').unlink(missing_ok=True)
 
 
 

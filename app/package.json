@@ -1,8 +1,8 @@
 {
   "name": "KickBoxer3000",
   "productName": "KickBoxer3000",
-  "version": "1.0.7",
-  "description": "KickBoxer3000",
+  "version": "2.4.6",
+  "description": "Chuck Norris can divide by zero.",
   "main": "src/index.js",
   "icon": "icon.png",
   "scripts": {

@@ -6,6 +6,10 @@
 	flex-grow: 1;
 }
 
+#ctrl_btns
+{
+	display: flex;
+}
 
 #info_display_dynamic
 {

@@ -43,7 +43,11 @@
 			<input style="min-width: 40%; margin-left: 10px;" placeholder="Internet link WITH http/https" xml_link type="text">
 			<sysbtn btname="set_title_name" onclick="set_title_xml_src()">Set SRC</sysbtn>
 		</prmrow>
-		<input style="align-self: flex-start;" type="checkbox" cbox_is_testing>
+		<prmrow>
+			<rowlabel>Example XML</rowlabel>
+			<input style="margin-left: 10px;" type="checkbox" cbox_is_testing>
+		</prmrow>
+		
 	</properties>
 
 	<timer regular_box></timer>
@@ -53,14 +57,14 @@
 
 	<div id="ctrl_btns">
 		<div>
-			<vmixbtn upd onclick="x2lr_update_coefficients(this)">Update</vmixbtn>
-			<vmixbtn trigger_onn onclick="trigger_onn(this)">Trigger</vmixbtn>
-			<vmixbtn forceoff onclick="force_off(this)">Force Off</vmixbtn>
+			<vmixbtn btname="upd" upd onclick="x2lr_update_coefficients(this)">Update</vmixbtn>
+			<vmixbtn btname="trigger_onn" trigger_onn onclick="trigger_onn(this)">Trigger</vmixbtn>
+			<vmixbtn btname="forceoff" forceoff onclick="force_off(this)">Force Off</vmixbtn>
 		</div>
 
 		<div>
-			<vmixbtn do_period onclick="init_period(this)">Period</vmixbtn>
-			<vmixbtn break_period onclick="period_break()">Break</vmixbtn>
+			<vmixbtn btname="do_period" do_period onclick="init_period(this)">Period</vmixbtn>
+			<vmixbtn btname="break_period" break_period onclick="period_break()">Break</vmixbtn>
 		</div>
 
 	</div>
