@@ -6,6 +6,8 @@
 // ============================================================
 
 
+window.ksys = {};
+
 // Electron File System Access
 const fs = require('fs');
 
@@ -160,6 +162,158 @@ function app_reload_refresh(evee){
 	}
 }
 
+function clamp(num, min, max) {
+  return num <= min 
+    ? min 
+    : num >= max 
+      ? max 
+      : num
+}
+
+// amount = amount sec
+window.ksys.ticker = {};
+window.ksys.ticker.sys_pool = [];
+window.ksys.ticker.syskill = false;
+
+window.ksys.ticker.new = function()
+{
+	var tick = new kickboxer_ticker(...arguments)
+	window.ksys.ticker.sys_pool.push(tick);
+	return tick
+}
+
+window.ksys.ticker.kill_all = function()
+{
+	for (var tm of window.ksys.ticker.sys_pool){
+		try{
+			tm.kill()
+		}catch (error){
+
+		}
+	}
+}
+
+
+window.ksys.ticker.pool = function()
+{
+	var pl = {};
+	for (var tm of window.ksys.ticker.sys_pool){
+		try{
+			pl[tm.name] = tm
+		}catch (error){
+
+		}
+	}
+	return pl
+}
+
+
+// returns a promise and resolved after the timer has reached its end naturally
+
+// {
+// 	duration = duration of 1 interval in seconds;
+// 	name = timer name. Duplicates not allowed. Random name is assigned if duplicate. Random name assigned if null/not passed;
+// 	infinite = whether keep ticking forever or not. Default is false;
+// 	start = start from a number. Clamped to max-1 if round is true and start exceeds 1 round duration. Default is 0;
+// 	speed = tickspeed. msec. Default is 1000 (1 second);
+// 	round = whether to loop over specified interval or not. Default is false;
+// 	callback = callback function to call every iteration;
+// 	loopcallback = callback function to call on every loop iteration;
+// }
+
+class kickboxer_ticker
+{
+	constructor(amount=2, tname=null, callbacker=null, loop=false, start=0, tickspeed=1000) {
+		this.alive = true;
+		this.looped = loop;
+		this.paused = false;
+		this.duration = amount;
+		this.fcallback = callbacker;
+		this.offset = start;
+		this.tickspeed = clamp(tickspeed);
+		this.thename = tname ? tname : CryptoJS.SHA256(lizard.rndwave(512, 'flac')).toString();
+		this.fired = false;
+	}
+
+
+	fire()
+	{
+		if (this.fcallback == null || this.fired == true){return}
+		this.fired = true;
+
+		// thy holy hand grenade
+		var thy = this;
+
+		return new Promise(async function(resolve, reject){
+			var counter = 0 + thy.offset;
+			while (thy.alive == true && (counter < thy.duration || thy.looped == true)){
+				if (thy.paused == true){
+					print('thy paused')
+					continue
+				}
+				// print('thy proceed, current amount:', counter, 'current tickspeed:', thy.tickspeed, 'wtf duration:', thy.duration)
+				counter += 1
+
+				// $('timer').text(`${str(counter).zfill(3)}/${howmuch}`)
+
+				thy.fcallback(counter, thy.duration, thy)
+				await jsleep(thy.tickspeed)
+			}
+			thy.alive = false;
+			resolve(true)
+		});
+	}
+
+	get tname(){
+		return this.thename
+	}
+
+	force_kill(){
+		this.alive = false;
+		return null
+	}
+
+	get pause(){
+		return this.paused;
+	}
+
+	set pause(state='toggle'){
+		if (state == 'toggle'){
+			this.paused = !this.paused;
+		}
+		// todo: paranoid...
+		if (state == true){
+			this.paused = true;
+		}
+		// todo: paranoid...
+		if (state == false){
+			this.paused = false;
+		}
+	}
+
+	get callback(){
+		return this.fcallback;
+	}
+
+	set callback(cb=null){
+		if (cb){
+			this.fcallback = callback;
+		}
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -244,6 +398,17 @@ async function jsleep(amt=500, ref='a') {
 	});
 }
 
+
+/*
+async function jsleep(amt=500) {
+	return new Promise(function(resolve, reject){
+	    setTimeout(function () {
+			resolve(true)
+	    }, amt);
+	});
+
+}
+*/
 // if empty then return empty_string html
 function str_check(st)
 {
@@ -345,13 +510,12 @@ class vmix_app_talker
 
 	// ============================================================
 	// ------------------------------------------------------------
-	//                           Python Sender
+	//                           Python Talker
 	// ------------------------------------------------------------
 	// ============================================================
 
-	// Takes payload
-	// A dict of parameters
-	// And the type of data to receive: bytes/text/json
+	// Takes action to be executed
+	// A payload
 	async py_talk(act='', pl={})
 	{
 		return new Promise(function(resolve, reject){
