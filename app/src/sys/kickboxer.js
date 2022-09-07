@@ -24,6 +24,8 @@ while (true) {
 	got_root = got_root.parent()
 }
 
+// set version in the title
+document.title = 'KickBoxer3000 - v' + JSON.parse(fs.readFileSync(window.sysroot.parent().join('package.json').toString(), {encoding:'utf8', flag:'r'}))['version_native']
 
 // Jquery
 window.$ = window.jQuery = require('./apis/jquery/3_6_0/jquery.min.js');
@@ -215,6 +217,28 @@ window.ksys.ticker.pool = function()
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================
+// ------------------------------------------------------------
+//                             Ticker
+// ------------------------------------------------------------
+// ============================================================
+
+
+
+
+
 // returns a promise and resolved after the timer has reached its end naturally
 
 // {
@@ -295,7 +319,6 @@ class kickboxer_ticker
 				// counting things
 				//
 
-
 				// wait for callback function to complete, if any
 				if (thy.wait_for_callback == true){
 					await thy.callback_func({
@@ -314,9 +337,6 @@ class kickboxer_ticker
 					})
 				}
 
-				// do not trigger this on first iteration
-				// important todo TRIGGER ont NOT to trigger ???
-				// like, inclusive or not inclusive ?
 				// if (thy.global_tick % thy.duration == 1 && thy.iteration_count != 0){
 				if (thy.iteration_tick == thy.duration){
 					thy.iteration_tick = -1;
@@ -330,10 +350,7 @@ class kickboxer_ticker
 				thy.iteration_tick += 1;
 
 
-
-
-
-				// the wait
+				// wait before executing next iteration
 				await jsleep(thy.tickspeed)
 			}
 			thy.alive = false;

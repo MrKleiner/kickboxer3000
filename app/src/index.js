@@ -3,28 +3,28 @@ const path = require('path');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
-  app.quit();
+	app.quit();
 }
 
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
-	webPreferences: {
-		nodeIntegration: true,
-		contextIsolation: false,
-	},
-    width: 1280,
-    height: 720,
-    minWidth: 400,
-    minHeight: 300,
-    icon: path.join(__dirname, 'assets', 'pink_panther.png')
-  });
+	const mainWindow = new BrowserWindow({
+		webPreferences: {
+			nodeIntegration: true,
+			contextIsolation: false,
+		},
+		width: 1280,
+		height: 720,
+		minWidth: 400,
+		minHeight: 300,
+		icon: path.join(__dirname, 'assets', 'pink_panther.png')
+	});
 
-  // and load the index.html of the app.
-  mainWindow.loadFile(path.join(__dirname, 'index.html'));
+	// and load the index.html of the app.
+	mainWindow.loadFile(path.join(__dirname, 'index.html'));
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+	// Open the DevTools.
+	mainWindow.webContents.openDevTools();
 };
 
 // This method will be called when Electron has finished
@@ -36,21 +36,21 @@ app.on('ready', createWindow);
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit();
-  }
+	if (process.platform !== 'darwin') {
+		app.quit();
+	}
 });
 
 app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow();
-  }
+	// On OS X it's common to re-create a window in the app when the
+	// dock icon is clicked and there are no other windows open.
+	if (BrowserWindow.getAllWindows().length === 0) {
+		createWindow();
+	}
 });
 
 app.on('browser-window-created',function(e,window) {
-      window.removeMenu()
+	window.removeMenu()
 });
 
 // In this file you can include the rest of your app's specific main process
@@ -59,15 +59,15 @@ app.on('browser-window-created',function(e,window) {
 const {PythonShell} = require('python-shell');
 
 let options = {
-    mode: 'text',
-    pythonPath: 'c:/custom/python/python_3_8_9/python.exe',
-    pythonOptions: ['-u'],
-    scriptPath: path.join(__dirname, '/app/'),
-    args: [10]
+	mode: 'text',
+	pythonPath: 'c:/custom/python/python_3_8_9/python.exe',
+	pythonOptions: ['-u'],
+	scriptPath: path.join(__dirname, '/app/'),
+	args: [10]
   };
 
   PythonShell.run('tst.py',options,function(err,results) {
-    if(err) throw err;
+	if(err) throw err;
 	// console.log('pootis')
   });
 */

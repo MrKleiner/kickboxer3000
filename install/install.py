@@ -11,6 +11,18 @@ import time
 application_path = os.path.dirname(sys.executable)
 server = Path(application_path).absolute()
 
+def resource_path(relative_path):
+	""" Get absolute path to resource, works for dev and for PyInstaller """
+	try:
+		# PyInstaller creates a temp folder and stores path in _MEIPASS
+		base_path = sys._MEIPASS
+	except Exception:
+		base_path = os.path.abspath('.')
+
+	return os.path.join(base_path, relative_path)
+
+
+
 def pretty(tgt='', sym='-', length=55):
 	length = length - 2
 	result = ''
@@ -47,52 +59,50 @@ print(pretty('Spinning Earth...'))
 
 src_bin = server / 'install_bin.pootis'
 
-
-# read first 8192 bytes of the thing
-with open(str(src_bin), 'rb') as bootleg:
-	bin_info = json.loads(base64.b64decode(bootleg.read(8192).decode().strip('!').encode()))
-	# print(bin_info)
-
-
-	#
-	# unpack 7z
-	#
-
-	print('')
-	print(pretty('Discovering LV-426...'))
-
-	# create folder
-	(server / 'unpk').mkdir(parents=True, exist_ok=True)
-
-	# exe
-	# set pointer to the start of the offset
-	bootleg.seek(8192 + bin_info['7z_exe']['offset'], 0)
-	# read/write
-	(server / 'unpk' / '7z.exe').write_bytes(bootleg.read(bin_info['7z_exe']['length']))
-
-	# DLL
-	# set pointer to the start of the offset
-	bootleg.seek(8192 + bin_info['7z_dll']['offset'], 0)
-	# read/write
-	(server / 'unpk' / '7z.dll').write_bytes(bootleg.read(bin_info['7z_dll']['length']))
+def obsol():
+	# read first 8192 bytes of the thing
+	with open(str(src_bin), 'rb') as bootleg:
+		bin_info = json.loads(base64.b64decode(bootleg.read(8192).decode().strip('!').encode()))
+		# print(bin_info)
 
 
+		#
+		# unpack 7z
+		#
+
+		print('')
+		print(pretty('Discovering LV-426...'))
+
+		# create folder
+		(server / 'unpk').mkdir(parents=True, exist_ok=True)
+
+		# exe
+		# set pointer to the start of the offset
+		bootleg.seek(8192 + bin_info['7z_exe']['offset'], 0)
+		# read/write
+		(server / 'unpk' / '7z.exe').write_bytes(bootleg.read(bin_info['7z_exe']['length']))
+
+		# DLL
+		# set pointer to the start of the offset
+		bootleg.seek(8192 + bin_info['7z_dll']['offset'], 0)
+		# read/write
+		(server / 'unpk' / '7z.dll').write_bytes(bootleg.read(bin_info['7z_dll']['length']))
 
 
 
-	#
-	# unpack binary archive
-	#
-
-	print('')
-	print(pretty('Sending Chuck Norris...'))
-	
-	# set pointer to the start of the offset
-	bootleg.seek(8192 + bin_info['app']['offset'], 0)
-	# read/write
-	(server / 'input.bootlegger').write_bytes(bootleg.read(bin_info['app']['length']))
 
 
+		#
+		# unpack binary archive
+		#
+
+		print('')
+		print(pretty('Sending Chuck Norris...'))
+		
+		# set pointer to the start of the offset
+		bootleg.seek(8192 + bin_info['app']['offset'], 0)
+		# read/write
+		(server / 'input.bootlegger').write_bytes(bootleg.read(bin_info['app']['length']))
 
 
 
@@ -110,16 +120,22 @@ with open(str(src_bin), 'rb') as bootleg:
 
 
 
+print('')
+print(pretty('Discovering LV-426...'))
 
 
+print('')
+print(pretty('Sending Chuck Norris...'))
 
 
 # unpack with created 7z
 eprms = [
-	str(server / 'unpk' / '7z.exe'),
+	# str(server / 'unpk' / '7z.exe'),
+	str(resource_path('7z.exe')),
 	'x',
 	'-o' + str(server),
-	str(server / 'input.bootlegger'),
+	# str(server / 'input.bootlegger'),
+	str(resource_path('KickBoxer3000-win32-x64.7z')),
 	'-aoa'
 ]
 
@@ -138,9 +154,9 @@ print('')
 
 # cleanup
 # delete 7z
-shutil.rmtree(server / 'unpk')
+# shutil.rmtree(server / 'unpk')
 # delete temp file
-(server / 'input.bootlegger').unlink()
+# (server / 'input.bootlegger').unlink()
 
 
 

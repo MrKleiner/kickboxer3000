@@ -177,6 +177,7 @@ header = {}
 # make sure the destination file is clear
 destination.unlink(missing_ok=True)
 for fl in packfiles:
+	break
 	src =  Path(fl['path'])
 
 	offset = rawbin.stat().st_size
@@ -200,21 +201,22 @@ for fl in packfiles:
 	}
 
 
-# write header
-with open(str(destination), 'wb') as chad:
-	head_data = base64.b64encode(json.dumps(header).encode())
-	padding = head_data + ((8192 - len(head_data))*'!').encode()
-	chad.write(padding)
-	#
-	# Write data
-	#
-	chad.write(rawbin.read_bytes())
+def obso():
+	# write header
+	with open(str(destination), 'wb') as chad:
+		head_data = base64.b64encode(json.dumps(header).encode())
+		padding = head_data + ((8192 - len(head_data))*'!').encode()
+		# chad.write(padding)
+		#
+		# Write data
+		#
+		# chad.write(rawbin.read_bytes())
 
 # delete nohead bin
 rawbin.unlink(missing_ok=True)
 
 # delete archive
-(project / 'app' / 'out' / 'KickBoxer3000-win32-x64.7z').unlink(missing_ok=True)
+# (project / 'app' / 'out' / 'KickBoxer3000-win32-x64.7z').unlink(missing_ok=True)
 
 
 
@@ -262,13 +264,21 @@ cmpileprms = [
 	'--console',
 	'--icon',
 	'E:/mapping/hl1/resource/game.ico',
+	# zip archive
+	'--add-data', str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64.7z;.'),
+	# 7z exe
+	'--add-data', str(project / 'install' / '7z' / '7z.exe;.'),
+	# 7z dll
+	'--add-data', str(project / 'install' / '7z' / '7z.dll;.'),
 	str(project / 'install' / 'install.py')
 ]
 
 subprocess.call(cmpileprms)
 
+ver = json.loads(server / 'app' / 'package.json')['version_native'].replace('.', '-')
+
 # move exe
-shutil.move(str(project / 'install' / 'dist' / 'install.exe'), str(project / 'release' / 'install.exe'))
+shutil.move(str(project / 'install' / 'dist' / 'install.exe'), str(project / 'release' / ('KixkBoxer_Install_v' + ver +'.exe')))
 
 # delete shit
 shutil.rmtree(str(project / 'install' / 'build'))
