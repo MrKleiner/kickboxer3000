@@ -183,20 +183,21 @@ async function force_off(btn)
 	all.break_period.vmixbtn(true)
 }
 
-// seconds only, for now
-async function giga_timer(howmuch)
+async function period_callback(ticks)
 {
-	// nice little padding
-	// var hw = howmuch - 5;
-	var counter = 0;
-	while (true){
-		if (counter >= howmuch || window.period_title == false){break}
-		counter += 1
-		$('timer').text(`${str(counter).zfill(3)}/${howmuch}`)
-		await jsleep(1000)
-	}
-}
+	// console.timeEnd('tick')
+	var fresh_context = context.read.interval / 1000
+	// display text
+	$('timer').text(`${str(ticks.iteration).zfill(3)}/${fresh_context}`)
 
+	// if loop reached - trigger shite
+	// it's important to note that we read fresh interval each time
+	if (ticks.iteration == fresh_context){
+		await x2lr_update_coefficients($('vmixbtn[upd]')[0])
+		await trigger_onn($('vmixbtn[trigger_onn]')[0])
+	}
+	// console.time('tick')
+}
 
 async function init_period(btn)
 {
@@ -205,14 +206,19 @@ async function init_period(btn)
 	// lock trigger button
 	btns.pool.trigger_onn.vmixbtn(false)
 
+	// turn off the title
 	await force_off($('vmixbtn[forceoff]')[0])
-	window.period_title = true
-	while (window.period_title == true){
-		await x2lr_update_coefficients($('vmixbtn[upd]')[0])
-		await trigger_onn($('vmixbtn[trigger_onn]')[0])
-		giga_timer(context.read.interval / 1000)
-		await jsleep(context.read.interval)
-	}
+
+	// spawn a timer
+	window.ad_timer = ksys.ticker.spawn({
+		'duration': context.read.interval / 1000,
+		'name': 'giga_timer',
+		'infinite': true,
+		'callback': period_callback,
+		'wait': true
+	})
+	// init it
+	print(window.ad_timer.fire())
 }
 
 
@@ -272,7 +278,10 @@ async function save_interval()
 	if (interval_fix == ''){return}
 
 	context.prm('interval_exp', interval_fix, false);
-	await context.prm('interval', eval(interval_fix) * 1000);
+	if (window.ad_timer != undefined){
+		window.ad_timer.timer_duration = int(eval(interval_fix))
+	}
+	await context.prm('interval', int(eval(interval_fix)) * 1000);
 }
 
 async function set_title_xml_src()

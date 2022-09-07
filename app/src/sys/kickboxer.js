@@ -172,21 +172,28 @@ function clamp(num, min, max) {
 
 // amount = amount sec
 window.ksys.ticker = {};
-window.ksys.ticker.sys_pool = [];
+window.ksys.ticker.sys_pool = {};
 window.ksys.ticker.syskill = false;
 
-window.ksys.ticker.new = function()
+window.ksys.ticker.spawn = function(params)
 {
-	var tick = new kickboxer_ticker(...arguments)
-	window.ksys.ticker.sys_pool.push(tick);
-	return tick
+	var timename = params['name'] ? params['name'] : CryptoJS.SHA256(lizard.rndwave(512, 'flac')).toString();
+	var upt_params = params
+	if (timename in window.ksys.ticker.sys_pool){
+		timename = CryptoJS.SHA256(lizard.rndwave(517, 'flac')).toString();
+		upt_params['name'] = timename
+	}
+	var zick = new kickboxer_ticker(upt_params)
+	window.ksys.ticker.sys_pool[timename] = zick;
+	return zick
 }
 
 window.ksys.ticker.kill_all = function()
 {
-	for (var tm of window.ksys.ticker.sys_pool){
+	for (var tm in window.ksys.ticker.sys_pool){
 		try{
-			tm.kill()
+			window.ksys.ticker.sys_pool[tm].force_kill()
+			delete window.ksys.ticker.sys_pool[tm]
 		}catch (error){
 
 		}
@@ -211,52 +218,122 @@ window.ksys.ticker.pool = function()
 // returns a promise and resolved after the timer has reached its end naturally
 
 // {
-// 	duration = duration of 1 interval in seconds;
+// 	duration = duration of 1 interval in seconds. Default is 5;
 // 	name = timer name. Duplicates not allowed. Random name is assigned if duplicate. Random name assigned if null/not passed;
 // 	infinite = whether keep ticking forever or not. Default is false;
 // 	start = start from a number. Clamped to max-1 if round is true and start exceeds 1 round duration. Default is 0;
 // 	speed = tickspeed. msec. Default is 1000 (1 second);
+//	step = step to add to ticker. Default is 1;
 // 	round = whether to loop over specified interval or not. Default is false;
+//	wait = whether to await for callback to complete or not. Default is false;
 // 	callback = callback function to call every iteration;
-// 	loopcallback = callback function to call on every loop iteration;
 // }
 
 class kickboxer_ticker
 {
-	constructor(amount=2, tname=null, callbacker=null, loop=false, start=0, tickspeed=1000) {
-		this.alive = true;
-		this.looped = loop;
-		this.paused = false;
-		this.duration = amount;
-		this.fcallback = callbacker;
-		this.offset = start;
-		this.tickspeed = clamp(tickspeed);
-		this.thename = tname ? tname : CryptoJS.SHA256(lizard.rndwave(512, 'flac')).toString();
-		this.fired = false;
-	}
+	constructor(prms=null, defprms={
+		'duration': 5,
+		'name': null,
+		'infinite': false,
+		'offset': 0,
+		'speed': 1000,
+		'round': false,
+		'wait': false,
+		'callback': null,
+		'loopcallback': null
+	}){
+		//
+		// input shit
+		//
+		this.duration 	= 			prms['duration'] 	? prms['duration'] 	: defprms['duration'];
+		this.timer_name = 			prms['name'] 		? prms['name'] 		: defprms['name'];
+		this.infinite = 			prms['infinite'] 	? prms['infinite'] 	: defprms['infinite'];
+		this.offset = 				prms['offset'] 		? prms['offset'] 	: defprms['offset'];
+		this.tickspeed = 			prms['speed'] 		? prms['speed'] 	: defprms['speed'];
+		this.round = 				prms['round'] 		? prms['round'] 	: defprms['round'];
+		this.wait_for_callback = 	prms['wait'] 		? prms['wait'] 		: defprms['wait'];
+		this.callback_func = 		prms['callback'] 	? prms['callback'] 	: defprms['callback'];
 
+
+		//
+		// sys shit
+		//
+
+		// state
+		this.alive = true;
+		this.paused = false;
+		this.fired = false;
+
+		// counter
+		this.current_tick = 0 + this.offset;
+		this.global_tick = 0;
+		this.iteration_tick = 0;
+		this.iteration_count = 0;
+	}
 
 	fire()
 	{
-		if (this.fcallback == null || this.fired == true){return}
+		// useless safety margins ?
+		if (this.callback_func == null || this.fired == true){return 'dead_timer'}
+		
+		// mark this timer as fired. It's impossible to call fire() if the timer was already fired
 		this.fired = true;
 
 		// thy holy hand grenade
 		var thy = this;
 
 		return new Promise(async function(resolve, reject){
-			var counter = 0 + thy.offset;
-			while (thy.alive == true && (counter < thy.duration || thy.looped == true)){
+			// while (thy.alive == true && (counter < thy.duration || thy.looped == true)){
+			while (thy.alive == true && (thy.global_tick < thy.duration || thy.infinite == true)){
+
+				// if paused then skip this iteration
 				if (thy.paused == true){
-					print('thy paused')
 					continue
 				}
-				// print('thy proceed, current amount:', counter, 'current tickspeed:', thy.tickspeed, 'wtf duration:', thy.duration)
-				counter += 1
 
-				// $('timer').text(`${str(counter).zfill(3)}/${howmuch}`)
+				//
+				// counting things
+				//
 
-				thy.fcallback(counter, thy.duration, thy)
+
+				// wait for callback function to complete, if any
+				if (thy.wait_for_callback == true){
+					await thy.callback_func({
+						'global': thy.global_tick,
+						'iteration': thy.iteration_tick,
+						'loops': thy.iteration_count,
+						'all': thy
+					})
+
+				}else{
+					thy.callback_func({
+						'global': thy.global_tick,
+						'iteration': thy.iteration_tick,
+						'loops': thy.iteration_count,
+						'all': thy
+					})
+				}
+
+				// do not trigger this on first iteration
+				// important todo TRIGGER ont NOT to trigger ???
+				// like, inclusive or not inclusive ?
+				// if (thy.global_tick % thy.duration == 1 && thy.iteration_count != 0){
+				if (thy.iteration_tick == thy.duration){
+					thy.iteration_tick = -1;
+					thy.iteration_count += 1;
+				}
+
+				// global timer
+				thy.global_tick += 1;
+
+				// iteration
+				thy.iteration_tick += 1;
+
+
+
+
+
+				// the wait
 				await jsleep(thy.tickspeed)
 			}
 			thy.alive = false;
@@ -265,7 +342,7 @@ class kickboxer_ticker
 	}
 
 	get tname(){
-		return this.thename
+		return this.timer_name
 	}
 
 	force_kill(){
@@ -292,14 +369,62 @@ class kickboxer_ticker
 	}
 
 	get callback(){
-		return this.fcallback;
+		return this.callback_func;
 	}
 
 	set callback(cb=null){
 		if (cb){
-			this.fcallback = callback;
+			this.callback_func = cb;
 		}
 	}
+
+	get timer_duration(){
+		return this.duration;
+	}
+
+	set timer_duration(dr=null){
+		if (dr){
+			this.duration = dr;
+		}
+	}
+
+	get tick(){
+		return {
+			'global': this.global_tick,
+			'iteration': this.iteration_tick,
+			'loops': this.iteration_count
+		}
+	}
+
+	set_iteration_tick(tick, trigger_callback=false){
+		if (tick){
+			this.iteration_tick = tick;
+			if (trigger_callback == true){
+				this.callback_func({
+					'global': thy.global_tick,
+					'iteration': thy.iteration_tick,
+					'loops': thy.iteration_count,
+					'all': thy
+				})
+			}
+		}
+	}
+
+	set_global_tick(tick, trigger_callback=false){
+		if (tick){
+			this.global_tick = tick;
+			if (trigger_callback == true){
+				this.callback_func({
+					'global': thy.global_tick,
+					'iteration': thy.iteration_tick,
+					'loops': thy.iteration_count,
+					'all': thy
+				})
+			}
+		}
+	}
+
+
 
 }
 
