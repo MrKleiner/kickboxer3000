@@ -6,7 +6,25 @@
 // ============================================================
 
 
+
+
+// define modules
+
+// ksys = most of the core functions
 window.ksys = {};
+
+// other sys stuff
+window.vmix = {};
+
+
+// interface for writing/saving files to global or local database
+window.db = {};
+
+
+
+
+
+
 
 // Electron File System Access
 const fs = require('fs');
@@ -172,6 +190,69 @@ function clamp(num, min, max) {
       : num
 }
 
+
+
+
+
+
+async function jsleep(amt=500, ref='a') {
+
+	return new Promise(function(resolve, reject){
+	    window.mein_sleep[ref] = setTimeout(function () {
+			resolve(true)
+	    }, amt);
+	});
+}
+/*
+async function jsleep(amt=500) {
+	return new Promise(function(resolve, reject){
+	    setTimeout(function () {
+			resolve(true)
+	    }, amt);
+	});
+
+}
+*/
+
+
+
+
+
+// if empty then return empty_string html
+window.ksys.str_check = function(st)
+{
+	if (str(st).trim() == ''){
+		return '<span style="color: gray; user-select: none">empty string</span>'
+	}else{
+		return st
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================
+// ------------------------------------------------------------
+//                             Ticker
+// ------------------------------------------------------------
+// ============================================================
+
+
+
+
+
+
+
 // amount = amount sec
 window.ksys.ticker = {};
 window.ksys.ticker.sys_pool = {};
@@ -229,11 +310,7 @@ window.ksys.ticker.pool = function()
 
 
 
-// ============================================================
-// ------------------------------------------------------------
-//                             Ticker
-// ------------------------------------------------------------
-// ============================================================
+
 
 
 
@@ -464,6 +541,18 @@ class kickboxer_ticker
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // ============================================================
 // ------------------------------------------------------------
 //                             Buttons
@@ -531,35 +620,7 @@ window.btns = new vmix_t_bottuns();
 
 
 
-async function jsleep(amt=500, ref='a') {
 
-	return new Promise(function(resolve, reject){
-	    window.mein_sleep[ref] = setTimeout(function () {
-			resolve(true)
-	    }, amt);
-	});
-}
-
-
-/*
-async function jsleep(amt=500) {
-	return new Promise(function(resolve, reject){
-	    setTimeout(function () {
-			resolve(true)
-	    }, amt);
-	});
-
-}
-*/
-// if empty then return empty_string html
-function str_check(st)
-{
-	if (str(st).trim() == ''){
-		return '<span style="color: gray; user-select: none">empty string</span>'
-	}else{
-		return st
-	}
-}
 
 
 
@@ -718,6 +779,22 @@ window.talker = new vmix_app_talker();
 
 
 
+// simply compares text and "function completed successfully"
+window.ksys.vmix_ok = function(txt){
+	if (!txt){return false}
+	if (txt.trim() == 'Function completed successfully.'){
+		return true
+	}else{
+		return false
+	}
+}
+
+
+
+
+
+
+
 
 
 
@@ -755,140 +832,468 @@ window.talker = new vmix_app_talker();
 // ------------------------------------------------------------
 // ============================================================
 
-class vmix_context_manager
-{
 
-	constructor() {
-		window.vmix = {}
-		window.vmix.app_context = {}
-		// window.vmix.app_context.vmix_ip = '192.168.0.10'
-		// window.vmix.app_context.vmix_port = '8088'
-		print('Initialized Context Manager');
-	};
 
-	// set OR get parameter
-	prm(key=null, value=undefined, dosave=true){
+//
+// modern shite
+//
 
-		// if value is undefined, then it means that we're only getting a parameter
-		if (value == undefined){
-			return window.vmix.app_context[key]
-		}
-		var remap_this = this;
-		// if defined - set and maybe save
-		window.vmix.app_context[key] = value;
-		if (dosave == true){
-			return new Promise(function(resolve, reject){
-				remap_this.save()
-				.then(function(response) {
-					resolve(response)
-				});
-			});
-		}
+// user
+window.context = {};
+window.context.global = {};
+window.context.module = {};
+// storing files
+window.context.module.db = {};
+// window.context.db = {};
+
+// system
+// this is where actual parameters are stored and this is where they're actually written to
+window.vmix.app_context = {};
+window.vmix.module_context = {};
+
+
+
+
+
+// -------------------------------
+// 			Global context
+// -------------------------------
+
+// get/set parameter
+window.context.global.prm = function(key=null, value=undefined, dosave=true){
+
+	// if value is undefined, then it means that we're only getting a parameter
+	if (value == undefined){
+		return window.vmix.app_context[key]
 	}
-
-
-
-	// readonly shite
-	get read(){
-		// todo: there are better ways of duplicating shit
-		var dupli = {}
-		for (var k in window.vmix.app_context){
-			dupli[k] = window.vmix.app_context[k]
-		}
-		return dupli
-	}
-
-
-
-	// save to disk
-	async save(){
-		return new Promise(async function(resolve, reject){
-			var rsp = await talker.py_talk('save_context', window.vmix.app_context)
-	    	// var resp = lizard.UTF8ArrToStr(new Uint8Array(rsp))
-	    	print('save response:', rsp)
-	    	resolve(rsp)
-		});
-	}
-
-
-	async pull(){
-		return new Promise(async function(resolve, reject){
-			var rsp = await talker.py_talk('load_context', null)
-	    	var resp = JSON.parse(rsp)
-	    	print(resp)
-	    	window.vmix.app_context = resp
-	    	resolve(resp)
-		});
+	var remap_this = this;
+	// if defined - set and maybe save
+	window.vmix.app_context[key] = value;
+	if (dosave == true){
+		window.context.global.save()
 	}
 }
-window.context = new vmix_context_manager();
 
 
+// save context
+window.context.global.save = function(){
+	var modpath = window.sysroot.join('db', 'global', 'context.ct')
+	fs.writeFileSync(modpath.toString(), JSON.stringify(window.vmix.app_context, null, 4))
+	print('Saved Global Context')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-async function sys_load(nm)
-{
+	/*
 	return new Promise(function(resolve, reject){
+		var rsp = await talker.py_talk('save_context', window.vmix.app_context)
+		// var resp = lizard.UTF8ArrToStr(new Uint8Array(rsp))
+		print('save response:', rsp)
+		resolve(rsp)
+	});
+	*/
+}
 
-		fetch(`modules/${nm}`, {
-		    'headers': {
-		    	'accept': '*/*',
-		    	'cache-control': 'no-cache',
-		    	'pragma': 'no-cache',
-		    	'Access-Control-Allow-Origin': '*'
-		    },
-		    'mode': 'no-cors',
-		    'method': 'GET'
+
+// load fresh context from disk into memory
+window.context.global.pull = function(){
+	var ld_context = JSON.parse(fs.readFileSync(window.sysroot.join('db', 'global', 'context.ct').toString(), {encoding:'utf8', flag:'r'}))
+	window.vmix.app_context = ld_context;
+	return ld_context
+}
+
+
+
+// returns readonly dict of parameters
+window.context.global.read = function(){
+	// todo: there are better ways of duplicating shit
+	var dupli = {}
+	for (var k in window.vmix.app_context){
+		dupli[k] = window.vmix.app_context[k]
+	}
+	return dupli
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// -------------------------------
+// 			Module context
+// -------------------------------
+
+// get/set parameter
+window.context.module.prm = function(key=null, value=undefined, dosave=true){
+
+	// if value is undefined, then it means that we're only getting a parameter
+	if (value == undefined){
+		return window.vmix.module_context[key]
+	}
+
+	// if defined - set and maybe save
+	window.vmix.module_context[key] = value;
+	if (dosave == true){
+		window.context.module.save()
+	}
+}
+
+
+// save context
+window.context.module.save = function(){
+	var modpath = window.sysroot.join('db', 'module', window.context.module.name, 'context.ct')
+	fs.writeFileSync(modpath.toString(), JSON.stringify(window.vmix.app_context, null, 4))
+	print('Saved Module Context')
+}
+
+
+// load fresh context from disk into memory
+window.context.module.pull = function(){
+	var ld_context = JSON.parse(fs.readFileSync(window.sysroot.join('db', 'module', window.context.module.name, 'context.ct').toString(), {encoding:'utf8', flag:'r'}))
+	window.vmix.module_context = ld_context;
+	print('Pulled Module Context')
+	return ld_context
+}
+
+
+
+// returns readonly dict of parameters
+window.context.module.read = function(){
+	// todo: there are better ways of duplicating shit
+	var dupli = {};
+	for (var k in window.vmix.module_context){
+		dupli[k] = window.vmix.module_context[k]
+	}
+	return dupli
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================
+// ------------------------------------------------------------
+//                        Database Manager
+// ------------------------------------------------------------
+// ============================================================
+
+//
+// module-level
+//
+window.db.module = {};
+
+// read file
+window.db.module.read = function(fname=null){
+	if (fname){
+		var file_target = window.sysroot.join('db', 'module', window.context.module.name, fname)
+		// ensure that the destination file exists
+		if (fs.existsSync(file_target.toString())){
+			return fs.readFileSync(module_loc.join(fname).toString(), {encoding:'utf8', flag:'r'})
+		}else{
+			print('Requested to read non-existent file', fname)
+			return
+		}
+	}else{
+		print('Requested to read invalid file from module database:', fname)
+		return null
+	}
+}
+
+// write file
+window.db.module.write = function(fname=null, data=null){
+	var module_loc = window.sysroot.join('db', 'module', window.context.module.name)
+
+	if (fname && data){
+		// ensure that the destination folder exists
+		if (!fs.existsSync(module_loc.toString())){
+			fs.mkdirSync(module_loc.toString())
+		}
+		fs.writeFileSync(window.sysroot.join('db', 'module', window.context.module.name, fname).toString(), data)
+		return true
+	}else{
+		print('Requested to write invalid file to module database:', fname)
+		return null
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================
+// ------------------------------------------------------------
+//                        Mapper
+// ------------------------------------------------------------
+// ============================================================
+
+window.ksys.map = {};
+
+// takes map element and src XML
+// important todo: better piping in case of specials
+window.ksys.map.pipe = function(el, src)
+{
+	var map_entries = {
+		wipe: function(){
+			for (var wp of el.querySelectorAll('from val')){
+				wp.innerHTML = '<span style="color: gray; user-select: none">empty string</span>'
+			}
+		}
+	}
+
+	var looper = []
+
+	for (var entry of el.querySelectorAll('entry'))
+	{
+		let solid = entry;
+
+		let xmlsrc_text = src.querySelector(solid.querySelector('from input').value).textContent;
+
+		looper.push({
+			'data': xmlsrc_text,
+			'target': solid.querySelector('to input').value.trim(),
+			'special': solid.querySelector('input[special]').value,
+			confirm_from: function(overwrite=null){
+				solid.querySelector('from val').innerHTML = overwrite || ksys.str_check(xmlsrc_text);
+			},
+			confirm_to: function(overwrite=null){
+				solid.querySelector('to val').innerHTML = overwrite || ksys.str_check(xmlsrc_text);
+			},
+			deny: function(reason='invalid_string'){
+				print('shit')
+			}
+		})
+
+	}
+	map_entries['loop'] = looper
+	return map_entries
+}
+
+
+// ensures all maps are there n shit
+window.ksys.map.resync = function(el, src)
+{
+	for (var resync of document.querySelectorAll('xmlmap entry:not(xmlmap entry[init])')){
+		if (resync.hasAttribute('init')){continue}
+		// var special = resync.querySelector('')
+		resync.replaceWith(lizard.ehtml(`
+			<entry init>
+				<input special type="text" placeholder="Special" value="${resync.getAttribute('special') || ''}">
+
+				<from>
+					<inf>From</inf>
+					<input spellcheck="false" type="text" value="${resync.querySelector('from').innerText.trim()}">
+					<val from>nil</val>
+				</from>
+
+				<between></between>
+
+				<to>
+					<inf>To</inf>
+					<input spellcheck="false" type="text" value="${resync.querySelector('to').innerText.trim()}">
+					<val to>nil</val>
+				</to>
+			</entry>
+		`))
+	}
+}
+
+
+
+// rips ifo from the map
+window.ksys.map.rip = function(el)
+{
+	var map_entries = []
+
+	for (var entry of el.querySelectorAll('entry'))
+	{
+		map_entries.push({
+			'from': entry.querySelector('from input').value,
+			'to': entry.querySelector('to input').value
+		})
+
+	}
+	return map_entries
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================
+// ------------------------------------------------------------
+//                        Module Loader
+// ------------------------------------------------------------
+// ============================================================
+
+window.ksys.sys_load = function(nm)
+{
+	var page = fs.readFileSync(window.sysroot.join('modules', nm, `${nm}.html`).toString(), {encoding:'utf8', flag:'r'});
+	var pagestyle = fs.readFileSync(window.sysroot.join('modules', nm, `${nm}.css`).toString(), {encoding:'utf8', flag:'r'});
+	$('#app_sys').html(page)
+	$('#module_styling').text(pagestyle)
+	window.context.module.name = nm;
+	// pull_cached_data()
+
+	// resync map objects
+	window.ksys.map.resync()
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================
+// ------------------------------------------------------------
+//                        Get Url Contents
+// ------------------------------------------------------------
+// ============================================================
+
+
+// text or bytes. Default = text
+window.ksys.url_get = async function(url=null, ctype='text'){
+	return new Promise(function(resolve, reject){
+		fetch(url, {
+			'headers': {
+				'accept': '*/*',
+				'cache-control': 'no-cache',
+				'pragma': 'no-cache'
+			},
+			'method': 'GET',
+			'mode': 'cors',
+			'credentials': 'omit'
 		})
 		.then(function(response) {
-		    print(response.status);
-		    response.text().then(function(data) {
-		    	$('#app_sys').html(data)
-		    	// module_styling
-
-
-		    	//
-		    	// Style
-		    	//
-
-				fetch(`modules/${nm.split('/').at(-2)}/style.css`, {
-				    'headers': {
-				    	'accept': '*/*',
-				    	'cache-control': 'no-cache',
-				    	'pragma': 'no-cache',
-				    	'Access-Control-Allow-Origin': '*'
-				    },
-				    'mode': 'no-cors',
-				    'method': 'GET'
+			if (response.status != 200){
+				reject({
+					'status': 'fail',
+					'response_code': response.status
 				})
-				.then(function(response) {
-				    print(response.status);
-				    response.text().then(function(data) {
-				    	$('#module_styling').text(data)
-				    	// module_styling
-				    	pull_cached_data()
-				    });
-				});
+				return
+			}
+			response.arrayBuffer().then(function(data) {
 
+				// text
+				if (ctype == 'text'){
+					var dt = lizard.UTF8ArrToStr(new Uint8Array(data))
+					resolve({
+						'status': 'success',
+						'code': response.status,
+						'payload': dt
+					})
+				}
 
+				// buffer
+				if (ctype == 'bytes'){
+					resolve({
+						'status': 'success',
+						'code': response.status,
+						'payload': new Uint8Array(data)
+					})
+				}
 
-
-
-		    });
+			});
 		});
 	});
 }
@@ -916,6 +1321,16 @@ async function sys_load(nm)
 
 
 
+
+
+// ============================================================
+// ------------------------------------------------------------
+//                        System Init
+// ------------------------------------------------------------
+// ============================================================
+
+
+// init app when document is ready
 $(document).ready(function(){
 	app_init()
 });
@@ -926,15 +1341,17 @@ $(document).ready(function(){
 // if reachable - load module
 async function app_init()
 {
+	// load latest config into memory
+	var loadlast = context.global.pull()
 
-	var loadlast = await context.pull()
-	print('LOADLAST', loadlast)
-	print('context read before warning', context.read['been_warned'])
-	if (context.read['been_warned'] != true){
+	// display a warning if not were warned before
+	if (context.global.read()['been_warned'] != true){
 		fbi.warn_critical('Do not forget to turn on alpha channel on the required outputs (sdi/ndi)!')
 	}
 
+	// ping vmix
 	var reach = await talker.ping()
+	// if vmix is not reachable - do not save the IP/port and simply prompt input again
 	if (reach == false){
 		$('#welcome_screen_title_2').text('VMIX is unreachable: Bad ip/port. Please enter valid ip/port to proceed.')
 		$('#welcome_screen').append(`
@@ -945,17 +1362,18 @@ async function app_init()
 		`)
 		return
 	}else{
+		// if vmix is reachable - display a list of available system
 		$('#welcome_screen_title_2').text('Please select a system from the list below...')
 		$('#system_selector').removeAttr('style')
 	}
 }
 
 
-async function save_creds_from_welcome()
+function save_creds_from_welcome()
 {
-	context.prm('vmix_ip', $('#welcome_enter_info [ip]').val(), false)
-	context.prm('vmix_port', $('#welcome_enter_info [port]').val(), false)
-	print(await context.save())
+	context.global.prm('vmix_ip', $('#welcome_enter_info [ip]').val(), false)
+	context.global.prm('vmix_port', $('#welcome_enter_info [port]').val(), false)
+	context.global.save()
 	window.location.reload()
 }
 
@@ -972,7 +1390,7 @@ function close_warnings()
 {
 	$('#logs_place').css('visibility', 'hidden')
 	$('#logs_place').empty()
-	context.prm('been_warned', true)
+	context.global.prm('been_warned', true)
 }
 
 
@@ -980,14 +1398,14 @@ function close_warnings()
 
 function wipe_context()
 {
-	context.prm('vmix_ip', '', false)
-	context.prm('vmix_port', '', false)
-	context.prm('title_name', '', false)
-	context.prm('title_path', '', false)
-	context.prm('interval', '', false)
-	context.prm('interval_exp', '', false)
-	context.prm('xml_url', 'https://feed.pm/api/v1/event/collection-xml/xsport_feed', false)
-	context.prm('been_warned', false)
+	context.global.prm('vmix_ip', '', false)
+	context.global.prm('vmix_port', '', false)
+	context.global.prm('title_name', '', false)
+	context.global.prm('title_path', '', false)
+	context.global.prm('interval', '', false)
+	context.global.prm('interval_exp', '', false)
+	context.global.prm('xml_url', 'https://feed.pm/api/v1/event/collection-xml/xsport_feed', false)
+	context.global.prm('been_warned', false)
 }
 
 

@@ -15,10 +15,16 @@
 {
 	display: flex;
 	flex-direction: column;
-	width: 50%;
+	/*width: 80%;*/
+	width: fit-content;
 	align-items: center;
 	margin: 5px;
 	align-self: center;
+}
+
+xmlmap entry val
+{
+	width: 150px !important;
 }
 
 
@@ -28,28 +34,6 @@ xmlstatus
 	align-items: center;
 	justify-content: center;
 	margin-bottom: 10px;
-}
-
-
-left, right, middle
-{
-	display: flex;
-	flex-direction: row;
-	margin-top: 10px;
-	width: -webkit-fill-available;
-	padding-left: 10px;
-}
-
-left text, right text
-{
-	min-width: 100px;
-}
-
-delimeter
-{
-	margin: 0px 5px 0px 5px;
-	user-select: none;
-	color: gray;
 }
 
 

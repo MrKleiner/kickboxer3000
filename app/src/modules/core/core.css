@@ -218,3 +218,76 @@ input:focus
 {
 	outline-color: #468058 !important;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+xmlmap
+{
+	display: flex;
+	flex-direction: column;
+	color: white;
+	font-family: 'tahoma';
+}
+
+xmlmap entry
+{
+	display: flex;
+	flex-direction: row;
+	margin-top: 5px;
+	/*padding: 2.5px 0px 2.5px 0px;*/
+}
+
+xmlmap input[special]
+{
+	height: 50%;
+	align-self: center;
+	width: 70px;
+}
+
+xmlmap entry inf
+{
+	/*padding-left: 10px;*/
+	/*padding-right: 10px;*/
+	user-select: none;
+	margin-right: 5px;
+}
+
+xmlmap entry val
+{
+	/*padding: 0px 5px 0px 5px;*/
+	/*border-radius: 0px 4px 4px 0px;*/
+	/*background: rgba(0, 0, 0, 0.3);*/
+	/*margin-right: 15px;*/
+	/*min-width: 100px;*/
+	margin-left: 5px;
+}
+
+xmlmap entry from, xmlmap entry to
+{
+	display: flex;
+	padding: 5px;
+	border-radius: 4px;
+	background: rgba(0, 0, 0, 0.3);
+}
+
+
+xmlmap entry between
+{
+	background: url('../../assets/arrow_right.svg');
+	background-position: center;
+	background-size: contain;
+	background-repeat: no-repeat;
+	width: 15px;
+	height: 100%;
+	margin: 0px 5px 0px 5px;
+}
+

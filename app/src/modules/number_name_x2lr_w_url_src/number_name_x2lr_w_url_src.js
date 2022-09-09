@@ -39,20 +39,20 @@ async function pull_cached_data()
 
 	// ldc = LoaD Cache
 	for (var ldc of fields_dict){
-		$(ldc['gui']).html(str_check(pr_xml.find(`input[title="${context.read.title_name}"] text[name="${ldc['vmix']}"]`).text()))
+		// $(ldc['gui']).html(str_check(pr_xml.find(`input[title="${context.global.read().title_name}"] text[name="${ldc['vmix']}"]`).text()))
 	}
 
 	// date
-	$('middle').html(str_check(pr_xml.find(`input[title="${context.read.title_name}"] text[name="date.Text"]`).text()))
+	// $('middle').html(str_check(pr_xml.find(`input[title="${context.global.read().title_name}"] text[name="date.Text"]`).text()))
 
 	// title path
-	$('input[tgt_title]').val(context.read.title_path)
+	$('input[tgt_title]').val(context.global.read().title_path)
 	// title name
-	$('input[tgt_title_name]').val(context.read.title_name)
+	$('input[tgt_title_name]').val(context.global.read().title_name)
 	// expression
-	$('input[interval]').val(context.read.interval_exp)
+	$('input[interval]').val(context.global.read().interval_exp)
 	// xml src
-	$('input[xml_link]').val(context.read.xml_url)
+	$('input[xml_link]').val(context.global.read().xml_url)
 }
 
 
@@ -60,45 +60,63 @@ async function pull_cached_data()
 async function x2lr_update_coefficients(btn)
 {
 	btn.vmixbtn(false)
+	// echo status
 	$('xmlstatus').text('Loading fresh XML...')
-	var fucking_proxy = await talker.py_talk('load_xml', {
-		'testing': ($('input[cbox_is_testing]')[0].checked ? '1': '0'),
-		'xml_url': context.read['xml_url']
-	})
-	print(fucking_proxy)
-	var xml_info = $($.parseXML(fucking_proxy))
-	$('xmlstatus').text('Loaded and evaluated XML...')
 
-	for (var upd of fields_dict){
-		// print(xml_info.find(upd).text(), ':', fields_dict[upd])
+	// var fucking_proxy = await talker.py_talk('load_xml', {
+	// 	'testing': ($('input[cbox_is_testing]')[0].checked ? '1': '0'),
+	// 	'xml_url': context.global.read()['xml_url']
+	// })
+
+	// load the xml
+	var load_xml = await ksys.url_get(context.global.read()['xml_url'])
+
+	// echo
+	print(load_xml)
+	$('xmlstatus').text('Response Status:', load_xml.code)
+
+	// evaluate XML
+	$('xmlstatus').text('Evaluating XML...')
+	var xml_info = $.parseXML(load_xml['payload'])
+	$('xmlstatus').text('Loaded and evaluated XML. Piping data...')
+
+
+	// set values
+	var go_pipe = ksys.map.pipe(document.querySelector('#info_display_dynamic xmlmap'), xml_info)
+	// wipe
+	go_pipe.wipe()
+	// do values
+	for (var upd of go_pipe['loop'])
+	{
+		// Date...
+		var set_data = upd['data']
+		// special condition
+		if (upd.special == 'date'){
+			var fulldate = new Date(upd['data'])
+			var set_data = `${str(fulldate.getDay()).zfill(2)}/${str(fulldate.getMonth()).zfill(2)}`
+		}
+
+		// echo local
+		upd.confirm_from(set_data)
 
 		// vmix
-		var v = xml_info.find(upd['xml']).text()
-    	await talker.vmix_talk({
-    		'Function': 'SetText',
-    		'Value': v,
-    		'Input': context.read.title_name,
-    		'SelectedName': upd['vmix']
-    	})
-    	// visual
-    	$(upd['gui']).html(str_check(v))
+		var shite = await talker.vmix_talk({
+			'Function': 'SetText',
+			'Value': set_data,
+			'Input': context.global.read().title_name,
+			'SelectedName': upd['target']
+		})
+
+		print('response shite:', shite)
+
+		if (ksys.vmix_ok(shite)){
+			upd.confirm_to(set_data)
+		}
 	}
 
-	// Date
-	var fulldate = new Date(xml_info.find('date_start').text())
-	var dt_frmt = `${str(fulldate.getDay()).zfill(2)}/${str(fulldate.getMonth()).zfill(2)}`
-	await talker.vmix_talk({
-		'Function': 'SetText',
-		'Value': dt_frmt,
-		'Input': context.read.title_name,
-		'SelectedName': 'date.Text'
-	})
-	// GUI echo
-	$('#info_display_dynamic middle').text(dt_frmt)
-
-	$('xmlstatus').text('Finished. No Errors. Data Updated')
-
+	// unlock button
 	btn.vmixbtn(true)
+	
 }
 
 
@@ -115,7 +133,7 @@ async function trigger_onn(btn)
 	// first turn the overlay off
 	await talker.vmix_talk({
 		'Function': 'OverlayInput2Out',
-		'Input': context.read.title_name,
+		'Input': context.global.read().title_name,
 		'Duration': '1'
 	})
 
@@ -125,13 +143,13 @@ async function trigger_onn(btn)
 	// then reset timeout
 	talker.vmix_talk({
 		'Function': 'OverlayInput2In',
-		'Input': context.read.title_name,
+		'Input': context.global.read().title_name,
 		'Duration': '1'
 	})
 	await jsleep(9000, 'main_title_timeout')
 	talker.vmix_talk({
 		'Function': 'OverlayInput2Out',
-		'Input': context.read.title_name,
+		'Input': context.global.read().title_name,
 		'Duration': '1'
 	})
 	print('turn off')
@@ -165,7 +183,7 @@ async function force_off(btn)
 	// tell vmix to fade out
 	await talker.vmix_talk({
 		'Function': 'OverlayInput2Out',
-		'Input': context.read.title_name,
+		'Input': context.global.read().title_name,
 		'Duration': '1'
 	})
 	// wait for fade to complete
@@ -186,7 +204,7 @@ async function force_off(btn)
 async function period_callback(ticks)
 {
 	// console.timeEnd('tick')
-	var fresh_context = context.read.interval / 1000
+	var fresh_context = context.global.read().interval / 1000
 	// display text
 	$('timer').text(`${str(ticks.iteration).zfill(3)}/${fresh_context}`)
 
@@ -211,7 +229,7 @@ async function init_period(btn)
 
 	// spawn a timer
 	window.ad_timer = ksys.ticker.spawn({
-		'duration': context.read.interval / 1000,
+		'duration': context.global.read().interval / 1000,
 		'name': 'giga_timer',
 		'infinite': true,
 		'callback': period_callback,
@@ -244,8 +262,8 @@ async function mkinput()
 		var fullpath = await talker.py_talk({'action': 'builtin_title_double_path'})
 	}
 
-	context.prm('title_path', fullpath, false);
-	await context.prm('title_name', fullpath.split('\\').at(-1));
+	context.global.prm('title_path', fullpath, false);
+	await context.global.prm('title_name', fullpath.split('\\').at(-1));
 	$('input[tgt_title_name]').val(fullpath.split('\\').at(-1));
 	await talker.vmix_talk({
 		'Function': 'AddInput',
@@ -265,10 +283,10 @@ async function set_title_name()
 	var title_val = $('input[tgt_title_name]').val().trim();
 	await talker.vmix_talk({
 		'Function': 'SetInputName',
-		'Input': context.read.title_name,
+		'Input': context.global.read().title_name,
 		'Value': title_val
 	})
-	await context.prm('title_name', title_val);
+	await context.global.prm('title_name', title_val);
 }
 
 
@@ -277,16 +295,16 @@ async function save_interval()
 	var interval_fix = $('input[interval]').val().trim()
 	if (interval_fix == ''){return}
 
-	context.prm('interval_exp', interval_fix, false);
+	context.global.prm('interval_exp', interval_fix, false);
 	if (window.ad_timer != undefined){
 		window.ad_timer.timer_duration = int(eval(interval_fix))
 	}
-	await context.prm('interval', int(eval(interval_fix)) * 1000);
+	await context.global.prm('interval', int(eval(interval_fix)) * 1000);
 }
 
 async function set_title_xml_src()
 {
-	await context.prm('xml_url', $('prmrow input[xml_link]').val().trim());
+	await context.global.prm('xml_url', $('prmrow input[xml_link]').val().trim());
 }
 
 

@@ -275,10 +275,10 @@ cmpileprms = [
 
 subprocess.call(cmpileprms)
 
-ver = json.loads(server / 'app' / 'package.json')['version_native'].replace('.', '-')
+ver = json.loads((project / 'app' / 'package.json').read_text())['version_native'].replace('.', '-')
 
 # move exe
-shutil.move(str(project / 'install' / 'dist' / 'install.exe'), str(project / 'release' / ('KixkBoxer_Install_v' + ver +'.exe')))
+shutil.move(str(project / 'install' / 'dist' / 'install.exe'), str(project / 'release' / ('KickBoxer_Install_v' + ver +'.exe')))
 
 # delete shit
 shutil.rmtree(str(project / 'install' / 'build'))
