@@ -1,10 +1,12 @@
+window.modules.number_name_x2lr_w_url_src={};
+
 
 // window.modules.number_name_x2lr_w_url_src = {}
 
 
 
 
-$this.load = async function()
+window.modules.number_name_x2lr_w_url_src.load = async function()
 {
 	context.module.pull()
 	var cdata = await talker.project()
@@ -23,7 +25,7 @@ $this.load = async function()
 
 
 
-$this.update_coefficients = async function(btn)
+window.modules.number_name_x2lr_w_url_src.update_coefficients = async function(btn)
 {
 	btn.vmixbtn(false)
 	// echo status
@@ -88,7 +90,7 @@ $this.update_coefficients = async function(btn)
 
 
 
-$this.trigger_onn = async function(btn)
+window.modules.number_name_x2lr_w_url_src.trigger_onn = async function(btn)
 {
 	// lock the button before starting the sequence
 	btn.vmixbtn(false)
@@ -127,7 +129,7 @@ $this.trigger_onn = async function(btn)
 
 
 
-$this.force_off = async function(btn)
+window.modules.number_name_x2lr_w_url_src.force_off = async function(btn)
 {
 	// lock this button
 	btn.vmixbtn(false)
@@ -168,7 +170,7 @@ $this.force_off = async function(btn)
 	all.break_period.vmixbtn(true)
 }
 
-$this.period_callback = async function(ticks)
+window.modules.number_name_x2lr_w_url_src.period_callback = async function(ticks)
 {
 	// console.timeEnd('tick')
 	var fresh_context = context.module.read().interval / 1000
@@ -184,7 +186,7 @@ $this.period_callback = async function(ticks)
 	// console.time('tick')
 }
 
-$this.init_period = async function(btn)
+window.modules.number_name_x2lr_w_url_src.init_period = async function(btn)
 {
 	// lock this button
 	btn.vmixbtn(false)
@@ -207,7 +209,7 @@ $this.init_period = async function(btn)
 }
 
 
-$this.period_break = function()
+window.modules.number_name_x2lr_w_url_src.period_break = function()
 {
 	// unlock period
 	$('vmixbtn[do_period]')[0].vmixbtn(true)
@@ -217,7 +219,7 @@ $this.period_break = function()
 }
 
 
-$this.mkinput = async function()
+window.modules.number_name_x2lr_w_url_src.mkinput = async function()
 {
 	var get_fullpath = $('input[tgt_title]').val().replaceAll('"', '').trim()
 	$('input[tgt_title]').val(get_fullpath)
@@ -244,7 +246,7 @@ $this.mkinput = async function()
 
 
 
-$this.set_title_name = async function()
+window.modules.number_name_x2lr_w_url_src.set_title_name = async function()
 {
 	// SetInputName
 	var title_val = $('input[tgt_title_name]').val().trim();
@@ -257,7 +259,7 @@ $this.set_title_name = async function()
 }
 
 
-$this.save_interval =  async function()
+window.modules.number_name_x2lr_w_url_src.save_interval =  async function()
 {
 	var interval_fix = $('input[interval]').val().trim()
 	if (interval_fix == ''){return}
@@ -269,13 +271,13 @@ $this.save_interval =  async function()
 	await context.module.prm('interval', int(eval(interval_fix)) * 1000);
 }
 
-$this.set_title_xml_src = async function()
+window.modules.number_name_x2lr_w_url_src.set_title_xml_src = async function()
 {
 	await context.module.prm('xml_url', $('prmrow input[xml_link]').val().trim());
 }
 
 
-$this.change_input_title = async function()
+window.modules.number_name_x2lr_w_url_src.change_input_title = async function()
 {
 	var input = document.createElement('input');
 	input.type = 'file';

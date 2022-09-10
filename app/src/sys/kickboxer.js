@@ -21,7 +21,7 @@ window.vmix = {};
 window.db = {};
 
 
-
+window.modules = {};
 
 
 
@@ -230,6 +230,22 @@ window.ksys.str_check = function(st)
 
 
 
+window.ksys.ensure_exists = function(pt=null, create=true)
+{
+	// if path is invalid - return false immediately
+	if (!pt){return false}
+
+	// if it exists - return true
+	if (!fs.existsSync(str(pt))){
+		// if it doesnt exist - create if asked and return false
+		if (create == true){
+			fs.mkdirSync(str(pt))
+		}
+		return false
+	}else{
+		return true
+	}
+}
 
 
 
@@ -877,8 +893,12 @@ window.context.global.prm = function(key=null, value=undefined, dosave=true){
 
 // save context
 window.context.global.save = function(){
-	var modpath = window.sysroot.join('db', 'global', 'context.ct')
-	fs.writeFileSync(modpath.toString(), JSON.stringify(window.vmix.app_context, null, 4))
+
+	// ensure that the destination folder exists
+	var context_file = window.sysroot.join('db', 'global', 'context.ct')
+	ksys.ensure_exists(context_file.dirname)
+
+	fs.writeFileSync(str(context_file), JSON.stringify(window.vmix.app_context, null, 4))
 	print('Saved Global Context')
 
 	/*
@@ -894,9 +914,13 @@ window.context.global.save = function(){
 
 // load fresh context from disk into memory
 window.context.global.pull = function(){
-	var ld_context = JSON.parse(fs.readFileSync(window.sysroot.join('db', 'global', 'context.ct').toString(), {encoding:'utf8', flag:'r'}))
-	window.vmix.app_context = ld_context;
-	return ld_context
+	var context_file = window.sysroot.join('db', 'global', 'context.ct')
+
+	if (ksys.ensure_exists(context_file, false)){
+		var ld_context = JSON.parse(fs.readFileSync(str(context_file), {encoding:'utf8', flag:'r'}))
+		window.vmix.app_context = ld_context;
+		return ld_context
+	}
 }
 
 
@@ -946,18 +970,29 @@ window.context.module.prm = function(key=null, value=undefined, dosave=true){
 
 // save context
 window.context.module.save = function(){
+
+	var target_folder = window.sysroot.join('db', 'module', window.context.module.name)
+	// ensure that the destination folders exists
+	ksys.ensure_exists(target_folder.dirname)
+	ksys.ensure_exists(target_folder)
+
 	var modpath = window.sysroot.join('db', 'module', window.context.module.name, 'context.ct')
-	fs.writeFileSync(modpath.toString(), JSON.stringify(window.vmix.app_context, null, 4))
+	fs.writeFileSync(str(modpath), JSON.stringify(window.vmix.module_context, null, 4))
 	print('Saved Module Context')
 }
 
 
 // load fresh context from disk into memory
 window.context.module.pull = function(){
-	var ld_context = JSON.parse(fs.readFileSync(window.sysroot.join('db', 'module', window.context.module.name, 'context.ct').toString(), {encoding:'utf8', flag:'r'}))
-	window.vmix.module_context = ld_context;
-	print('Pulled Module Context')
-	return ld_context
+	var context_file = window.sysroot.join('db', 'module', window.context.module.name, 'context.ct');
+
+	// only try loading it if it exists
+	if (ksys.ensure_exists(context_file, false)){
+		var ld_context = JSON.parse(fs.readFileSync(str(context_file), {encoding:'utf8', flag:'r'}))
+		window.vmix.module_context = ld_context;
+		print('Pulled Module Context')
+		return ld_context
+	}
 }
 
 
@@ -1009,10 +1044,10 @@ window.db.module.read = function(fname=null){
 	if (fname){
 		var file_target = window.sysroot.join('db', 'module', window.context.module.name, fname)
 		// ensure that the destination file exists
-		if (fs.existsSync(file_target.toString())){
-			return fs.readFileSync(module_loc.join(fname).toString(), {encoding:'utf8', flag:'r'})
+		if (ksys.ensure_exists(file_target, false)){
+			return fs.readFileSync(str(file_target), {encoding:'utf8', flag:'r'})
 		}else{
-			print('Requested to read non-existent file', fname)
+			print('Requested to read non-existent file', str(file_target))
 			return
 		}
 	}else{
@@ -1027,10 +1062,8 @@ window.db.module.write = function(fname=null, data=null){
 
 	if (fname && data){
 		// ensure that the destination folder exists
-		if (!fs.existsSync(module_loc.toString())){
-			fs.mkdirSync(module_loc.toString())
-		}
-		fs.writeFileSync(window.sysroot.join('db', 'module', window.context.module.name, fname).toString(), data)
+		ksys.ensure_exists(module_loc)
+		fs.writeFileSync(str(window.sysroot.join('db', 'module', window.context.module.name, fname)), data)
 		return true
 	}else{
 		print('Requested to write invalid file to module database:', fname)
@@ -1115,9 +1148,11 @@ window.ksys.map.pipe = function(el, src)
 			'special': solid.querySelector('input[special]').value,
 			confirm_from: function(overwrite=null){
 				solid.querySelector('from val').innerHTML = overwrite || ksys.str_check(xmlsrc_text);
+				solid.querySelector('from inf').setAttribute('success', true)
 			},
 			confirm_to: function(overwrite=null){
 				solid.querySelector('to val').innerHTML = overwrite || ksys.str_check(xmlsrc_text);
+				solid.querySelector('to inf').setAttribute('success', true)
 			},
 			deny: function(reason='invalid_string'){
 				print('shit')
@@ -1163,17 +1198,63 @@ window.ksys.map.resync = function(el, src)
 // rips ifo from the map
 window.ksys.map.rip = function(el)
 {
+	if (el.closest('xmlmap') == null){
+		return null
+	}
 	var map_entries = []
 
 	for (var entry of el.querySelectorAll('entry'))
 	{
 		map_entries.push({
 			'from': entry.querySelector('from input').value,
-			'to': entry.querySelector('to input').value
+			'to': entry.querySelector('to input').value,
+			'special': entry.querySelector('input[special]').value
 		})
 
 	}
 	return map_entries
+}
+
+
+
+// overwrites shite
+// takes an array of dicts:
+// {
+// 'from': '',
+// 'to': '',
+// 'special': ''
+// }
+
+window.ksys.map.load = function(el, info=null)
+{
+	if (el.closest('xmlmap') == null || info == null){
+		return null
+	}
+
+	// wipe previous stuff
+	el.innerHTML = '';
+
+	for (var resync of info){
+		el.append(lizard.ehtml(`
+			<entry init>
+				<input special type="text" placeholder="Special" value="${resync['special'] || ''}">
+
+				<from>
+					<inf>From</inf>
+					<input spellcheck="false" type="text" value="${resync['from'].trim() || ''}">
+					<val from>nil</val>
+				</from>
+
+				<between></between>
+
+				<to>
+					<inf>To</inf>
+					<input spellcheck="false" type="text" value="${resync['to'].trim() || ''}">
+					<val to>nil</val>
+				</to>
+			</entry>
+		`))
+	}
 }
 
 
@@ -1221,7 +1302,7 @@ window.ksys.map.rip = function(el)
 
 window.ksys.sys_load = function(nm)
 {
-	var page = fs.readFileSync(window.sysroot.join('modules', nm, `${nm}.html`).toString(), {encoding:'utf8', flag:'r'});
+	var page = fs.readFileSync(window.sysroot.join('modules_c', nm, `${nm}.html`).toString(), {encoding:'utf8', flag:'r'});
 	var pagestyle = fs.readFileSync(window.sysroot.join('modules', nm, `${nm}.css`).toString(), {encoding:'utf8', flag:'r'});
 	$('#app_sys').html(page)
 	$('#module_styling').text(pagestyle)
@@ -1230,6 +1311,13 @@ window.ksys.sys_load = function(nm)
 
 	// resync map objects
 	window.ksys.map.resync()
+
+	// init load for module
+	try{
+		window.modules[nm].load()
+	}catch (error){
+
+	}
 }
 
 
@@ -1265,13 +1353,13 @@ window.ksys.url_get = async function(url=null, ctype='text'){
 			'credentials': 'omit'
 		})
 		.then(function(response) {
-			if (response.status != 200){
-				reject({
-					'status': 'fail',
-					'response_code': response.status
-				})
-				return
-			}
+			// if (response.status != 200){
+			// 	reject({
+			// 		'status': 'fail',
+			// 		'response_code': response.status
+			// 	})
+			// 	return
+			// }
 			response.arrayBuffer().then(function(data) {
 
 				// text
@@ -1294,6 +1382,13 @@ window.ksys.url_get = async function(url=null, ctype='text'){
 				}
 
 			});
+		})
+		.catch((error) => {
+			console.error(error)
+			resolve({
+				'status': 'fail',
+				'reason': error
+			})
 		});
 	});
 }
@@ -1353,7 +1448,7 @@ async function app_init()
 	var reach = await talker.ping()
 	// if vmix is not reachable - do not save the IP/port and simply prompt input again
 	if (reach == false){
-		$('#welcome_screen_title_2').text('VMIX is unreachable: Bad ip/port. Please enter valid ip/port to proceed.')
+		$('#welcome_screen_title_2').html(`Unable to reach VMIX at <addr>${ksys.str_check(loadlast.vmix_ip)}</addr> : <addr>${ksys.str_check(loadlast.vmix_port)}</addr>. Please enter a valid ip/port to proceed or ensure that the networking is not malfunctioning (aka rubbish bootleg firewalls, wrong LAN, etc...) and VMIX is running with Web Controller ONN.`)
 		$('#welcome_screen').append(`
 			<div id="welcome_enter_info">
 				<input style="color: white" type="text" placeholder="IP (absolute)" ip>:<input style="color: white" type="number" placeholder="Port" port>
