@@ -255,11 +255,11 @@ window.modules.number_name_x2lr_w_url_src.set_title_name = async function()
 		'Input': context.module.read().title_name,
 		'Value': title_val
 	})
-	await context.module.prm('title_name', title_val);
+	context.module.prm('title_name', title_val);
 }
 
 
-window.modules.number_name_x2lr_w_url_src.save_interval =  async function()
+window.modules.number_name_x2lr_w_url_src.save_interval = function()
 {
 	var interval_fix = $('input[interval]').val().trim()
 	if (interval_fix == ''){return}
@@ -268,23 +268,19 @@ window.modules.number_name_x2lr_w_url_src.save_interval =  async function()
 	if (window.ad_timer != undefined){
 		window.ad_timer.timer_duration = int(eval(interval_fix))
 	}
-	await context.module.prm('interval', int(eval(interval_fix)) * 1000);
+	context.module.prm('interval', int(eval(interval_fix)) * 1000);
 }
 
-window.modules.number_name_x2lr_w_url_src.set_title_xml_src = async function()
+window.modules.number_name_x2lr_w_url_src.set_title_xml_src = function()
 {
-	await context.module.prm('xml_url', $('prmrow input[xml_link]').val().trim());
+	context.module.prm('xml_url', $('prmrow input[xml_link]').val().trim());
 }
 
 
-window.modules.number_name_x2lr_w_url_src.change_input_title = async function()
+window.modules.number_name_x2lr_w_url_src.change_input_title = function()
 {
-	var input = document.createElement('input');
-	input.type = 'file';
-	input.addEventListener('change', ch => {
-		$('properties input[tgt_title]').val(input.files[0].path)
-		input.remove()
-		input = null
-	});
-	input.click();
+	ksys.ask_for_file()
+	.then(function(response) {
+		$('properties input[tgt_title]').val(response[0].path)
+	})
 }

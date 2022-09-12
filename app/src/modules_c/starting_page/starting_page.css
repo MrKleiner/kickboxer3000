@@ -1,0 +1,22 @@
+startpage
+{
+	user-select: none;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	flex-grow: 1;
+}
+
+
+startpage img
+{
+	object-fit: contain;
+	object-position: center;
+	width: 250px;
+}
+
+startpage addr
+{
+	color: #96BBFF;
+}

@@ -3,33 +3,49 @@
 	<head>
 		<meta charset="UTF-8">
 		<title>Loading...</title>
+
 		<link rel="stylesheet" href="index.css">
+		<link id="mdstyle" rel="stylesheet" href="index.css">
+
 	</head>
 
 
 	<body>
 		<div id="logs_place"></div>
-		<div id="app_sys">
-			<div id="starting_page">
-				<div id="welcome_screen">
-					<div id="welcome_screen_title">Welcome to Kickboxer3000</div>
-					<img draggable="false" src="assets/kickboxer.webp">
-					<div id="welcome_screen_title_2">Initializing...</div>
-				</div>
-				<div style="display: none" id="system_selector">
-					<sysbtn onclick="window.ksys.sys_load('number_name_x2lr_w_url_src')" style="padding: 10px;">Number-Name x2(LR) w/ URL SRC</sysbtn>
-				</div>
-			</div>
-		</div>
+		<div id="app_sys"></div>
 
 
-		<script src="./apis/jquery/3_6_0/jquery.min.js"></script>
+		<!-- <script src="./apis/jquery/3_6_0/jquery.min.js"></script> -->
+		<!-- <script src="./apis/filesaverjs/2_0_4/filesaver.min.js"></script> -->
 		<script src="./apis/crypto_js/4_1_1/crypto-js.min.js"></script>
 		<script src="https://cdn.jsdelivr.net/gh/MrKleiner/liz3_toybox_webtools@latest/sex_toys/shared/toolbox.js"></script>
 		<script src="./sys/kickboxer.js"></script>
 
-		<!-- x2lr -->
+
+
+
+		<!-- Link Modules -->
+
+
+
+		<!-- starting page -->
+		<script src="./modules_c/starting_page/starting_page.js"></script>
+
+		<!-- kickboxing standard -->
+		<script src="./modules_c/kickboxing_standard/kickboxing_standard.js"></script>
+
+		<!-- number_name_x2lr_w_url_src -->
 		<script src="./modules_c/number_name_x2lr_w_url_src/number_name_x2lr_w_url_src.js"></script>
+
+
+
+
+
+
+
+
+
+
 
 		<style id="module_styling" type="text/css"></style>
 

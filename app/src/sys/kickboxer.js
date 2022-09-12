@@ -48,6 +48,10 @@ document.title = 'KickBoxer3000 - v' + JSON.parse(fs.readFileSync(window.sysroot
 // Jquery
 window.$ = window.jQuery = require('./apis/jquery/3_6_0/jquery.min.js');
 
+// filesaverjs
+window.fsaver = require('./apis/filesaverjs/2_0_4/FileSaver.js');
+
+
 //
 // python shite
 //
@@ -71,9 +75,6 @@ function shell_end_c(err,code,signal)
 
 
 
-
-
-window.mein_sleep = {}
 
 
 
@@ -257,6 +258,33 @@ window.ksys.ensure_exists = function(pt=null, create=true)
 
 
 
+
+
+window.ksys.ask_for_file = function()
+{
+	return new Promise(function(resolve, reject){
+		var input = document.createElement('input');
+		input.type = 'file';
+		input.addEventListener('change', ch => {
+			// print(input.files)
+			resolve([...input.files])
+			input.remove()
+			input = null
+		});
+		input.click();
+	});
+}
+
+
+
+
+
+
+
+
+
+
+
 // ============================================================
 // ------------------------------------------------------------
 //                             Ticker
@@ -320,19 +348,7 @@ window.ksys.ticker.pool = function()
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-// returns a promise and resolved after the timer has reached its end naturally
+// returns a promise wich is resolved after the timer has reached its end naturally AND is not looped
 
 // {
 // 	duration = duration of 1 interval in seconds. Default is 5;
@@ -357,6 +373,7 @@ class kickboxer_ticker
 		'round': false,
 		'wait': false,
 		'callback': null,
+		'reversed': false,
 		'loopcallback': null
 	}){
 		//
@@ -370,6 +387,7 @@ class kickboxer_ticker
 		this.round = 				prms['round'] 		? prms['round'] 	: defprms['round'];
 		this.wait_for_callback = 	prms['wait'] 		? prms['wait'] 		: defprms['wait'];
 		this.callback_func = 		prms['callback'] 	? prms['callback'] 	: defprms['callback'];
+		this.reversed = 			prms['reversed'] 	? prms['reversed'] 	: defprms['reversed'];
 
 
 		//
@@ -382,8 +400,8 @@ class kickboxer_ticker
 		this.fired = false;
 
 		// counter
-		this.current_tick = 0 + this.offset;
-		this.global_tick = 0;
+		// this.current_tick = 0 + this.offset;
+		this.global_tick = 0 + this.offset;
 		this.iteration_tick = 0;
 		this.iteration_count = 0;
 	}
@@ -391,7 +409,7 @@ class kickboxer_ticker
 	fire()
 	{
 		// useless safety margins ?
-		if (this.callback_func == null || this.fired == true){return 'dead_timer'}
+		if (!this.callback_func || this.fired == true){return 'dead_timer'}
 		
 		// mark this timer as fired. It's impossible to call fire() if the timer was already fired
 		this.fired = true;
@@ -400,11 +418,15 @@ class kickboxer_ticker
 		var thy = this;
 
 		return new Promise(async function(resolve, reject){
-			// while (thy.alive == true && (counter < thy.duration || thy.looped == true)){
 			while (thy.alive == true && (thy.global_tick < thy.duration || thy.infinite == true)){
 
 				// if paused then skip this iteration
 				if (thy.paused == true){
+					// jsleep is very important, because otherwise the while loop would run way too fast
+					// and everything will freeze
+
+					// best we can do is divide the tickspeed by 2
+					await jsleep(thy.tickspeed / 2)
 					continue
 				}
 
@@ -412,25 +434,14 @@ class kickboxer_ticker
 				// counting things
 				//
 
-				// wait for callback function to complete, if any
+				// wait for callback function to complete, if asked
 				if (thy.wait_for_callback == true){
-					await thy.callback_func({
-						'global': thy.global_tick,
-						'iteration': thy.iteration_tick,
-						'loops': thy.iteration_count,
-						'all': thy
-					})
+					await thy.callback_func(thy.tick)
 
 				}else{
-					thy.callback_func({
-						'global': thy.global_tick,
-						'iteration': thy.iteration_tick,
-						'loops': thy.iteration_count,
-						'all': thy
-					})
+					thy.callback_func(thy.tick)
 				}
 
-				// if (thy.global_tick % thy.duration == 1 && thy.iteration_count != 0){
 				if (thy.iteration_tick == thy.duration){
 					thy.iteration_tick = -1;
 					thy.iteration_count += 1;
@@ -474,6 +485,9 @@ class kickboxer_ticker
 		}
 		// todo: paranoid...
 		if (state == false){
+			if (this.fired == false){
+				this.fire()
+			}
 			this.paused = false;
 		}
 	}
@@ -482,7 +496,7 @@ class kickboxer_ticker
 		return this.callback_func;
 	}
 
-	set callback(cb=null){
+	set callback(cb){
 		if (cb){
 			this.callback_func = cb;
 		}
@@ -492,7 +506,7 @@ class kickboxer_ticker
 		return this.duration;
 	}
 
-	set timer_duration(dr=null){
+	set timer_duration(dr){
 		if (dr){
 			this.duration = dr;
 		}
@@ -500,9 +514,10 @@ class kickboxer_ticker
 
 	get tick(){
 		return {
-			'global': this.global_tick,
-			'iteration': this.iteration_tick,
-			'loops': this.iteration_count
+			'global': this.reversed ? (this.duration - this.global_tick) : this.global_tick,
+			'iteration': this.reversed ? (this.duration - this.global_tick) : this.global_tick,
+			'loops': this.iteration_count,
+			'all': this
 		}
 	}
 
@@ -510,26 +525,17 @@ class kickboxer_ticker
 		if (tick){
 			this.iteration_tick = tick;
 			if (trigger_callback == true){
-				this.callback_func({
-					'global': thy.global_tick,
-					'iteration': thy.iteration_tick,
-					'loops': thy.iteration_count,
-					'all': thy
-				})
+				this.callback_func(this.tick)
 			}
 		}
 	}
 
 	set_global_tick(tick, trigger_callback=false){
 		if (tick){
-			this.global_tick = tick;
+			this.global_tick = this.reversed ? (this.duration - tick) : tick;
+			// let thy = this
 			if (trigger_callback == true){
-				this.callback_func({
-					'global': thy.global_tick,
-					'iteration': thy.iteration_tick,
-					'loops': thy.iteration_count,
-					'all': thy
-				})
+				this.callback_func(this.tick)
 			}
 		}
 	}
@@ -920,6 +926,8 @@ window.context.global.pull = function(){
 		var ld_context = JSON.parse(fs.readFileSync(str(context_file), {encoding:'utf8', flag:'r'}))
 		window.vmix.app_context = ld_context;
 		return ld_context
+	}else{
+		return {}
 	}
 }
 
@@ -992,6 +1000,8 @@ window.context.module.pull = function(){
 		window.vmix.module_context = ld_context;
 		print('Pulled Module Context')
 		return ld_context
+	}else{
+		return {}
 	}
 }
 
@@ -1048,7 +1058,7 @@ window.db.module.read = function(fname=null){
 			return fs.readFileSync(str(file_target), {encoding:'utf8', flag:'r'})
 		}else{
 			print('Requested to read non-existent file', str(file_target))
-			return
+			return null
 		}
 	}else{
 		print('Requested to read invalid file from module database:', fname)
@@ -1303,14 +1313,18 @@ window.ksys.map.load = function(el, info=null)
 window.ksys.sys_load = function(nm)
 {
 	var page = fs.readFileSync(window.sysroot.join('modules_c', nm, `${nm}.html`).toString(), {encoding:'utf8', flag:'r'});
-	var pagestyle = fs.readFileSync(window.sysroot.join('modules', nm, `${nm}.css`).toString(), {encoding:'utf8', flag:'r'});
+	// var pagestyle = fs.readFileSync(window.sysroot.join('modules', nm, `${nm}.css`).toString(), {encoding:'utf8', flag:'r'});
 	$('#app_sys').html(page)
-	$('#module_styling').text(pagestyle)
+	// $('#module_styling').text(pagestyle)
+	$('head link#mdstyle')[0].href = window.sysroot.join('modules', nm, `${nm}.css`).toString()
 	window.context.module.name = nm;
 	// pull_cached_data()
 
 	// resync map objects
 	window.ksys.map.resync()
+
+	// get context
+	context.module.pull()
 
 	// init load for module
 	try{
@@ -1436,7 +1450,7 @@ $(document).ready(function(){
 // if reachable - load module
 async function app_init()
 {
-	// load latest config into memory
+	// load latest config into ram
 	var loadlast = context.global.pull()
 
 	// display a warning if not were warned before
@@ -1444,33 +1458,33 @@ async function app_init()
 		fbi.warn_critical('Do not forget to turn on alpha channel on the required outputs (sdi/ndi)!')
 	}
 
+	ksys.sys_load('starting_page')
+
 	// ping vmix
 	var reach = await talker.ping()
+
 	// if vmix is not reachable - do not save the IP/port and simply prompt input again
 	if (reach == false){
+		// load the starting page
+
+		// apply info
 		$('#welcome_screen_title_2').html(`Unable to reach VMIX at <addr>${ksys.str_check(loadlast.vmix_ip)}</addr> : <addr>${ksys.str_check(loadlast.vmix_port)}</addr>. Please enter a valid ip/port to proceed or ensure that the networking is not malfunctioning (aka rubbish bootleg firewalls, wrong LAN, etc...) and VMIX is running with Web Controller ONN.`)
-		$('#welcome_screen').append(`
+		$('startpage').append(`
 			<div id="welcome_enter_info">
 				<input style="color: white" type="text" placeholder="IP (absolute)" ip>:<input style="color: white" type="number" placeholder="Port" port>
 			</div>
-			<sysbtn style="margin-top: 10px" onclick="save_creds_from_welcome()" id="welcome_apply_creds">Apply</sysbtn>
+			<sysbtn style="margin-top: 10px" onclick="window.modules.starting_page.save_creds()" id="welcome_apply_creds">Apply</sysbtn>
 		`)
 		return
 	}else{
-		// if vmix is reachable - display a list of available system
-		$('#welcome_screen_title_2').text('Please select a system from the list below...')
-		$('#system_selector').removeAttr('style')
+		// if vmix is reachable - display a list of available systems
+
+		// load welcome
+		ksys.sys_load('welcome')
 	}
 }
 
 
-function save_creds_from_welcome()
-{
-	context.global.prm('vmix_ip', $('#welcome_enter_info [ip]').val(), false)
-	context.global.prm('vmix_port', $('#welcome_enter_info [port]').val(), false)
-	context.global.save()
-	window.location.reload()
-}
 
 
 
@@ -1486,21 +1500,6 @@ function close_warnings()
 	$('#logs_place').css('visibility', 'hidden')
 	$('#logs_place').empty()
 	context.global.prm('been_warned', true)
-}
-
-
-
-
-function wipe_context()
-{
-	context.global.prm('vmix_ip', '', false)
-	context.global.prm('vmix_port', '', false)
-	context.global.prm('title_name', '', false)
-	context.global.prm('title_path', '', false)
-	context.global.prm('interval', '', false)
-	context.global.prm('interval_exp', '', false)
-	context.global.prm('xml_url', 'https://feed.pm/api/v1/event/collection-xml/xsport_feed', false)
-	context.global.prm('been_warned', false)
 }
 
 

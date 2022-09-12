@@ -253,11 +253,11 @@ $this.set_title_name = async function()
 		'Input': context.module.read().title_name,
 		'Value': title_val
 	})
-	await context.module.prm('title_name', title_val);
+	context.module.prm('title_name', title_val);
 }
 
 
-$this.save_interval =  async function()
+$this.save_interval = function()
 {
 	var interval_fix = $('input[interval]').val().trim()
 	if (interval_fix == ''){return}
@@ -266,23 +266,19 @@ $this.save_interval =  async function()
 	if (window.ad_timer != undefined){
 		window.ad_timer.timer_duration = int(eval(interval_fix))
 	}
-	await context.module.prm('interval', int(eval(interval_fix)) * 1000);
+	context.module.prm('interval', int(eval(interval_fix)) * 1000);
 }
 
-$this.set_title_xml_src = async function()
+$this.set_title_xml_src = function()
 {
-	await context.module.prm('xml_url', $('prmrow input[xml_link]').val().trim());
+	context.module.prm('xml_url', $('prmrow input[xml_link]').val().trim());
 }
 
 
-$this.change_input_title = async function()
+$this.change_input_title = function()
 {
-	var input = document.createElement('input');
-	input.type = 'file';
-	input.addEventListener('change', ch => {
-		$('properties input[tgt_title]').val(input.files[0].path)
-		input.remove()
-		input = null
-	});
-	input.click();
+	ksys.ask_for_file()
+	.then(function(response) {
+		$('properties input[tgt_title]').val(response[0].path)
+	})
 }

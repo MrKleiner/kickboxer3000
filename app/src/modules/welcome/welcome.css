@@ -5,7 +5,7 @@
 	flex-direction: column;
 }
 
-#welcome_screen
+welcome, greetings
 {
 	user-select: none;
 	display: flex;
@@ -27,12 +27,8 @@
 	padding: 10px 30px 10px 30px;
 }
 
-#welcome_screen_title_2 addr
-{
-	color: #96BBFF;
-}
 
-#welcome_screen img
+greetings img
 {
 	object-fit: contain;
 	object-position: center;
@@ -40,17 +36,14 @@
 }
 
 
-#welcome_enter_info input, #welcome_screen button
-{
-	color: black;
-}
-
 
 #system_selector
 {
-	padding: 30px;
+	/*padding: 30px;*/
+	margin: 30px;
 	display: flex;
 	flex-direction: row;
+	width: 100%;
 }
 
 
@@ -74,4 +67,11 @@
 {
 	outline-color: lime;
 	background-color: rgba(200, 255, 255, 0.15)
+}
+
+
+welcome sysbtn
+{
+	padding: 10px;
+	margin-left: 10px;
 }

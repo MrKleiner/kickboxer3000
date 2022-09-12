@@ -1,0 +1,77 @@
+<kbstandard>
+	<div id="lside">
+		<box regular_box>
+			<vmixbtn btname="vs_off" onclick="modules.$this.vs_off()">VS OFF</vmixbtn>
+			<vmixbtn btname="vs_onn" onclick="modules.$this.vs_onn(this)">VS ON</vmixbtn>
+			<fbr></fbr>
+			<vmixbtn btname="player_off" onclick="modules.$this.player_off(this)">Player OFF</vmixbtn>
+			<vmixbtn btname="player_onn" onclick="modules.$this.player_onn(this)">Player ON</vmixbtn>
+		</box>
+
+
+		<box regular_box id="timer_ctrl">
+			<bxtitle>Timer</bxtitle>
+			<vmixbtn btname="" onclick="modules.$this.respawn_manager(true)">ONN, Start</vmixbtn>
+			<vmixbtn btname="" onclick="modules.$this.timer_hide(true)">OFF, Pause</vmixbtn>
+			<fbr></fbr>
+			<vmixbtn btname="" onclick="modules.$this.respawn_timer(false)">Reset</vmixbtn>
+			<vmixbtn btname="" onclick="modules.$this.timer_pause(true)">Pause</vmixbtn>
+			<vmixbtn btname="" onclick="modules.$this.timer_pause(false)">Resume</vmixbtn>
+			<input type="text" newtime placeholder="Expressions allowed">
+			<fbr></fbr>
+			<row>
+				<vmixbtn btname="" onclick="modules.$this.timer_set_time(eval($('input[newtime]').val().trim()))">Set Time</vmixbtn>
+				<rounds amount="12">
+					<header>Round Number</header>
+					<pool></pool>
+				</rounds>
+			</row>
+
+			<row round_dur>
+				<rowlabel>Round Duration</rowlabel>
+				<input type="text" round_duration placeholder="Expressions allowed">
+				<sysbtn btname="set_round_duration" onclick="modules.$this.save_timer_duration()">Set Duration</sysbtn>
+			</row>
+
+
+			<column res_loc>
+				<rowlabel>Resources Location</rowlabel>
+				<input type="text" res_path placeholder="Absolute path to a folder. Quotation marks allowed">
+				<sysbtn btname="save_res_path" onclick="modules.$this.save_res_path()">Save Path</sysbtn>
+			</column>
+
+
+
+
+
+
+
+			<row null_shit_to_avoid_selection></row>
+		</box>
+	</div>
+
+
+
+
+	<div id="rside">
+		<div id="pairs_pool" regular_box>
+			<sysbtn onclick="modules.$this.toggle_edit()" btname="toggle_edit_mode">Toggle Edit</sysbtn>
+			<sysbtn style="display: none" onclick="modules.$this.add_pair()" btname="edit_add_pair">Add Pair</sysbtn>
+			<sysbtn style="display: none" onclick="modules.$this.load_pairs_from_file()" btname="load_pairs_from_file">Load Pairs From File</sysbtn>
+			<sysbtn onclick="modules.$this.load_pairs_from_file()" style="display: none" btname="save_pairs">Save</sysbtn>
+			<sysbtn onclick="modules.$this.save_pairs_to_file()" style="display: none" btname="save_pairs_to_file">Save To File</sysbtn>
+		</div>
+	</div>
+
+
+
+
+
+
+
+
+
+
+
+
+</kbstandard>

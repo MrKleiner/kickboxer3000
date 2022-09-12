@@ -91,8 +91,8 @@ zipper = (project / 'install' / '7z' / '7z.exe')
 (project / 'app' / 'out' / 'KickBoxer3000-win32-x64.7z').unlink(missing_ok=True)
 
 # wipe contexts
-shituil.rmtree(str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'db' / 'global'))
-shituil.rmtree(str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'db' / 'module'))
+shutil.rmtree(str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'db' / 'global'))
+shutil.rmtree(str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'db' / 'module'))
 
 zip_prms = [
 	# executable
