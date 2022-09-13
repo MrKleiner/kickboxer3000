@@ -151,7 +151,7 @@ $this.toggle_edit = function(state=null)
 		$('kbstandard #pairs_pool player').attr('noclick', true);
 
 		// unhide editors
-		$('#pairs_pool sysbtn, players player p_param').css('display', '')
+		$('#pairs_pool > sysbtn, players player p_param').css('display', '')
 		return
 	}
 
@@ -176,7 +176,7 @@ $this.toggle_edit = function(state=null)
 		$('kbstandard #pairs_pool player').removeAttr('noclick');
 
 		// hide editors
-		$('#pairs_pool sysbtn[btname="edit_add_pair"], #pairs_pool sysbtn[btname="save_pairs"], players player p_param').css('display', 'none')
+		$('#pairs_pool > sysbtn:not(sysbtn[btname="toggle_edit_mode"]), players player p_param').css('display', 'none')
 		return
 	}
 }
@@ -712,7 +712,6 @@ $this.load_pairs_from_file = function()
 			console.error(error)
 			print('Failed to load pairs from file. Most probable problem: invalid file.')
 		}
-		
 	})
 }
 
