@@ -134,7 +134,7 @@ $this.force_off = async function(btn)
 
 
 	// break
-	period_break()
+	$this.period_break()
 
 	// lock everything
 	var all = btns.pool
@@ -171,15 +171,15 @@ $this.force_off = async function(btn)
 $this.period_callback = async function(ticks)
 {
 	// console.timeEnd('tick')
-	var fresh_context = context.module.read().interval / 1000
+	const fresh_context = context.module.read().interval / 1000
 	// display text
-	$('timer').text(`${str(ticks.iteration).zfill(3)}/${fresh_context}`)
+	$('timer').text(`${str(ticks.iteration % fresh_context).zfill(3)}/${fresh_context}`)
 
 	// if loop reached - trigger shite
 	// it's important to note that we read fresh interval each time
-	if (ticks.iteration == fresh_context){
-		await x2lr_update_coefficients($('vmixbtn[upd]')[0])
-		await trigger_onn($('vmixbtn[trigger_onn]')[0])
+	if (ticks.iteration % fresh_context == 0){
+		await $this.update_coefficients($('vmixbtn[upd]')[0])
+		await $this.trigger_onn($('vmixbtn[trigger_onn]')[0])
 	}
 	// console.time('tick')
 }
@@ -192,14 +192,14 @@ $this.init_period = async function(btn)
 	btns.pool.trigger_onn.vmixbtn(false)
 
 	// turn off the title
-	await force_off($('vmixbtn[forceoff]')[0])
+	await $this.force_off($('vmixbtn[forceoff]')[0])
 
 	// spawn a timer
 	window.ad_timer = ksys.ticker.spawn({
 		'duration': context.module.read().interval / 1000,
 		'name': 'giga_timer',
 		'infinite': true,
-		'callback': period_callback,
+		'callback': $this.period_callback,
 		'wait': true
 	})
 	// init it
@@ -209,9 +209,14 @@ $this.init_period = async function(btn)
 
 $this.period_break = function()
 {
+	print('Killing timer')
 	// unlock period
 	$('vmixbtn[do_period]')[0].vmixbtn(true)
 	window.period_title = false
+	// kill ticker
+	if (window.ad_timer != undefined){
+		window.ad_timer.force_kill()
+	}
 	// unlock trigger button
 	btns.pool.trigger_onn.vmixbtn(true)
 }
@@ -259,7 +264,7 @@ $this.set_title_name = async function()
 
 $this.save_interval = function()
 {
-	var interval_fix = $('input[interval]').val().trim()
+	const interval_fix = $('input[interval]').val().trim()
 	if (interval_fix == ''){return}
 
 	context.module.prm('interval_exp', interval_fix, false);

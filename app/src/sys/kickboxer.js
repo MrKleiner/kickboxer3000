@@ -195,7 +195,7 @@ function clamp(num, min, max) {
 
 
 
-
+window.mein_sleep = {}
 async function jsleep(amt=500, ref='a') {
 
 	return new Promise(function(resolve, reject){
@@ -379,15 +379,15 @@ class kickboxer_ticker
 		//
 		// input shit
 		//
-		this.duration 	= 			prms['duration'] 	? prms['duration'] 	: defprms['duration'];
-		this.timer_name = 			prms['name'] 		? prms['name'] 		: defprms['name'];
-		this.infinite = 			prms['infinite'] 	? prms['infinite'] 	: defprms['infinite'];
-		this.offset = 				prms['offset'] 		? prms['offset'] 	: defprms['offset'];
-		this.tickspeed = 			prms['speed'] 		? prms['speed'] 	: defprms['speed'];
-		this.round = 				prms['round'] 		? prms['round'] 	: defprms['round'];
-		this.wait_for_callback = 	prms['wait'] 		? prms['wait'] 		: defprms['wait'];
-		this.callback_func = 		prms['callback'] 	? prms['callback'] 	: defprms['callback'];
-		this.reversed = 			prms['reversed'] 	? prms['reversed'] 	: defprms['reversed'];
+		this.duration 	=           prms['duration']    ? prms['duration']  : defprms['duration'];
+		this.timer_name =           prms['name']        ? prms['name']      : defprms['name'];
+		this.infinite =             prms['infinite']    ? prms['infinite']  : defprms['infinite'];
+		this.offset =               prms['offset']      ? prms['offset']    : defprms['offset'];
+		this.tickspeed =            prms['speed']       ? prms['speed']     : defprms['speed'];
+		this.round =                prms['round']       ? prms['round']     : defprms['round'];
+		this.wait_for_callback =    prms['wait']        ? prms['wait']      : defprms['wait'];
+		this.callback_func =        prms['callback']    ? prms['callback']  : defprms['callback'];
+		this.reversed =             prms['reversed']    ? prms['reversed']  : defprms['reversed'];
 
 
 		//
@@ -515,7 +515,7 @@ class kickboxer_ticker
 	get tick(){
 		return {
 			'global': this.reversed ? (this.duration - this.global_tick) : this.global_tick,
-			'iteration': this.reversed ? (this.duration - this.global_tick) : this.global_tick,
+			'iteration': (this.reversed ? (this.duration - this.global_tick) : this.global_tick) % this.duration,
 			'loops': this.iteration_count,
 			'all': this
 		}

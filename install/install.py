@@ -158,6 +158,20 @@ print('')
 # delete temp file
 # (server / 'input.bootlegger').unlink()
 
+# unpack python stuff
+py_eprms = [
+	# str(server / 'unpk' / '7z.exe'),
+	str(resource_path('7z.exe')),
+	'x',
+	'-o' + str(server / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'bins'),
+	# str(server / 'input.bootlegger'),
+	str(server / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'bins' / 'python.7z'),
+	'-aoa'
+]
+
+# exec unpacking
+subprocess.run(py_eprms, stdout=subprocess.DEVNULL)
+
 
 
 print(pretty('... among Aliens.'))

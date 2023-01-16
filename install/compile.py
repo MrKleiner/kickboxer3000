@@ -90,9 +90,31 @@ zipper = (project / 'install' / '7z' / '7z.exe')
 # delete previous archive, if any
 (project / 'app' / 'out' / 'KickBoxer3000-win32-x64.7z').unlink(missing_ok=True)
 
+
+
 # wipe contexts
-shutil.rmtree(str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'db' / 'global'))
-shutil.rmtree(str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'db' / 'module'))
+try:
+	shutil.rmtree(str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'db' / 'global'))
+except Exception as e:
+	pass
+
+try:
+	shutil.rmtree(str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'db' / 'module'))
+except Exception as e:
+	pass
+
+# remove the python zip
+# todo: maybe leave it as backup?
+# todo: zip
+# (project / 'app' / 'out' / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'bins' / 'python.7z').unlink(missing_ok=True)
+
+# this allows to save extra 10 mb
+try:
+	shutil.rmtree(str(project / 'app' / 'out' / 'KickBoxer3000-win32-x64' / 'resources' / 'app' / 'src' / 'bins' / 'python'))
+except Exception as e:
+	pass
+
+
 
 zip_prms = [
 	# executable
