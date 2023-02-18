@@ -220,10 +220,10 @@ async function jsleep(amt=500) {
 
 
 // if empty then return empty_string html
-window.ksys.str_check = function(st)
+window.ksys.str_check = function(st, msg='empty string')
 {
 	if (str(st).trim() == ''){
-		return '<span style="color: gray; user-select: none">empty string</span>'
+		return `<span style="color: gray; user-select: none">${msg}</span>`
 	}else{
 		return st
 	}
@@ -249,7 +249,14 @@ window.ksys.ensure_exists = function(pt=null, create=true)
 }
 
 
-
+window.ksys.eval_xml = function(str){
+	try{
+		return $.parseXML(str)
+	}catch{
+		return false
+	}
+	
+}
 
 
 
@@ -379,6 +386,8 @@ class kickboxer_ticker
 		//
 		// input shit
 		//
+
+		// todo: WHAT THE FUCK ????? JUST MERGE TWO OBJECTS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		this.duration 	=           prms['duration']    ? prms['duration']  : defprms['duration'];
 		this.timer_name =           prms['name']        ? prms['name']      : defprms['name'];
 		this.infinite =             prms['infinite']    ? prms['infinite']  : defprms['infinite'];
@@ -415,18 +424,20 @@ class kickboxer_ticker
 		this.fired = true;
 
 		// thy holy hand grenade
-		var thy = this;
+		const self = this;
 
 		return new Promise(async function(resolve, reject){
-			while (thy.alive == true && (thy.global_tick < thy.duration || thy.infinite == true)){
+			while (self.alive == true && (self.global_tick < self.duration || self.infinite == true)){
 
 				// if paused then skip this iteration
-				if (thy.paused == true){
+				if (self.paused == true){
 					// jsleep is very important, because otherwise the while loop would run way too fast
 					// and everything will freeze
 
 					// best we can do is divide the tickspeed by 2
-					await jsleep(thy.tickspeed / 2)
+					// todo: better way of doing this?
+					// fun fact: python suffers of the same issue...
+					await jsleep(self.tickspeed / 2)
 					continue
 				}
 
@@ -435,29 +446,29 @@ class kickboxer_ticker
 				//
 
 				// wait for callback function to complete, if asked
-				if (thy.wait_for_callback == true){
-					await thy.callback_func(thy.tick)
+				if (self.wait_for_callback == true){
+					await self.callback_func(self.tick)
 
 				}else{
-					thy.callback_func(thy.tick)
+					self.callback_func(self.tick)
 				}
 
-				if (thy.iteration_tick == thy.duration){
-					thy.iteration_tick = -1;
-					thy.iteration_count += 1;
+				if (self.iteration_tick == self.duration){
+					self.iteration_tick = -1;
+					self.iteration_count += 1;
 				}
 
 				// global timer
-				thy.global_tick += 1;
+				self.global_tick += 1;
 
 				// iteration
-				thy.iteration_tick += 1;
+				self.iteration_tick += 1;
 
 
 				// wait before executing next iteration
-				await jsleep(thy.tickspeed)
+				await jsleep(self.tickspeed)
 			}
-			thy.alive = false;
+			self.alive = false;
 			resolve(true)
 		});
 	}
@@ -1150,7 +1161,12 @@ window.ksys.map.pipe = function(el, src)
 	{
 		let solid = entry;
 
-		let xmlsrc_text = src.querySelector(solid.querySelector('from input').value).textContent;
+		var xmlsrc_text = null;
+
+		let select_from_src = src.querySelector(solid.querySelector('from input').value)
+		if (select_from_src){
+			var xmlsrc_text = select_from_src.textContent;
+		}
 
 		looper.push({
 			'data': xmlsrc_text,
@@ -1158,14 +1174,20 @@ window.ksys.map.pipe = function(el, src)
 			'special': solid.querySelector('input[special]').value,
 			confirm_from: function(overwrite=null){
 				solid.querySelector('from val').innerHTML = overwrite || ksys.str_check(xmlsrc_text);
-				solid.querySelector('from inf').setAttribute('success', true)
+				solid.querySelector('from inf').setAttribute('success', true);
+				solid.querySelector('from inf').removeAttribute('fail');
 			},
 			confirm_to: function(overwrite=null){
 				solid.querySelector('to val').innerHTML = overwrite || ksys.str_check(xmlsrc_text);
-				solid.querySelector('to inf').setAttribute('success', true)
+				solid.querySelector('to inf').setAttribute('success', true);
+				solid.querySelector('to inf').removeAttribute('fail');
 			},
 			deny: function(reason='invalid_string'){
-				print('shit')
+				solid.querySelector('from val').innerHTML = ksys.str_check('', 'not found');
+				solid.querySelector('from inf').setAttribute('fail', true);
+
+				solid.querySelector('to val').innerHTML = ksys.str_check('');
+				// solid.querySelector('to inf').setAttribute('fail', true);
 			}
 		})
 
@@ -1355,7 +1377,9 @@ window.ksys.sys_load = function(nm)
 
 // text or bytes. Default = text
 window.ksys.url_get = async function(url=null, ctype='text'){
-	return new Promise(function(resolve, reject){
+	return new Promise(async function(resolve, reject){
+
+		const response = await
 		fetch(url, {
 			'headers': {
 				'accept': '*/*',
@@ -1365,45 +1389,37 @@ window.ksys.url_get = async function(url=null, ctype='text'){
 			'method': 'GET',
 			'mode': 'cors',
 			'credentials': 'omit'
-		})
-		.then(function(response) {
-			// if (response.status != 200){
-			// 	reject({
-			// 		'status': 'fail',
-			// 		'response_code': response.status
-			// 	})
-			// 	return
-			// }
-			response.arrayBuffer().then(function(data) {
-
-				// text
-				if (ctype == 'text'){
-					var dt = lizard.UTF8ArrToStr(new Uint8Array(data))
-					resolve({
-						'status': 'success',
-						'code': response.status,
-						'payload': dt
-					})
-				}
-
-				// buffer
-				if (ctype == 'bytes'){
-					resolve({
-						'status': 'success',
-						'code': response.status,
-						'payload': new Uint8Array(data)
-					})
-				}
-
-			});
-		})
-		.catch((error) => {
-			console.error(error)
+		}).catch((error) => {
+			console.error(`fetching ${url} resulted in the following errror:`, error);
 			resolve({
 				'status': 'fail',
 				'reason': error
 			})
 		});
+
+		if (!response){return}
+
+		const rsp_buff = await response.arrayBuffer();
+
+		// text
+		if (ctype == 'text'){
+			const dt = lizard.UTF8ArrToStr(new Uint8Array(rsp_buff))
+			resolve({
+				'status': 'success',
+				'code': response.status,
+				'payload': dt
+			})
+		}
+
+		// buffer
+		if (ctype == 'bytes'){
+			resolve({
+				'status': 'success',
+				'code': response.status,
+				'payload': new Uint8Array(rsp_buff)
+			})
+		}
+
 	});
 }
 

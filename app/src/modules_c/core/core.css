@@ -225,7 +225,10 @@ input:focus
 	outline-color: #468058 !important;
 }
 
-
+input[invalid]
+{
+	outline-color: #E25851 !important;
+}
 
 
 

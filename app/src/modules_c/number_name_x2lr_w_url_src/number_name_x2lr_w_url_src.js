@@ -37,14 +37,31 @@ window.modules.number_name_x2lr_w_url_src.update_coefficients = async function(b
 	// })
 
 	// load the xml
-	var load_xml = await ksys.url_get(context.module.read()['xml_url'])
+	const load_xml = await ksys.url_get(context.module.read()['xml_url']);
+	$('xmlmap from inf').removeAttr('fail');
+	if (load_xml.status != 'success'){
+		$('input[xml_link]').attr('invalid', true);
+		$('xmlstatus').text('The response received from the link is invalid');
+		$('xmlmap from inf').attr('fail', true);
+		$('xmlmap val').html(ksys.str_check(''));
+		btn.vmixbtn(true)
+		return
+	}
 
 	// echo
 	$('xmlstatus').text('Response Status:', load_xml.code)
 
 	// evaluate XML
 	$('xmlstatus').text('Evaluating XML...')
-	var xml_info = $.parseXML(load_xml['payload'])
+	const xml_info = ksys.eval_xml(load_xml['payload'])
+	if (xml_info == false){
+		$('input[xml_link]').attr('invalid', true);
+		$('xmlstatus').text('The response received from the link does not represent a proper XML structure');
+		btn.vmixbtn(true)
+		return
+	}
+	$('input[xml_link]').removeAttr('invalid');
+
 	$('xmlstatus').text('Loaded and evaluated XML. Piping data...')
 
 
@@ -55,12 +72,17 @@ window.modules.number_name_x2lr_w_url_src.update_coefficients = async function(b
 	// do values
 	for (var upd of go_pipe['loop'])
 	{
-		// Date...
-		var set_data = upd['data']
+		var set_data = upd['data'];
+
+		if (set_data == null){
+			upd.deny()
+			continue
+		}
+		
 		// special condition
 		if (upd.special == 'date'){
 			var fulldate = new Date(upd['data'])
-			var set_data = `${str(fulldate.getDay()).zfill(2)}/${str(fulldate.getMonth()).zfill(2)}`
+			var set_data = `${str(fulldate.getUTCDate()).zfill(2)}/${str(fulldate.getMonth()+1).zfill(2)}`
 		}
 
 		// echo local
@@ -70,7 +92,8 @@ window.modules.number_name_x2lr_w_url_src.update_coefficients = async function(b
 		var shite = await talker.vmix_talk({
 			'Function': 'SetText',
 			'Value': set_data,
-			'Input': context.module.read().title_name,
+			// 'Input': context.module.read().title_name,
+			'Input': 'cf_double_new_text.gtzip',
 			'SelectedName': upd['target']
 		})
 
@@ -101,8 +124,13 @@ window.modules.number_name_x2lr_w_url_src.trigger_onn = async function(btn)
 
 	// first turn the overlay off
 	await talker.vmix_talk({
+		'Function': 'OverlayInput1Out',
+		'Input': 'cf_double_new_bg.gtzip',
+		'Duration': '1'
+	})
+	await talker.vmix_talk({
 		'Function': 'OverlayInput2Out',
-		'Input': context.module.read().title_name,
+		'Input': 'cf_double_new_text.gtzip',
 		'Duration': '1'
 	})
 
@@ -110,20 +138,38 @@ window.modules.number_name_x2lr_w_url_src.trigger_onn = async function(btn)
 	await jsleep(1100, 'wait_for_off')
 
 	// then reset timeout
+	// 5.25 * 1000
+	// show image bg
 	talker.vmix_talk({
-		'Function': 'OverlayInput2In',
-		'Input': context.module.read().title_name,
+		'Function': 'OverlayInput1In',
+		'Input': 'cf_double_new_bg.gtzip',
 		'Duration': '1'
 	})
-	await jsleep(9000, 'main_title_timeout')
+	// wait for anim to complete
+	await jsleep(4990, 'main_title_timeout')
+
+	// show text
+	talker.vmix_talk({
+		'Function': 'OverlayInput2In',
+		'Input': 'cf_double_new_text.gtzip',
+		'Duration': '1'
+	})
+
+	// wait and then hide text
+	await jsleep(2000, 'main_title_timeout')
 	talker.vmix_talk({
 		'Function': 'OverlayInput2Out',
-		'Input': context.module.read().title_name,
+		'Input': 'cf_double_new_text.gtzip',
 		'Duration': '1'
 	})
 	print('turn off')
 	// Now unlock the button
-	await jsleep(1100, 'main_title_timeout')
+	await jsleep(2500, 'main_title_timeout')
+	talker.vmix_talk({
+		'Function': 'OverlayInput1Out',
+		'Input': 'cf_double_new_bg.gtzip',
+		'Duration': '1'
+	})
 	btn.vmixbtn(true)
 }
 
@@ -152,7 +198,8 @@ window.modules.number_name_x2lr_w_url_src.force_off = async function(btn)
 	// tell vmix to fade out
 	await talker.vmix_talk({
 		'Function': 'OverlayInput2Out',
-		'Input': context.module.read().title_name,
+		// 'Input': context.module.read().title_name,
+		'Input': 'cf_double_new_text.gtzip',
 		'Duration': '1'
 	})
 	// wait for fade to complete
