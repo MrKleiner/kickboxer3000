@@ -5,7 +5,7 @@
 // ------------------------------------------------------------
 // ============================================================
 
-
+// console.log('FUUUUUUUUUUUUUUUUUUUUUUUUU')
 
 
 // define modules
@@ -31,6 +31,11 @@ const fs = require('fs');
 
 // Python-like pathlib
 const pathlib = require('pathlib-js').default;
+const Path = function(){
+	const p = new pathlib(...arguments)
+	return p
+}
+
 // app root path
 var got_root = new pathlib(__dirname)
 while (true) {
@@ -204,6 +209,9 @@ async function jsleep(amt=500, ref='a') {
 	    }, amt);
 	});
 }
+
+const kbsleep = jsleep;
+
 /*
 async function jsleep(amt=500) {
 	return new Promise(function(resolve, reject){
@@ -229,10 +237,7 @@ window.ksys.str_check = function(st, msg='empty string')
 	}
 }
 
-
-
-window.ksys.ensure_exists = function(pt=null, create=true)
-{
+window.ksys.ensure_exists = function(pt=null, create=true){
 	// if path is invalid - return false immediately
 	if (!pt){return false}
 
@@ -247,7 +252,6 @@ window.ksys.ensure_exists = function(pt=null, create=true)
 		return true
 	}
 }
-
 
 window.ksys.eval_xml = function(str){
 	try{
@@ -681,7 +685,8 @@ window.btns = new vmix_t_bottuns();
 class vmix_app_talker
 {
 
-	constructor() {
+	constructor(mute=false) {
+		this.mute = mute;
 		print('Initialized Talker');
 	};
 
@@ -697,16 +702,19 @@ class vmix_app_talker
 	// takes a dict of parameters
 	async vmix_talk(rq={})
 	{
-		return new Promise(function(resolve, reject){
-			var prms = new URLSearchParams(rq)
+		const self = this;
+		return new Promise(async function(resolve, reject){
+			const prms = new URLSearchParams(rq)
+
+			var has_error = false;
 
 			// get random colour and id for this request
-			var rnd_colour = `color: hsl(${357 % window.crypto.getRandomValues(new Uint32Array(1))[0]}deg, 52%, 47%);`;
-			var rnd_id = window.crypto.getRandomValues(new Uint16Array(1))[0]
+			const rnd_colour = `color: hsl(${357 % window.crypto.getRandomValues(new Uint32Array(1))[0]}deg, 52%, 47%);`;
+			const rnd_id = window.crypto.getRandomValues(new Uint16Array(1))[0]
 
-			log('vmix_talk', rnd_id, 'Talking to', window.vmix.app_context.vmix_ip, ':', window.vmix.app_context.vmix_port, rq, prms.toString())
+			if (!self.mute){log('vmix_talk', rnd_id, 'Talking to', window.vmix.app_context.vmix_ip, ':', window.vmix.app_context.vmix_port, rq, prms.toString())}
 
-			fetch(`http://${window.vmix.app_context.vmix_ip}:${window.vmix.app_context.vmix_port}/API/?${prms.toString()}`, {
+			const response = await fetch(`http://${window.vmix.app_context.vmix_ip}:${window.vmix.app_context.vmix_port}/API/?${prms.toString()}`, {
 			    'headers': {
 			        'accept': '*/*',
 			        'cache-control': 'no-cache',
@@ -719,20 +727,26 @@ class vmix_app_talker
 			    'mode': 'cors',
 			    'credentials': 'omit'
 			})
-			.then(function(response) {
-				log('vmix_talk', rnd_id, 'Status:', response.status)
-			    if (response.status != 200){
-			    	resolve(false)
-			    }
-			    response.arrayBuffer().then(function(data) {
-			    	var dt = lizard.UTF8ArrToStr(new Uint8Array(data))
-			    	log('vmix_talk', rnd_id, 'Data:', dt)
-			    	resolve(dt)
-			    });
-			})
 			.catch((error) => {
+				print(log('vmix_talk', rnd_id, 'Error occured while performing a request:', error))
+				has_error = true;
 				resolve(false)
+				return
 			});
+
+			if (has_error){return}
+
+			if (!self.mute){log('vmix_talk', rnd_id, 'Status:', response.status)}
+			if (response.status != 200){
+				resolve(false)
+				return
+			}
+
+			const reseponse_data = await response.arrayBuffer()
+			const dt = lizard.UTF8ArrToStr(new Uint8Array(reseponse_data))
+			if (!self.mute){log('vmix_talk', rnd_id, 'Data:', dt)}
+			resolve(dt)
+			return
 		});
 	}
 
@@ -791,12 +805,14 @@ class vmix_app_talker
 		if (raw == true){
 			return await this.vmix_talk({'Function': ''})
 		}else{
-			return $.parseXML(await this.vmix_talk({'Function': ''}))
+			// return $.parseXML(await this.vmix_talk({'Function': ''}))
+			const xm = (new DOMParser()).parseFromString((await this.vmix_talk({'Function': ''})), 'application/xml');
+			return xm
 		}
 	}
 
 	async ping(){
-		var pinger = await this.vmix_talk({'Function': ''})
+		const pinger = await this.vmix_talk({'Function': ''})
 		if (pinger != false){
 			return true
 		}else{
@@ -807,7 +823,7 @@ class vmix_app_talker
 
 
 }
-window.talker = new vmix_app_talker();
+window.talker = new vmix_app_talker(true);
 
 
 
@@ -899,7 +915,7 @@ window.context.global.prm = function(key=null, value=undefined, dosave=true){
 	if (value == undefined){
 		return window.vmix.app_context[key]
 	}
-	var remap_this = this;
+	let remap_this = this;
 	// if defined - set and maybe save
 	window.vmix.app_context[key] = value;
 	if (dosave == true){
@@ -912,7 +928,7 @@ window.context.global.prm = function(key=null, value=undefined, dosave=true){
 window.context.global.save = function(){
 
 	// ensure that the destination folder exists
-	var context_file = window.sysroot.join('db', 'global', 'context.ct')
+	const context_file = window.sysroot.join('db', 'global', 'context.ct')
 	ksys.ensure_exists(context_file.dirname)
 
 	fs.writeFileSync(str(context_file), JSON.stringify(window.vmix.app_context, null, 4))
@@ -931,10 +947,10 @@ window.context.global.save = function(){
 
 // load fresh context from disk into memory
 window.context.global.pull = function(){
-	var context_file = window.sysroot.join('db', 'global', 'context.ct')
+	const context_file = sysroot.join('db', 'global', 'context.ct');
 
 	if (ksys.ensure_exists(context_file, false)){
-		var ld_context = JSON.parse(fs.readFileSync(str(context_file), {encoding:'utf8', flag:'r'}))
+		const ld_context = JSON.parse(fs.readFileSync(str(context_file), {encoding:'utf8', flag:'r'}))
 		window.vmix.app_context = ld_context;
 		return ld_context
 	}else{
@@ -948,7 +964,7 @@ window.context.global.pull = function(){
 window.context.global.read = function(){
 	// todo: there are better ways of duplicating shit
 	var dupli = {}
-	for (var k in window.vmix.app_context){
+	for (let k in window.vmix.app_context){
 		dupli[k] = window.vmix.app_context[k]
 	}
 	return dupli
@@ -987,7 +1003,7 @@ window.context.module.prm = function(key=null, value=undefined, dosave=true){
 }
 
 
-// save context
+// save context to disk
 window.context.module.save = function(){
 
 	var target_folder = window.sysroot.join('db', 'module', window.context.module.name)
@@ -1334,7 +1350,7 @@ window.ksys.map.load = function(el, info=null)
 
 window.ksys.sys_load = function(nm)
 {
-	var page = fs.readFileSync(window.sysroot.join('modules_c', nm, `${nm}.html`).toString(), {encoding:'utf8', flag:'r'});
+	const page = fs.readFileSync(window.sysroot.join('modules_c', nm, `${nm}.html`).toString(), {encoding:'utf8', flag:'r'});
 	// var pagestyle = fs.readFileSync(window.sysroot.join('modules', nm, `${nm}.css`).toString(), {encoding:'utf8', flag:'r'});
 	$('#app_sys').html(page)
 	// $('#module_styling').text(pagestyle)
@@ -1493,10 +1509,12 @@ async function app_init()
 		`)
 		return
 	}else{
+		document.title = `${document.title}  |  ${loadlast.vmix_ip}:${loadlast.vmix_port}`
 		// if vmix is reachable - display a list of available systems
 
 		// load welcome
-		ksys.sys_load('welcome')
+		// ksys.sys_load('welcome')
+		ksys.sys_load('football_standard')
 	}
 }
 

@@ -17,16 +17,16 @@
 
 
 
-body::-webkit-scrollbar {
+*::-webkit-scrollbar {
 	width: 1em;
 	background: rgb(150, 150, 150);
 }
  
-body::-webkit-scrollbar-track {
+*::-webkit-scrollbar-track {
 	/*box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);*/
 }
  
-body::-webkit-scrollbar-thumb {
+*::-webkit-scrollbar-thumb {
 	background-color: #12141C;
 	/*outline: 1px solid slategrey; */
 	/*border-radius: 10px;*/
@@ -64,16 +64,16 @@ body
 }
 
 
-body::-moz-scrollbar {
+*::-moz-scrollbar {
   width: 1em;
   background: gray;
 }
  
-body::-moz-scrollbar-track {
+*::-moz-scrollbar-track {
   box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
 }
  
-body::-moz-scrollbar-thumb {
+*::-moz-scrollbar-thumb {
   background-color: black;
   /* outline: 1px solid slategrey; */
   
@@ -151,6 +151,11 @@ vmixbtn:active
 {
 	color: lime;
 	outline: 3px solid cyan;
+}
+
+vmixbtn[titled]:active *
+{
+	color: lime;
 }
 
 .vmixbtn_locked
@@ -319,3 +324,15 @@ fbr
 	height: 0px !important;
 	opacity: 0 !important;
 }
+
+
+img[contain]
+{
+	object-position: center;
+	object-fit: contain;
+}
+
+
+
+
+

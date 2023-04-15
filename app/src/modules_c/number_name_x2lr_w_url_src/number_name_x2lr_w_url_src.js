@@ -336,3 +336,17 @@ window.modules.number_name_x2lr_w_url_src.change_input_title = function()
 		$('properties input[tgt_title]').val(response[0].path)
 	})
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// window.modules.number_name_x2lr_w_url_src.load()

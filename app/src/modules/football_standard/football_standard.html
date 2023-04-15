@@ -1,0 +1,280 @@
+<div id="football_standard">
+	<div id="team_defs">
+
+
+		<div id="team1_def" class="teamdef">
+			<div class="team_base_params_ctrl">
+				<sysbtn btname="save_team_preset" onclick="modules.$this.save_team_preset(1)">Save Team Preset</sysbtn>
+				<select onchange="modules.$this.load_team_preset(event)" class="team_preset_selector">
+				</select>
+				<!-- <option value="volvo">Volvo</option> -->
+			</div>
+
+			<div class="team_base_params">
+				<div class="team_param" prmname="team_logo">
+					<div class="team_param_label">Logo image</div>
+					<input onchange="modules.$this.show_chosen_club_logo(1)" type="file" class="team_param_input">
+				</div>
+
+				<div class="team_param" prmname="team_name">
+					<div class="team_param_label">Club name</div>
+					<input oninput="modules.$this.club_name_dynamic_type(event, 1)" type="text" class="team_param_input">
+				</div>
+
+				<div class="team_param" prmname="team_coach">
+					<div class="team_param_label">Coach's name</div>
+					<input type="text" class="team_param_input">
+				</div>
+
+				<img contain src="./assets/red_cross.png" vis_feedback="team1_logo" class="team_logo_vis">
+			</div>
+
+			<div class="player_lists">
+				<div class="player_list starters">
+					<sysbtn class="create_player" btname="define_player" onclick="modules.$this.spawn_player(event)">Add</sysbtn>
+					<!-- <div onclick="modules.$this.spawn_player(event)" class="create_player">Add</div> -->
+					<div class="list_pool"></div>
+				</div>
+				<div class="player_list reserve">
+					<sysbtn class="create_player" btname="define_player" onclick="modules.$this.spawn_player(event)">Add</sysbtn>
+					<!-- <div onclick="modules.$this.spawn_player(event)" class="create_player">Add</div> -->
+					<div class="list_pool"></div>
+				</div>
+			</div>
+		</div>
+
+		<div id="team2_def" class="teamdef">
+			<div class="team_base_params_ctrl">
+				<sysbtn btname="save_team_preset" onclick="modules.$this.save_team_preset(2)">Save Team Preset</sysbtn>
+				<select onchange="modules.$this.load_team_preset(event)" class="team_preset_selector">
+				</select>
+			</div>
+
+			<div class="team_base_params">
+				<div class="team_param" prmname="team_logo">
+					<div class="team_param_label">Logo image</div>
+					<input type="file" onchange="modules.$this.show_chosen_club_logo(2)" class="team_param_input">
+				</div>
+
+				<div class="team_param" prmname="team_name">
+					<div class="team_param_label">Club name</div>
+					<input oninput="modules.$this.club_name_dynamic_type(event, 2)" type="text" class="team_param_input">
+				</div>
+
+				<div class="team_param" prmname="team_coach">
+					<div class="team_param_label">Coach's name</div>
+					<input type="text" class="team_param_input">
+				</div>
+
+				<img contain vis_feedback="team2_logo" src="./assets/red_cross.png" class="team_logo_vis">
+			</div>
+
+			<div class="player_lists">
+				<div class="player_list starters">
+					<sysbtn class="create_player" btname="define_player" onclick="modules.$this.spawn_player(event)">Add</sysbtn>
+					<!-- <div onclick="modules.$this.spawn_player(event)" class="create_player">Add</div> -->
+					<div class="list_pool"></div>
+				</div>
+				<div class="player_list reserve">
+					<sysbtn class="create_player" btname="define_player" onclick="modules.$this.spawn_player(event)">Add</sysbtn>
+					<!-- <div onclick="modules.$this.spawn_player(event)" class="create_player">Add</div> -->
+					<div class="list_pool"></div>
+				</div>
+			</div>
+		</div>
+
+
+	</div>
+
+
+	<div id="teams_layouts">
+		<div id="team1_layout" class="team_layout">
+			<div class="team_layout_header">
+				<img vis_feedback="team1_logo" contain class="layout_club_logo" src="./assets/red_cross.png">
+				<div vis_feedback="team1_name" class="layout_club_name"></div>
+			</div>
+			<div class="team_layout_body">
+				<div class="player_picker">
+					<input oninput="modules.$this.filter_players(event, '#team1_def')" type="text" class="player_picker_filter">
+					<div class="player_picker_pool"></div>
+				</div>
+				<div class="ftfield">
+					<div t_num="1_1"></div> <div t_num="1_2"></div> <div t_num="1_3"></div> <div t_num="1_4"></div> <div t_num="1_5"></div>
+					<div t_num="2_1"></div> <div t_num="2_2"></div> <div t_num="2_3"></div> <div t_num="2_4"></div> <div t_num="2_5"></div>
+					<div t_num="3_1"></div> <div t_num="3_2"></div> <div t_num="3_3"></div> <div t_num="3_4"></div> <div t_num="3_5"></div>
+					<div t_num="4_1"></div> <div t_num="4_2"></div> <div t_num="4_3"></div> <div t_num="4_4"></div> <div t_num="4_5"></div>
+					<div t_num="5_1" class="shadowcell"></div>
+					<div t_num="5_2" class="shadowcell"></div>
+						<div t_num="5_3" class="goalkeeper"></div>
+					<div t_num="5_4" class="shadowcell"></div>
+					<div t_num="5_5" class="shadowcell"></div>
+				</div>
+			</div>
+		</div>
+
+		<div id="team2_layout" class="team_layout">
+			<div class="team_layout_header">
+				<img vis_feedback="team2_logo" contain class="layout_club_logo" src="./assets/red_cross.png">
+				<div vis_feedback="team2_name" class="layout_club_name"></div>
+			</div>
+			<div class="team_layout_body">
+				<div class="player_picker">
+					<input oninput="modules.$this.filter_players(event, '#team2_def')" type="text" class="player_picker_filter">
+					<div class="player_picker_pool"></div>
+				</div>
+				<div class="ftfield">
+					<div t_num="1_1"></div> <div t_num="1_2"></div> <div t_num="1_3"></div> <div t_num="1_4"></div> <div t_num="1_5"></div>
+					<div t_num="2_1"></div> <div t_num="2_2"></div> <div t_num="2_3"></div> <div t_num="2_4"></div> <div t_num="2_5"></div>
+					<div t_num="3_1"></div> <div t_num="3_2"></div> <div t_num="3_3"></div> <div t_num="3_4"></div> <div t_num="3_5"></div>
+					<div t_num="4_1"></div> <div t_num="4_2"></div> <div t_num="4_3"></div> <div t_num="4_4"></div> <div t_num="4_5"></div>
+					<div t_num="5_1" class="shadowcell"></div>
+					<div t_num="5_2" class="shadowcell"></div>
+						<div t_num="5_3" class="goalkeeper"></div>
+					<div t_num="5_4" class="shadowcell"></div>
+					<div t_num="5_5" class="shadowcell"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+
+	<div id="layout_buttons">
+
+		<h1>Splash / VS Control</h1>
+		<div id="layout_buttons_vs_ctrl">
+			<div id="layout_buttons_vs_ctrl_head">
+				<div class="layout_buttons_vs_ctrl_head_minititle">Upper Line</div>
+				<input onchange="modules.$this.save_vs_sublines()" type="text" id="vs_text_bottom_upper">
+				<div class="layout_buttons_vs_ctrl_head_minititle">Lower Line</div>
+				<input onchange="modules.$this.save_vs_sublines()" type="text" id="vs_text_bottom_lower">
+			</div>
+
+			<div id="layout_buttons_vs_ctrl_body">
+				<vmixbtn btname="show_splash" onclick="modules.$this.show_vs_title()">Show VS</vmixbtn>
+				<vmixbtn btname="hide_splash" onclick="modules.$this.hide_vs_title()">Hide VS</vmixbtn>
+			</div>
+		</div>
+
+
+		<h1>Field Layout Control + Coach</h1>
+		<div id="layout_buttons_field_ctrl">
+
+			<div id="layout_buttons_field_ctrl_command1" class="layout_buttons_field_ctrl_command">
+				<div class="layout_ctrl_head">
+					<img vis_feedback="team1_logo" contain class="layout_buttons_field_ctrl_command_logo" src="./assets/red_cross.png">
+					<div vis_feedback="team1_name" class="layout_buttons_field_ctrl_command_name"></div>
+				</div>
+				<div class="layout_ctrl_body">
+					<vmixbtn btname="show_field_layout_command1" onclick="modules.$this.show_field_layout(1)">Field Layout ONN</vmixbtn>
+					<vmixbtn btname="hide_field_layout_command1" onclick="modules.$this.hide_field_layout(1)">Field Layout OFF</vmixbtn>
+				</div>
+				<div class="team_layout_coach_ctrl">
+					<vmixbtn btname="show_coach_team1" onclick="modules.$this.show_coach(1)">Coach ONN</vmixbtn>
+					<vmixbtn btname="hide_coach_team1" onclick="modules.$this.hide_coach(1)">Coach OFF</vmixbtn>
+				</div>
+
+			</div>
+
+			<div id="layout_buttons_field_ctrl_command2" class="layout_buttons_field_ctrl_command">
+				<div class="layout_ctrl_head">
+					<img vis_feedback="team2_logo" contain class="layout_buttons_field_ctrl_command_logo" src="./assets/red_cross.png">
+					<div vis_feedback="team2_name" class="layout_buttons_field_ctrl_command_name"></div>
+				</div>
+				<div class="layout_ctrl_body">
+					<vmixbtn btname="show_field_layout_command2" onclick="modules.$this.show_field_layout(2)">Field Layout ONN</vmixbtn>
+					<vmixbtn btname="hide_field_layout_command2" onclick="modules.$this.hide_field_layout(2)">Field Layout OFF</vmixbtn>
+				</div>
+				<div class="team_layout_coach_ctrl">
+					<vmixbtn btname="show_coach_team2" onclick="modules.$this.show_coach(2)">Coach ONN</vmixbtn>
+					<vmixbtn btname="hide_coach_team2" onclick="modules.$this.hide_coach(2)">Coach OFF</vmixbtn>
+				</div>
+			</div>
+
+		</div>
+
+
+	</div>
+
+
+	<!-- score now counts as punishment. Amazing -->
+	<div id="punisher">
+		<div id="card_player_filter">
+			<input oninput="modules.$this.filter_players_to_punish(event)" type="text" id="card_player_filter_input">
+			<div id="card_player_filter_pool"></div>
+		</div>
+		<div id="card_player_buttons">
+			<div id="card_player_buttons_cards">
+				<div id="card_player_buttons_turn_onn">
+					<vmixbtn titled btname="yellow_card" onclick="modules.$this.show_card('yellow')">
+						<img draggable="false" contain class="punish_card_vis" src="./assets/yellow_card.png">
+						<div class="punish_card_title">YELLOW</div>
+					</vmixbtn>
+					<vmixbtn titled btname="red_card" onclick="modules.$this.show_card('red')">
+						<img draggable="false" contain class="punish_card_vis" src="./assets/red_card.png">
+						<div class="punish_card_title">RED</div>
+					</vmixbtn>
+				</div>
+
+				<div id="card_player_buttons_turn_off">
+					<vmixbtn btname="kill_card" onclick="modules.$this.hide_card()">OFF</vmixbtn>
+				</div>
+			</div>
+
+			<div id="card_player_buttons_score">
+				<vmixbtn titled btname="scored" onclick="modules.$this.goal_score_on()">
+					<img draggable="false" contain class="punish_card_vis" src="./assets/ball.png">
+					<div class="punish_card_title">SCORE!</div>
+				</vmixbtn>
+				<vmixbtn titled btname="scored_off" onclick="modules.$this.goal_score_off()">OFF</vmixbtn>
+			</div>
+
+		</div>
+	</div>
+
+
+	<div id="replacement">
+		<div class="replacement_team" id="replacement_team1">
+			<div class="replacement_team_head">
+				<img vis_feedback="team1_logo" contain class="replacement_team_logo" src="./assets/red_cross.png">
+				<div vis_feedback="team1_name" class="replacement_team_name"></div>
+			</div>
+			<div class="replacement_team_body">
+				<div class="replacement_leaving replacement_list">
+					<input oninput="modules.$this.filter_players_replacement(event)" type="text">
+					<div class="replacement_filtered_list"></div>
+				</div>
+				<div class="replacement_vis_que">&lt;</div>
+				<div class="replacement_incoming replacement_list">
+					<input oninput="modules.$this.filter_players_replacement(event)" type="text">
+					<div class="replacement_filtered_list"></div>
+				</div>
+			</div>
+		</div>
+		<div class="replacement_team" id="replacement_team2">
+			<div class="replacement_team_head">
+				<img vis_feedback="team2_logo" contain class="replacement_team_logo" src="./assets/red_cross.png">
+				<div vis_feedback="team2_name" class="replacement_team_name"></div>
+			</div>
+			<div class="replacement_team_body">
+				<div class="replacement_leaving replacement_list">
+					<input oninput="modules.$this.filter_players_replacement(event)" type="text">
+					<div class="replacement_filtered_list"></div>
+				</div>
+				<div class="replacement_vis_que">&lt;</div>
+				<div class="replacement_incoming replacement_list">
+					<input oninput="modules.$this.filter_players_replacement(event)" type="text">
+					<div class="replacement_filtered_list"></div>
+				</div>
+			</div>
+		</div>
+		<div id="replacement_buttons">
+			<vmixbtn btname="subst_show_leaving" onclick="modules.$this.replacement_player_title(event)">SHOW LEAVING player</vmixbtn>
+			<vmixbtn btname="subst_hide_leaving" onclick="modules.$this.replacement_player_title(event)">HIDE LEAVING player</vmixbtn>
+			<vmixbtn btname="subst_show_incoming" onclick="modules.$this.replacement_player_title(event)">SHOW INCOMING player</vmixbtn>
+			<vmixbtn btname="subst_hide_incoming" onclick="modules.$this.replacement_player_title(event)">HIDE INCOMING player</vmixbtn>
+		</div>
+	</div>
+
+
+</div>

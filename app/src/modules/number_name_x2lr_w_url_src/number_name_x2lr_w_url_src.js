@@ -334,3 +334,17 @@ $this.change_input_title = function()
 		$('properties input[tgt_title]').val(response[0].path)
 	})
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// $this.load()

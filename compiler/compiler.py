@@ -1,5 +1,5 @@
 from pathlib import Path
-import shutil
+import shutil, codecs
 
 app = Path(__file__).parents[1] / 'app' / 'src'
 
@@ -22,8 +22,8 @@ for md in (app / 'modules').glob('*'):
 		if not fl.is_file():
 			continue
 		if fl.suffix.lower() == '.js':
-			(app / 'modules_c' / md.name / fl.name).write_text('window.modules.' + md.name + '={};' + '\n\n' + fl.read_text().replace('$this', 'window.modules.' + md.name))
+			(app / 'modules_c' / md.name / fl.name).write_text('window.modules.' + md.name + '={};' + '\n\n' + fl.read_text(encoding='utf-8').replace('$this', 'window.modules.' + md.name), encoding='utf-8')
 		else:
-			(app / 'modules_c' / md.name / fl.name).write_text(fl.read_text().replace('$this', md.name))
+			(app / 'modules_c' / md.name / fl.name).write_text(fl.read_text(encoding='utf-8').replace('$this', md.name), encoding='utf-8')
 
 

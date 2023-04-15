@@ -1,0 +1,893 @@
+
+#football_standard
+{
+	display: flex;
+	flex-direction: column;
+	/*background: green;*/
+	flex-grow: 1;
+	padding-bottom: 400px;
+	padding-top: 50px;
+	/*filter: grayscale(1);*/
+	/*filter: brightness(1.1);*/
+}
+
+
+body.emergency_break
+{
+	filter: grayscale(1);
+}
+
+
+
+
+#team_defs
+{
+	display: flex;
+	flex-direction: column;
+	/*width: 70vw;*/
+	/*width: 950px;*/
+	/*flex-shrink: 1;*/
+	background: rgba(0, 0, 0, 0.2);
+	outline: 1px solid rgba(100, 100, 100);
+	width: fit-content;
+	padding-left: 40px;
+	margin-left: 20px;
+	padding: 20px;
+}
+
+#team_defs .teamdef
+{
+	display: flex;
+	flex-direction: column;
+}
+
+#team_defs .teamdef .team_base_params_ctrl
+{
+	display: flex;
+	flex-direction: row;
+	padding-left: 10px;
+}
+
+#team_defs .teamdef .team_base_params_ctrl sysbtn
+{
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+#team_defs .teamdef .team_base_params_ctrl select
+{
+	margin-left: 20px;
+	min-width: 100px;
+	color: black;
+}
+
+#team_defs .teamdef .team_base_params_ctrl option
+{
+	color: black;
+}
+
+#team_defs .teamdef:last-child
+{
+	margin-top: 75px;
+}
+
+
+
+#team_defs .team_base_params
+{
+	display: flex;
+	flex-direction: column;
+	padding-left: 10px;
+	position: relative;
+}
+
+.team_base_params .team_param
+{
+	display: flex;
+	flex-direction: row;
+	/*background: blue;*/
+	margin-top: 5px;
+	padding: 3px;
+}
+
+/*.team_base_params .team_param:hover
+{
+	background: rgba(255, 255, 255, 0.05);
+}*/
+
+.team_base_params .team_param .team_param_label
+{
+	width: 140px;
+	user-select: none;
+}
+
+
+.team_base_params .team_logo_vis
+{
+	position: absolute;
+	width: 150px;
+	height: 150px;
+	/*background: lime;*/
+	/*right: 50px;*/
+	/*right: 1vw;*/
+	right: -155px;
+	margin-right: -20px;
+}
+
+
+
+.teamdef .player_lists
+{
+	display: flex;
+	flex-direction: row;
+	padding-left: 10px;
+	margin-top: 15px;
+}
+
+
+.teamdef .player_lists .player_list
+{
+	display: flex;
+	flex-direction: column;
+	width: 350px;
+	/*background: #2F3339;*/
+	background: #25282D;
+	box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 1);
+	/*background: #222222;*/
+	outline: 1px solid rgb(90, 90, 90);
+	padding: 10px;
+}
+
+.teamdef .player_lists .player_list .list_pool
+{
+	display: flex;
+	flex-direction: column;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	max-height: 600px;
+	margin-top: 10px;
+}
+
+
+.player_lists .player_list .player_item
+{
+	display: flex;
+	flex-direction: column;
+	margin-top: 10px;
+	border-left: 2px solid rgba(255, 255, 255, 0.5);
+	padding-left: 3px;
+}
+
+.player_lists .player_list .player_item .player_param
+{
+	display: flex;
+	flex-direction: row;
+	margin-top: 4px;
+}
+
+.player_lists .player_list .player_item .player_param .player_param_label
+{
+	width: 100px;
+	user-select: none;
+}
+
+
+
+
+
+
+
+.teamdef .player_lists .player_list:last-child
+{
+	margin-left: 50px;
+}
+
+
+.player_lists .player_list .create_player
+{
+	width: 80%;
+	align-self: center;
+	text-align: center;
+	padding: 2px;
+	user-select: none;
+}
+
+
+
+#teams_layouts
+{
+	display: flex;
+	flex-direction: column;
+	/*background: gray;*/
+	margin-top: 70px;
+}
+
+#teams_layouts .team_layout
+{
+	display: flex;
+	flex-direction: column;
+	/*justify-content: space-between;*/
+	margin-top: 50px;
+}
+
+#teams_layouts .team_layout .team_layout_header
+{
+	display: flex;
+	flex-direction: row;
+	padding-left: 20px;
+}
+#teams_layouts .team_layout .team_layout_header .layout_club_name
+{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 40px;
+	font-family: 'tahoma_bold';
+	height: 100%;
+	flex-shrink: 1;
+	padding-left: 50px;
+	user-select: none;
+}
+#teams_layouts .team_layout .team_layout_header .layout_club_logo
+{
+	width: 150px;
+	height: 150px;
+}
+#teams_layouts .team_layout .team_layout_body
+{
+	display: flex;
+	flex-direction: row;
+	margin-top: 10px;
+}
+
+.team_layout_body .player_picker .player_picker_pool
+{
+	margin-top: 20px;
+}
+
+#teams_layouts .team_layout .player_picker
+{
+	display: flex;
+	flex-direction: column;
+	width: 300px;
+	/*background: purple;*/
+	background: #25282D;
+	box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 1);
+	outline: 1px solid rgb(90, 90, 90);
+	padding: 15px;
+	margin-left: 20px;
+}
+
+#teams_layouts .team_layout .player_picker .player_picker_filter
+{
+	font-size: 23px;
+}
+
+#teams_layouts .team_layout .ftfield
+{
+	display: grid;
+	grid-template-columns: repeat(5, 150px);
+	grid-template-rows:    repeat(5, 120px);
+	grid-row-gap: 7px;
+	grid-column-gap: 7px;
+
+	/*justify-content: center;*/
+
+	user-select: none;
+	/*width: 800px;*/
+	/*height: 550px;*/
+	background: rgba(0, 0, 0, 0.1);
+	padding: 20px;
+	margin-left:  65px;
+	margin-right: 20px;
+}
+
+#teams_layouts .team_layout .ftfield *
+{
+	user-select: none;
+}
+
+#teams_layouts .ftfield .player_slot
+{
+	/*min-width:  120px;*/
+	/*min-height: 120px;*/
+/*	max-width:  100px;
+	max-height: 100px;*/
+	display: flex;
+	width: 100%;
+	height: 100%;
+	background: #25282D;
+	box-shadow: inset 0px 0px 22px 2px rgba(0, 0, 0, 1);
+	/*margin: 5px;*/
+	outline: 1px solid rgb(128, 128, 128);
+}
+#teams_layouts .ftfield .player_slot.goalkeeper
+{}
+
+#teams_layouts .ftfield .player_slot.shadowcell
+{
+	visibility: hidden !important;
+	pointer-events: none !important;
+}
+
+#teams_layouts .team_layout .field_cell_hover
+{
+	background: #6CDD89 !important;
+}
+
+
+.player_item_cmd_layout, .player_item_cmd_layout *
+{
+	user-select: none;
+}
+
+.player_item_cmd_layout
+{
+	/*background: #1B1B1B;*/
+}
+
+.player_item_cmd_layout .player_number
+{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+
+/* When the player item is located in the picker list */
+/* Then, the layut should be horizontal */
+.team_layout .player_picker .player_item_cmd_layout
+{
+	display: flex;
+	flex-direction: row;
+	/*padding: 10px;*/
+	margin: 3px;
+	margin-top: 4px;
+	outline: 1px solid rgb(100, 100, 100);
+	background: #1B1B1B;
+}
+
+.team_layout .player_picker .player_item_cmd_layout:hover
+{
+	background: #2B2B2B;
+	outline-color: rgb(128, 129, 128);
+}
+
+.team_layout .player_picker .player_item_cmd_layout .player_number
+{
+	width: 30px;
+	text-align: center;
+	background: rgba(255, 255, 255, 0.05);
+	border-right: 2px solid black;
+}
+
+.team_layout .player_picker .player_item_cmd_layout .player_surname
+{
+	padding: 10px;
+}
+
+
+
+/* When the player item is located in the punish list */
+/* Then, the layut should be horizontal AND upscaled */
+#card_player_filter .player_item_cmd_layout,
+#replacement .replacement_team_body .replacement_filtered_list .player_item_cmd_layout
+{
+	display: flex;
+	flex-direction: row;
+	/*padding: 7px;*/
+	margin: 3px;
+	margin-top: 7px;
+	outline: 1px solid rgb(100, 100, 100);
+	background: #1B1B1B;
+	font-size: 25px;
+}
+
+#card_player_filter .player_item_cmd_layout:hover,
+#replacement .replacement_team_body .replacement_filtered_list .player_item_cmd_layout:hover
+{
+	background: #2B2B2B;
+	outline-color: rgb(128, 129, 128);
+}
+
+#card_player_filter .player_item_cmd_layout .player_number,
+#replacement .replacement_team_body .replacement_filtered_list .player_item_cmd_layout .player_number
+{
+	width: 35px;
+	text-align: center;
+	background: rgba(255, 255, 255, 0.05);
+	border-right: 2px solid black;
+}
+
+#card_player_filter .player_item_cmd_layout .player_surname,
+#replacement .replacement_team_body .replacement_filtered_list .player_item_cmd_layout .player_surname
+{
+	padding: 5px;
+}
+
+
+
+
+/* When the player item is located on the field */
+/* Then, the layut should be vertical with a cool t-shirt displayed behind the name */
+.team_layout .ftfield .player_item_cmd_layout
+{
+	/*background: cyan;*/
+	/*min-height: 120px;*/
+	/*min-width: 120px;*/
+	display: flex;
+	justify-content: space-around;
+	flex-grow: 1;
+	flex-direction: column;
+	padding: 7px;
+}
+.team_layout .ftfield .player_item_cmd_layout .player_number
+{
+	/*background: coral;*/
+	font-family: 'tahoma_bold';
+	display: flex;
+	flex-direction: row;
+	flex-grow: 1;
+	align-items: center;
+	justify-content: center;
+	font-size: 28px;
+	/*width: 100%;*/
+	height: 50% !important;
+	color: black;
+	background-image: url('../../assets/t-shirt.png');
+	background-size: contain;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+.team_layout .ftfield .player_item_cmd_layout .player_surname
+{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	/*padding: 2px;*/
+	font-size: 20px;
+	padding-bottom: 3px;
+}
+
+
+
+
+.player_item_cmd_layout.dragging
+{
+	position: fixed !important;
+	pointer-events: none;
+	margin: 30px;
+}
+
+.team_layout .ftfield .player_item_cmd_layout.dragging
+{
+	min-width: 120px;
+	min-height: 120px;
+	background: #1B1B1B;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#punisher
+{
+	padding: 30px;
+	display: flex;
+	flex-direction: row;
+	background: rgba(0, 0, 0, 0.5);
+	padding-left: 20px;
+	margin-top: 100px;
+	justify-content: space-around;
+}
+
+#card_player_filter
+{
+	padding: 7px;
+	display: flex;
+	flex-direction: column;
+	width: 350px;
+	/* purple burglar alarm */
+	/*background: purple;*/
+	background: #25282D;
+	box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 1);
+	outline: 1px solid rgb(90, 90, 90);
+}
+
+#card_player_filter_pool
+{
+	padding-top: 20px;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	display: flex;
+	flex-direction: column;
+}
+
+#card_player_filter_pool .selected_to_punish
+{
+	outline: 2px solid lime !important;
+}
+
+#card_player_filter_input
+{
+	font-size: 30px;
+}
+
+
+#card_player_buttons
+{
+	display: flex;
+	flex-direction: column;
+	/*background: brown;*/
+	/*margin-left: 75px;*/
+	margin-right: 75px;
+}
+
+#card_player_buttons_cards
+{
+	display: flex;
+	flex-direction: row;
+}
+
+#card_player_buttons_score
+{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: row;
+}
+
+#card_player_buttons_score vmixbtn
+{
+	font-size: 30px;
+}
+
+#card_player_buttons_turn_onn
+{
+	display: flex;
+	flex-direction: column;
+}
+
+#card_player_buttons_turn_off
+{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	margin-left: 90px;
+	font-size: 40px;
+}
+
+#card_player_buttons vmixbtn
+{
+	padding: 10px;
+	width: 200px;
+	height: 200px;
+	display: flex;
+	flex-direction: column;
+}
+
+
+#card_player_buttons .punish_card_vis
+{
+	width: 100%;
+	/*important todo: WHAT THE FUCK ?!*/
+	height: 10%;
+	display: flex;
+	flex-grow: 1;
+}
+
+#card_player_buttons .punish_card_title
+{
+	font-size: 30px;
+	text-align: center;
+}
+
+
+
+img[vis_feedback]
+{
+	pointer-events: none;
+	user-select: none;
+}
+
+
+
+
+
+
+
+
+
+#replacement
+{
+	margin-top: 25px;
+	display: flex;
+	flex-direction: column;
+	/*background: blue;*/
+}
+
+#replacement .replacement_team
+{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: column;
+	/*justify-content: center;*/
+	/*background: cyan;*/
+}
+
+#replacement .replacement_team .replacement_team_head
+{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+#replacement .replacement_team .replacement_team_head .replacement_team_logo
+{
+	width: 150px;
+	height: 150px;
+}
+#replacement .replacement_team .replacement_team_head .replacement_team_name
+{
+	display: flex;
+	flex-shrink: 1;
+	height: 100%;
+	align-items: center;
+	justify-content: center;
+	font-size: 45px;
+	user-select: none;
+	display: flex;
+	height: 100%;
+	margin-left: 30px;
+}
+
+#replacement .replacement_team .replacement_team_body
+{
+	margin-top: 55px;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	/*position: relative;*/
+}
+
+#replacement .replacement_team .replacement_team_body .replacement_leaving::before
+{
+	content: 'Leaving';
+	position: absolute;
+	top: -50px;
+	/*width: 100%;*/
+	align-self: center;
+	color: white;
+	font-size: 30px;
+	text-align: center;
+}
+
+#replacement .replacement_team .replacement_team_body .replacement_incoming::before
+{
+	content: 'Inbound';
+	position: absolute;
+	top: -50px;
+	/*width: 100%;*/
+	align-self: center;
+	color: white;
+	font-size: 30px;
+	text-align: center;
+}
+
+#replacement .replacement_team .replacement_vis_que
+{
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	/*background: red;*/
+	font-size: 70px;
+	font-family: 'tahoma_bold';
+	margin: 0px 40px 0px 40px;
+	justify-content: center;
+	align-items: center;
+	user-select: none;
+	pointer-events: none;
+}
+
+#replacement .replacement_team .replacement_list
+{
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+
+	background: #25282D;
+	box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 1);
+	outline: 1px solid rgb(90, 90, 90);
+	padding: 15px;
+
+	height: 500px;
+	width: 350px;
+	position: relative;
+}
+
+#replacement .replacement_team .replacement_list input
+{
+	font-size: 30px;
+}
+
+
+
+#replacement .replacement_team .replacement_list .selected_replacement
+{
+	outline: 2px solid lime !important;
+}
+
+#replacement #replacement_buttons
+{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	margin-top: 75px;
+}
+
+
+
+#replacement #replacement_buttons vmixbtn
+{
+	padding: 10px;
+	width: 200px;
+	height: 200px;
+	font-size: 25px;
+}
+
+
+
+
+
+
+#layout_buttons
+{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	margin-top: 30px;
+}
+
+#layout_buttons h1
+{
+	font-size: 40px;
+	margin-top: 75px;
+	margin-bottom: 20px;
+	user-select: none;
+}
+
+
+#layout_buttons_vs_ctrl
+{
+	/*margin-top: 75px;*/
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	background: rgba(0, 0, 0, 0.1);
+	padding: 20px;
+	outline: 1px solid rgb(90, 90, 90);
+}
+
+#layout_buttons_vs_ctrl_head
+{
+	display: flex;
+	flex-direction: column;
+}
+
+#layout_buttons_vs_ctrl_head .layout_buttons_vs_ctrl_head_minititle
+{
+	user-select: none;
+	display: flex;
+	font-size: 30px;
+	align-items: center;
+	justify-content: center;
+}
+
+#layout_buttons_vs_ctrl_head input
+{
+	width: 750px;
+	font-size: 21px;
+}
+
+#layout_buttons_vs_ctrl_body
+{
+	display: flex;
+	flex-direction: row;
+}
+
+#layout_buttons_vs_ctrl vmixbtn
+{
+	width: 200px;
+	height: 200px;
+	font-size: 30px;
+}
+
+
+
+
+
+
+
+#layout_buttons_field_ctrl
+{
+	/*margin-top: 75px;*/
+	display: flex;
+	flex-direction: row;
+	/*background: blue;*/
+	align-items: center;
+	justify-content: space-around;
+	width: 100%;
+}
+
+
+
+.layout_buttons_field_ctrl_command
+{
+	display: flex;
+	flex-direction: column;
+	/*background: lime;*/
+	background: rgba(0, 0, 0, 0.2);
+	outline: 1px solid rgb(90, 90, 90);
+	padding: 15px;
+	justify-content: center;
+	align-items: center;
+}
+
+.team_layout_coach_ctrl
+{
+	display: flex;
+	margin-top: 20px;
+	flex-direction: row;
+}
+
+.layout_buttons_field_ctrl_command .layout_ctrl_head
+{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+.layout_buttons_field_ctrl_command_logo
+{
+	width: 120px;
+	height: 120px;
+}
+
+.layout_buttons_field_ctrl_command_name
+{
+	display: flex;
+	/*justify-content: center;*/
+	/*align-items: center;*/
+	font-size: 35px;
+	margin-left: 20px;
+	/*text-align: center;*/
+	pointer-events: none;
+	user-select: none;
+	height: 100%;
+}
+
+.layout_buttons_field_ctrl_command .layout_ctrl_body
+{
+	display: flex;
+	flex-direction: row;
+}
+
+.layout_buttons_field_ctrl_command .layout_ctrl_body vmixbtn
+{
+	width: 200px;
+	height: 200px;
+	font-size: 30px;
+}
+

@@ -111,10 +111,11 @@ window.modules.kickboxing_standard.add_pair = function()
 
 window.modules.kickboxing_standard.enumerate_pairs = function()
 {
-	var pool = [...document.querySelectorAll('#pairs_pool pairnum')]
-	for (var enm in pool){
-		pool[enm].textContent = str(int(enm) + 1);
-		pool[enm].setAttribute('pair_index', str(int(enm) + 1));
+	const p_pool = [...document.querySelectorAll('#pairs_pool pairnum')]
+	for (let enm in p_pool){
+		print('fuckoff', p_pool[enm])
+		p_pool[enm].textContent = str(int(enm) + 1);
+		p_pool[enm].setAttribute('pair_index', str(int(enm) + 1));
 	}
 }
 
@@ -752,3 +753,4 @@ window.modules.kickboxing_standard.save_pairs_to_file = function()
 
 
 
+// window.modules.kickboxing_standard.load()
