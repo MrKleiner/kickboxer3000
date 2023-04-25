@@ -301,7 +301,7 @@ window.modules.number_name_x2lr_w_url_src.mkinput = async function()
 window.modules.number_name_x2lr_w_url_src.set_title_name = async function()
 {
 	// SetInputName
-	var title_val = $('input[tgt_title_name]').val().trim();
+	const title_val = $('input[tgt_title_name]').val().trim();
 	await talker.vmix_talk({
 		'Function': 'SetInputName',
 		'Input': context.module.read().title_name,

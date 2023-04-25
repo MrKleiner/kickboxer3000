@@ -146,6 +146,8 @@ body.emergency_break
 	overflow-y: scroll;
 	max-height: 600px;
 	margin-top: 10px;
+
+	height: -webkit-fill-available;
 }
 
 
@@ -316,17 +318,26 @@ body.emergency_break
 }
 
 
-.player_item_cmd_layout, .player_item_cmd_layout *
+.generic_player_item, .generic_player_item *
 {
 	user-select: none;
 }
 
-.player_item_cmd_layout
+.generic_player_item
 {
 	/*background: #1B1B1B;*/
 }
 
-.player_item_cmd_layout .player_number
+.generic_player_item img
+{
+	width: 30px;
+	height: 100%;
+	object-fit: contain;
+	object-position: center;
+	padding: 0px 5px 0px 5px;
+}
+
+.generic_player_item .player_number
 {
 	display: flex;
 	align-items: center;
@@ -334,9 +345,9 @@ body.emergency_break
 }
 
 
-/* When the player item is located in the picker list */
+/* When the player item is located in the layout picker list */
 /* Then, the layut should be horizontal */
-.team_layout .player_picker .player_item_cmd_layout
+.team_layout .player_picker .generic_player_item
 {
 	display: flex;
 	flex-direction: row;
@@ -347,13 +358,13 @@ body.emergency_break
 	background: #1B1B1B;
 }
 
-.team_layout .player_picker .player_item_cmd_layout:hover
+.team_layout .player_picker .generic_player_item:hover
 {
 	background: #2B2B2B;
 	outline-color: rgb(128, 129, 128);
 }
 
-.team_layout .player_picker .player_item_cmd_layout .player_number
+.team_layout .player_picker .generic_player_item .player_number
 {
 	width: 30px;
 	text-align: center;
@@ -361,17 +372,23 @@ body.emergency_break
 	border-right: 2px solid black;
 }
 
-.team_layout .player_picker .player_item_cmd_layout .player_surname
+.team_layout .player_picker .generic_player_item .player_surname
 {
 	padding: 10px;
+}
+
+/* And team logo hidden */
+.team_layout .player_picker .generic_player_item img
+{
+	display: none;
 }
 
 
 
 /* When the player item is located in the punish list */
 /* Then, the layut should be horizontal AND upscaled */
-#card_player_filter .player_item_cmd_layout,
-#replacement .replacement_team_body .replacement_filtered_list .player_item_cmd_layout
+#card_player_filter .generic_player_item,
+#replacement .replacement_team_body .replacement_filtered_list .generic_player_item
 {
 	display: flex;
 	flex-direction: row;
@@ -383,15 +400,15 @@ body.emergency_break
 	font-size: 25px;
 }
 
-#card_player_filter .player_item_cmd_layout:hover,
-#replacement .replacement_team_body .replacement_filtered_list .player_item_cmd_layout:hover
+#card_player_filter .generic_player_item:hover,
+#replacement .replacement_team_body .replacement_filtered_list .generic_player_item:hover
 {
 	background: #2B2B2B;
 	outline-color: rgb(128, 129, 128);
 }
 
-#card_player_filter .player_item_cmd_layout .player_number,
-#replacement .replacement_team_body .replacement_filtered_list .player_item_cmd_layout .player_number
+#card_player_filter .generic_player_item .player_number,
+#replacement .replacement_team_body .replacement_filtered_list .generic_player_item .player_number
 {
 	width: 35px;
 	text-align: center;
@@ -399,8 +416,8 @@ body.emergency_break
 	border-right: 2px solid black;
 }
 
-#card_player_filter .player_item_cmd_layout .player_surname,
-#replacement .replacement_team_body .replacement_filtered_list .player_item_cmd_layout .player_surname
+#card_player_filter .generic_player_item .player_surname,
+#replacement .replacement_team_body .replacement_filtered_list .generic_player_item .player_surname
 {
 	padding: 5px;
 }
@@ -410,7 +427,7 @@ body.emergency_break
 
 /* When the player item is located on the field */
 /* Then, the layut should be vertical with a cool t-shirt displayed behind the name */
-.team_layout .ftfield .player_item_cmd_layout
+.team_layout .ftfield .generic_player_item
 {
 	/*background: cyan;*/
 	/*min-height: 120px;*/
@@ -421,7 +438,7 @@ body.emergency_break
 	flex-direction: column;
 	padding: 7px;
 }
-.team_layout .ftfield .player_item_cmd_layout .player_number
+.team_layout .ftfield .generic_player_item .player_number
 {
 	/*background: coral;*/
 	font-family: 'tahoma_bold';
@@ -439,7 +456,7 @@ body.emergency_break
 	background-repeat: no-repeat;
 	background-position: center;
 }
-.team_layout .ftfield .player_item_cmd_layout .player_surname
+.team_layout .ftfield .generic_player_item .player_surname
 {
 	display: flex;
 	align-items: center;
@@ -449,18 +466,27 @@ body.emergency_break
 	font-size: 20px;
 	padding-bottom: 3px;
 }
+.team_layout .ftfield .generic_player_item img
+{
+	display: none;
+}
 
 
 
 
-.player_item_cmd_layout.dragging
+
+
+
+
+
+.generic_player_item.dragging
 {
 	position: fixed !important;
 	pointer-events: none;
 	margin: 30px;
 }
 
-.team_layout .ftfield .player_item_cmd_layout.dragging
+.team_layout .ftfield .generic_player_item.dragging
 {
 	min-width: 120px;
 	min-height: 120px;

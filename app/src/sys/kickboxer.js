@@ -70,7 +70,7 @@ window.py_common_opts = {
 
 function shell_end_c(err,code,signal)
 {
-	if (err) throw err;
+	if (err) {throw err};
 	console.log('The exit code was: ' + code);
 	console.log('The exit signal was: ' + signal);
 	console.log('finished');
@@ -321,14 +321,14 @@ window.ksys.ticker.spawn = function(params)
 		timename = CryptoJS.SHA256(lizard.rndwave(517, 'flac')).toString();
 		upt_params['name'] = timename
 	}
-	var zick = new kickboxer_ticker(upt_params)
+	const zick = new kickboxer_ticker(upt_params)
 	window.ksys.ticker.sys_pool[timename] = zick;
 	return zick
 }
 
 window.ksys.ticker.kill_all = function()
 {
-	for (var tm in window.ksys.ticker.sys_pool){
+	for (let tm in window.ksys.ticker.sys_pool){
 		try{
 			window.ksys.ticker.sys_pool[tm].force_kill()
 			delete window.ksys.ticker.sys_pool[tm]
@@ -342,7 +342,7 @@ window.ksys.ticker.kill_all = function()
 window.ksys.ticker.pool = function()
 {
 	var pl = {};
-	for (var tm of window.ksys.ticker.sys_pool){
+	for (let tm of window.ksys.ticker.sys_pool){
 		try{
 			pl[tm.name] = tm
 		}catch (error){
@@ -351,9 +351,6 @@ window.ksys.ticker.pool = function()
 	}
 	return pl
 }
-
-
-
 
 
 
@@ -375,6 +372,7 @@ window.ksys.ticker.pool = function()
 
 class kickboxer_ticker
 {
+	// important todo: this constructor's default properties is not how things are done in javascript
 	constructor(prms=null, defprms={
 		'duration': 5,
 		'name': null,
@@ -411,6 +409,10 @@ class kickboxer_ticker
 		this.alive = true;
 		this.paused = false;
 		this.fired = false;
+		// the Promise to await inside pause
+		this.pause_promise = null;
+		// the resolve function to resolve the awaited Promise
+		this.pause_promise_resolve = null;
 
 		// counter
 		// this.current_tick = 0 + this.offset;
@@ -427,9 +429,11 @@ class kickboxer_ticker
 		// mark this timer as fired. It's impossible to call fire() if the timer was already fired
 		this.fired = true;
 
-		// thy holy hand grenade
+		// the holy hand grenade
 		const self = this;
 
+		// todo: even though this is javascript, having such a huge body in a promise is just stupid
+		// split this into functions, because fuck you
 		return new Promise(async function(resolve, reject){
 			while (self.alive == true && (self.global_tick < self.duration || self.infinite == true)){
 
@@ -441,8 +445,20 @@ class kickboxer_ticker
 					// best we can do is divide the tickspeed by 2
 					// todo: better way of doing this?
 					// fun fact: python suffers of the same issue...
-					await jsleep(self.tickspeed / 2)
-					continue
+					// await jsleep(self.tickspeed / 2)
+					// continue
+
+
+					// UPDATE: new solution dropped
+					// simply create a promise and wait for it to resolve
+					// aka resuming the ticker
+
+					// todo: what kind of problems would this bring up to the table ?
+
+					// todo: ALWAYS await for the promise no matter what?
+					// Because it appears that awaiting for the resolved promise doesn't cause much harm
+					// Also, anything can be awaited, even null:  >await null<  --> * no error *
+					await self.pause_promise
 				}
 
 				//
@@ -452,7 +468,6 @@ class kickboxer_ticker
 				// wait for callback function to complete, if asked
 				if (self.wait_for_callback == true){
 					await self.callback_func(self.tick)
-
 				}else{
 					self.callback_func(self.tick)
 				}
@@ -490,20 +505,47 @@ class kickboxer_ticker
 		return this.paused;
 	}
 
+	_pause(){
+		// todo: Fuck javascript. Retarded shit
+		const self = this;
+		// important: overwriting unresolved pause promise with a new one will fuck everything up
+		if (!this.paused){
+			this.pause_promise = 
+			new Promise(function(resolve, reject){
+				self.pause_promise_resolve = resolve;
+			});
+		}
+		this.paused = true;
+	}
+
+	_resume(){
+		if (this.fired == false){
+			this.fire()
+		}
+		this.paused = false;
+		if (this.pause_promise_resolve){
+			this.pause_promise_resolve()
+		}
+	}
+
+	// todo: does it really has to be a property ?
+	// What would be a use case for this ?
 	set pause(state='toggle'){
 		if (state == 'toggle'){
-			this.paused = !this.paused;
+			if (this.paused){
+				this._resume()
+			}else{
+				this._pause()
+			}
 		}
+
 		// todo: paranoid...
 		if (state == true){
-			this.paused = true;
+			this._pause()
 		}
 		// todo: paranoid...
 		if (state == false){
-			if (this.fired == false){
-				this.fire()
-			}
-			this.paused = false;
+			this._resume()
 		}
 	}
 
@@ -514,6 +556,8 @@ class kickboxer_ticker
 	set callback(cb){
 		if (cb){
 			this.callback_func = cb;
+		}else{
+			console.error('Tried setting invalid callback function for ticker');
 		}
 	}
 
@@ -524,6 +568,8 @@ class kickboxer_ticker
 	set timer_duration(dr){
 		if (dr){
 			this.duration = dr;
+		}else{
+			console.error('Tried setting invalid duration for the ticker')
 		}
 	}
 
@@ -604,7 +650,7 @@ class vmix_t_bottuns
 		window.vmix_btns.pool = {}
 		console.log('Initialized Buttons System');
 		Element.prototype.vmixbtn=function(state=false) {
-			if (this.closest('vmixbtn') != null){
+			if (this.closest('vmixbtn')){
 				if (state == false){
 					this.classList.add('vmixbtn_locked')
 				}
@@ -617,7 +663,7 @@ class vmix_t_bottuns
 
 	// register named buttons in a pool
 	sync_pool(){
-		for (var reg of document.querySelectorAll('vmixbtn[btname]')){
+		for (let reg of document.querySelectorAll('vmixbtn[btname]')){
 			window.vmix_btns.pool[reg.getAttribute('btname')] = reg
 		}
 	}
@@ -1006,12 +1052,18 @@ window.context.module.prm = function(key=null, value=undefined, dosave=true){
 // save context to disk
 window.context.module.save = function(){
 
-	var target_folder = window.sysroot.join('db', 'module', window.context.module.name)
+	const target_folder = window.sysroot.join('db', 'module', window.context.module.name)
 	// ensure that the destination folders exists
 	ksys.ensure_exists(target_folder.dirname)
 	ksys.ensure_exists(target_folder)
 
-	var modpath = window.sysroot.join('db', 'module', window.context.module.name, 'context.ct')
+	const tgt_module_path = str(window.sysroot.join('db', 'module', window.context.module.name))
+	if (!fs.existsSync(tgt_module_path)){
+		fs.mkdirSync(tgt_module_path)
+	}
+	// fs.mkdirSync(str(pt))
+
+	const modpath = window.sysroot.join('db', 'module', window.context.module.name, 'context.ct')
 	fs.writeFileSync(str(modpath), JSON.stringify(window.vmix.module_context, null, 4))
 	print('Saved Module Context')
 }
@@ -1320,10 +1372,113 @@ window.ksys.map.load = function(el, info=null)
 
 
 
+// ============================================================
+// ------------------------------------------------------------
+//                        Transliteration
+// ------------------------------------------------------------
+// ============================================================
 
 
+window.ksys.translit = function(inputText) {
+	const rules = [
+		{'pattern': 'а', 'replace': 'a'},
+		{'pattern': 'б', 'replace': 'b'},
+		{'pattern': 'в', 'replace': 'v'},
+		{'pattern': 'зг', 'replace': 'zgh'},
+		{'pattern': 'Зг', 'replace': 'Zgh'},
+		{'pattern': 'г', 'replace': 'h'},
+		{'pattern': 'ґ', 'replace': 'g'},
+		{'pattern': 'д', 'replace': 'd'},
+		{'pattern': 'е', 'replace': 'e'},
+		{'pattern': '^є', 'replace': 'ye'},
+		{'pattern': 'є', 'replace': 'ie'},
+		{'pattern': 'ж', 'replace': 'zh'},
+		{'pattern': 'з', 'replace': 'z'},
+		{'pattern': 'и', 'replace': 'y'},
+		{'pattern': 'і', 'replace': 'i'},
+		{'pattern': '^ї', 'replace': 'yi'},
+		{'pattern': 'ї', 'replace': 'i'},
+		{'pattern': '^й', 'replace': 'y'},
+		{'pattern': 'й', 'replace': 'i'},
+		{'pattern': 'к', 'replace': 'k'},
+		{'pattern': 'л', 'replace': 'l'},
+		{'pattern': 'м', 'replace': 'm'},
+		{'pattern': 'н', 'replace': 'n'},
+		{'pattern': 'о', 'replace': 'o'},
+		{'pattern': 'п', 'replace': 'p'},
+		{'pattern': 'р', 'replace': 'r'},
+		{'pattern': 'с', 'replace': 's'},
+		{'pattern': 'т', 'replace': 't'},
+		{'pattern': 'у', 'replace': 'u'},
+		{'pattern': 'ф', 'replace': 'f'},
+		{'pattern': 'х', 'replace': 'kh'},
+		{'pattern': 'ц', 'replace': 'ts'},
+		{'pattern': 'ч', 'replace': 'ch'},
+		{'pattern': 'ш', 'replace': 'sh'},
+		{'pattern': 'щ', 'replace': 'shch'},
+		{'pattern': 'ьо', 'replace': 'io'},
+		{'pattern': 'ьї', 'replace': 'ii'},
+		{'pattern': 'ь', 'replace': ''},
+		{'pattern': '^ю', 'replace': 'yu'},
+		{'pattern': 'ю', 'replace': 'iu'},
+		{'pattern': '^я', 'replace': 'ya'},
+		{'pattern': 'я', 'replace': 'ia'},
+		{'pattern': 'А', 'replace': 'A'},
+		{'pattern': 'Б', 'replace': 'B'},
+		{'pattern': 'В', 'replace': 'V'},
+		{'pattern': 'Г', 'replace': 'H'},
+		{'pattern': 'Ґ', 'replace': 'G'},
+		{'pattern': 'Д', 'replace': 'D'},
+		{'pattern': 'Е', 'replace': 'E'},
+		{'pattern': '^Є', 'replace': 'Ye'},
+		{'pattern': 'Є', 'replace': 'Ie'},
+		{'pattern': 'Ж', 'replace': 'Zh'},
+		{'pattern': 'З', 'replace': 'Z'},
+		{'pattern': 'И', 'replace': 'Y'},
+		{'pattern': 'І', 'replace': 'I'},
+		{'pattern': '^Ї', 'replace': 'Yi'},
+		{'pattern': 'Ї', 'replace': 'I'},
+		{'pattern': '^Й', 'replace': 'Y'},
+		{'pattern': 'Й', 'replace': 'I'},
+		{'pattern': 'К', 'replace': 'K'},
+		{'pattern': 'Л', 'replace': 'L'},
+		{'pattern': 'М', 'replace': 'M'},
+		{'pattern': 'Н', 'replace': 'N'},
+		{'pattern': 'О', 'replace': 'O'},
+		{'pattern': 'П', 'replace': 'P'},
+		{'pattern': 'Р', 'replace': 'R'},
+		{'pattern': 'С', 'replace': 'S'},
+		{'pattern': 'Т', 'replace': 'T'},
+		{'pattern': 'У', 'replace': 'U'},
+		{'pattern': 'Ф', 'replace': 'F'},
+		{'pattern': 'Х', 'replace': 'Kh'},
+		{'pattern': 'Ц', 'replace': 'Ts'},
+		{'pattern': 'Ч', 'replace': 'Ch'},
+		{'pattern': 'Ш', 'replace': 'Sh'},
+		{'pattern': 'Щ', 'replace': 'Shch'},
+		{'pattern': 'Ь', 'replace': ''},
+		{'pattern': '^Ю', 'replace': 'Yu'},
+		{'pattern': 'Ю', 'replace': 'Iu'},
+		{'pattern': '^Я', 'replace': 'Ya'},
+		{'pattern': 'Я', 'replace': 'Ia'},
+		{'pattern': '’', 'replace': ''},
+		{'pattern': '\'', 'replace': ''},
+		{'pattern': '`', 'replace': ''}
+	];
 
-
+	const words = inputText.split(/[-_ \n]/);
+	for (let n in words) {
+		var word = words[n];
+		for (let ruleNumber in rules) {
+			word = word.replace(
+				new RegExp(rules[ruleNumber]['pattern'], 'gm'),
+				rules[ruleNumber]['replace']
+			);
+		}
+		inputText = inputText.replace(words[n], word);
+	}
+	return inputText;
+};
 
 
 
@@ -1483,7 +1638,7 @@ $(document).ready(function(){
 async function app_init()
 {
 	// load latest config into ram
-	var loadlast = context.global.pull()
+	const loadlast = context.global.pull()
 
 	// display a warning if not were warned before
 	if (context.global.read()['been_warned'] != true){
@@ -1493,7 +1648,7 @@ async function app_init()
 	ksys.sys_load('starting_page')
 
 	// ping vmix
-	var reach = await talker.ping()
+	const reach = await talker.ping()
 
 	// if vmix is not reachable - do not save the IP/port and simply prompt input again
 	if (reach == false){
@@ -1535,7 +1690,6 @@ function close_warnings()
 	$('#logs_place').empty()
 	context.global.prm('been_warned', true)
 }
-
 
 
 

@@ -299,7 +299,7 @@ $this.mkinput = async function()
 $this.set_title_name = async function()
 {
 	// SetInputName
-	var title_val = $('input[tgt_title_name]').val().trim();
+	const title_val = $('input[tgt_title_name]').val().trim();
 	await talker.vmix_talk({
 		'Function': 'SetInputName',
 		'Input': context.module.read().title_name,

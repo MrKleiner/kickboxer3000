@@ -12,8 +12,10 @@ window.modules.kickboxing_standard.load = function()
 {
 	// spawn rounds
 	print('kickboxing init')
-	var roundspool = document.querySelector('rounds pool');
-	for (var rnd of range(int(document.querySelector('rounds').getAttribute('amount')))){
+	const roundspool = document.querySelector('rounds pool');
+	const fresh_context = context.module.read();
+
+	for (let rnd of range(int(document.querySelector('rounds').getAttribute('amount')))){
 		roundspool.append(lizard.ehtml(`<round round_index=${rnd+1} onclick="window.modules.kickboxing_standard.set_round(${rnd+1}, true)">${rnd+1}</round>`))
 	}
 
@@ -25,14 +27,20 @@ window.modules.kickboxing_standard.load = function()
 	// context.module.pull()
 
 	// context stuff
-	$('input[round_duration]').val(context.module.read().round_duration_exp)
-	$('input[res_path]').val(context.module.read().resource_path)
+	$('input[round_duration]').val(fresh_context.round_duration_exp)
+	$('input[res_path]').val(fresh_context.resource_path)
 
 	// round
-	$(`round[round_index="${context.module.read().current_round}"]`).css('color', 'lime')
+	$(`round[round_index="${fresh_context.current_round}"]`).css('color', 'lime')
 
 	// pair
-	$(`#pairs_pool pairnum[pair_index="${context.module.read().active_pair_index}"]`).css('color', 'lime')
+	$(`#pairs_pool pairnum[pair_index="${fresh_context.active_pair_index}"]`).css('color', 'lime')
+
+	if (fresh_context.current_player){
+		$('player.active_player').removeClass('active_player');
+		const selected_player = fresh_context.current_player.split('-');
+		$(`pairnum[pair_index="${selected_player[0]}"]`).closest('pair').find(`player[${selected_player[1]}]`).addClass('active_player')
+	}
 
 }
 
@@ -113,7 +121,7 @@ window.modules.kickboxing_standard.enumerate_pairs = function()
 {
 	const p_pool = [...document.querySelectorAll('#pairs_pool pairnum')]
 	for (let enm in p_pool){
-		print('fuckoff', p_pool[enm])
+		// print('fuckoff', p_pool[enm])
 		p_pool[enm].textContent = str(int(enm) + 1);
 		p_pool[enm].setAttribute('pair_index', str(int(enm) + 1));
 	}
@@ -188,23 +196,23 @@ window.modules.kickboxing_standard.toggle_edit = function(state=null)
 window.modules.kickboxing_standard.save_pairs = function(tofile=false)
 {
 	var collected = []
-	for (var pair of document.querySelectorAll('#pairs_pool pair')){
+	for (let pair of document.querySelectorAll('#pairs_pool pair')){
 		collected.push({
 			'left':{
-				'name': pair.querySelector('player[left] p_param[p_name] input').value,
-				'age': pair.querySelector('player[left] p_param[p_age] input').value,
-				'height': pair.querySelector('player[left] p_param[p_height] input').value,
-				'weight': pair.querySelector('player[left] p_param[p_weight] input').value,
+				'name':    pair.querySelector('player[left] p_param[p_name] input').value,
+				'age':     pair.querySelector('player[left] p_param[p_age] input').value,
+				'height':  pair.querySelector('player[left] p_param[p_height] input').value,
+				'weight':  pair.querySelector('player[left] p_param[p_weight] input').value,
 				'country': pair.querySelector('player[left] p_param[p_country] input').value,
-				'record': pair.querySelector('player[left] p_param[p_record] input').value,
+				'record':  pair.querySelector('player[left] p_param[p_record] input').value,
 			},
 			'right':{
-				'name': pair.querySelector('player[right] p_param[p_name] input').value,
-				'age': pair.querySelector('player[right] p_param[p_age] input').value,
-				'height': pair.querySelector('player[right] p_param[p_height] input').value,
-				'weight': pair.querySelector('player[right] p_param[p_weight] input').value,
+				'name':    pair.querySelector('player[right] p_param[p_name] input').value,
+				'age':     pair.querySelector('player[right] p_param[p_age] input').value,
+				'height':  pair.querySelector('player[right] p_param[p_height] input').value,
+				'weight':  pair.querySelector('player[right] p_param[p_weight] input').value,
 				'country': pair.querySelector('player[right] p_param[p_country] input').value,
-				'record': pair.querySelector('player[right] p_param[p_record] input').value,
+				'record':  pair.querySelector('player[right] p_param[p_record] input').value,
 			}
 		})
 	}
@@ -233,7 +241,7 @@ window.modules.kickboxing_standard.load_paris = function(overwrite=null)
 	pairs_dict = JSON.parse(pairs_dict)
 
 	// spawn pairs one by one
-	for (var pair of pairs_dict){
+	for (let pair of pairs_dict){
 		document.querySelector('#pairs_pool').append(lizard.ehtml(`
 			<pair oncontextmenu="window.modules.kickboxing_standard.del_pair(this)">
 				<pairnum click_contrast onclick="window.modules.kickboxing_standard.upd_vs_title(this.getAttribute('pair_index'))"></pairnum>
@@ -413,7 +421,7 @@ window.modules.kickboxing_standard.upd_vs_title = async function(p_index=null)
 
 	}
 
-	for (var apply in c_dict){
+	for (let apply in c_dict){
 		await talker.vmix_talk({
 			'Function': 'SetText',
 			'Value': $(pair_elem).find(c_dict[apply]['gui']).val().trim(),
@@ -455,19 +463,31 @@ window.modules.kickboxing_standard.upd_vs_title = async function(p_index=null)
 
 window.modules.kickboxing_standard.upd_personal_title = async function(player)
 {
-	if (window.modules.kickboxing_standard.edit_mode_active == true){return}
+	if (window.modules.kickboxing_standard.edit_mode_active == true){return};
+
+	const player_elem = $(player).closest('player');
+
+	$('player.active_player').removeClass('active_player');
+	player_elem.addClass('active_player');
+
+	context.module.prm(
+		'current_player',
+		`${player_elem.closest('pair').find('pairnum').attr('pair_index')}-${(player_elem.attr('left') == '') ? 'left' : 'right'}`
+	)
+
+	const pname = window.ksys.translit(player_elem.find('p_param[p_name] input').val().trim()).split(' ');
+
 	// surname
 	await talker.vmix_talk({
 		'Function': 'SetText',
-		'Value': $(player).find('p_param[p_name] input').val().trim().split(' ')[1].trim(),
+		'Value': pname.at(-1).trim(),
 		'Input': 'personal.gtzip',
 		'SelectedName': 'name.Text'
 	})
-
 	// name
 	await talker.vmix_talk({
 		'Function': 'SetText',
-		'Value': $(player).find('p_param[p_name] input').val().trim().split(' ')[0].trim(),
+		'Value': pname[0].trim(),
 		'Input': 'personal.gtzip',
 		'SelectedName': 'surname.Text'
 	})
@@ -541,8 +561,8 @@ window.modules.kickboxing_standard.timer_callback = async function(ticks)
 
 	var minutes = Math.floor(ticks.global / 60)
 	var seconds = ticks.global - (60*minutes)
-	print('minutes:', minutes, 'seconds', seconds)
-	print('global:', ticks.global)
+	// print('minutes:', minutes, 'seconds', seconds)
+	// print('global:', ticks.global)
 
 	if (ticks.global <= 6){
 		window.modules.kickboxing_standard.timer_hide(true)

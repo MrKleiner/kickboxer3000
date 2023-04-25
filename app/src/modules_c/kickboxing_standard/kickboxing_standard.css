@@ -283,3 +283,10 @@ column[res_loc] *
 {
 	margin-top: 10px;
 }
+
+
+
+player.active_player display
+{
+	color: lime;
+}
