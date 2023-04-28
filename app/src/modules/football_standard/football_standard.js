@@ -15,6 +15,8 @@ window.modules.football_standard = {};
 // field context is needed to ensure that a player item can only be dropped into the corresponding field
 $this.player_item_drag_field_context = null
 $this.next_card_out = null;
+$this.base_timer = null;
+
 
 
 $this.index_titles = function(ctx){
@@ -101,6 +103,16 @@ $this.index_titles = function(ctx){
 				'margin': 100,
 			}
 		}),
+
+		// Timer and scores
+		'timer': new vmix_title({
+			'title_name': 'score_and_time.gtzip',
+			'timings': {
+				'fps': 30,
+				'frames_in': 70,
+				'margin': 100,
+			}
+		}),
 	}
 
 }
@@ -118,6 +130,7 @@ $this.playerbase = {
 		'main': new Set(),
 		'reserve': new Set(),
 	},
+	'indexed': {},
 }
 
 $this.playerbase_as_dict = function(){
@@ -177,15 +190,6 @@ $this.playerbase_as_dict = function(){
 	return pbase_dict
 }
 
-$this.teams = {
-	'one': {
-		// 'name': '',
-		// 'short': '',
-		// 'coach': '',
-		// 'logo': '',
-	},
-	'two': {},
-}
 
 
 
@@ -273,6 +277,57 @@ $this.load = async function(){
 
 	// it's important that the layout is loaded AFTER the player items were created in the control panel
 	$this.load_last_layout()
+
+	// the time number
+	$this.time_num = fresh_context.time_num || 1;
+
+	// 
+	// index all the selectors and whatever the fucknot
+	// 
+	{
+		const return_selectors = function(t){
+			return {
+				'logo_input': $(`#team${t}_def [prmname="team_logo"] input`)[0],
+				'team_name':  $(`#team${t}_def [prmname="team_name"] input`)[0],
+				'shorthand':  $(`#team${t}_def [prmname="club_shorthand"] input`)[0],
+				'team_coach': $(`#team${t}_def [prmname="team_coach"] input`)[0],
+				logo: function(){
+					const input_elem = $(`#team${t}_def [prmname="team_logo"] input`)[0]
+					if (!input_elem.files[0] && $(`#team${1}_def`).attr(`logo_path`)){
+						return null
+					}
+					if (input_elem.files[0]){
+						return input_elem.files[0].path
+					}else{
+						return this.team.elem.attr(`logo_path`)
+					}
+				},
+
+				'field': {
+					'filter_pool': $(`#teams_layouts #team${t}_layout .player_picker_pool`)[0],
+					'field': $(`#teams_layouts #team${t}_layout .ftfield`)[0],
+				},
+
+				'replace': {
+					'leaving': $(`#replacement #replacement_team${t} .replacement_leaving .replacement_filtered_list`)[0],
+					'inbound': $(`#replacement #replacement_team${t} .replacement_incoming .replacement_filtered_list`)[0],
+				},
+			}
+		}
+
+		const team1_sel = return_selectors(1);
+		const team2_sel = return_selectors(2);
+
+		$this.teams = {
+			1: team1_sel,
+			'1': team1_sel,
+			'one': team1_sel,
+
+			2: team2_sel,
+			'2': team2_sel,
+			'two': team2_sel,
+		}
+	}
 
 }
 // $this.load()
@@ -492,7 +547,7 @@ $this.upd_vis_feedback = function(){
 		$('#team1_def').attr('logo_path', team_logo.files[0].path);
 		var team_logo = team_logo.files[0].path;
 	}else{
-		var team_logo= null;
+		var team_logo = null;
 	}
 	$('[vis_feedback="team1_logo"]').attr('src', team_logo || $('#team1_def').attr('logo_path'));
 	$('[vis_feedback="team1_name"]').text($('#team1_def [prmname="team_name"] input').val());
@@ -505,7 +560,7 @@ $this.upd_vis_feedback = function(){
 		$('#team2_def').attr('logo_path', team_logo.files[0].path);
 		var team_logo = team_logo.files[0].path;
 	}else{
-		var team_logo= null;
+		var team_logo = null;
 	}
 	$('[vis_feedback="team2_logo"]').attr('src', team_logo || $('#team2_def').attr('logo_path'));
 	$('[vis_feedback="team2_name"]').text($('#team2_def [prmname="team_name"] input').val());
@@ -514,7 +569,7 @@ $this.upd_vis_feedback = function(){
 
 
 // player parameters input
-$this.player_ctrl = class _player_item{
+$this.player_ctrl = class {
 	constructor(team, is_reserve, pname='', psurname='', number=''){
 		this.name = pname;
 		this.surname = psurname;
@@ -583,13 +638,16 @@ $this.player_ctrl = class _player_item{
 
 	// update the namecode including the control element
 	_update_namecode(forward){
+		const reserve_or_main = this.is_reserve ? 'reserve' : 'main';
 		// Forward update has to come BEFORE the class' namecode is updated,
 		// because all the other generic player items still have an old namecode
+		delete $this.playerbase.indexed[this.namecode];
 		if (forward){
 			this.forward_update(true)
 		}
 		this.namecode = `${this.name.lower()} ${this.surname.lower()} ${this.number}`;
-		this.ctrl_elem.setAttribute('namecode', this.namecode)
+		this.ctrl_elem.setAttribute('namecode', this.namecode);
+		$this.playerbase.indexed[this.namecode] = this;
 	}
 
 	// remove, destroy, kill, annihilate, obliterate this player from the face of Earth
@@ -707,6 +765,7 @@ $this.save_team_preset = function(team){
 	const club_info = {
 		'club_name': club_name,
 		'coach': $(`${team_def} .team_base_params [prmname="team_coach"] input`).val(),
+		'shorthand': $(`${team_def} .team_base_params [prmname="club_shorthand"] input`).val(),
 		'logo': has_logo || null,
 		'main_players': [],
 		'reserve_players': [],
@@ -786,6 +845,8 @@ $this.load_team_preset = function(event){
 	tgt_team.find('.player_list .list_pool').empty()
 	// Set logo attribute of the current team
 	tgt_team.attr('logo_path', team_preset.logo)
+	// team shorthand
+	tgt_team.find('.team_base_params [prmname="club_shorthand"] input')[0].value = team_preset.shorthand || '';
 
 	// spawn main players
 	// team, is_reserve, pname='', psurname='', number=''
@@ -846,9 +907,9 @@ $this.filter_players = function(event, team){
 	// 	occupied_players.push(field_player.getAttribute('namecode'))
 	// }
 
-	for (let player of [...$this.playerbase[team].main, ...$this.playerbase[team].reserve]){
+	for (let player_index in $this.playerbase.indexed){
 		// const fullname_code = `${player.name} ${player.surname} ${player.number}`.lower()
-
+		const player = $this.playerbase.indexed[player_index]
 		// print(fullname_code)
 
 		//    match player name or number           make sure the player is not on the field
@@ -871,16 +932,17 @@ $this.filter_players_to_punish = function(event){
 
 	// todo: is this too slow ?
 	// and is this faster than getting indexed shit ?
-	const all_players = [
-		...$this.playerbase.one.main,
-		...$this.playerbase.one.reserve,
+	// const all_players = [
+	// 	...$this.playerbase.one.main,
+	// 	...$this.playerbase.one.reserve,
 
-		...$this.playerbase.two.main,
-		...$this.playerbase.two.reserve,
-	];
+	// 	...$this.playerbase.two.main,
+	// 	...$this.playerbase.two.reserve,
+	// ];
 
-	for (let player of all_players){
+	for (let player_index in $this.playerbase.indexed){
 		// match player name or number
+		const player = $this.playerbase.indexed[player_index];
 		if (player.namecode.includes(tquery)){
 			const filtered_item = player.get_generic_player_item()
 			filtered_item[0].onclick = $this.select_player_for_punishment;
@@ -1362,6 +1424,35 @@ $this.hide_coach = async function(){
 	window.btns.pool.hide_coach_team1.vmixbtn(true)
 	window.btns.pool.show_coach_team2.vmixbtn(true)
 	window.btns.pool.hide_coach_team2.vmixbtn(true)
+}
+
+
+$this.timer_callback = function(tick){
+	const minutes = Math.floor(tick.global / 60)
+	const seconds = tick.global - (60*minutes)
+	$this.titles.timer.set_text('base_ticker', `${minutes}:${str(seconds).zfill(2)}`)
+}
+
+
+
+
+$this.start_base_timer = function(){
+	$this.counter = ksys.ticker.spawn({
+		'duration': (45*60) * 1000,
+		'name': 'giga_timer',
+		'infinite': false,
+		'reversed': false,
+		'callback': $this.timer_callback,
+		'wait': true,
+	})
+
+	$this.counter.fire()
+	.then(function(response) {
+		// turn off automatically
+		if ($this.counter){
+			$this.counter.pause = true;
+		}
+	})
 }
 
 

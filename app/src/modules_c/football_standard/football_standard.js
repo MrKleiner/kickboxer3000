@@ -17,6 +17,8 @@ window.modules.football_standard = {};
 // field context is needed to ensure that a player item can only be dropped into the corresponding field
 window.modules.football_standard.player_item_drag_field_context = null
 window.modules.football_standard.next_card_out = null;
+window.modules.football_standard.base_timer = null;
+
 
 
 window.modules.football_standard.index_titles = function(ctx){
@@ -103,6 +105,16 @@ window.modules.football_standard.index_titles = function(ctx){
 				'margin': 100,
 			}
 		}),
+
+		// Timer and scores
+		'timer': new vmix_title({
+			'title_name': 'score_and_time.gtzip',
+			'timings': {
+				'fps': 30,
+				'frames_in': 70,
+				'margin': 100,
+			}
+		}),
 	}
 
 }
@@ -120,6 +132,7 @@ window.modules.football_standard.playerbase = {
 		'main': new Set(),
 		'reserve': new Set(),
 	},
+	'indexed': {},
 }
 
 window.modules.football_standard.playerbase_as_dict = function(){
@@ -275,6 +288,9 @@ window.modules.football_standard.load = async function(){
 
 	// it's important that the layout is loaded AFTER the player items were created in the control panel
 	window.modules.football_standard.load_last_layout()
+
+	// the time number
+	window.modules.football_standard.time_num = fresh_context.time_num || 1;
 
 }
 // window.modules.football_standard.load()
@@ -494,7 +510,7 @@ window.modules.football_standard.upd_vis_feedback = function(){
 		$('#team1_def').attr('logo_path', team_logo.files[0].path);
 		var team_logo = team_logo.files[0].path;
 	}else{
-		var team_logo= null;
+		var team_logo = null;
 	}
 	$('[vis_feedback="team1_logo"]').attr('src', team_logo || $('#team1_def').attr('logo_path'));
 	$('[vis_feedback="team1_name"]').text($('#team1_def [prmname="team_name"] input').val());
@@ -507,7 +523,7 @@ window.modules.football_standard.upd_vis_feedback = function(){
 		$('#team2_def').attr('logo_path', team_logo.files[0].path);
 		var team_logo = team_logo.files[0].path;
 	}else{
-		var team_logo= null;
+		var team_logo = null;
 	}
 	$('[vis_feedback="team2_logo"]').attr('src', team_logo || $('#team2_def').attr('logo_path'));
 	$('[vis_feedback="team2_name"]').text($('#team2_def [prmname="team_name"] input').val());
@@ -516,7 +532,7 @@ window.modules.football_standard.upd_vis_feedback = function(){
 
 
 // player parameters input
-window.modules.football_standard.player_ctrl = class _player_item{
+window.modules.football_standard.player_ctrl = class {
 	constructor(team, is_reserve, pname='', psurname='', number=''){
 		this.name = pname;
 		this.surname = psurname;
@@ -709,6 +725,7 @@ window.modules.football_standard.save_team_preset = function(team){
 	const club_info = {
 		'club_name': club_name,
 		'coach': $(`${team_def} .team_base_params [prmname="team_coach"] input`).val(),
+		'shorthand': $(`${team_def} .team_base_params [prmname="club_shorthand"] input`).val(),
 		'logo': has_logo || null,
 		'main_players': [],
 		'reserve_players': [],
@@ -788,6 +805,8 @@ window.modules.football_standard.load_team_preset = function(event){
 	tgt_team.find('.player_list .list_pool').empty()
 	// Set logo attribute of the current team
 	tgt_team.attr('logo_path', team_preset.logo)
+	// team shorthand
+	tgt_team.find('.team_base_params [prmname="club_shorthand"] input')[0].value = team_preset.shorthand || '';
 
 	// spawn main players
 	// team, is_reserve, pname='', psurname='', number=''
@@ -1364,6 +1383,35 @@ window.modules.football_standard.hide_coach = async function(){
 	window.btns.pool.hide_coach_team1.vmixbtn(true)
 	window.btns.pool.show_coach_team2.vmixbtn(true)
 	window.btns.pool.hide_coach_team2.vmixbtn(true)
+}
+
+
+window.modules.football_standard.timer_callback = function(tick){
+	const minutes = Math.floor(tick.global / 60)
+	const seconds = tick.global - (60*minutes)
+	window.modules.football_standard.titles.timer.set_text('base_ticker', `${minutes}:${str(seconds).zfill(2)}`)
+}
+
+
+
+
+window.modules.football_standard.start_base_timer = function(){
+	window.modules.football_standard.counter = ksys.ticker.spawn({
+		'duration': (45*60) * 1000,
+		'name': 'giga_timer',
+		'infinite': false,
+		'reversed': false,
+		'callback': window.modules.football_standard.timer_callback,
+		'wait': true,
+	})
+
+	window.modules.football_standard.counter.fire()
+	.then(function(response) {
+		// turn off automatically
+		if (window.modules.football_standard.counter){
+			window.modules.football_standard.counter.pause = true;
+		}
+	})
 }
 
 

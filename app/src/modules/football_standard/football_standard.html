@@ -21,6 +21,11 @@
 					<input onchange="modules.$this.upd_vis_feedback()" type="text" class="team_param_input">
 				</div>
 
+				<div class="team_param" prmname="club_shorthand">
+					<div class="team_param_label">Club shorthand</div>
+					<input onchange="modules.$this.upd_vis_feedback()" type="text" class="team_param_input">
+				</div>
+
 				<div class="team_param" prmname="team_coach">
 					<div class="team_param_label">Coach's name</div>
 					<input type="text" class="team_param_input">
@@ -58,6 +63,11 @@
 
 				<div class="team_param" prmname="team_name">
 					<div class="team_param_label">Club name</div>
+					<input onchange="modules.$this.upd_vis_feedback()" type="text" class="team_param_input">
+				</div>
+
+				<div class="team_param" prmname="club_shorthand">
+					<div class="team_param_label">Club shorthand</div>
 					<input onchange="modules.$this.upd_vis_feedback()" type="text" class="team_param_input">
 				</div>
 
@@ -274,6 +284,7 @@
 			<!-- <vmixbtn btname="subst_show_incoming" onclick="modules.$this.replacement_player_title(event)">SHOW INCOMING player</vmixbtn> -->
 			<!-- <vmixbtn btname="subst_hide_incoming" onclick="modules.$this.replacement_player_title(event)">HIDE INCOMING player</vmixbtn> -->
 			<vmixbtn btname="exec_replacement_sequence" onclick="modules.$this.replacement_player_title(event)">Execute Sequence</vmixbtn>
+			<vmixbtn btname="exec_replacement_sequences" onclick="modules.$this.start_base_timer()">AAA</vmixbtn>
 		</div>
 	</div>
 
