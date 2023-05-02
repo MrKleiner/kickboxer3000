@@ -64,11 +64,11 @@ $this.update_coefficients = async function(btn)
 
 
 	// set values
-	var go_pipe = ksys.map.pipe(document.querySelector('#info_display_dynamic xmlmap'), xml_info)
+	const go_pipe = ksys.map.pipe(document.querySelector('#info_display_dynamic xmlmap'), xml_info)
 	// wipe
 	go_pipe.wipe()
 	// do values
-	for (var upd of go_pipe['loop'])
+	for (let upd of go_pipe['loop'])
 	{
 		var set_data = upd['data'];
 
@@ -76,7 +76,7 @@ $this.update_coefficients = async function(btn)
 			upd.deny()
 			continue
 		}
-		
+
 		// special condition
 		if (upd.special == 'date'){
 			var fulldate = new Date(upd['data'])

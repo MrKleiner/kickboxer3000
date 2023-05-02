@@ -1,14 +1,14 @@
-window.modules.kickboxing_standard={};
+kbmodules.kickboxing_standard={};
 
 
 
 
 
 
-window.modules.kickboxing_standard.edit_mode_active = false;
-window.modules.kickboxing_standard.counter = {};
+kbmodules.kickboxing_standard.edit_mode_active = false;
+kbmodules.kickboxing_standard.counter = {};
 
-window.modules.kickboxing_standard.load = function()
+kbmodules.kickboxing_standard.load = function()
 {
 	// spawn rounds
 	print('kickboxing init')
@@ -16,13 +16,13 @@ window.modules.kickboxing_standard.load = function()
 	const fresh_context = context.module.read();
 
 	for (let rnd of range(int(document.querySelector('rounds').getAttribute('amount')))){
-		roundspool.append(lizard.ehtml(`<round round_index=${rnd+1} onclick="window.modules.kickboxing_standard.set_round(${rnd+1}, true)">${rnd+1}</round>`))
+		roundspool.append(lizard.ehtml(`<round round_index=${rnd+1} onclick="kbmodules.kickboxing_standard.set_round(${rnd+1}, true)">${rnd+1}</round>`))
 	}
 
 	// load pairs
-	window.modules.kickboxing_standard.load_paris()
+	kbmodules.kickboxing_standard.load_paris()
 	// this just has to be here... Dont fucking question it you mongrel
-	window.modules.kickboxing_standard.toggle_edit(false)
+	kbmodules.kickboxing_standard.toggle_edit(false)
 
 	// context.module.pull()
 
@@ -47,11 +47,11 @@ window.modules.kickboxing_standard.load = function()
 
 
 
-window.modules.kickboxing_standard.add_pair = function()
+kbmodules.kickboxing_standard.add_pair = function()
 {
 	document.querySelector('#pairs_pool').append(lizard.ehtml(`
-		<pair oncontextmenu="window.modules.kickboxing_standard.del_pair(this)">
-			<pairnum click_contrast></pairnum onclick="window.modules.kickboxing_standard.upd_vs_title(this.getAttribute("pair_index"))">
+		<pair oncontextmenu="kbmodules.kickboxing_standard.del_pair(this)">
+			<pairnum click_contrast></pairnum onclick="kbmodules.kickboxing_standard.upd_vs_title(this.getAttribute("pair_index"))">
 			<players>
 				<player left click_contrast noclick>
 					<display></display>
@@ -114,10 +114,10 @@ window.modules.kickboxing_standard.add_pair = function()
 	`))
 
 	// enumarate pairs
-	window.modules.kickboxing_standard.enumerate_pairs()
+	kbmodules.kickboxing_standard.enumerate_pairs()
 }
 
-window.modules.kickboxing_standard.enumerate_pairs = function()
+kbmodules.kickboxing_standard.enumerate_pairs = function()
 {
 	const p_pool = [...document.querySelectorAll('#pairs_pool pairnum')]
 	for (let enm in p_pool){
@@ -128,28 +128,28 @@ window.modules.kickboxing_standard.enumerate_pairs = function()
 }
 
 
-window.modules.kickboxing_standard.del_pair = function(pr)
+kbmodules.kickboxing_standard.del_pair = function(pr)
 {
-	if (pr && (window.modules.kickboxing_standard.edit_mode_active == true)){
+	if (pr && (kbmodules.kickboxing_standard.edit_mode_active == true)){
 		pr.remove()
-		window.modules.kickboxing_standard.enumerate_pairs()
+		kbmodules.kickboxing_standard.enumerate_pairs()
 	}
 }
 
 
 
-window.modules.kickboxing_standard.toggle_edit = function(state=null)
+kbmodules.kickboxing_standard.toggle_edit = function(state=null)
 {
 	// Sometimes I stagger even myself with my genius
 	if (state == false || state == true){
-		window.modules.kickboxing_standard.edit_mode_active = !state
+		kbmodules.kickboxing_standard.edit_mode_active = !state
 	}
 
 
-	if (window.modules.kickboxing_standard.edit_mode_active == false){
-		window.modules.kickboxing_standard.edit_mode_active = true;
+	if (kbmodules.kickboxing_standard.edit_mode_active == false){
+		kbmodules.kickboxing_standard.edit_mode_active = true;
 
-		window.modules.kickboxing_standard.enumerate_pairs()
+		kbmodules.kickboxing_standard.enumerate_pairs()
 
 		// unlimit height
 		$('kbstandard #pairs_pool').css('height', 'auto')
@@ -166,8 +166,8 @@ window.modules.kickboxing_standard.toggle_edit = function(state=null)
 		return
 	}
 
-	if (window.modules.kickboxing_standard.edit_mode_active == true){
-		window.modules.kickboxing_standard.edit_mode_active = false;
+	if (kbmodules.kickboxing_standard.edit_mode_active == true){
+		kbmodules.kickboxing_standard.edit_mode_active = false;
 
 		// unhide display
 		$('kbstandard #pairs_pool display').css('display', '');
@@ -178,7 +178,7 @@ window.modules.kickboxing_standard.toggle_edit = function(state=null)
 			evl.querySelector('display').textContent = evl.querySelector('p_param[p_name] input').value
 		}
 
-		window.modules.kickboxing_standard.enumerate_pairs()
+		kbmodules.kickboxing_standard.enumerate_pairs()
 
 		// limit height
 		$('kbstandard #pairs_pool').css('height', '600px');
@@ -193,7 +193,7 @@ window.modules.kickboxing_standard.toggle_edit = function(state=null)
 }
 
 
-window.modules.kickboxing_standard.save_pairs = function(tofile=false)
+kbmodules.kickboxing_standard.save_pairs = function(tofile=false)
 {
 	var collected = []
 	for (let pair of document.querySelectorAll('#pairs_pool pair')){
@@ -227,7 +227,7 @@ window.modules.kickboxing_standard.save_pairs = function(tofile=false)
 
 
 // overwrite takes a JOn object/json containing pairs
-window.modules.kickboxing_standard.load_paris = function(overwrite=null)
+kbmodules.kickboxing_standard.load_paris = function(overwrite=null)
 {
 	// wipe existing
 	$('#pairs_pool pair').remove();
@@ -243,10 +243,10 @@ window.modules.kickboxing_standard.load_paris = function(overwrite=null)
 	// spawn pairs one by one
 	for (let pair of pairs_dict){
 		document.querySelector('#pairs_pool').append(lizard.ehtml(`
-			<pair oncontextmenu="window.modules.kickboxing_standard.del_pair(this)">
-				<pairnum click_contrast onclick="window.modules.kickboxing_standard.upd_vs_title(this.getAttribute('pair_index'))"></pairnum>
+			<pair oncontextmenu="kbmodules.kickboxing_standard.del_pair(this)">
+				<pairnum click_contrast onclick="kbmodules.kickboxing_standard.upd_vs_title(this.getAttribute('pair_index'))"></pairnum>
 				<players>
-					<player left click_contrast noclick onclick="window.modules.kickboxing_standard.upd_personal_title(this)">
+					<player left click_contrast noclick onclick="kbmodules.kickboxing_standard.upd_personal_title(this)">
 						<display></display>
 						<p_param p_name>
 							<descr>Name</descr>
@@ -275,7 +275,7 @@ window.modules.kickboxing_standard.load_paris = function(overwrite=null)
 					</player>
 
 
-					<player right click_contrast noclick onclick="window.modules.kickboxing_standard.upd_personal_title(this)">
+					<player right click_contrast noclick onclick="kbmodules.kickboxing_standard.upd_personal_title(this)">
 						<display></display>
 						<p_param p_name>
 							<descr>Name</descr>
@@ -308,20 +308,20 @@ window.modules.kickboxing_standard.load_paris = function(overwrite=null)
 	}
 
 	// and enumerate pair indexes
-	window.modules.kickboxing_standard.enumerate_pairs()
+	kbmodules.kickboxing_standard.enumerate_pairs()
 }
 
 
 
 
 
-window.modules.kickboxing_standard.save_res_path = function()
+kbmodules.kickboxing_standard.save_res_path = function()
 {
 	context.module.prm('resource_path', document.querySelector('input[res_path]').value)
 }
 
 
-window.modules.kickboxing_standard.save_timer_duration = function()
+kbmodules.kickboxing_standard.save_timer_duration = function()
 {
 	context.module.prm('round_duration', eval(document.querySelector('input[round_duration]').value) * 1000, false);
 	context.module.prm('round_duration_exp', document.querySelector('input[round_duration]').value)
@@ -348,11 +348,11 @@ window.modules.kickboxing_standard.save_timer_duration = function()
 
 // process VS screen
 // todo: this could be done easier by splitting the save function into ripper and saver itself...
-window.modules.kickboxing_standard.upd_vs_title = async function(p_index=null)
+kbmodules.kickboxing_standard.upd_vs_title = async function(p_index=null)
 {
 	// if (!pindex){return}
 	// do NOT do this in edit mode!
-	if (window.modules.kickboxing_standard.edit_mode_active == true){return}
+	if (kbmodules.kickboxing_standard.edit_mode_active == true){return}
 
 	$('#pairs_pool pairnum').css('color', '');
 	$(`#pairs_pool pairnum[pair_index="${p_index}"]`).css('color', 'lime')
@@ -461,9 +461,9 @@ window.modules.kickboxing_standard.upd_vs_title = async function(p_index=null)
 
 
 
-window.modules.kickboxing_standard.upd_personal_title = async function(player)
+kbmodules.kickboxing_standard.upd_personal_title = async function(player)
 {
-	if (window.modules.kickboxing_standard.edit_mode_active == true){return};
+	if (kbmodules.kickboxing_standard.edit_mode_active == true){return};
 
 	const player_elem = $(player).closest('player');
 
@@ -475,7 +475,7 @@ window.modules.kickboxing_standard.upd_personal_title = async function(player)
 		`${player_elem.closest('pair').find('pairnum').attr('pair_index')}-${(player_elem.attr('left') == '') ? 'left' : 'right'}`
 	)
 
-	const pname = window.ksys.translit(player_elem.find('p_param[p_name] input').val().trim()).split(' ');
+	const pname = ksys.translit(player_elem.find('p_param[p_name] input').val().trim()).split(' ');
 
 	// surname
 	await talker.vmix_talk({
@@ -529,7 +529,7 @@ window.modules.kickboxing_standard.upd_personal_title = async function(player)
 
 
 
-window.modules.kickboxing_standard.set_round = function(r, resetround=false)
+kbmodules.kickboxing_standard.set_round = function(r, resetround=false)
 {
 	// store current round number
 	context.module.prm('current_round', r)
@@ -546,7 +546,7 @@ window.modules.kickboxing_standard.set_round = function(r, resetround=false)
 
 	// reset round if asked
 	if (resetround == true){
-		window.modules.kickboxing_standard.respawn_timer(false, false)
+		kbmodules.kickboxing_standard.respawn_timer(false, false)
 	}
 	
 }
@@ -556,7 +556,7 @@ window.modules.kickboxing_standard.set_round = function(r, resetround=false)
 
 
 
-window.modules.kickboxing_standard.timer_callback = async function(ticks)
+kbmodules.kickboxing_standard.timer_callback = async function(ticks)
 {
 
 	var minutes = Math.floor(ticks.global / 60)
@@ -565,7 +565,7 @@ window.modules.kickboxing_standard.timer_callback = async function(ticks)
 	// print('global:', ticks.global)
 
 	if (ticks.global <= 6){
-		window.modules.kickboxing_standard.timer_hide(true)
+		kbmodules.kickboxing_standard.timer_hide(true)
 	}
 
 	// update
@@ -577,24 +577,24 @@ window.modules.kickboxing_standard.timer_callback = async function(ticks)
 	})
 }
 
-window.modules.kickboxing_standard.respawn_manager = function(act)
+kbmodules.kickboxing_standard.respawn_manager = function(act)
 {
 
 	// onn = the big button onn
 	// if there's no timer OR the prv one is dead - create one and start and then show
 	// if there's timer and it's alive - unpase and show
-	if (!window.modules.kickboxing_standard.counter.alive){
-		window.modules.kickboxing_standard.respawn_timer(true, true)
+	if (!kbmodules.kickboxing_standard.counter.alive){
+		kbmodules.kickboxing_standard.respawn_timer(true, true)
 	}else{
-		if (window.modules.kickboxing_standard.counter.alive == true){
+		if (kbmodules.kickboxing_standard.counter.alive == true){
 			// clear pause
-			// window.modules.kickboxing_standard.timer_pause(false)
-			window.modules.kickboxing_standard.timer_show()
+			// kbmodules.kickboxing_standard.timer_pause(false)
+			kbmodules.kickboxing_standard.timer_show()
 		} 
 	}
 }
 
-window.modules.kickboxing_standard.respawn_timer = async function(show=false, st=false)
+kbmodules.kickboxing_standard.respawn_timer = async function(show=false, st=false)
 {
 	var minutes = Math.floor((context.module.read().round_duration / 1000) / 60)
 	var seconds = (context.module.read().round_duration / 1000) - (60*minutes)
@@ -609,39 +609,39 @@ window.modules.kickboxing_standard.respawn_timer = async function(show=false, st
 
 	// kill previous timer
 	try{
-		window.modules.kickboxing_standard.counter.force_kill()
+		kbmodules.kickboxing_standard.counter.force_kill()
 	}catch (error){}
 
 	// spawn a timer
-	window.modules.kickboxing_standard.counter = ksys.ticker.spawn({
+	kbmodules.kickboxing_standard.counter = ksys.ticker.spawn({
 		'duration': context.module.read().round_duration / 1000,
 		'name': 'giga_timer',
 		'infinite': false,
 		'reversed': true,
-		'callback': window.modules.kickboxing_standard.timer_callback,
+		'callback': kbmodules.kickboxing_standard.timer_callback,
 		'wait': true
 	})
 	// init and show, if asked
 	if (st == true){
 		// init
-		window.modules.kickboxing_standard.counter.fire()
+		kbmodules.kickboxing_standard.counter.fire()
 		.then(function(response) {
 			// turn off automatically
-			if (window.modules.kickboxing_standard.counter){
-				window.modules.kickboxing_standard.counter.pause = true;
+			if (kbmodules.kickboxing_standard.counter){
+				kbmodules.kickboxing_standard.counter.pause = true;
 			}
 		})
 	}
 
 	if (show == true){
-		await window.modules.kickboxing_standard.timer_show()
+		await kbmodules.kickboxing_standard.timer_show()
 	}
 }
 
 
-window.modules.kickboxing_standard.timer_hide = async function(dopause=false)
+kbmodules.kickboxing_standard.timer_hide = async function(dopause=false)
 {
-	window.modules.kickboxing_standard.timer_pause(dopause)
+	kbmodules.kickboxing_standard.timer_pause(dopause)
 	// off
 	await talker.vmix_talk({
 		'Function': 'OverlayInput1Out',
@@ -649,9 +649,9 @@ window.modules.kickboxing_standard.timer_hide = async function(dopause=false)
 	})
 }
 
-window.modules.kickboxing_standard.timer_show = async function(unpause=true)
+kbmodules.kickboxing_standard.timer_show = async function(unpause=true)
 {
-	window.modules.kickboxing_standard.timer_pause(!unpause)
+	kbmodules.kickboxing_standard.timer_pause(!unpause)
 	// off
 	await talker.vmix_talk({
 		'Function': 'OverlayInput1In',
@@ -660,21 +660,21 @@ window.modules.kickboxing_standard.timer_show = async function(unpause=true)
 }
 
 
-window.modules.kickboxing_standard.timer_pause = function(state=true)
+kbmodules.kickboxing_standard.timer_pause = function(state=true)
 {
-	if (window.modules.kickboxing_standard.counter){
+	if (kbmodules.kickboxing_standard.counter){
 		// do pause
-		window.modules.kickboxing_standard.counter.pause = state;
+		kbmodules.kickboxing_standard.counter.pause = state;
 	}
 }
 
 
 
-window.modules.kickboxing_standard.timer_set_time = function(tm=null)
+kbmodules.kickboxing_standard.timer_set_time = function(tm=null)
 {
-	if (window.modules.kickboxing_standard.counter && tm){
+	if (kbmodules.kickboxing_standard.counter && tm){
 		// set time
-		window.modules.kickboxing_standard.counter.set_global_tick(tm, true)
+		kbmodules.kickboxing_standard.counter.set_global_tick(tm, true)
 	}
 }
 
@@ -684,7 +684,7 @@ window.modules.kickboxing_standard.timer_set_time = function(tm=null)
 
 
 
-window.modules.kickboxing_standard.vs_onn = function()
+kbmodules.kickboxing_standard.vs_onn = function()
 {
 	talker.vmix_talk({
 		'Function': 'OverlayInput1In',
@@ -692,7 +692,7 @@ window.modules.kickboxing_standard.vs_onn = function()
 	})
 }
 
-window.modules.kickboxing_standard.vs_off = function()
+kbmodules.kickboxing_standard.vs_off = function()
 {
 	talker.vmix_talk({
 		'Function': 'OverlayInput1Out',
@@ -707,7 +707,7 @@ window.modules.kickboxing_standard.vs_off = function()
 
 
 
-window.modules.kickboxing_standard.player_onn = function()
+kbmodules.kickboxing_standard.player_onn = function()
 {
 	talker.vmix_talk({
 		'Function': 'OverlayInput1In',
@@ -715,7 +715,7 @@ window.modules.kickboxing_standard.player_onn = function()
 	})
 }
 
-window.modules.kickboxing_standard.player_off = function()
+kbmodules.kickboxing_standard.player_off = function()
 {
 	talker.vmix_talk({
 		'Function': 'OverlayInput1Out',
@@ -725,12 +725,12 @@ window.modules.kickboxing_standard.player_off = function()
 
 
 
-window.modules.kickboxing_standard.load_pairs_from_file = function()
+kbmodules.kickboxing_standard.load_pairs_from_file = function()
 {
 	ksys.ask_for_file()
 	.then(function(response) {
 		try{
-			window.modules.kickboxing_standard.load_paris(JSON.parse(fs.readFileSync(response[0].path, {encoding:'utf8', flag:'r'})))
+			kbmodules.kickboxing_standard.load_paris(JSON.parse(fs.readFileSync(response[0].path, {encoding:'utf8', flag:'r'})))
 		}catch (error){
 			console.error(error)
 			print('Failed to load pairs from file. Most probable problem: invalid file.')
@@ -740,9 +740,9 @@ window.modules.kickboxing_standard.load_pairs_from_file = function()
 
 
 
-window.modules.kickboxing_standard.save_pairs_to_file = function()
+kbmodules.kickboxing_standard.save_pairs_to_file = function()
 {
-	lizard.textdl('boxing_pairs.preset', window.modules.kickboxing_standard.save_pairs(true))
+	lizard.textdl('boxing_pairs.preset', kbmodules.kickboxing_standard.save_pairs(true))
 }
 
 
@@ -773,4 +773,4 @@ window.modules.kickboxing_standard.save_pairs_to_file = function()
 
 
 
-// window.modules.kickboxing_standard.load()
+// kbmodules.kickboxing_standard.load()

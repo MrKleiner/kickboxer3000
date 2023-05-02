@@ -5,8 +5,8 @@
 	flex-direction: column;
 	/*background: green;*/
 	flex-grow: 1;
-	padding-bottom: 400px;
-	padding-top: 50px;
+	padding-bottom: 50px;
+	/*padding-top: 50px;*/
 	/*filter: grayscale(1);*/
 	/*filter: brightness(1.1);*/
 }
@@ -16,6 +16,70 @@ body.emergency_break
 {
 	filter: grayscale(1);
 }
+
+
+#tabs
+{
+	position: fixed;
+	width: 100%;
+	display: flex;
+	height: 40px;
+	background: #151417;
+	z-index: 99999;
+	padding-bottom: 5px;
+	/*box-shadow: 0px 7px 23px 0px rgba(0, 0, 0, 1);*/
+	/*box-shadow: 0px 5px 18px -3px rgba(0, 0, 0, 1);*/
+	box-shadow: 0px 0px 22px -5px rgba(0, 0, 0, 0.75);
+	border-bottom: 1px solid rgb(60, 60, 60);
+}
+
+#tabs .tab
+{
+	user-select: none;
+	height: 100%;
+	margin: 0px 10px 0px 10px;
+	padding: 0px 10px 0px 10px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	border-radius: 0px 0px 10px 10px;
+	background: #1F2020;
+	border: 1px solid rgb(100, 100, 100);
+	border-top-width: 0px;
+}
+
+#tabs .tab:hover
+{
+	padding-top: 10px;
+	background: #3B3C3D;
+}
+
+tab
+{
+	padding-top: 100px;
+	display: flex;
+	flex-direction: column;
+}
+
+tab.tab_hidden
+{
+	display: none !important;
+}
+
+#tabs .tab.active_tab
+{
+	background: #1a3c75 !important;
+	border-color: #3E6AB5 !important;
+}
+
+
+
+
+
+
+
+
 
 
 
@@ -201,7 +265,7 @@ body.emergency_break
 	display: flex;
 	flex-direction: column;
 	/*background: gray;*/
-	margin-top: 70px;
+	/*margin-top: 70px;*/
 }
 
 #teams_layouts .team_layout
@@ -268,8 +332,10 @@ body.emergency_break
 #teams_layouts .team_layout .ftfield
 {
 	display: grid;
-	grid-template-columns: repeat(5, 150px);
-	grid-template-rows:    repeat(5, 120px);
+	/*grid-template-columns: repeat(10, 150px);*/
+	/*grid-template-rows:    repeat(9, 120px);*/
+	grid-template-columns: repeat(10, 90px);
+	grid-template-rows:    repeat(9, 80px);
 	grid-row-gap: 7px;
 	grid-column-gap: 7px;
 
@@ -299,17 +365,41 @@ body.emergency_break
 	width: 100%;
 	height: 100%;
 	background: #25282D;
-	box-shadow: inset 0px 0px 22px 2px rgba(0, 0, 0, 1);
+	/*box-shadow: inset 0px 0px 22px 2px rgba(0, 0, 0, 1);*/
+	/*filter: drop-shadow(-1px -1px 2px rgba(0, 0, 0, 1));*/
 	/*margin: 5px;*/
 	outline: 1px solid rgb(128, 128, 128);
+	position: relative;
 }
+
+#teams_layouts .ftfield .player_slot::before
+{
+	content: '';
+	z-index: 1;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background: url('../../assets/fake_shadow.png');
+	background-size: cover;
+	background-position: center;
+}
+
 #teams_layouts .ftfield .player_slot.goalkeeper
-{}
+{
+	/*margin-left: -52%;*/
+}
 
 #teams_layouts .ftfield .player_slot.shadowcell
 {
 	visibility: hidden !important;
 	pointer-events: none !important;
+}
+
+#teams_layouts .ftfield .player_slot.cell_unused
+{
+	outline-color: #875650;
+	visibility: hidden;
+	pointer-events: none;
 }
 
 #teams_layouts .team_layout .field_cell_hover
@@ -436,7 +526,8 @@ body.emergency_break
 	justify-content: space-around;
 	flex-grow: 1;
 	flex-direction: column;
-	padding: 7px;
+	padding: 5px;
+	z-index: 33;
 }
 .team_layout .ftfield .generic_player_item .player_number
 {
@@ -447,7 +538,7 @@ body.emergency_break
 	flex-grow: 1;
 	align-items: center;
 	justify-content: center;
-	font-size: 28px;
+	font-size: 15px;
 	/*width: 100%;*/
 	height: 50% !important;
 	color: black;
@@ -463,7 +554,7 @@ body.emergency_break
 	justify-content: center;
 	width: 100%;
 	/*padding: 2px;*/
-	font-size: 20px;
+	font-size: 12px;
 	padding-bottom: 3px;
 }
 .team_layout .ftfield .generic_player_item img
@@ -471,9 +562,21 @@ body.emergency_break
 	display: none;
 }
 
+.team_layout .ftfield .generic_player_item.dragging .player_number
+{
+	font-size: 30px;
+}
+
+.team_layout .ftfield .generic_player_item.dragging .player_surname
+{
+	font-size: 20px;
+}
 
 
-
+.team_layout .ftfield .generic_player_item:not(.generic_player_item.dragging)
+{
+	transform: scale(2);
+}
 
 
 
@@ -484,6 +587,7 @@ body.emergency_break
 	position: fixed !important;
 	pointer-events: none;
 	margin: 30px;
+	z-index: 999 !important;
 }
 
 .team_layout .ftfield .generic_player_item.dragging
@@ -513,7 +617,7 @@ body.emergency_break
 	flex-direction: row;
 	background: rgba(0, 0, 0, 0.5);
 	padding-left: 20px;
-	margin-top: 100px;
+	/*margin-top: 100px;*/
 	justify-content: space-around;
 }
 
@@ -528,10 +632,12 @@ body.emergency_break
 	background: #25282D;
 	box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 1);
 	outline: 1px solid rgb(90, 90, 90);
+	height: 700px;
 }
 
 #card_player_filter_pool
 {
+	height: 100%;
 	padding-top: 20px;
 	overflow-x: hidden;
 	overflow-y: scroll;
@@ -636,11 +742,37 @@ img[vis_feedback]
 
 #replacement
 {
-	margin-top: 25px;
+	/*margin-top: 25px;*/
+	display: flex;
+	flex-direction: row;
+	/*background: blue;*/
+	justify-content: space-around;
+}
+
+#replacement #replacement_teams
+{
 	display: flex;
 	flex-direction: column;
-	/*background: blue;*/
+	align-self: center;
+
 }
+
+#replacement_buttons > div
+{
+	display: flex;
+	flex-direction: column;
+	height: fit-content;
+	position: sticky;
+	top: 100px;
+}
+
+#replacement_buttons [btname="shadow_player_swap"]
+{
+	/*margin-top: 10px;*/
+	transform: scale(0.5);
+	font-size: 40px !important;
+}
+
 
 #replacement .replacement_team
 {
@@ -656,6 +788,7 @@ img[vis_feedback]
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
+	align-items: center;
 }
 
 #replacement .replacement_team .replacement_team_head .replacement_team_logo
@@ -684,6 +817,12 @@ img[vis_feedback]
 	flex-direction: row;
 	justify-content: center;
 	/*position: relative;*/
+}
+
+#replacement .replacement_team_body .replacement_filtered_list
+{
+	overflow-y: scroll;
+	overflow-x: hidden;
 }
 
 #replacement .replacement_team .replacement_team_body .replacement_leaving::before
@@ -721,8 +860,10 @@ img[vis_feedback]
 	margin: 0px 40px 0px 40px;
 	justify-content: center;
 	align-items: center;
+	height: 100%;
 	user-select: none;
 	pointer-events: none;
+	align-self: center;
 }
 
 #replacement .replacement_team .replacement_list
@@ -782,10 +923,10 @@ img[vis_feedback]
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	margin-top: 30px;
+	/*margin-top: 30px;*/
 }
 
-#layout_buttons h1
+#layout_buttons h1:not(#layout_buttons h1:first-child)
 {
 	font-size: 40px;
 	margin-top: 75px;
@@ -917,3 +1058,133 @@ img[vis_feedback]
 	font-size: 30px;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#timer_and_scores
+{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+
+#timer_ctrl
+{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+
+#timer_ctrl_base
+{
+	display: flex;
+	flex-direction: row;
+}
+
+/*#timer_ctrl vmixbtn[]*/
+
+#timer_ctrl vmixbtn
+{
+	width: 200px;
+	height: 200px;
+	font-size: 30px;
+}
+
+#timer_ctrl_additional
+{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+#timer_ctrl_additional input
+{
+	width: 40%;
+	font-size: 30px;
+	text-align: center;
+}
+
+#score_ctrl
+{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: row;
+	width: 100%;
+	justify-content: space-around;
+}
+
+#score_ctrl .score_ctrl_team
+{
+	display: flex;
+	flex-direction: column;
+	width: 40%;
+	justify-content: center;
+}
+
+#score_ctrl .score_ctrl_team .score_ctrl_head
+{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	pointer-events: none;
+	user-select: none;
+}
+
+
+#score_ctrl .score_ctrl_team .score_ctrl_head_img
+{
+	width: 100px;
+	height: 100px;
+}
+
+#score_ctrl .score_ctrl_team .score_ctrl_head .score_ctrl_head_tname
+{
+	font-size: 35px;
+	margin-left: 20px;
+}
+
+#score_ctrl .score_ctrl_table
+{
+	margin-top: 10px;
+	background: #25282D;
+	box-shadow: inset 0px 0px 5px 0px rgb(0 0 0);
+	outline: 1px solid rgb(90, 90, 90);
+	padding: 15px;
+}
+
+
+#score_ctrl_buttons
+{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+
+#score_ctrl_buttons vmixbtn
+{
+	width: 150px;
+	height: 150px;
+	font-size: 20px;
+}

@@ -473,7 +473,7 @@ $this.upd_personal_title = async function(player)
 		`${player_elem.closest('pair').find('pairnum').attr('pair_index')}-${(player_elem.attr('left') == '') ? 'left' : 'right'}`
 	)
 
-	const pname = window.ksys.translit(player_elem.find('p_param[p_name] input').val().trim()).split(' ');
+	const pname = ksys.translit(player_elem.find('p_param[p_name] input').val().trim()).split(' ');
 
 	// surname
 	await talker.vmix_talk({

@@ -1,8 +1,6 @@
 
 
-
-
-class fbi_logger
+class _fbi_logger
 {
 	// constructor(height, width) {
 	constructor() {
@@ -16,9 +14,9 @@ class fbi_logger
 	// log: an array of objects to log
 	module_log(md=null, lg=''){
 		// get pure list of stuff to actually log
-		var clear_log = [...arguments].slice(1)
+		const clear_log = [...arguments].slice(1)
 
-		var predef_styles = {
+		const predef_styles = {
 			'skyboxer': {
 				'bg': 'rgba(0, 0, 0, 0.0)',
 				'fg': '#1F963B',
@@ -65,16 +63,16 @@ class fbi_logger
 		print(
 			module_name,
 			module_style,
-			...clear_log
+			...clear_log,
 		)
-	}
 
+	}
 
 	warn_critical(msg=''){
 		$('#logs_place').append(`
 			<div class="warning_critical">
 				<msg>${msg}</msg>
-				<sysbtn onclick="close_warnings()"><span style="font-style: italic">I swear I will not ignore this warning and do what was asked</span></sysbtn>
+				<sysbtn onclick="close_warnings()"><span style="font-style: italic">I swear I will not ignore this warning and act accordingly</span></sysbtn>
 			</div>
 		`);
 		$('#logs_place').css('visibility', 'visible')
@@ -82,10 +80,7 @@ class fbi_logger
 
 }
 
-
-window.fbi = new fbi_logger();
-
+const fbi = new _fbi_logger();
 
 
-
-
+module.exports = fbi;

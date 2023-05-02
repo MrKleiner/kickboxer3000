@@ -1,6 +1,5 @@
 
 
-
 // timings are in the following format:
 // {
 // 	'fps': 30,
@@ -34,12 +33,12 @@ class vmix_title
 			this.gtformat =   merge.gtformat;
 			this.timings =    merge.timings;
 
-			print('MERGE RESULT', merge, this.gtformat)
+			// print('MERGE RESULT', merge, this.gtformat)
 		}
 	}
 
 	async set_text(field_name, newval){
-		await window.talker.vmix_talk({
+		await vmix.talker.vmix_talk({
 			'Function': 'SetText',
 			'Value': newval,
 			'Input': this.title_name,
@@ -49,7 +48,7 @@ class vmix_title
 
 	async toggle_text(field_name, state=null){
 		// const do_toggle = state == null;
-		await window.talker.vmix_talk({
+		await vmix.talker.vmix_talk({
 			'Function': (state == null) ? 'SetTextVisible' : `SetTextVisible${state ? 'On' : 'Off'}`,
 			'Input': this.title_name,
 			'SelectedName': field_name + (this.gtformat ? '.Text' : ''),
@@ -57,7 +56,7 @@ class vmix_title
 	}
 
 	async set_img_src(img_name, newsrc){
-		await window.talker.vmix_talk({
+		await vmix.talker.vmix_talk({
 			'Function': 'SetImage',
 			'Value': str(newsrc),
 			'Input': this.title_name,
@@ -67,7 +66,7 @@ class vmix_title
 
 	async toggle_img(field_name, state=null){
 		// const do_toggle = state == null;
-		await window.talker.vmix_talk({
+		await vmix.talker.vmix_talk({
 			'Function': (state == null) ? 'SetImageVisible' : `SetImageVisible${state ? 'On' : 'Off'}`,
 			'Input': this.title_name,
 			'SelectedName': field_name + (this.gtformat ? '.Source' : ''),
@@ -76,7 +75,7 @@ class vmix_title
 	// todo: add check to prevent exceeding 4 overlays
 	async overlay_in(overlay_num=1, wait=true){
 		this.last_overlay = overlay_num;
-		await window.talker.vmix_talk({
+		await vmix.talker.vmix_talk({
 			'Function': `OverlayInput${overlay_num}In`,
 			'Input': this.title_name,
 		})
@@ -87,7 +86,7 @@ class vmix_title
 	}
 
 	async overlay_out(overlay_num=null, wait=true){
-		await window.talker.vmix_talk({
+		await vmix.talker.vmix_talk({
 			'Function': `OverlayInput${this.last_overlay || overlay_num || 1}Out`,
 			'Input': this.title_name,
 		})
@@ -98,3 +97,5 @@ class vmix_title
 		}
 	}
 }
+
+module.exports = vmix_title;

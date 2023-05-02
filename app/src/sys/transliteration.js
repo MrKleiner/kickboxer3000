@@ -1,5 +1,4 @@
-
-$this.transliteration = function (inputText) {
+const translit = function(inputText) {
 	const rules = [
 		{'pattern': 'а', 'replace': 'a'},
 		{'pattern': 'б', 'replace': 'b'},
@@ -97,5 +96,8 @@ $this.transliteration = function (inputText) {
 		}
 		inputText = inputText.replace(words[n], word);
 	}
-	return inputText.toUpperCase();
+	return inputText;
 };
+
+
+module.exports = translit;

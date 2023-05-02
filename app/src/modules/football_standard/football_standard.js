@@ -8,7 +8,7 @@
 // Surname
 // Number
 
-window.modules.football_standard = {};
+kbmodules.football_standard = {};
 
 // window.modules.football_standard.playerbase
 
@@ -25,7 +25,7 @@ $this.index_titles = function(ctx){
 		// 'team_layout': new vmix_title('command_layout.gtzip'),
 
 		// field layout
-		'team_layout': new vmix_title({
+		'team_layout': new vmix.title({
 			'title_name': 'command_layout.gtzip',
 			'timings': {
 				'fps': 30,
@@ -36,7 +36,7 @@ $this.index_titles = function(ctx){
 
 
 		// cards
-		'yellow_card': new vmix_title({
+		'yellow_card': new vmix.title({
 			'title_name': 'yellow_card.gtzip',
 			'timings': {
 				'fps': 30,
@@ -44,7 +44,7 @@ $this.index_titles = function(ctx){
 				'margin': 100,
 			}
 		}),
-		'red_card': new vmix_title({
+		'red_card': new vmix.title({
 			'title_name': 'red_card.gtzip',
 			'timings': {
 				'fps': 30,
@@ -54,7 +54,7 @@ $this.index_titles = function(ctx){
 		}),
 
 		// replacements
-		'replacement_out': new vmix_title({
+		'replacement_out': new vmix.title({
 			'title_name': 'replacement_leaving.gtzip',
 			'timings': {
 				'fps': 30,
@@ -63,7 +63,7 @@ $this.index_titles = function(ctx){
 				'margin': 100,
 			}
 		}),
-		'replacement_in': new vmix_title({
+		'replacement_in': new vmix.title({
 			'title_name': 'replacement_incoming.gtzip',
 			'timings': {
 				'fps': 30,
@@ -74,7 +74,7 @@ $this.index_titles = function(ctx){
 		}),
 
 		// VS
-		'splash': new vmix_title({
+		'splash': new vmix.title({
 			'title_name': 'splash.gtzip',
 			'timings': {
 				'fps': 30,
@@ -84,7 +84,7 @@ $this.index_titles = function(ctx){
 		}),
 
 		// Goal / score
-		'gscore': new vmix_title({
+		'gscore': new vmix.title({
 			'title_name': 'scored.gtzip',
 			'timings': {
 				'fps': 30,
@@ -95,7 +95,7 @@ $this.index_titles = function(ctx){
 		}),
 
 		// Coach l4d2
-		'coach': new vmix_title({
+		'coach': new vmix.title({
 			'title_name': 'coach.gtzip',
 			'timings': {
 				'fps': 30,
@@ -105,11 +105,21 @@ $this.index_titles = function(ctx){
 		}),
 
 		// Timer and scores
-		'timer': new vmix_title({
+		'timer': new vmix.title({
 			'title_name': 'score_and_time.gtzip',
 			'timings': {
 				'fps': 30,
 				'frames_in': 70,
+				'margin': 100,
+			}
+		}),
+
+		// Composed scores
+		'final_scores': new vmix.title({
+			'title_name': 'final_scores.gtzip',
+			'timings': {
+				'fps': 30,
+				'frames_in': 59,
 				'margin': 100,
 			}
 		}),
@@ -123,17 +133,28 @@ $this.index_titles = function(ctx){
 
 $this.playerbase = {
 	'one': {
-		'main': new Set(),
-		'reserve': new Set(),
+		'main': {},
+		'reserve': {},
+		'both': {},
 	},
 	'two': {
-		'main': new Set(),
-		'reserve': new Set(),
+		'main': {},
+		'reserve': {},
+		'both': {},
 	},
-	'indexed': {},
-}
 
-$this.playerbase_as_dict = function(){
+	// todo: is this collision safe ?
+	'global_index': {},
+}
+$this.playerbase[1] = $this.playerbase['one'];
+$this.playerbase['1'] = $this.playerbase['one'];
+
+$this.playerbase[2] = $this.playerbase['two'];
+$this.playerbase['2'] = $this.playerbase['two'];
+
+
+
+$this.__playerbase_as_dict = function(){
 	// console.time('pbase as dict')
 	const pbase_dict = {
 		'one': {
@@ -190,8 +211,24 @@ $this.playerbase_as_dict = function(){
 	return pbase_dict
 }
 
+$this.tab_switch = function(event){
+	const id_pair = event.target.getAttribute('match_id');
 
+	$('tab').addClass('tab_hidden');
+	$(`tab[tabid="${id_pair}"]`).removeClass('tab_hidden');
+	$('#tabs .tab').removeClass('active_tab');
+	event.target.classList.add('active_tab');
+}
 
+// $this.teams = {
+// 	1: team1_sel,
+// 	'1': team1_sel,
+// 	'one': team1_sel,
+
+// 	2: team2_sel,
+// 	'2': team2_sel,
+// 	'two': team2_sel,
+// }
 
 $this.load = async function(){
 	$this.index_titles()
@@ -199,9 +236,15 @@ $this.load = async function(){
 	$('#teams_layouts .team_layout .ftfield div, #teams_layouts .team_layout .ftfield .goalkeeper').addClass('player_slot');
 	// important todo: such startup info has to be evaluated by the core
 	// const vmix_state = (new DOMParser()).parseFromString((await window.talker.vmix_talk({'Function': ''})), 'application/xml');
-	const vmix_state = await window.talker.project()
+	const vmix_state = await vmix.talker.project();
 
-	const fresh_context = context.module.read();
+	await $this.titles.timer.toggle_text('time_added', false);
+	await $this.titles.timer.toggle_img('extra_time_bg', false);
+	await $this.titles.timer.toggle_text('extra_ticker', false);
+	await $this.titles.timer.set_text('extra_ticker', '0:00');
+	await $this.titles.timer.set_text('base_ticker', '0:00');
+
+	const fresh_context = ksys.context.module.pull();
 
 	// important todo: Fuck VMIX
 	{
@@ -239,7 +282,7 @@ $this.load = async function(){
 
 	// presets
 	{
-		const index_file = JSON.parse(window.db.module.read('teams_index.index'))
+		const index_file = JSON.parse(ksys.db.module.read('teams_index.index'))
 		const preset_targets = $('.team_base_params_ctrl .team_preset_selector')
 		if (index_file){
 			for (let team of index_file){
@@ -291,15 +334,16 @@ $this.load = async function(){
 				'team_name':  $(`#team${t}_def [prmname="team_name"] input`)[0],
 				'shorthand':  $(`#team${t}_def [prmname="club_shorthand"] input`)[0],
 				'team_coach': $(`#team${t}_def [prmname="team_coach"] input`)[0],
+				'score_pool': $(`#score_ctrl_team${t} .score_ctrl_table`)[0],
 				logo: function(){
 					const input_elem = $(`#team${t}_def [prmname="team_logo"] input`)[0]
-					if (!input_elem.files[0] && $(`#team${1}_def`).attr(`logo_path`)){
+					if (!input_elem.files[0] && !$(`#team${t}_def`).attr(`logo_path`)){
 						return null
 					}
 					if (input_elem.files[0]){
 						return input_elem.files[0].path
 					}else{
-						return this.team.elem.attr(`logo_path`)
+						return $(`#team${t}_def`).attr(`logo_path`)
 					}
 				},
 
@@ -413,6 +457,7 @@ $this.postload = function(){
 		}
 	});
 
+
 	// fancy hover effect
 	document.addEventListener('mouseover', tr_event => {
 
@@ -430,7 +475,8 @@ $this.postload = function(){
 			target_cell.classList.add('field_cell_hover')
 		}
 
-	});
+	})
+
 
 	document.addEventListener('contextmenu', tr_event => {
 
@@ -469,7 +515,7 @@ $this.quit_all_titles = async function(){
 $this.format_text = function(txt, case_sel, translit=false){
 	var result = txt;
 	if (translit){
-		result = window.ksys.translit(result);
+		result = ksys.translit(result);
 	}
 
 	// 1 = capital
@@ -575,6 +621,7 @@ $this.player_ctrl = class {
 		this.surname = psurname;
 		this.number = number;
 		this.is_reserve = is_reserve;
+		this.scores = 0;
 		// important todo: WHAT THE FUCK IS THIS ?!!!
 		const _team_selector = {
 			1: 'one',
@@ -629,9 +676,16 @@ $this.player_ctrl = class {
 			self.number = evt.target.value;
 			self._update_namecode(true);
 		}
+		ctrl_elem[0].oncontextmenu = function(evt){
+			if (evt.altKey){
+				self.kill()
+			}
+		}
 
-		// register this player in the global player pool
-		$this.playerbase[this.team.num_word][this.is_reserve ? 'reserve' : 'main'].add(this);
+		// register this player in the index
+		$this.playerbase[this.team.num_word][this.is_reserve ? 'reserve' : 'main'][this.namecode] = this;
+		$this.playerbase[this.team.num_word]['both'][this.namecode] = this;
+		$this.playerbase.global_index[this.namecode] = this;
 	}
 
 	// important todo: this retarded shit logic does an extra lap. TOO BAD
@@ -639,26 +693,39 @@ $this.player_ctrl = class {
 	// update the namecode including the control element
 	_update_namecode(forward){
 		const reserve_or_main = this.is_reserve ? 'reserve' : 'main';
+
+		// global player index
+		delete $this.playerbase.global_index[this.namecode];
+		// current team reserve/main
+		delete $this.playerbase[this.team.num_word][reserve_or_main][this.namecode];
+		// current team combo of main and reserve
+		delete $this.playerbase[this.team.num_word].both[this.namecode];
+
 		// Forward update has to come BEFORE the class' namecode is updated,
 		// because all the other generic player items still have an old namecode
-		delete $this.playerbase.indexed[this.namecode];
 		if (forward){
 			this.forward_update(true)
 		}
 		this.namecode = `${this.name.lower()} ${this.surname.lower()} ${this.number}`;
 		this.ctrl_elem.setAttribute('namecode', this.namecode);
-		$this.playerbase.indexed[this.namecode] = this;
+
+		$this.playerbase[this.team.num_word][reserve_or_main][this.namecode] = this;
+		$this.playerbase[this.team.num_word].both[this.namecode] = this;
+		$this.playerbase.global_index[this.namecode] = this;
 	}
 
 	// remove, destroy, kill, annihilate, obliterate this player from the face of Earth
 	kill(){
-		$this.playerbase.one.main.delete(this)
-		$this.playerbase.one.reserve.delete(this)
+		// global player index
+		delete $this.playerbase.global_index[this.namecode];
+		// current team reserve/main
+		delete $this.playerbase[this.team.num_word][reserve_or_main][this.namecode];
+		// current team combo of main and reserve
+		delete $this.playerbase[this.team.num_word].both[this.namecode];
 
-		$this.playerbase.two.main.delete(this)
-		$this.playerbase.two.reserve.delete(this)
+		this.ctrl_elem.remove();
 
-		$(`player[namecode="${this.namecode}"]`).remove()
+		$(`player[namecode="${this.namecode}"]`).remove();
 	}
 
 	// update all the player elements on the page with new data
@@ -792,20 +859,20 @@ $this.save_team_preset = function(team){
 	print(club_info)
 
 	// save the team to file
-	window.db.module.write(`${club_name}.tdef`, JSON.stringify(club_info, null, 4))
+	ksys.db.module.write(`${club_name}.tdef`, JSON.stringify(club_info, null, 4))
 
 	// update index
-	const index_file = window.db.module.read('teams_index.index')
+	const index_file = ksys.db.module.read('teams_index.index')
 	// important todo: Fuck
 	const team_presets_index = JSON.parse(index_file) || [];
 
 	if (!index_file){
-		window.db.module.write('teams_index.index', JSON.stringify([], null, 4))
+		ksys.db.module.write('teams_index.index', JSON.stringify([], null, 4))
 	}
 
 	if (!team_presets_index.includes(club_name)){
 		team_presets_index.push(club_name)
-		window.db.module.write('teams_index.index', JSON.stringify(team_presets_index, null, 4))
+		ksys.db.module.write('teams_index.index', JSON.stringify(team_presets_index, null, 4))
 	}
 
 	$this.save_last_team_presets()
@@ -814,7 +881,7 @@ $this.save_team_preset = function(team){
 $this.load_team_preset = function(event){
 	print(event)
 	// get preset by file name and evaluate to JSON
-	const team_preset = JSON.parse(window.db.module.read(`${event.target.value}.tdef`))
+	const team_preset = JSON.parse(ksys.db.module.read(`${event.target.value}.tdef`))
 	// if this files does not exist - don't do anything
 	if (!team_preset){return};
 
@@ -881,16 +948,13 @@ $this.load_team_preset = function(event){
 }
 
 $this.save_last_team_presets = function(){
-	context.module.prm('last_team_def1', $('#team1_def [prmname="team_name"] input')[0].value)
-	context.module.prm('last_team_def2', $('#team2_def [prmname="team_name"] input')[0].value, true)
+	ksys.context.module.prm('last_team_def1', $('#team1_def [prmname="team_name"] input')[0].value)
+	ksys.context.module.prm('last_team_def2', $('#team2_def [prmname="team_name"] input')[0].value, true)
 }
 
 
-// По какому принципу должна происходить фильтрация?
 $this.filter_players = function(event, team){
 	// Worst timing result: 2.5 ms
-
-	console.time('Filter')
 
 	// current team's field/players
 	const field_context = event.target.closest('.team_layout');
@@ -901,24 +965,14 @@ $this.filter_players = function(event, team){
 	// Clear the filtered pool
 	pool.empty()
 
-	// Collect players present on the field
-	// const occupied_players = [];
-	// for (let field_player of field_context.querySelectorAll('.ftfield .generic_player_item')){
-	// 	occupied_players.push(field_player.getAttribute('namecode'))
-	// }
-
-	for (let player_index in $this.playerbase.indexed){
-		// const fullname_code = `${player.name} ${player.surname} ${player.number}`.lower()
-		const player = $this.playerbase.indexed[player_index]
-		// print(fullname_code)
+	for (let player_index in $this.playerbase[team].both){
+		const player = $this.playerbase[team].both[player_index]
 
 		//    match player name or number           make sure the player is not on the field
 		if (  player.namecode.includes(tquery)  &&  !player.is_on_field()  ){
 			pool.append(player.get_generic_player_item())
 		}
 	}
-
-	console.timeEnd('Filter')
 }
 
 $this.filter_players_to_punish = function(event){
@@ -940,9 +994,9 @@ $this.filter_players_to_punish = function(event){
 	// 	...$this.playerbase.two.reserve,
 	// ];
 
-	for (let player_index in $this.playerbase.indexed){
+	for (let player_index in $this.playerbase.global_index){
 		// match player name or number
-		const player = $this.playerbase.indexed[player_index];
+		const player = $this.playerbase.global_index[player_index];
 		if (player.namecode.includes(tquery)){
 			const filtered_item = player.get_generic_player_item()
 			filtered_item[0].onclick = $this.select_player_for_punishment;
@@ -959,7 +1013,7 @@ $this.save_last_layout = function(){
 		'team2': {},
 	};
 
-	const playerbase_keyed = $this.playerbase_as_dict();
+	const playerbase_keyed = $this.playerbase;
 
 	// TEAM 1
 	for (let player of document.querySelectorAll('#team1_layout .ftfield .player_slot')){
@@ -993,21 +1047,21 @@ $this.save_last_layout = function(){
 		}
 	}
 
-	window.db.module.write('last_layout.lol', JSON.stringify(layout, null, 4))
+	ksys.db.module.write('last_layout.lol', JSON.stringify(layout, null, 4))
 
 	print('saved last layout')
 }
 
 $this.load_last_layout = function(){
 	// get last layout file and evaluate it as JSON
-	const last_layout = JSON.parse(window.db.module.read('last_layout.lol'))
+	const last_layout = JSON.parse(ksys.db.module.read('last_layout.lol'))
 	print(last_layout)
 	// if file does not exist/invalid - return
 	// Yes, it works, because JSON.parse(null) returns null
 	if (!last_layout){return};
 
 	// get playerbase as an indexed dict
-	const pbase_indexed = $this.playerbase_as_dict();
+	const pbase_indexed = $this.playerbase;
 
 	print('WHAT THE FUCK', pbase_indexed)
 	// Go through each slot number in the last layout dict
@@ -1060,7 +1114,7 @@ $this.filter_players_replacement = function(event, _team){
 	// main, replacement
 	// const pools = $this.playerbase[_team][event.target.closest('')];
 	// const all_players = $this.playerbase_as_dict()[_team];
-	const all_players = [...$this.playerbase[_team].main, ...$this.playerbase[_team].reserve];
+	// const all_players = [...$this.playerbase[_team].main, ...$this.playerbase[_team].reserve];
 
 	// important todo: create a function to return players on the field or reservees or whatever
 	// basically groups
@@ -1068,11 +1122,13 @@ $this.filter_players_replacement = function(event, _team){
 	const reserve_demand = !!event.target.closest('.replacement_incoming');
 
 	// for (let player of document.querySelectorAll(`${team} .list_pool .player_item`)){
-	for (let player of all_players){
+	for (let player_index in $this.playerbase[team].both){
+		const player = $this.playerbase[team].both[player_index];
+
 		const player_is_on_field = player.is_on_field()
 
 		if (on_field_demand && !player_is_on_field){
-			continue
+			// continue
 		}
 
 		if (reserve_demand && (!player.is_reserve || player_is_on_field)){
@@ -1112,18 +1168,18 @@ $this.replacement_player_title = async function(event){
 	}
 
 	// todo: do the same for other titles
-	const pdict = $this.playerbase_as_dict()
-	const all_players = {...pdict.one.both, ...pdict.two.both};
+	// const pdict = $this.playerbase_as_dict()
+	const all_players = $this.playerbase.global_index;
 
 	const leaving_player_object = all_players[leaving_player.attr('namecode')];
 	const incoming_player_object = all_players[incoming_player.attr('namecode')];
 
 	await $this.titles.replacement_out.set_text('player_name', leaving_player_object.surname)
 	await $this.titles.replacement_out.set_img_src('club_logo', leaving_player_object.get_team_logo())
-	await $this.titles.replacement_in.set_text('player_name', leaving_player_object.surname)
-	await $this.titles.replacement_in.set_img_src('club_logo', leaving_player_object.get_team_logo())
+	await $this.titles.replacement_in.set_text('player_name', incoming_player_object.surname)
+	await $this.titles.replacement_in.set_img_src('club_logo', incoming_player_object.get_team_logo())
 
-	window.btns.pool.exec_replacement_sequence.vmixbtn(false)
+	ksys.btns.pool.exec_replacement_sequence.vmixbtn(false)
 
 	await $this.titles.replacement_out.overlay_in(1)
 	await kbsleep(5000)
@@ -1131,7 +1187,7 @@ $this.replacement_player_title = async function(event){
 	await kbsleep(5000)
 	await $this.titles.replacement_in.overlay_out(1)
 
-	window.btns.pool.exec_replacement_sequence.vmixbtn(true)
+	ksys.btns.pool.exec_replacement_sequence.vmixbtn(true)
 }
 
 
@@ -1148,28 +1204,28 @@ $this.show_card = async function(_card){
 	const card = $this.titles[card_selection[_card]];
 	const selected_player = document.querySelector('#card_player_filter .generic_player_item.selected_to_punish')
 	if (selected_player){
-		const player_object = {...$this.playerbase_as_dict().one.both, ...$this.playerbase_as_dict().two.both}[selected_player.getAttribute('namecode')];
+		const player_object = $this.playerbase.global_index[selected_player.getAttribute('namecode')];
 
 		$this.next_card_out = card;
 
 		await card.set_text('player_name', `${player_object.number} ${player_object.surname.toUpperCase()}`)
 		await card.set_img_src('club_logo', player_object.get_team_logo())
 		// disable buttons
-		window.btns.pool.red_card.vmixbtn(false)
-		window.btns.pool.yellow_card.vmixbtn(false)
+		ksys.btns.pool.red_card.vmixbtn(false)
+		ksys.btns.pool.yellow_card.vmixbtn(false)
 		await card.overlay_in(1)
 
 		// re-enable buttons
-		window.btns.pool.red_card.vmixbtn(true)
-		window.btns.pool.yellow_card.vmixbtn(true)
+		ksys.btns.pool.red_card.vmixbtn(true)
+		ksys.btns.pool.yellow_card.vmixbtn(true)
 	}
 }
 
 $this.hide_card = async function(){
 	// disable buttons
-	window.btns.pool.red_card.vmixbtn(false)
-	window.btns.pool.yellow_card.vmixbtn(false)
-	window.btns.pool.kill_card.vmixbtn(false)
+	ksys.btns.pool.red_card.vmixbtn(false)
+	ksys.btns.pool.yellow_card.vmixbtn(false)
+	ksys.btns.pool.kill_card.vmixbtn(false)
 
 	if ($this.next_card_out){
 		print('Turning off', $this.next_card_out.title_name)
@@ -1177,9 +1233,9 @@ $this.hide_card = async function(){
 	}
 
 	// re-enable buttons
-	window.btns.pool.red_card.vmixbtn(true)
-	window.btns.pool.yellow_card.vmixbtn(true)
-	window.btns.pool.kill_card.vmixbtn(true)
+	ksys.btns.pool.red_card.vmixbtn(true)
+	ksys.btns.pool.yellow_card.vmixbtn(true)
+	ksys.btns.pool.kill_card.vmixbtn(true)
 }
 
 
@@ -1217,7 +1273,7 @@ $this.upd_player_layout = async function(team){
 	const team_field = _team_selector[team].field;
 	const team_def = _team_selector[team].def;
 
-	const player_pool = $this.playerbase_as_dict()[_team_selector[team].num].both;
+	const player_pool = $this.playerbase[_team_selector[team].num].both;
 	// const player_pool = [...$this.playerbase[_team_selector[team].num].main, ...$this.playerbase[_team_selector[team].num].reserve]
 
 	// 
@@ -1231,18 +1287,18 @@ $this.upd_player_layout = async function(team){
 
 		
 		// player number
-		await title.toggle_text(`player_num_${cell_id}`, slot_has_player)
+		await title.toggle_text(`plr_num_${cell_id}`, slot_has_player)
 		// player name
-		await title.toggle_text(`player_name_${cell_id}`, slot_has_player)
+		await title.toggle_text(`plr_name_${cell_id}`, slot_has_player)
 		// tshirt image
-		await title.toggle_img(`player_bg_${cell_id}`, slot_has_player)
+		await title.toggle_img(`plr_bg_${cell_id}`, slot_has_player)
 
 		if (slot_has_player){
 			const player_object = player_pool[player_item.getAttribute('namecode')];
 			// player number
-			await title.set_text(`player_num_${cell_id}`, player_object.number);
+			await title.set_text(`plr_num_${cell_id}`, player_object.number);
 			// player name
-			await title.set_text(`player_name_${cell_id}`, player_object.name);
+			await title.set_text(`plr_name_${cell_id}`, player_object.surname);
 		}
 	}
 
@@ -1251,32 +1307,56 @@ $this.upd_player_layout = async function(team){
 	// main player list
 	// 
 
-	// todo: use array and then join it
+	// 
+	// I sincerely fucking hate javascript retarded fucking useless pointless stupid stinky garbage
+	// Go fucking die in a car crash and then in a fire
+	// (fuck .map, especially)
+	// 
+	const player_list_sorted = [];
+	for (let player in $this.playerbase[team].main){
+		player_list_sorted.push($this.playerbase[team].main[player])
+	}
+	player_list_sorted.sort(function(a, b){
+		// print(a, b)
+		return int(a.number) - int(b.number)
+	})
 	const player_list = [];
 	const player_nums = [];
-	for (let player of document.querySelectorAll(`${team_def} .player_list.starters .list_pool .player_item`)){
-		player_list.push(player.querySelector('[prmname="psurname"] input').value)
-		player_nums.push(player.querySelector('[prmname="number"] input').value)
+	for (let player of player_list_sorted){
+		player_nums.push(player.number)
+		player_list.push(player.surname)
 	}
+
 	// names
 	await title.set_text('playerlist', player_list.join('\n'))
 	// numbers
 	await title.set_text('playerlist_nums', player_nums.join('\n'))
 
 
+
 	// 
 	// reserve list
 	// 
+	const reserve_list_sorted = [];
+	for (let player in $this.playerbase[team].reserve){
+		reserve_list_sorted.push($this.playerbase[team].reserve[player])
+	}
+	reserve_list_sorted.sort(function(a, b){
+		// print(a, b)
+		return int(a.number) - int(b.number)
+	})
 	const reserve_list = [];
 	const reserve_nums = [];
-	for (let player of document.querySelectorAll(`${team_def} .player_list.reserve .list_pool .player_item`)){
-		reserve_list.push(player.querySelector('[prmname="psurname"] input').value)
-		reserve_nums.push(player.querySelector('[prmname="number"] input').value)
+	for (let player of reserve_list_sorted){
+		reserve_nums.push(player.number)
+		reserve_list.push(player.surname)
 	}
 	// names
 	await title.set_text('reserve_list', reserve_list.join('\n'))
 	// numbers
 	await title.set_text('reserve_list_nm', reserve_nums.join('\n'))
+
+
 
 	// 
 	// coach
@@ -1286,7 +1366,7 @@ $this.upd_player_layout = async function(team){
 	// 
 	// team name
 	// 
-	await title.set_text('club_name', $(`${team_def} [prmname="team_name"] input`).val())
+	await title.set_text('club_name', $(`${team_def} [prmname="team_name"] input`).val().upper())
 
 	// 
 	// logo
@@ -1296,30 +1376,30 @@ $this.upd_player_layout = async function(team){
 
 
 $this.show_field_layout = async function(team){
-	window.btns.pool.show_field_layout_command1.vmixbtn(false)
-	window.btns.pool.hide_field_layout_command1.vmixbtn(false)
-	window.btns.pool.show_field_layout_command2.vmixbtn(false)
-	window.btns.pool.hide_field_layout_command2.vmixbtn(false)
+	ksys.btns.pool.show_field_layout_command1.vmixbtn(false)
+	ksys.btns.pool.hide_field_layout_command1.vmixbtn(false)
+	ksys.btns.pool.show_field_layout_command2.vmixbtn(false)
+	ksys.btns.pool.hide_field_layout_command2.vmixbtn(false)
 	await $this.upd_player_layout(team)
 	await $this.titles.team_layout.overlay_in(1)
-	window.btns.pool.show_field_layout_command1.vmixbtn(true)
-	window.btns.pool.hide_field_layout_command1.vmixbtn(true)
-	window.btns.pool.show_field_layout_command2.vmixbtn(true)
-	window.btns.pool.hide_field_layout_command2.vmixbtn(true)
+	ksys.btns.pool.show_field_layout_command1.vmixbtn(true)
+	ksys.btns.pool.hide_field_layout_command1.vmixbtn(true)
+	ksys.btns.pool.show_field_layout_command2.vmixbtn(true)
+	ksys.btns.pool.hide_field_layout_command2.vmixbtn(true)
 }
 
 
 $this.hide_field_layout = async function(team){
-	window.btns.pool.show_field_layout_command1.vmixbtn(false)
-	window.btns.pool.hide_field_layout_command1.vmixbtn(false)
-	window.btns.pool.show_field_layout_command2.vmixbtn(false)
-	window.btns.pool.hide_field_layout_command2.vmixbtn(false)
+	ksys.btns.pool.show_field_layout_command1.vmixbtn(false)
+	ksys.btns.pool.hide_field_layout_command1.vmixbtn(false)
+	ksys.btns.pool.show_field_layout_command2.vmixbtn(false)
+	ksys.btns.pool.hide_field_layout_command2.vmixbtn(false)
 	// await $this.upd_player_layout(team)
 	await $this.titles.team_layout.overlay_out(1)
-	window.btns.pool.show_field_layout_command1.vmixbtn(true)
-	window.btns.pool.hide_field_layout_command1.vmixbtn(true)
-	window.btns.pool.show_field_layout_command2.vmixbtn(true)
-	window.btns.pool.hide_field_layout_command2.vmixbtn(true)
+	ksys.btns.pool.show_field_layout_command1.vmixbtn(true)
+	ksys.btns.pool.hide_field_layout_command1.vmixbtn(true)
+	ksys.btns.pool.show_field_layout_command2.vmixbtn(true)
+	ksys.btns.pool.hide_field_layout_command2.vmixbtn(true)
 }
 
 
@@ -1330,28 +1410,28 @@ $this.save_vs_sublines = function(){
 
 
 $this.show_vs_title = async function(){
-	window.btns.pool.show_splash.vmixbtn(false)
-	await $this.titles.splash.set_text('title_lower_top', $('#vs_text_bottom_upper')[0].value)
-	await $this.titles.splash.set_text('title_lower_bot', $('#vs_text_bottom_lower')[0].value)
+	ksys.btns.pool.show_splash.vmixbtn(false)
+	await $this.titles.splash.set_text('title_lower_top', $('#vs_text_bottom_upper').val())
+	await $this.titles.splash.set_text('title_lower_bot', $('#vs_text_bottom_lower').val())
 
 	await $this.titles.splash.set_img_src('logo_l', $('#team1_def').attr('logo_path'))
 	await $this.titles.splash.set_img_src('logo_r', $('#team2_def').attr('logo_path'))
 
-	await $this.titles.splash.set_text('club_name_l', $('#team1_def [prmname="team_name"] input')[0].value)
-	await $this.titles.splash.set_text('club_name_r', $('#team2_def [prmname="team_name"] input')[0].value)
+	await $this.titles.splash.set_text('club_name_l', $('#team1_def [prmname="team_name"] input').val().upper())
+	await $this.titles.splash.set_text('club_name_r', $('#team2_def [prmname="team_name"] input').val().upper())
 
 	await $this.titles.splash.overlay_in(1)
 
-	window.btns.pool.show_splash.vmixbtn(true)
+	ksys.btns.pool.show_splash.vmixbtn(true)
 }
 
 
 $this.hide_vs_title = async function(){
-	window.btns.pool.show_splash.vmixbtn(false)
-	window.btns.pool.hide_splash.vmixbtn(false)
+	ksys.btns.pool.show_splash.vmixbtn(false)
+	ksys.btns.pool.hide_splash.vmixbtn(false)
 	await $this.titles.splash.overlay_out(1)
-	window.btns.pool.show_splash.vmixbtn(true)
-	window.btns.pool.hide_splash.vmixbtn(true)
+	ksys.btns.pool.show_splash.vmixbtn(true)
+	ksys.btns.pool.hide_splash.vmixbtn(true)
 }
 
 
@@ -1360,28 +1440,40 @@ $this.goal_score_on = async function(){
 
 	if (!selected_player){return};
 
-	const player_object = {...$this.playerbase_as_dict().one.both, ...$this.playerbase_as_dict().two.both}[selected_player.getAttribute('namecode')]
+	const player_object = $this.playerbase.global_index[selected_player.getAttribute('namecode')]
+
+	// register this goal
+	$($this.teams[player_object.team.num_word].score_pool).append(`
+		<div oncontextmenu="this.remove()" namecode="${player_object.namecode}" class="team_score_record">
+			<input value="${Math.floor($this.base_counter.tick.global / 60)}" type="text" class="score_record_time">
+			<input value="${player_object.surname}" type="text" class="score_record_player">
+		</div>
+	`);
 
 	await $this.titles.gscore.set_text('player_name', `${player_object.number} ${player_object.surname.toUpperCase()}`)
 	await $this.titles.gscore.set_img_src('club_logo', player_object.get_team_logo())
+
+	await $this.titles.timer.set_text('score_l', $($this.teams[1].score_pool).find('.team_score_record').length)
+	await $this.titles.timer.set_text('score_r', $($this.teams[2].score_pool).find('.team_score_record').length)
+
 	// disable buttons
-	window.btns.pool.scored.vmixbtn(false)
+	ksys.btns.pool.scored.vmixbtn(false)
 
 	await $this.titles.gscore.overlay_in(1)
 
 	// re-enable buttons
-	window.btns.pool.scored.vmixbtn(true)
+	ksys.btns.pool.scored.vmixbtn(true)
 }
 
 
 $this.goal_score_off = async function(){
-	window.btns.pool.scored.vmixbtn(false)
-	window.btns.pool.scored_off.vmixbtn(false)
+	ksys.btns.pool.scored.vmixbtn(false)
+	ksys.btns.pool.scored_off.vmixbtn(false)
 
 	await $this.titles.gscore.overlay_out(1)
 
-	window.btns.pool.scored.vmixbtn(true)
-	window.btns.pool.scored_off.vmixbtn(true)
+	ksys.btns.pool.scored.vmixbtn(true)
+	ksys.btns.pool.scored_off.vmixbtn(true)
 }
 
 
@@ -1399,31 +1491,31 @@ $this.show_coach = async function(team){
 
 	const teamdef = _team_selector[team].def
 
-	window.btns.pool.show_coach_team1.vmixbtn(false)
-	window.btns.pool.hide_coach_team1.vmixbtn(false)
-	window.btns.pool.show_coach_team2.vmixbtn(false)
-	window.btns.pool.hide_coach_team2.vmixbtn(false)
+	ksys.btns.pool.show_coach_team1.vmixbtn(false)
+	ksys.btns.pool.hide_coach_team1.vmixbtn(false)
+	ksys.btns.pool.show_coach_team2.vmixbtn(false)
+	ksys.btns.pool.hide_coach_team2.vmixbtn(false)
 
 	await $this.titles.coach.set_text('name', $(`${teamdef} [prmname="team_coach"] input`)[0].value)
 	await $this.titles.coach.overlay_in(1)
 
-	window.btns.pool.show_coach_team1.vmixbtn(true)
-	window.btns.pool.hide_coach_team1.vmixbtn(true)
-	window.btns.pool.show_coach_team2.vmixbtn(true)
-	window.btns.pool.hide_coach_team2.vmixbtn(true)
+	ksys.btns.pool.show_coach_team1.vmixbtn(true)
+	ksys.btns.pool.hide_coach_team1.vmixbtn(true)
+	ksys.btns.pool.show_coach_team2.vmixbtn(true)
+	ksys.btns.pool.hide_coach_team2.vmixbtn(true)
 }
 
 
 $this.hide_coach = async function(){
-	window.btns.pool.show_coach_team1.vmixbtn(false)
-	window.btns.pool.hide_coach_team1.vmixbtn(false)
-	window.btns.pool.show_coach_team2.vmixbtn(false)
-	window.btns.pool.hide_coach_team2.vmixbtn(false)
+	ksys.btns.pool.show_coach_team1.vmixbtn(false)
+	ksys.btns.pool.hide_coach_team1.vmixbtn(false)
+	ksys.btns.pool.show_coach_team2.vmixbtn(false)
+	ksys.btns.pool.hide_coach_team2.vmixbtn(false)
 	await $this.titles.coach.overlay_out(1)
-	window.btns.pool.show_coach_team1.vmixbtn(true)
-	window.btns.pool.hide_coach_team1.vmixbtn(true)
-	window.btns.pool.show_coach_team2.vmixbtn(true)
-	window.btns.pool.hide_coach_team2.vmixbtn(true)
+	ksys.btns.pool.show_coach_team1.vmixbtn(true)
+	ksys.btns.pool.hide_coach_team1.vmixbtn(true)
+	ksys.btns.pool.show_coach_team2.vmixbtn(true)
+	ksys.btns.pool.hide_coach_team2.vmixbtn(true)
 }
 
 
@@ -1434,25 +1526,157 @@ $this.timer_callback = function(tick){
 }
 
 
+$this.extra_timer_callback = function(tick){
+	const minutes = Math.floor(tick.global / 60)
+	const seconds = tick.global - (60*minutes)
+	$this.titles.timer.set_text('extra_ticker', `${minutes}:${str(seconds).zfill(2)}`)
+}
 
 
-$this.start_base_timer = function(){
-	$this.counter = ksys.ticker.spawn({
-		'duration': (45*60) * 1000,
-		'name': 'giga_timer',
+
+
+$this.start_base_timer = async function(rnum){
+	if ($this.base_counter){
+		$this.base_counter.force_kill()
+		$this.base_counter = null;
+	}
+
+	const dur = 45;
+
+	$this.base_counter = ksys.ticker.spawn({
+		'duration': (rnum == 2) ? (((dur*60)*2)+1) : ((dur*60)+1),
+		'name': `giga_timer${rnum}`,
+		'offset': (rnum == 2) ? (dur*60) : 0,
 		'infinite': false,
 		'reversed': false,
 		'callback': $this.timer_callback,
 		'wait': true,
 	})
 
-	$this.counter.fire()
+	$this.base_counter.fire()
 	.then(function(response) {
 		// turn off automatically
-		if ($this.counter){
-			$this.counter.pause = true;
+		if ($this.base_counter){
+			$this.base_counter.force_kill()
+		}
+	})
+
+	// print($this.base_counter)
+
+}
+
+
+$this.main_timer_vis = async function(state){
+	if (state == true){
+		await $this.titles.timer.set_text('command_l', $this.teams[1].shorthand.value)
+		await $this.titles.timer.set_text('command_r', $this.teams[2].shorthand.value)
+
+		await $this.titles.timer.set_text('score_l', $($this.teams[1].score_pool).find('.team_score_record').length)
+		await $this.titles.timer.set_text('score_r', $($this.teams[2].score_pool).find('.team_score_record').length)
+
+		$this.titles.timer.overlay_in(2)
+	}
+	if (state == false){
+		$this.titles.timer.overlay_out(2)
+	}
+}
+
+$this.extra_time_vis = async function(state){
+	if (state == true){
+		await $this.titles.timer.toggle_text('time_added', true)
+		await $this.titles.timer.toggle_img('extra_time_bg', true)
+		await $this.titles.timer.toggle_text('extra_ticker', true)
+	}
+	if (state == false){
+		await $this.titles.timer.toggle_text('time_added', false)
+		await $this.titles.timer.toggle_img('extra_time_bg', false)
+		await $this.titles.timer.toggle_text('extra_ticker', false)
+	}
+}
+
+
+$this.launch_extra_time = async function(){
+	const extra_amount = int($('#timer_ctrl_additional input').val())
+	if (!extra_amount){
+		return
+	}
+
+	await $this.titles.timer.set_text('time_added', $(`+${extra_amount}`))
+	await $this.titles.timer.toggle_text('time_added', true)
+	await $this.titles.timer.toggle_img('extra_time_bg', true)
+	await $this.titles.timer.toggle_text('extra_ticker', true)
+
+	$this.extra_counter = ksys.ticker.spawn({
+		'duration': extra_amount*60,
+		'name': `gigas_timer${1}`,
+		'infinite': true,
+		'reversed': false,
+		'callback': $this.extra_timer_callback,
+		'wait': true,
+	})
+
+	$this.extra_counter.fire()
+	.then(function(response) {
+		// turn off automatically
+		if ($this.extra_counter){
+			$this.extra_counter.force_kill()
 		}
 	})
 }
 
 
+
+$this.score_sum_vis = async function(state){
+	if (state == true){
+
+		const nums_l = [];
+		const names_l = [];
+		for (let player of document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record')){
+			nums_l.push(player.querySelector('.score_record_time').value)
+			names_l.push(player.querySelector('.score_record_player').value)
+		}
+		await $this.titles.final_scores.set_text('scores_l', names_l.join('\n'))
+		await $this.titles.final_scores.set_text('scores_l_num', nums_l.join('\n'))
+
+		const nums_r = [];
+		const names_r = [];
+		for (let player of document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record')){
+			nums_r.push(player.querySelector('.score_record_time').value)
+			names_r.push(player.querySelector('.score_record_player').value)
+		}
+		await $this.titles.final_scores.set_text('scores_r', names_r.join('\n'))
+		await $this.titles.final_scores.set_text('scores_r_num', nums_r.join('\n'))
+
+
+
+		// composite
+		await $this.titles.final_scores.set_text('score_sum', `${document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length} : ${document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length}`)
+
+		// team name LEFT
+		await $this.titles.final_scores.set_text('team_name_l', $this.teams.one.team_name.value.upper())
+		// team logo LEFT
+		await $this.titles.final_scores.set_img_src('team_logo_l', $this.teams.one.logo())
+
+		// team name RIGHT
+		await $this.titles.final_scores.set_text('team_name_r', $this.teams.two.team_name.value.upper())
+		// team logo RIGHT
+		await $this.titles.final_scores.set_img_src('team_logo_r', $this.teams.two.logo())
+
+		// show
+		await $this.titles.final_scores.overlay_in(1)
+	}
+
+	if (state == false){
+		await $this.titles.final_scores.overlay_out(1)
+	}
+}
+
+
+$this.add_score = function(team){
+	$(`#score_ctrl_team${team} .score_ctrl_table`).append(`
+		<div oncontextmenu="this.remove()" class="team_score_record">
+			<input type="text" class="score_record_time">
+			<input type="text" class="score_record_player">
+		</div>
+	`)
+}

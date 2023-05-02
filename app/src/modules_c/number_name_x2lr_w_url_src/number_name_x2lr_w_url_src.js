@@ -1,4 +1,4 @@
-window.modules.number_name_x2lr_w_url_src={};
+kbmodules.number_name_x2lr_w_url_src={};
 
 
 // window.modules.number_name_x2lr_w_url_src = {}
@@ -6,7 +6,7 @@ window.modules.number_name_x2lr_w_url_src={};
 
 
 
-window.modules.number_name_x2lr_w_url_src.load = async function()
+kbmodules.number_name_x2lr_w_url_src.load = async function()
 {
 	context.module.pull()
 	var cdata = await talker.project()
@@ -25,7 +25,7 @@ window.modules.number_name_x2lr_w_url_src.load = async function()
 
 
 
-window.modules.number_name_x2lr_w_url_src.update_coefficients = async function(btn)
+kbmodules.number_name_x2lr_w_url_src.update_coefficients = async function(btn)
 {
 	btn.vmixbtn(false)
 	// echo status
@@ -66,11 +66,11 @@ window.modules.number_name_x2lr_w_url_src.update_coefficients = async function(b
 
 
 	// set values
-	var go_pipe = ksys.map.pipe(document.querySelector('#info_display_dynamic xmlmap'), xml_info)
+	const go_pipe = ksys.map.pipe(document.querySelector('#info_display_dynamic xmlmap'), xml_info)
 	// wipe
 	go_pipe.wipe()
 	// do values
-	for (var upd of go_pipe['loop'])
+	for (let upd of go_pipe['loop'])
 	{
 		var set_data = upd['data'];
 
@@ -78,7 +78,7 @@ window.modules.number_name_x2lr_w_url_src.update_coefficients = async function(b
 			upd.deny()
 			continue
 		}
-		
+
 		// special condition
 		if (upd.special == 'date'){
 			var fulldate = new Date(upd['data'])
@@ -113,7 +113,7 @@ window.modules.number_name_x2lr_w_url_src.update_coefficients = async function(b
 
 
 
-window.modules.number_name_x2lr_w_url_src.trigger_onn = async function(btn)
+kbmodules.number_name_x2lr_w_url_src.trigger_onn = async function(btn)
 {
 	// lock the button before starting the sequence
 	btn.vmixbtn(false)
@@ -175,14 +175,14 @@ window.modules.number_name_x2lr_w_url_src.trigger_onn = async function(btn)
 
 
 
-window.modules.number_name_x2lr_w_url_src.force_off = async function(btn)
+kbmodules.number_name_x2lr_w_url_src.force_off = async function(btn)
 {
 	// lock this button
 	btn.vmixbtn(false)
 
 
 	// break
-	window.modules.number_name_x2lr_w_url_src.period_break()
+	kbmodules.number_name_x2lr_w_url_src.period_break()
 
 	// lock everything
 	var all = btns.pool
@@ -217,7 +217,7 @@ window.modules.number_name_x2lr_w_url_src.force_off = async function(btn)
 	all.break_period.vmixbtn(true)
 }
 
-window.modules.number_name_x2lr_w_url_src.period_callback = async function(ticks)
+kbmodules.number_name_x2lr_w_url_src.period_callback = async function(ticks)
 {
 	// console.timeEnd('tick')
 	const fresh_context = context.module.read().interval / 1000
@@ -227,13 +227,13 @@ window.modules.number_name_x2lr_w_url_src.period_callback = async function(ticks
 	// if loop reached - trigger shite
 	// it's important to note that we read fresh interval each time
 	if (ticks.iteration % fresh_context == 0){
-		await window.modules.number_name_x2lr_w_url_src.update_coefficients($('vmixbtn[upd]')[0])
-		await window.modules.number_name_x2lr_w_url_src.trigger_onn($('vmixbtn[trigger_onn]')[0])
+		await kbmodules.number_name_x2lr_w_url_src.update_coefficients($('vmixbtn[upd]')[0])
+		await kbmodules.number_name_x2lr_w_url_src.trigger_onn($('vmixbtn[trigger_onn]')[0])
 	}
 	// console.time('tick')
 }
 
-window.modules.number_name_x2lr_w_url_src.init_period = async function(btn)
+kbmodules.number_name_x2lr_w_url_src.init_period = async function(btn)
 {
 	// lock this button
 	btn.vmixbtn(false)
@@ -241,14 +241,14 @@ window.modules.number_name_x2lr_w_url_src.init_period = async function(btn)
 	btns.pool.trigger_onn.vmixbtn(false)
 
 	// turn off the title
-	await window.modules.number_name_x2lr_w_url_src.force_off($('vmixbtn[forceoff]')[0])
+	await kbmodules.number_name_x2lr_w_url_src.force_off($('vmixbtn[forceoff]')[0])
 
 	// spawn a timer
 	window.ad_timer = ksys.ticker.spawn({
 		'duration': context.module.read().interval / 1000,
 		'name': 'giga_timer',
 		'infinite': true,
-		'callback': window.modules.number_name_x2lr_w_url_src.period_callback,
+		'callback': kbmodules.number_name_x2lr_w_url_src.period_callback,
 		'wait': true
 	})
 	// init it
@@ -256,7 +256,7 @@ window.modules.number_name_x2lr_w_url_src.init_period = async function(btn)
 }
 
 
-window.modules.number_name_x2lr_w_url_src.period_break = function()
+kbmodules.number_name_x2lr_w_url_src.period_break = function()
 {
 	print('Killing timer')
 	// unlock period
@@ -271,7 +271,7 @@ window.modules.number_name_x2lr_w_url_src.period_break = function()
 }
 
 
-window.modules.number_name_x2lr_w_url_src.mkinput = async function()
+kbmodules.number_name_x2lr_w_url_src.mkinput = async function()
 {
 	var get_fullpath = $('input[tgt_title]').val().replaceAll('"', '').trim()
 	$('input[tgt_title]').val(get_fullpath)
@@ -298,7 +298,7 @@ window.modules.number_name_x2lr_w_url_src.mkinput = async function()
 
 
 
-window.modules.number_name_x2lr_w_url_src.set_title_name = async function()
+kbmodules.number_name_x2lr_w_url_src.set_title_name = async function()
 {
 	// SetInputName
 	const title_val = $('input[tgt_title_name]').val().trim();
@@ -311,7 +311,7 @@ window.modules.number_name_x2lr_w_url_src.set_title_name = async function()
 }
 
 
-window.modules.number_name_x2lr_w_url_src.save_interval = function()
+kbmodules.number_name_x2lr_w_url_src.save_interval = function()
 {
 	const interval_fix = $('input[interval]').val().trim()
 	if (interval_fix == ''){return}
@@ -323,13 +323,13 @@ window.modules.number_name_x2lr_w_url_src.save_interval = function()
 	context.module.prm('interval', int(eval(interval_fix)) * 1000);
 }
 
-window.modules.number_name_x2lr_w_url_src.set_title_xml_src = function()
+kbmodules.number_name_x2lr_w_url_src.set_title_xml_src = function()
 {
 	context.module.prm('xml_url', $('prmrow input[xml_link]').val().trim());
 }
 
 
-window.modules.number_name_x2lr_w_url_src.change_input_title = function()
+kbmodules.number_name_x2lr_w_url_src.change_input_title = function()
 {
 	ksys.ask_for_file()
 	.then(function(response) {
@@ -349,4 +349,4 @@ window.modules.number_name_x2lr_w_url_src.change_input_title = function()
 
 
 
-// window.modules.number_name_x2lr_w_url_src.load()
+// kbmodules.number_name_x2lr_w_url_src.load()

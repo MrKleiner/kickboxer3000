@@ -1,14 +1,22 @@
-window.modules.starting_page={};
+kbmodules.starting_page={};
 
 
 
 
 
 
-window.modules.starting_page.save_creds = function()
+kbmodules.starting_page.save_creds = function()
 {
-	context.global.prm('vmix_ip', $('#welcome_enter_info [ip]').val(), false)
-	context.global.prm('vmix_port', $('#welcome_enter_info [port]').val(), false)
-	context.global.save()
+	ksys.context.global.cache['vmix_ip'] = $('#welcome_enter_info [ip]').val()
+	ksys.context.global.cache['vmix_port'] = $('#welcome_enter_info [port]').val()
+	ksys.context.global.save()
 	window.location.reload()
 }
+
+
+
+
+
+
+
+
