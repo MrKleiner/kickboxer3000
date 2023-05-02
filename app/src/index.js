@@ -1,4 +1,4 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, globalShortcut } = require('electron');
 const path = require('path');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -25,6 +25,14 @@ const createWindow = () => {
 
 	// Open the DevTools.
 	mainWindow.webContents.openDevTools();
+
+	globalShortcut.register('CommandOrControl+R', function() {
+		mainWindow.reload();
+	})
+
+	globalShortcut.register('CommandOrControl+Shift+I', function() {
+		mainWindow.webContents.openDevTools();
+	})
 };
 
 // This method will be called when Electron has finished

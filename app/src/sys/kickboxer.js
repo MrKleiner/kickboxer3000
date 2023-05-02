@@ -1,19 +1,3 @@
-// ===================================
-//              f5
-// ===================================
-function app_reload_refresh(evee){
-	if (  evee.ctrlKey  &&  evee.keyCode == 82  ){
-		location.reload()
-	}
-}
-document.addEventListener('keydown', kvt => {
-	app_reload_refresh(kvt)
-    // if (kvt.altKey && kvt.keyCode == 87 && window.current_app_module != 'main_dashboard'){
-    // 	dashboard_app_loader()
-    // }
-});
-
-
 
 
 
