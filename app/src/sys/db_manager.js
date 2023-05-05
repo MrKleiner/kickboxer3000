@@ -29,14 +29,14 @@ const db_module_read_file = function(fname=null, load_as='text'){
 // write file
 const db_module_write_file = function(fname=null, data=null){
 	const module_folder = app_root.join('db', 'module', ksys.context.module_name)
-
+	// obviously, both filename and data should be present and valid
 	if (!fname || !data){
 		console.warn('Tried writing invalid data to the module db', fname, data)
 		return false
 	}
-
-	ksys.ensure_folder_exists(module_folder)
-
+	// ensure that the target module folder exists
+	ksys.util.ensure_folder_exists(module_folder)
+	// write the desired file to the module folder
 	module_folder.join(fname).writeSync(data)
 }
 
@@ -46,5 +46,7 @@ module.exports = {
 	module: {
 		read: db_module_read_file,
 		write: db_module_write_file,
-	}
+	},
 }
+
+

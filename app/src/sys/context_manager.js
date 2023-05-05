@@ -78,6 +78,7 @@ ctx.module.prm = function(key=null, value=undefined, dosave=true){
 
 	// if defined - update cache and save if asked to
 	ksys.context.module.cache[key] = value;
+	print('Incoming params:', key, value)
 	if (dosave == true){
 		ksys.context.module.save()
 	}
@@ -93,7 +94,7 @@ ctx.module.save = function(){
 	// construct path pointing to the context file
 	const ctx_file = target_folder.join('context.ct');
 	ctx_file.writeSync(JSON.stringify(ksys.context.module.cache, null, 4))
-	print('Saved Module Context')
+	print('Saved Module Context', ksys.context.module.cache)
 }
 
 // load fresh context from disk into memory
@@ -110,7 +111,7 @@ ctx.module.pull = function(){
 	const fresh_context = JSON.parse(context_file.readFileSync('utf8'))
 	ksys.context.module.cache = fresh_context;
 	print('Pulled Module Context')
-	return fresh_context
+	return {...fresh_context}
 }
 
 

@@ -1,5 +1,7 @@
-kbmodules.kickboxing_standard={};
 
+if(!kbmodules){kbmodules={}};
+
+if(!kbmodules.kickboxing_standard){kbmodules.kickboxing_standard={}};
 
 
 

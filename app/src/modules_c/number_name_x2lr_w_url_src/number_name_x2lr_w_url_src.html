@@ -51,26 +51,26 @@
 	<properties regular_box>
 		<prmrow>
 			<input placeholder="Interval In Seconds. Expressions Supported (e.g. 60*17)" interval type="text">
-			<sysbtn btname="save_interval" onclick="modules.number_name_x2lr_w_url_src.save_interval()">Save</sysbtn>
+			<sysbtn btname="save_interval" onclick="modules.kbmodules.number_name_x2lr_w_url_src.save_interval()">Save</sysbtn>
 		</prmrow>
 
 		<prmrow>
 			<rowlabel>Spawn-Set Target Title:</rowlabel>
 			<input placeholder="Absolute Path to a XAML file (gtzip works too, quotes allowed)" tgt_title type="text">
-			<sysbtn btname="spawn_title" onclick="modules.number_name_x2lr_w_url_src.mkinput()">Spawn</sysbtn>
-			<sysbtn btname="change_title" onclick="modules.number_name_x2lr_w_url_src.change_input_title()">Change</sysbtn>
+			<sysbtn btname="spawn_title" onclick="modules.kbmodules.number_name_x2lr_w_url_src.mkinput()">Spawn</sysbtn>
+			<sysbtn btname="change_title" onclick="modules.kbmodules.number_name_x2lr_w_url_src.change_input_title()">Change</sysbtn>
 		</prmrow>
 
 		<prmrow>
 			<rowlabel>Set Title Name</rowlabel>
 			<input placeholder="Anything, any length, dots allowed. No collisions allowed" tgt_title_name type="text">
-			<sysbtn btname="set_title_name" onclick="modules.number_name_x2lr_w_url_src.set_title_name()">Set Name</sysbtn>
+			<sysbtn btname="set_title_name" onclick="modules.kbmodules.number_name_x2lr_w_url_src.set_title_name()">Set Name</sysbtn>
 		</prmrow>
 
 		<prmrow>
 			<rowlabel>XML SRC Link</rowlabel>
 			<input style="min-width: 40%; margin-left: 10px;" placeholder="Internet link WITH http/https" xml_link type="text">
-			<sysbtn btname="set_title_name" onclick="modules.number_name_x2lr_w_url_src.set_title_xml_src()">Set SRC</sysbtn>
+			<sysbtn btname="set_title_name" onclick="modules.kbmodules.number_name_x2lr_w_url_src.set_title_xml_src()">Set SRC</sysbtn>
 		</prmrow>
 <!-- 		<prmrow>
 			<rowlabel>Example XML</rowlabel>
@@ -86,14 +86,14 @@
 
 	<div id="ctrl_btns">
 		<div>
-			<vmixbtn btname="upd" upd onclick="modules.number_name_x2lr_w_url_src.update_coefficients(this)">Update</vmixbtn>
-			<vmixbtn btname="trigger_onn" trigger_onn onclick="modules.number_name_x2lr_w_url_src.trigger_onn(this)">Force Onn</vmixbtn>
-			<vmixbtn btname="forceoff" forceoff onclick="modules.number_name_x2lr_w_url_src.force_off(this)">Force Off</vmixbtn>
+			<vmixbtn btname="upd" upd onclick="modules.kbmodules.number_name_x2lr_w_url_src.update_coefficients(this)">Update</vmixbtn>
+			<vmixbtn btname="trigger_onn" trigger_onn onclick="modules.kbmodules.number_name_x2lr_w_url_src.trigger_onn(this)">Force Onn</vmixbtn>
+			<vmixbtn btname="forceoff" forceoff onclick="modules.kbmodules.number_name_x2lr_w_url_src.force_off(this)">Force Off</vmixbtn>
 		</div>
 
 		<div>
-			<vmixbtn btname="do_period" do_period onclick="modules.number_name_x2lr_w_url_src.init_period(this)">Loop</vmixbtn>
-			<vmixbtn btname="break_period" break_period onclick="modules.number_name_x2lr_w_url_src.period_break()">Break</vmixbtn>
+			<vmixbtn btname="do_period" do_period onclick="modules.kbmodules.number_name_x2lr_w_url_src.init_period(this)">Loop</vmixbtn>
+			<vmixbtn btname="break_period" break_period onclick="modules.kbmodules.number_name_x2lr_w_url_src.period_break()">Break</vmixbtn>
 		</div>
 
 	</div>

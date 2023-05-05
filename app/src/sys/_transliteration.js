@@ -1,4 +1,6 @@
-const translit = function(inputText) {
+const translit = function(txt) {
+	const inputText = str(txt).toLowerCase();
+
 	const rules = [
 		{'pattern': 'а', 'replace': 'a'},
 		{'pattern': 'б', 'replace': 'b'},

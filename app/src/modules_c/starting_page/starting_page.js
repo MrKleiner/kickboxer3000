@@ -1,5 +1,7 @@
-kbmodules.starting_page={};
 
+if(!kbmodules){kbmodules={}};
+
+if(!kbmodules.starting_page){kbmodules.starting_page={}};
 
 
 

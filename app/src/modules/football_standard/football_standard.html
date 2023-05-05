@@ -1,23 +1,119 @@
 <div id="football_standard">
 
 	<div id="tabs">
-		<div onclick="kbmodules.$this.tab_switch(event)" match_id="team_defs" class="tab">Config/Lists</div>
-		<div onclick="kbmodules.$this.tab_switch(event)" match_id="teams_layouts" class="tab">Layout</div>
-		<div onclick="kbmodules.$this.tab_switch(event)" match_id="layout_buttons" class="tab">Layout Ctrl</div>
-		<div onclick="kbmodules.$this.tab_switch(event)" match_id="punisher" class="tab">Cards/Goals</div>
-		<div onclick="kbmodules.$this.tab_switch(event)" match_id="replacement" class="tab">Substitute</div>
-		<div onclick="kbmodules.$this.tab_switch(event)" match_id="timer_and_scores" class="tab">Timer/Scores</div>
+		<div onclick="$this.tab_switch(event)" match_id="team_defs" class="tab">Config/Lists</div>
+		<div onclick="$this.tab_switch(event)" match_id="teams_layouts" class="tab">Layout</div>
+		<div onclick="$this.tab_switch(event)" match_id="layout_buttons" class="tab">Layout Ctrl</div>
+		<div onclick="$this.tab_switch(event)" match_id="punisher" class="tab">Cards/Goals</div>
+		<div onclick="$this.tab_switch(event)" match_id="replacement" class="tab">Substitute</div>
+		<div onclick="$this.tab_switch(event)" match_id="timer_and_scores" class="tab">Timer/Scores</div>
 	</div>
 
 
 	<tab tabid="team_defs">
-		<div id="team_defs">
 
+		<div id="text_formatting_params">
+
+			<div class="format_param" format_param_name="coach">
+				<div class="format_param_label">Coach</div>
+				<div class="format_param_selector">
+					<div class="txt_format_opt_group">
+						<div class="txt_format_option">
+							<label for="coach_text_format_translit">Translit</label>
+							<input type="checkbox" id="coach_text_format_translit">
+						</div>
+					</div>
+
+					<div class="txt_format_opt_group">
+						<div class="txt_format_option">
+							<label for="coach_text_format_capital">Capital</label>
+							<input value="capital" type="radio" id="coach_text_format_capital" name="coach_text_format">
+						</div>
+
+						<div class="txt_format_option">
+							<label for="coach_text_format_all_upper">ALL UPPER</label>
+							<input value="all_upper" type="radio" id="coach_text_format_all_upper" name="coach_text_format">
+						</div>
+
+						<div class="txt_format_option">
+							<label for="coach_text_format_all_lower">all lower</label>
+							<input value="all_lower" type="radio" id="coach_text_format_all_lower" name="coach_text_format">
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+
+			<div class="format_param" format_param_name="players">
+				<div class="format_param_label">Players</div>
+				<div class="format_param_selector">
+					<div class="txt_format_opt_group">
+						<div class="txt_format_option">
+							<label for="players_text_format_translit">Translit</label>
+							<input type="checkbox" id="players_text_format_translit">
+						</div>
+					</div>
+
+					<div class="txt_format_opt_group">
+						<div class="txt_format_option">
+							<label for="players_text_format_capital">Capital</label>
+							<input value="capital" type="radio" id="players_text_format_capital" name="players_text_format">
+						</div>
+
+						<div class="txt_format_option">
+							<label for="players_text_format_all_upper">ALL UPPER</label>
+							<input value="all_upper" type="radio" id="players_text_format_all_upper" name="players_text_format">
+						</div>
+
+						<div class="txt_format_option">
+							<label for="players_text_format_all_lower">all lower</label>
+							<input value="all_lower" type="radio" id="players_text_format_all_lower" name="players_text_format">
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+
+			<div class="format_param" format_param_name="club_name">
+				<div class="format_param_label">Full club name</div>
+				<div class="format_param_selector">
+					<div class="txt_format_opt_group">
+						<div class="txt_format_option">
+							<label for="club_name_text_format_translit">Translit</label>
+							<input type="checkbox" id="club_name_text_format_translit">
+						</div>
+					</div>
+
+					<div class="txt_format_opt_group">
+						<div class="txt_format_option">
+							<label for="club_name_text_format_capital">Capital</label>
+							<input value="capital" type="radio" id="club_name_text_format_capital" name="club_name_text_format">
+						</div>
+
+						<div class="txt_format_option">
+							<label for="club_name_text_format_all_upper">ALL UPPER</label>
+							<input value="all_upper" type="radio" id="club_name_text_format_all_upper" name="club_name_text_format">
+						</div>
+
+						<div class="txt_format_option">
+							<label for="club_name_text_format_all_lower">all lower</label>
+							<input value="all_lower" type="radio" id="club_name_text_format_all_lower" name="club_name_text_format">
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+		</div>
+
+		<div id="team_defs">
 
 			<div id="team1_def" class="teamdef">
 				<div class="team_base_params_ctrl">
-					<sysbtn btname="save_team_preset" onclick="kbmodules.$this.save_team_preset(1)">Save Team Preset</sysbtn>
-					<select onchange="kbmodules.$this.load_team_preset(event)" class="team_preset_selector">
+					<sysbtn btname="save_team_preset" onclick="$this.save_team_preset(1)">Save Team Preset</sysbtn>
+					<select onchange="$this.load_team_preset(event)" class="team_preset_selector">
 					</select>
 					<!-- <option value="volvo">Volvo</option> -->
 				</div>
@@ -25,17 +121,17 @@
 				<div class="team_base_params">
 					<div class="team_param" prmname="team_logo">
 						<div class="team_param_label">Logo image</div>
-						<input onchange="kbmodules.$this.upd_vis_feedback()" type="file" class="team_param_input">
+						<input onchange="$this.upd_vis_feedback()" type="file" class="team_param_input">
 					</div>
 
 					<div class="team_param" prmname="team_name">
 						<div class="team_param_label">Club name</div>
-						<input onchange="kbmodules.$this.upd_vis_feedback()" type="text" class="team_param_input">
+						<input onchange="$this.upd_vis_feedback()" type="text" class="team_param_input">
 					</div>
 
 					<div class="team_param" prmname="club_shorthand">
 						<div class="team_param_label">Club shorthand</div>
-						<input onchange="kbmodules.$this.upd_vis_feedback()" type="text" class="team_param_input">
+						<input onchange="$this.upd_vis_feedback()" type="text" class="team_param_input">
 					</div>
 
 					<div class="team_param" prmname="team_coach">
@@ -48,13 +144,13 @@
 
 				<div class="player_lists">
 					<div class="player_list starters">
-						<sysbtn class="create_player" btname="define_player" onclick="kbmodules.$this.spawn_player(event, 1)">Add</sysbtn>
-						<!-- <div onclick="kbmodules.$this.spawn_player(event)" class="create_player">Add</div> -->
+						<sysbtn class="create_player" btname="define_player" onclick="$this.spawn_player(event, 1)">Add</sysbtn>
+						<!-- <div onclick="$this.spawn_player(event)" class="create_player">Add</div> -->
 						<div class="list_pool"></div>
 					</div>
 					<div class="player_list reserve">
-						<sysbtn class="create_player" btname="define_player" onclick="kbmodules.$this.spawn_player(event, 1)">Add</sysbtn>
-						<!-- <div onclick="kbmodules.$this.spawn_player(event)" class="create_player">Add</div> -->
+						<sysbtn class="create_player" btname="define_player" onclick="$this.spawn_player(event, 1)">Add</sysbtn>
+						<!-- <div onclick="$this.spawn_player(event)" class="create_player">Add</div> -->
 						<div class="list_pool"></div>
 					</div>
 				</div>
@@ -62,25 +158,25 @@
 
 			<div id="team2_def" class="teamdef">
 				<div class="team_base_params_ctrl">
-					<sysbtn btname="save_team_preset" onclick="kbmodules.$this.save_team_preset(2)">Save Team Preset</sysbtn>
-					<select onchange="kbmodules.$this.load_team_preset(event)" class="team_preset_selector">
+					<sysbtn btname="save_team_preset" onclick="$this.save_team_preset(2)">Save Team Preset</sysbtn>
+					<select onchange="$this.load_team_preset(event)" class="team_preset_selector">
 					</select>
 				</div>
 
 				<div class="team_base_params">
 					<div class="team_param" prmname="team_logo">
 						<div class="team_param_label">Logo image</div>
-						<input type="file" onchange="kbmodules.$this.upd_vis_feedback()" class="team_param_input">
+						<input type="file" onchange="$this.upd_vis_feedback()" class="team_param_input">
 					</div>
 
 					<div class="team_param" prmname="team_name">
 						<div class="team_param_label">Club name</div>
-						<input onchange="kbmodules.$this.upd_vis_feedback()" type="text" class="team_param_input">
+						<input onchange="$this.upd_vis_feedback()" type="text" class="team_param_input">
 					</div>
 
 					<div class="team_param" prmname="club_shorthand">
 						<div class="team_param_label">Club shorthand</div>
-						<input onchange="kbmodules.$this.upd_vis_feedback()" type="text" class="team_param_input">
+						<input onchange="$this.upd_vis_feedback()" type="text" class="team_param_input">
 					</div>
 
 					<div class="team_param" prmname="team_coach">
@@ -93,18 +189,17 @@
 
 				<div class="player_lists">
 					<div class="player_list starters">
-						<sysbtn class="create_player" btname="define_player" onclick="kbmodules.$this.spawn_player(event, 2)">Add</sysbtn>
-						<!-- <div onclick="kbmodules.$this.spawn_player(event)" class="create_player">Add</div> -->
+						<sysbtn class="create_player" btname="define_player" onclick="$this.spawn_player(event, 2)">Add</sysbtn>
+						<!-- <div onclick="$this.spawn_player(event)" class="create_player">Add</div> -->
 						<div class="list_pool"></div>
 					</div>
 					<div class="player_list reserve">
-						<sysbtn class="create_player" btname="define_player" onclick="kbmodules.$this.spawn_player(event, 2)">Add</sysbtn>
-						<!-- <div onclick="kbmodules.$this.spawn_player(event)" class="create_player">Add</div> -->
+						<sysbtn class="create_player" btname="define_player" onclick="$this.spawn_player(event, 2)">Add</sysbtn>
+						<!-- <div onclick="$this.spawn_player(event)" class="create_player">Add</div> -->
 						<div class="list_pool"></div>
 					</div>
 				</div>
 			</div>
-
 
 		</div>
 	</tab>
@@ -120,7 +215,7 @@
 				</div>
 				<div class="team_layout_body">
 					<div class="player_picker">
-						<input oninput="kbmodules.$this.filter_players(event, 'one')" type="text" class="player_picker_filter">
+						<input oninput="$this.filter_players(event, 'one')" type="text" class="player_picker_filter">
 						<div class="player_picker_pool"></div>
 					</div>
 					<div class="ftfield">
@@ -153,7 +248,7 @@
 				</div>
 				<div class="team_layout_body">
 					<div class="player_picker">
-						<input oninput="kbmodules.$this.filter_players(event, 'two')" type="text" class="player_picker_filter">
+						<input oninput="$this.filter_players(event, 'two')" type="text" class="player_picker_filter">
 						<div class="player_picker_pool"></div>
 					</div>
 					<div class="ftfield">
@@ -188,14 +283,14 @@
 			<div id="layout_buttons_vs_ctrl">
 				<div id="layout_buttons_vs_ctrl_head">
 					<div class="layout_buttons_vs_ctrl_head_minititle">Upper Line</div>
-					<input onchange="kbmodules.$this.save_vs_sublines()" type="text" id="vs_text_bottom_upper">
+					<input onchange="$this.save_vs_sublines()" type="text" id="vs_text_bottom_upper">
 					<div class="layout_buttons_vs_ctrl_head_minititle">Lower Line</div>
-					<input onchange="kbmodules.$this.save_vs_sublines()" type="text" id="vs_text_bottom_lower">
+					<input onchange="$this.save_vs_sublines()" type="text" id="vs_text_bottom_lower">
 				</div>
 
 				<div id="layout_buttons_vs_ctrl_body">
-					<vmixbtn btname="show_splash" onclick="kbmodules.$this.show_vs_title()">Show VS</vmixbtn>
-					<vmixbtn btname="hide_splash" onclick="kbmodules.$this.hide_vs_title()">Hide VS</vmixbtn>
+					<vmixbtn btname="show_splash" onclick="$this.show_vs_title()">Show VS</vmixbtn>
+					<vmixbtn btname="hide_splash" onclick="$this.hide_vs_title()">Hide VS</vmixbtn>
 				</div>
 			</div>
 
@@ -209,12 +304,12 @@
 						<div vis_feedback="team1_name" class="layout_buttons_field_ctrl_command_name"></div>
 					</div>
 					<div class="layout_ctrl_body">
-						<vmixbtn btname="show_field_layout_command1" onclick="kbmodules.$this.show_field_layout(1)">Field Layout ONN</vmixbtn>
-						<vmixbtn btname="hide_field_layout_command1" onclick="kbmodules.$this.hide_field_layout(1)">Field Layout OFF</vmixbtn>
+						<vmixbtn btname="show_field_layout_command1" onclick="$this.show_field_layout(1)">Field Layout ONN</vmixbtn>
+						<vmixbtn btname="hide_field_layout_command1" onclick="$this.hide_field_layout(1)">Field Layout OFF</vmixbtn>
 					</div>
 					<div class="team_layout_coach_ctrl">
-						<vmixbtn btname="show_coach_team1" onclick="kbmodules.$this.show_coach(1)">Coach ONN</vmixbtn>
-						<vmixbtn btname="hide_coach_team1" onclick="kbmodules.$this.hide_coach(1)">Coach OFF</vmixbtn>
+						<vmixbtn btname="show_coach_team1" onclick="$this.show_coach(1)">Coach ONN</vmixbtn>
+						<vmixbtn btname="hide_coach_team1" onclick="$this.hide_coach(1)">Coach OFF</vmixbtn>
 					</div>
 
 				</div>
@@ -225,12 +320,12 @@
 						<div vis_feedback="team2_name" class="layout_buttons_field_ctrl_command_name"></div>
 					</div>
 					<div class="layout_ctrl_body">
-						<vmixbtn btname="show_field_layout_command2" onclick="kbmodules.$this.show_field_layout(2)">Field Layout ONN</vmixbtn>
-						<vmixbtn btname="hide_field_layout_command2" onclick="kbmodules.$this.hide_field_layout(2)">Field Layout OFF</vmixbtn>
+						<vmixbtn btname="show_field_layout_command2" onclick="$this.show_field_layout(2)">Field Layout ONN</vmixbtn>
+						<vmixbtn btname="hide_field_layout_command2" onclick="$this.hide_field_layout(2)">Field Layout OFF</vmixbtn>
 					</div>
 					<div class="team_layout_coach_ctrl">
-						<vmixbtn btname="show_coach_team2" onclick="kbmodules.$this.show_coach(2)">Coach ONN</vmixbtn>
-						<vmixbtn btname="hide_coach_team2" onclick="kbmodules.$this.hide_coach(2)">Coach OFF</vmixbtn>
+						<vmixbtn btname="show_coach_team2" onclick="$this.show_coach(2)">Coach ONN</vmixbtn>
+						<vmixbtn btname="hide_coach_team2" onclick="$this.hide_coach(2)">Coach OFF</vmixbtn>
 					</div>
 				</div>
 
@@ -244,33 +339,33 @@
 		<!-- score now counts as punishment. Amazing -->
 		<div id="punisher">
 			<div id="card_player_filter">
-				<input oninput="kbmodules.$this.filter_players_to_punish(event)" type="text" id="card_player_filter_input">
+				<input oninput="$this.filter_players_to_punish(event)" type="text" id="card_player_filter_input">
 				<div id="card_player_filter_pool"></div>
 			</div>
 			<div id="card_player_buttons">
 				<div id="card_player_buttons_cards">
 					<div id="card_player_buttons_turn_onn">
-						<vmixbtn titled btname="yellow_card" onclick="kbmodules.$this.show_card('yellow')">
+						<vmixbtn titled btname="yellow_card" onclick="$this.show_card('yellow')">
 							<img draggable="false" contain class="punish_card_vis" src="./assets/yellow_card.png">
 							<div class="punish_card_title">YELLOW</div>
 						</vmixbtn>
-						<vmixbtn titled btname="red_card" onclick="kbmodules.$this.show_card('red')">
+						<vmixbtn titled btname="red_card" onclick="$this.show_card('red')">
 							<img draggable="false" contain class="punish_card_vis" src="./assets/red_card.png">
 							<div class="punish_card_title">RED</div>
 						</vmixbtn>
 					</div>
 
 					<div id="card_player_buttons_turn_off">
-						<vmixbtn btname="kill_card" onclick="kbmodules.$this.hide_card()">OFF</vmixbtn>
+						<vmixbtn btname="kill_card" onclick="$this.hide_card()">OFF</vmixbtn>
 					</div>
 				</div>
 
 				<div id="card_player_buttons_score">
-					<vmixbtn titled btname="scored" onclick="kbmodules.$this.goal_score_on()">
+					<vmixbtn titled btname="scored" onclick="$this.goal_score_on()">
 						<img draggable="false" contain class="punish_card_vis" src="./assets/ball.png">
 						<div class="punish_card_title">SCORE!</div>
 					</vmixbtn>
-					<vmixbtn titled btname="scored_off" onclick="kbmodules.$this.goal_score_off()">OFF</vmixbtn>
+					<vmixbtn titled btname="scored_off" onclick="$this.goal_score_off()">OFF</vmixbtn>
 				</div>
 
 			</div>
@@ -281,9 +376,9 @@
 		<div id="replacement">
 			<div id="replacement_buttons">
 				<div>
-					<vmixbtn btname="exec_replacement_sequence" onclick="kbmodules.$this.replacement_player_title(event)">Execute Sequence</vmixbtn>
-					<vmixbtn btname="shadow_player_swap" onclick="kbmodules.$this.replacement_player_title(event)">Shadow swap</vmixbtn>
-					<!-- <vmixbtn btname="exec_replacement_sequences" onclick="kbmodules.$this.start_base_timer()">AAA</vmixbtn> -->
+					<vmixbtn btname="exec_replacement_sequence" onclick="$this.replacement_player_title(event)">Execute Sequence</vmixbtn>
+					<vmixbtn btname="shadow_player_swap" onclick="$this.replacement_player_title(event)">Shadow swap</vmixbtn>
+					<!-- <vmixbtn btname="exec_replacement_sequences" onclick="$this.start_base_timer()">AAA</vmixbtn> -->
 				</div>
 			</div>
 			<div id="replacement_teams">
@@ -294,12 +389,12 @@
 					</div>
 					<div class="replacement_team_body">
 						<div class="replacement_leaving replacement_list">
-							<input oninput="kbmodules.$this.filter_players_replacement(event, 'one')" type="text">
+							<input oninput="$this.filter_players_replacement(event, 'one')" type="text">
 							<div class="replacement_filtered_list"></div>
 						</div>
 						<div class="replacement_vis_que">&lt;</div>
 						<div class="replacement_incoming replacement_list">
-							<input oninput="kbmodules.$this.filter_players_replacement(event, 'one')" type="text">
+							<input oninput="$this.filter_players_replacement(event, 'one')" type="text">
 							<div class="replacement_filtered_list"></div>
 						</div>
 					</div>
@@ -311,12 +406,12 @@
 					</div>
 					<div class="replacement_team_body">
 						<div class="replacement_leaving replacement_list">
-							<input oninput="kbmodules.$this.filter_players_replacement(event, 'two')" type="text">
+							<input oninput="$this.filter_players_replacement(event, 'two')" type="text">
 							<div class="replacement_filtered_list"></div>
 						</div>
 						<div class="replacement_vis_que">&lt;</div>
 						<div class="replacement_incoming replacement_list">
-							<input oninput="kbmodules.$this.filter_players_replacement(event, 'two')" type="text">
+							<input oninput="$this.filter_players_replacement(event, 'two')" type="text">
 							<div class="replacement_filtered_list"></div>
 						</div>
 					</div>
@@ -333,24 +428,24 @@
 			<div id="timer_ctrl">
 				<div id="timer_ctrl_base">
 					<div id="timer_ctrl_base_launchers">
-						<vmixbtn btname="launch_main_timer_r1" onclick="kbmodules.$this.start_base_timer(1)">Start Round 1</vmixbtn>
-						<!-- <vmixbtn btname="launch_main_timer_r2" onclick="kbmodules.$this.start_base_timer(2)">Arm Round 2</vmixbtn> -->
-						<vmixbtn btname="launch_main_timer_r2" onclick="kbmodules.$this.start_base_timer(2)">Start round 2</vmixbtn>
+						<vmixbtn btname="launch_main_timer_r1" onclick="$this.start_base_timer(1)">Start Round 1</vmixbtn>
+						<!-- <vmixbtn btname="launch_main_timer_r2" onclick="$this.start_base_timer(2)">Arm Round 2</vmixbtn> -->
+						<vmixbtn btname="launch_main_timer_r2" onclick="$this.start_base_timer(2)">Start round 2</vmixbtn>
 					</div>
 
 					<div id="timer_ctrl_base_visibility">
-						<vmixbtn btname="show_main_timer" onclick="kbmodules.$this.main_timer_vis(true)">Show Main Timer</vmixbtn>
-						<vmixbtn btname="hide_main_timer" onclick="kbmodules.$this.main_timer_vis(false)">Hide Main Timer</vmixbtn>
+						<vmixbtn btname="show_main_timer" onclick="$this.main_timer_vis(true)">Show Main Timer</vmixbtn>
+						<vmixbtn btname="hide_main_timer" onclick="$this.main_timer_vis(false)">Hide Main Timer</vmixbtn>
 					</div>
 
 				</div>
 
 				<div id="timer_ctrl_additional">
 					<input type="text">
-					<vmixbtn btname="launch_extra_timer" onclick="kbmodules.$this.launch_extra_time()">Launch Extra Time</vmixbtn>
+					<vmixbtn btname="launch_extra_timer" onclick="$this.launch_extra_time()">Launch Extra Time</vmixbtn>
 				</div>
-				<vmixbtn btname="hide_extra_timer" onclick="kbmodules.$this.extra_time_vis(false)">Hide Extra Time</vmixbtn>
-				<vmixbtn btname="show_extra_time" onclick="kbmodules.$this.extra_time_vis(true)">Show Extra Time</vmixbtn>
+				<vmixbtn btname="hide_extra_timer" onclick="$this.extra_time_vis(false)">Hide Extra Time</vmixbtn>
+				<vmixbtn btname="show_extra_time" onclick="$this.extra_time_vis(true)">Show Extra Time</vmixbtn>
 			</div>
 
 			<div id="score_ctrl">
@@ -360,7 +455,7 @@
 						<div vis_feedback="team1_name" class="score_ctrl_head_tname">Pootis</div>
 					</div>
 					<div class="score_ctrl_table"></div>
-					<sysbtn btname="add_team_score" onclick="kbmodules.$this.add_score(1)">Add</sysbtn>
+					<sysbtn btname="add_team_score" onclick="$this.add_score(1)">Add</sysbtn>
 				</div>
 
 				<div class="score_ctrl_team" id="score_ctrl_team2">
@@ -369,13 +464,13 @@
 						<div vis_feedback="team2_name" class="score_ctrl_head_tname">Pootis</div>
 					</div>
 					<div class="score_ctrl_table"></div>
-					<sysbtn btname="add_team_score" onclick="kbmodules.$this.add_score(2)">Add</sysbtn>
+					<sysbtn btname="add_team_score" onclick="$this.add_score(2)">Add</sysbtn>
 				</div>
 			</div>
 
 			<div id="score_ctrl_buttons">
-				<vmixbtn btname="show_score_results" onclick="kbmodules.$this.score_sum_vis(true)">Show scores</vmixbtn>
-				<vmixbtn btname="show_score_results" onclick="kbmodules.$this.score_sum_vis(false)">Hide scores</vmixbtn>
+				<vmixbtn btname="show_score_results" onclick="$this.score_sum_vis(true)">Show scores</vmixbtn>
+				<vmixbtn btname="show_score_results" onclick="$this.score_sum_vis(false)">Hide scores</vmixbtn>
 			</div>
 
 		</div>

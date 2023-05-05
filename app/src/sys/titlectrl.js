@@ -38,7 +38,7 @@ class vmix_title
 	}
 
 	async set_text(field_name, newval){
-		await vmix.talker.vmix_talk({
+		await vmix.talker.talk({
 			'Function': 'SetText',
 			'Value': newval,
 			'Input': this.title_name,
@@ -48,7 +48,7 @@ class vmix_title
 
 	async toggle_text(field_name, state=null){
 		// const do_toggle = state == null;
-		await vmix.talker.vmix_talk({
+		await vmix.talker.talk({
 			'Function': (state == null) ? 'SetTextVisible' : `SetTextVisible${state ? 'On' : 'Off'}`,
 			'Input': this.title_name,
 			'SelectedName': field_name + (this.gtformat ? '.Text' : ''),
@@ -56,7 +56,7 @@ class vmix_title
 	}
 
 	async set_img_src(img_name, newsrc){
-		await vmix.talker.vmix_talk({
+		await vmix.talker.talk({
 			'Function': 'SetImage',
 			'Value': str(newsrc),
 			'Input': this.title_name,
@@ -66,7 +66,7 @@ class vmix_title
 
 	async toggle_img(field_name, state=null){
 		// const do_toggle = state == null;
-		await vmix.talker.vmix_talk({
+		await vmix.talker.talk({
 			'Function': (state == null) ? 'SetImageVisible' : `SetImageVisible${state ? 'On' : 'Off'}`,
 			'Input': this.title_name,
 			'SelectedName': field_name + (this.gtformat ? '.Source' : ''),
@@ -75,25 +75,25 @@ class vmix_title
 	// todo: add check to prevent exceeding 4 overlays
 	async overlay_in(overlay_num=1, wait=true){
 		this.last_overlay = overlay_num;
-		await vmix.talker.vmix_talk({
+		await vmix.talker.talk({
 			'Function': `OverlayInput${overlay_num}In`,
 			'Input': this.title_name,
 		})
 		if (this.timings && wait){
 			const margin = this.timings.margin || 0
-			await kbsleep(((this.timings.frames_in / this.timings.fps)*1000) + margin)
+			await ksys.util.sleep(((this.timings.frames_in / this.timings.fps)*1000) + margin)
 		}
 	}
 
 	async overlay_out(overlay_num=null, wait=true){
-		await vmix.talker.vmix_talk({
+		await vmix.talker.talk({
 			'Function': `OverlayInput${this.last_overlay || overlay_num || 1}Out`,
 			'Input': this.title_name,
 		})
 		if (this.timings && wait){
 			const margin = this.timings.margin || 0
 			const frames_out = this.timings.frames_out || this.timings.frames_in
-			await kbsleep(((frames_out / this.timings.fps)*1000) + margin)
+			await ksys.util.sleep(((frames_out / this.timings.fps)*1000) + margin)
 		}
 	}
 }

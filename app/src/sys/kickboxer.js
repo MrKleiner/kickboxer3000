@@ -17,8 +17,7 @@ const fs = require('fs');
 // Python-like pathlib
 const pathlib = require('pathlib-js').default;
 const Path = function(){
-	const p = new pathlib(...arguments)
-	return p
+	return (new pathlib(...arguments))
 }
 
 // lizard's toolbox
@@ -41,7 +40,7 @@ const kbmodules = {};
 // ksys = most of the core functions
 const ksys = {
 	util: {
-		translit: require('./sys/transliteration.js'),
+		// translit: require('./sys/transliteration.js'),
 		str_ops: require('./sys/string_ops.js'),
 	},
 	ticker:  require('./sys/ticker.js'),
@@ -68,11 +67,10 @@ const vmix = {
 
 // Get app root path
 function _get_app_root_path(){
-	var got_root = new pathlib(__dirname);
+	var got_root = Path(__dirname);
 	while (true) {
 		const exs = got_root.join('roothook.lizard').isFileSync()
 		if (exs == true){
-			window.sysroot = got_root
 			break
 		}
 		got_root = got_root.parent()
@@ -82,7 +80,9 @@ function _get_app_root_path(){
 const app_root = _get_app_root_path();
 
 // set version in the window header
-document.title = 'KickBoxer3000 - v' + JSON.parse(fs.readFileSync(window.sysroot.parent().join('package.json').toString(), {encoding:'utf8', flag:'r'}))['version_native']
+// document.title = 'KickBoxer3000 - v' + JSON.parse(fs.readFileSync(app_root.parent().join('package.json').toString(), {encoding:'utf8', flag:'r'}))['version_native']
+document.title = 'KickBoxer3000 - v' + JSON.parse(app_root.parent().join('package.json').readFileSync('utf-8'))['version_native']
+
 
 
 // ---------------
@@ -91,9 +91,9 @@ document.title = 'KickBoxer3000 - v' + JSON.parse(fs.readFileSync(window.sysroot
 const {PythonShell} = require('python-shell');
 window.py_common_opts = {
 	mode: 'binary',
-	pythonPath: str(window.sysroot.join('bins', 'python', 'bin', 'python.exe')),
+	pythonPath: str(app_root.join('bins', 'python', 'bin', 'python.exe')),
 	pythonOptions: [],
-	scriptPath: str(window.sysroot.join('py'))
+	scriptPath: str(app_root.join('py'))
 };
 
 function shell_end_c(err,code,signal)
@@ -109,7 +109,7 @@ function close_warnings()
 {
 	$('#logs_place').css('visibility', 'hidden')
 	$('#logs_place').empty()
-	context.global.prm('been_warned', true)
+	ksys.context.global.prm('been_warned', true)
 }
 
 
@@ -155,10 +155,11 @@ ksys.util.eval_xml = function(xml){
 // -------------------------
 //      sleep for n ms
 // -------------------------
-ksys.util.sleep = async function jsleep(amt=500, ref='a') {
+ksys.util.sleep = function jsleep(amt=500, ref='a') {
 
 	return new Promise(function(resolve, reject){
-	    window.mein_sleep[ref] = setTimeout(function () {
+	    // window.mein_sleep[ref] = setTimeout(function () {
+	    const abc = setTimeout(function () {
 			resolve(true)
 	    }, amt);
 	});
@@ -169,7 +170,7 @@ ksys.util.sleep = async function jsleep(amt=500, ref='a') {
 // open a file selection dialogue
 // ------------------------------
 
-// returns a promise which resolves a path
+// returns a promise which resolves into a path
 ksys.util.ask_file = function()
 {
 	return new Promise(function(resolve, reject){
@@ -299,7 +300,7 @@ const sys_load = function(nm)
 	// display loaded html on the page
 	$('#app_sys').html(page);
 	// get css of the module
-	$('head link#mdstyle')[0].href = app_root.join('modules', nm, `${nm}.css`).toString();
+	$('head link#mdstyle')[0].href = app_root.join('modules_c', nm, `${nm}.css`).toString();
 	ksys.context.module_name = nm;
 
 	// refresh context

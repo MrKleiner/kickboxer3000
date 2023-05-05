@@ -1,5 +1,7 @@
-kbmodules.number_name_x2lr_w_url_src={};
 
+if(!kbmodules){kbmodules={}};
+
+if(!kbmodules.number_name_x2lr_w_url_src){kbmodules.number_name_x2lr_w_url_src={}};
 
 // window.modules.number_name_x2lr_w_url_src = {}
 

@@ -1,4 +1,81 @@
 
+const tmute = true;
+
+const vtalker = {};
+
+
+vtalker.talk = async function(rparams=null){
+
+	const ctx_cache = ksys.context.global.cache;
+
+	return new Promise(async function(resolve, reject){
+		const prms = new URLSearchParams(rparams || {})
+
+		var has_error = false;
+
+		// get random colour and id for this request
+		const rnd_colour = `color: hsl(${356 % window.crypto.getRandomValues(new Uint32Array(1))[0]}deg, 52%, 47%);`;
+		const rnd_id = window.crypto.getRandomValues(new Uint16Array(1))[0];
+
+		if (!tmute){log('vmix_talk', rnd_id, 'Talking to', ctx_cache.vmix_ip, ':', ctx_cache.vmix_port, rparams, prms.toString())}
+
+		const response = await fetch(`http://${ctx_cache.vmix_ip}:${ctx_cache.vmix_port}/API/?${prms.toString()}`, {
+		    'headers': {
+		        'accept': '*/*',
+		        'cache-control': 'no-cache',
+		        'pragma': 'no-cache',
+		        'Access-Control-Allow-Origin': '*',
+		        // 'Access-Control-Allow-Methods': 'DELETE, POST, GET, OPTIONS',
+		        // 'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
+		    },
+		    'method': 'GET',
+		    'mode': 'cors',
+		    'credentials': 'omit'
+		})
+		.catch((error) => {
+			print(log('vmix_talk', rnd_id, 'Error occured while performing a request:', error))
+			has_error = true;
+			resolve(false)
+			return
+		});
+
+		if (has_error){return}
+
+		if (!tmute){log('vmix_talk', rnd_id, 'Status:', response.status)}
+
+		if (response.status != 200){
+			resolve(false)
+			return
+		}
+
+		const reseponse_data = await response.arrayBuffer()
+		const dt = lizard.UTF8ArrToStr(new Uint8Array(reseponse_data))
+		if (!tmute){log('vmix_talk', rnd_id, 'Data:', dt)}
+		resolve(dt)
+		return
+	});
+}
+
+vtalker.ping = async function(){
+	const pinger = await vtalker.talk({'Function': ''})
+	if (pinger != false){
+		return true
+	}else{
+		return false
+	}
+}
+
+vtalker.project = async function(raw=false) {
+	if (raw == true){
+		return await vtalker.talk({'Function': ''})
+	}else{
+		const xm = (new DOMParser()).parseFromString((await vtalker.talk({'Function': ''})), 'application/xml');
+		return xm
+	}
+}
+
+
+
 class _vmix_app_talker
 {
 
@@ -30,7 +107,7 @@ class _vmix_app_talker
 			const rnd_colour = `color: hsl(${357 % window.crypto.getRandomValues(new Uint32Array(1))[0]}deg, 52%, 47%);`;
 			const rnd_id = window.crypto.getRandomValues(new Uint16Array(1))[0]
 
-			if (!self.mute){log('vmix_talk', rnd_id, 'Talking to', ctx_cache.vmix_ip, ':', ctx_cache.vmix_port, rq, prms.toString())}
+			if (!self.mute){log('vmix_talk', rnd_id, 'Talking to', ctx_cache.vmix_ip, ':', ctx_cache.vmix_port, rq, prms.toString())};
 
 			const response = await fetch(`http://${ctx_cache.vmix_ip}:${ctx_cache.vmix_port}/API/?${prms.toString()}`, {
 			    'headers': {
@@ -54,16 +131,18 @@ class _vmix_app_talker
 
 			if (has_error){return}
 
-			if (!self.mute){log('vmix_talk', rnd_id, 'Status:', response.status)}
+			if (!self.mute){log('vmix_talk', rnd_id, 'Status:', response.status)};
 			if (response.status != 200){
 				resolve(false)
 				return
 			}
 
-			const reseponse_data = await response.arrayBuffer()
-			const dt = lizard.UTF8ArrToStr(new Uint8Array(reseponse_data))
-			if (!self.mute){log('vmix_talk', rnd_id, 'Data:', dt)}
-			resolve(dt)
+			const response_data = await response.arrayBuffer()
+			const decoder = new TextDecoder();
+			// const dt = lizard.UTF8ArrToStr(new Uint8Array(response_data))
+			resolve(decoder.decode(response_data))
+			if (!self.mute){log('vmix_talk', rnd_id, 'Data:', dt)};
+
 			return
 		});
 	}
@@ -142,8 +221,8 @@ class _vmix_app_talker
 
 
 
-const _vmixtalker = new _vmix_app_talker(true);
-module.exports = _vmixtalker;
+// const _vmixtalker = new _vmix_app_talker(true);
+module.exports = vtalker;
 
 
 

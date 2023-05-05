@@ -8,9 +8,9 @@
 // Surname
 // Number
 
-kbmodules.football_standard = {};
+// kbmodules.football_standard = {};
 
-// window.modules.football_standard.playerbase
+// kbmodules.football_standard.playerbase
 
 // field context is needed to ensure that a player item can only be dropped into the corresponding field
 $this.player_item_drag_field_context = null
@@ -220,15 +220,6 @@ $this.tab_switch = function(event){
 	event.target.classList.add('active_tab');
 }
 
-// $this.teams = {
-// 	1: team1_sel,
-// 	'1': team1_sel,
-// 	'one': team1_sel,
-
-// 	2: team2_sel,
-// 	'2': team2_sel,
-// 	'two': team2_sel,
-// }
 
 $this.load = async function(){
 	$this.index_titles()
@@ -716,6 +707,8 @@ $this.player_ctrl = class {
 
 	// remove, destroy, kill, annihilate, obliterate this player from the face of Earth
 	kill(){
+		const reserve_or_main = this.is_reserve ? 'reserve' : 'main';
+
 		// global player index
 		delete $this.playerbase.global_index[this.namecode];
 		// current team reserve/main
@@ -948,8 +941,8 @@ $this.load_team_preset = function(event){
 }
 
 $this.save_last_team_presets = function(){
-	ksys.context.module.prm('last_team_def1', $('#team1_def [prmname="team_name"] input')[0].value)
-	ksys.context.module.prm('last_team_def2', $('#team2_def [prmname="team_name"] input')[0].value, true)
+	ksys.context.module.prm('last_team_def1', $('#team1_def [prmname="team_name"] input')[0].value, false)
+	ksys.context.module.prm('last_team_def2', $('#team2_def [prmname="team_name"] input')[0].value)
 }
 
 
@@ -974,6 +967,7 @@ $this.filter_players = function(event, team){
 		}
 	}
 }
+
 
 $this.filter_players_to_punish = function(event){
 
@@ -1008,6 +1002,7 @@ $this.filter_players_to_punish = function(event){
 
 
 $this.save_last_layout = function(){
+	console.time('Saved laout')
 	const layout = {
 		'team1': {},
 		'team2': {},
@@ -1015,41 +1010,27 @@ $this.save_last_layout = function(){
 
 	const playerbase_keyed = $this.playerbase;
 
-	// TEAM 1
-	for (let player of document.querySelectorAll('#team1_layout .ftfield .player_slot')){
-		const player_info = player.querySelector('.generic_player_item')
-		if (!player_info){
-			layout.team1[player.getAttribute('t_num')] = null
-			continue
-		}
-		const player_item = playerbase_keyed.one.both[player_info.getAttribute('namecode')]
-		layout.team1[player.getAttribute('t_num')] = {
-			'player_num': player_item.number,
-			'name':       player_item.name,
-			'surname':    player_item.surname,
-			'namecode':   player_item.namecode,
-		}
-	}
-
-	// TEAM 2
-	for (let player of document.querySelectorAll('#team2_layout .ftfield .player_slot')){
-		const player_info = player.querySelector('.generic_player_item')
-		if (!player_info){
-			layout.team2[player.getAttribute('t_num')] = null
-			continue
-		}
-		const player_item = playerbase_keyed.two.both[player_info.getAttribute('namecode')]
-		layout.team2[player.getAttribute('t_num')] = {
-			'player_num': player_item.number,
-			'name':       player_item.name,
-			'surname':    player_item.surname,
-			'namecode':   player_item.namecode,
+	for (let team of [1, 2]){
+		for (let player of document.querySelectorAll(`#team${team}_layout .ftfield .player_slot`)){
+			const player_info = player.querySelector('.generic_player_item')
+			if (!player_info){
+				layout[`team${team}`][player.getAttribute('t_num')] = null
+				continue
+			}
+			const player_item = playerbase_keyed[team].both[player_info.getAttribute('namecode')]
+			layout[`team${team}`][player.getAttribute('t_num')] = {
+				'player_num': player_item.number,
+				'name':       player_item.name,
+				'surname':    player_item.surname,
+				'namecode':   player_item.namecode,
+			}
 		}
 	}
 
 	ksys.db.module.write('last_layout.lol', JSON.stringify(layout, null, 4))
 
-	print('saved last layout')
+	// print('saved last layout')
+	console.timeEnd('Saved laout')
 }
 
 $this.load_last_layout = function(){
@@ -1182,9 +1163,9 @@ $this.replacement_player_title = async function(event){
 	ksys.btns.pool.exec_replacement_sequence.vmixbtn(false)
 
 	await $this.titles.replacement_out.overlay_in(1)
-	await kbsleep(5000)
+	await ksys.util.sleep(5000)
 	await $this.titles.replacement_in.overlay_in(1)
-	await kbsleep(5000)
+	await ksys.util.sleep(5000)
 	await $this.titles.replacement_in.overlay_out(1)
 
 	ksys.btns.pool.exec_replacement_sequence.vmixbtn(true)
@@ -1376,36 +1357,40 @@ $this.upd_player_layout = async function(team){
 
 
 $this.show_field_layout = async function(team){
-	ksys.btns.pool.show_field_layout_command1.vmixbtn(false)
-	ksys.btns.pool.hide_field_layout_command1.vmixbtn(false)
-	ksys.btns.pool.show_field_layout_command2.vmixbtn(false)
-	ksys.btns.pool.hide_field_layout_command2.vmixbtn(false)
+	const btn_pool = ksys.btns.pool;
+
+	btn_pool.show_field_layout_command1.vmixbtn(false)
+	btn_pool.hide_field_layout_command1.vmixbtn(false)
+	btn_pool.show_field_layout_command2.vmixbtn(false)
+	btn_pool.hide_field_layout_command2.vmixbtn(false)
 	await $this.upd_player_layout(team)
 	await $this.titles.team_layout.overlay_in(1)
-	ksys.btns.pool.show_field_layout_command1.vmixbtn(true)
-	ksys.btns.pool.hide_field_layout_command1.vmixbtn(true)
-	ksys.btns.pool.show_field_layout_command2.vmixbtn(true)
-	ksys.btns.pool.hide_field_layout_command2.vmixbtn(true)
+	btn_pool.show_field_layout_command1.vmixbtn(true)
+	btn_pool.hide_field_layout_command1.vmixbtn(true)
+	btn_pool.show_field_layout_command2.vmixbtn(true)
+	btn_pool.hide_field_layout_command2.vmixbtn(true)
 }
 
 
 $this.hide_field_layout = async function(team){
-	ksys.btns.pool.show_field_layout_command1.vmixbtn(false)
-	ksys.btns.pool.hide_field_layout_command1.vmixbtn(false)
-	ksys.btns.pool.show_field_layout_command2.vmixbtn(false)
-	ksys.btns.pool.hide_field_layout_command2.vmixbtn(false)
+	const btn_pool = ksys.btns.pool;
+
+	btn_pool.show_field_layout_command1.vmixbtn(false)
+	btn_pool.hide_field_layout_command1.vmixbtn(false)
+	btn_pool.show_field_layout_command2.vmixbtn(false)
+	btn_pool.hide_field_layout_command2.vmixbtn(false)
 	// await $this.upd_player_layout(team)
 	await $this.titles.team_layout.overlay_out(1)
-	ksys.btns.pool.show_field_layout_command1.vmixbtn(true)
-	ksys.btns.pool.hide_field_layout_command1.vmixbtn(true)
-	ksys.btns.pool.show_field_layout_command2.vmixbtn(true)
-	ksys.btns.pool.hide_field_layout_command2.vmixbtn(true)
+	btn_pool.show_field_layout_command1.vmixbtn(true)
+	btn_pool.hide_field_layout_command1.vmixbtn(true)
+	btn_pool.show_field_layout_command2.vmixbtn(true)
+	btn_pool.hide_field_layout_command2.vmixbtn(true)
 }
 
 
 $this.save_vs_sublines = function(){
-	context.module.prm('vs_title_bottom_upper_line', $('#vs_text_bottom_upper')[0].value)
-	context.module.prm('vs_title_bottom_lower_line', $('#vs_text_bottom_lower')[0].value, true)
+	ksys.context.module.prm('vs_title_bottom_upper_line', $('#vs_text_bottom_upper')[0].value, false)
+	ksys.context.module.prm('vs_title_bottom_lower_line', $('#vs_text_bottom_lower')[0].value)
 }
 
 
@@ -1680,3 +1665,20 @@ $this.add_score = function(team){
 		</div>
 	`)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

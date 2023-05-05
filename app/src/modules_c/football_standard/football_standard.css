@@ -14,10 +14,19 @@
 
 body.emergency_break
 {
-	filter: grayscale(1);
+	filter: grayscale(1) !important;
 }
 
 
+
+
+
+/*
+===============================================
+                  Tab system
+===============================================
+!~~ #tabs
+*/
 #tabs
 {
 	position: fixed;
@@ -72,6 +81,148 @@ tab.tab_hidden
 	background: #1a3c75 !important;
 	border-color: #3E6AB5 !important;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+===============================================
+             Text formatting config
+===============================================
+*/
+
+
+/*
+!~~ #text_formatting_params
+*/
+#text_formatting_params
+{
+	display: flex;
+	flex-direction: column;
+	padding: 10px;
+	background: rgba(0, 0, 0, 0.2);
+	outline: 1px solid rgba(100, 100, 100);
+	width: 600px;
+	padding-left: 40px;
+	margin-left: 20px;
+	margin-bottom: 30px;
+}
+
+#text_formatting_params *
+{
+	user-select: none;
+}
+
+#text_formatting_params .format_param
+{
+	display: flex;
+	flex-direction: row;
+	padding: 1px;
+	margin-top: 10px;
+	border-left: 2px solid white;
+}
+
+#text_formatting_params .format_param:hover
+{
+	border-color: lime;
+}
+
+#text_formatting_params .format_param_label
+{
+	width: 120px;
+	padding-left: 5px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+}
+
+#text_formatting_params .format_param_selector
+{
+	display: flex;
+	flex-direction: row;
+}
+
+#text_formatting_params .txt_format_opt_group
+{
+	display: flex;
+	flex-direction: row;
+	margin-left: 20px;
+}
+
+
+
+
+
+
+
+/*
+!~~ #text_formatting_params .txt_format_opt_group .txt_format_option
+*/
+#text_formatting_params .txt_format_opt_group .txt_format_option
+{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	/*padding: 5px 10px 5px 10px;*/
+	background: rgba(0, 0, 0, 0.3);
+}
+
+#text_formatting_params .txt_format_opt_group .txt_format_option:hover
+{
+	background: rgba(90, 90, 90, 0.3);
+}
+
+#text_formatting_params .txt_format_opt_group .txt_format_option:active
+{
+	z-index: 999;
+	outline: 1px solid #3E6AB5;
+}
+
+#text_formatting_params .txt_format_opt_group .txt_format_option:first-child
+{
+	border-radius: 7px 0px 0px 7px;
+}
+
+#text_formatting_params .txt_format_opt_group .txt_format_option:last-child
+{
+	border-radius: 0px 7px 7px 0px;
+}
+
+#text_formatting_params .txt_format_opt_group .txt_format_option:last-child:first-child
+{
+	border-radius: 7px;
+}
+
+#text_formatting_params .txt_format_opt_group .txt_format_option input
+{
+	width:  16px;
+	height: 100%;
+	margin-right: 5px;
+}
+
+#text_formatting_params .txt_format_opt_group .txt_format_option label
+{
+	padding: 5px 10px 5px 10px;
+}
+
+
+
+
 
 
 
@@ -251,6 +402,9 @@ tab.tab_hidden
 
 .player_lists .player_list .create_player
 {
+	position: sticky;
+	height: fit-content;
+	top: 70px;
 	width: 80%;
 	align-self: center;
 	text-align: center;

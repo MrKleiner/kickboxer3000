@@ -22,7 +22,8 @@ for md in (app / 'modules').glob('*'):
 		if not fl.is_file():
 			continue
 		if fl.suffix.lower() == '.js':
-			(app / 'modules_c' / md.name / fl.name).write_text('kbmodules.' + md.name + '={};' + '\n\n' + fl.read_text(encoding='utf-8').replace('$this', 'kbmodules.' + md.name), encoding='utf-8')
+			# (app / 'modules_c' / md.name / fl.name).write_text('kbmodules.' + md.name + '={};' + '\n\n' + fl.read_text(encoding='utf-8').replace('$this', 'kbmodules.' + md.name), encoding='utf-8')
+			continue
 		else:
 			(app / 'modules_c' / md.name / fl.name).write_text(fl.read_text(encoding='utf-8').replace('$this', md.name), encoding='utf-8')
 

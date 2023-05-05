@@ -215,7 +215,7 @@ sysbtn:active
 	outline: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-input:not(input[type="file"], input[type="checkbox"])
+input:not(input[type="file"], input[type="checkbox"], input[type="radio"])
 {
 	all: unset;
 	color: white;
