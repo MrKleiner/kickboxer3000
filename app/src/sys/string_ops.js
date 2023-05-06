@@ -3,7 +3,7 @@ const ops = {};
 
 
 ops.translit = function(txt) {
-	const inputText = str(txt).toLowerCase();
+	var inputText = str(txt).toLowerCase();
 
 	const rules = [
 		{'pattern': 'а', 'replace': 'a'},
@@ -127,15 +127,20 @@ ops.validate = function(st, msg='empty string'){
 ops.format = function(_txt, _to_case, transliteration=false, overwrite_prev_format=true){
 	const txt = transliteration ? ops.translit(str(_txt).lower()) : str(_txt).lower()
 	const to_case = str(_to_case).lower()
-
+	// print('Input params:', _txt, _to_case, transliteration)
 	if (to_case == '1'){
-		return to_case.capitalize()
+		// const words = txt.split(' ')
+		const upper_words = txt.split(' ').map(function(word){
+			return word.capitalize()
+		})
+		// return txt.capitalize()
+		return upper_words.join(' ')
 	}
 	if (to_case == '2'){
-		return to_case.upper()
+		return txt.upper()
 	}
-	if (to_case == '2'){
-		return to_case.lower()
+	if (to_case == '3'){
+		return txt.lower()
 	}
 }
 

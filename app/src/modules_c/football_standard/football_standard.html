@@ -1,12 +1,12 @@
 <div id="football_standard">
 
 	<div id="tabs">
-		<div onclick="kbmodules.football_standard.tab_switch(event)" match_id="team_defs" class="tab">Config/Lists</div>
-		<div onclick="kbmodules.football_standard.tab_switch(event)" match_id="teams_layouts" class="tab">Layout</div>
-		<div onclick="kbmodules.football_standard.tab_switch(event)" match_id="layout_buttons" class="tab">Layout Ctrl</div>
-		<div onclick="kbmodules.football_standard.tab_switch(event)" match_id="punisher" class="tab">Cards/Goals</div>
-		<div onclick="kbmodules.football_standard.tab_switch(event)" match_id="replacement" class="tab">Substitute</div>
-		<div onclick="kbmodules.football_standard.tab_switch(event)" match_id="timer_and_scores" class="tab">Timer/Scores</div>
+		<div onmousedown="kbmodules.football_standard.tab_switch(event)" match_id="team_defs" class="tab">Config/Lists</div>
+		<div onmousedown="kbmodules.football_standard.tab_switch(event)" match_id="teams_layouts" class="tab">Layout</div>
+		<div onmousedown="kbmodules.football_standard.tab_switch(event)" match_id="layout_buttons" class="tab">Layout Ctrl</div>
+		<div onmousedown="kbmodules.football_standard.tab_switch(event)" match_id="punisher" class="tab">Cards/Goals</div>
+		<div onmousedown="kbmodules.football_standard.tab_switch(event)" match_id="replacement" class="tab">Substitute</div>
+		<div onmousedown="kbmodules.football_standard.tab_switch(event)" match_id="timer_and_scores" class="tab">Timer/Scores</div>
 	</div>
 
 
@@ -14,6 +14,7 @@
 
 		<div id="text_formatting_params">
 
+			<!-- COACH -->
 			<div class="format_param" format_param_name="coach">
 				<div class="format_param_label">Coach</div>
 				<div class="format_param_selector">
@@ -24,27 +25,27 @@
 						</div>
 					</div>
 
-					<div class="txt_format_opt_group">
+					<div class="txt_format_opt_group" id="coach_string_format">
 						<div class="txt_format_option">
 							<label for="coach_text_format_capital">Capital</label>
-							<input value="capital" type="radio" id="coach_text_format_capital" name="coach_text_format">
+							<input value="1" type="radio" id="coach_text_format_capital" name="coach_text_format">
 						</div>
 
 						<div class="txt_format_option">
 							<label for="coach_text_format_all_upper">ALL UPPER</label>
-							<input value="all_upper" type="radio" id="coach_text_format_all_upper" name="coach_text_format">
+							<input value="2" checked="true" type="radio" id="coach_text_format_all_upper" name="coach_text_format">
 						</div>
 
 						<div class="txt_format_option">
 							<label for="coach_text_format_all_lower">all lower</label>
-							<input value="all_lower" type="radio" id="coach_text_format_all_lower" name="coach_text_format">
+							<input value="3" type="radio" id="coach_text_format_all_lower" name="coach_text_format">
 						</div>
 					</div>
 
 				</div>
 			</div>
 
-
+			<!-- PLAYERS -->
 			<div class="format_param" format_param_name="players">
 				<div class="format_param_label">Players</div>
 				<div class="format_param_selector">
@@ -55,27 +56,27 @@
 						</div>
 					</div>
 
-					<div class="txt_format_opt_group">
+					<div class="txt_format_opt_group" id="players_string_format">
 						<div class="txt_format_option">
 							<label for="players_text_format_capital">Capital</label>
-							<input value="capital" type="radio" id="players_text_format_capital" name="players_text_format">
+							<input value="1" type="radio" id="players_text_format_capital" name="players_text_format">
 						</div>
 
 						<div class="txt_format_option">
 							<label for="players_text_format_all_upper">ALL UPPER</label>
-							<input value="all_upper" type="radio" id="players_text_format_all_upper" name="players_text_format">
+							<input checked="true" value="2" type="radio" id="players_text_format_all_upper" name="players_text_format">
 						</div>
 
 						<div class="txt_format_option">
 							<label for="players_text_format_all_lower">all lower</label>
-							<input value="all_lower" type="radio" id="players_text_format_all_lower" name="players_text_format">
+							<input value="3" type="radio" id="players_text_format_all_lower" name="players_text_format">
 						</div>
 					</div>
 
 				</div>
 			</div>
 
-
+			<!-- CLUB NAME -->
 			<div class="format_param" format_param_name="club_name">
 				<div class="format_param_label">Full club name</div>
 				<div class="format_param_selector">
@@ -86,20 +87,20 @@
 						</div>
 					</div>
 
-					<div class="txt_format_opt_group">
+					<div class="txt_format_opt_group" id="club_string_format">
 						<div class="txt_format_option">
 							<label for="club_name_text_format_capital">Capital</label>
-							<input value="capital" type="radio" id="club_name_text_format_capital" name="club_name_text_format">
+							<input value="1" type="radio" id="club_name_text_format_capital" name="club_name_text_format">
 						</div>
 
 						<div class="txt_format_option">
 							<label for="club_name_text_format_all_upper">ALL UPPER</label>
-							<input value="all_upper" type="radio" id="club_name_text_format_all_upper" name="club_name_text_format">
+							<input checked="true" value="2" type="radio" id="club_name_text_format_all_upper" name="club_name_text_format">
 						</div>
 
 						<div class="txt_format_option">
 							<label for="club_name_text_format_all_lower">all lower</label>
-							<input value="all_lower" type="radio" id="club_name_text_format_all_lower" name="club_name_text_format">
+							<input value="3" type="radio" id="club_name_text_format_all_lower" name="club_name_text_format">
 						</div>
 					</div>
 
@@ -137,6 +138,16 @@
 					<div class="team_param" prmname="team_coach">
 						<div class="team_param_label">Coach's name</div>
 						<input type="text" class="team_param_input">
+					</div>
+
+					<div class="team_param" prmname="team_player_color">
+						<div class="team_param_label">Player colour</div>
+						<div class="colour_picker"></div>
+					</div>
+
+					<div class="team_param" prmname="team_gk_color">
+						<div class="team_param_label">Goalkeeper colour</div>
+						<div class="colour_picker"></div>
 					</div>
 
 					<img contain src="./assets/red_cross.png" vis_feedback="team1_logo" class="team_logo_vis">
@@ -184,6 +195,16 @@
 						<input type="text" class="team_param_input">
 					</div>
 
+					<div class="team_param" prmname="team_player_color">
+						<div class="team_param_label">Player colour</div>
+						<div class="colour_picker"></div>
+					</div>
+
+					<div class="team_param" prmname="team_gk_color">
+						<div class="team_param_label">Goalkeeper colour</div>
+						<div class="colour_picker"></div>
+					</div>
+
 					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png" class="team_logo_vis">
 				</div>
 
@@ -218,7 +239,7 @@
 						<input oninput="kbmodules.football_standard.filter_players(event, 'one')" type="text" class="player_picker_filter">
 						<div class="player_picker_pool"></div>
 					</div>
-					<div class="ftfield">
+					<div nosel class="ftfield">
 						<div class="cell_unused" t_num="0_0"></div> <div t_num="0_1"></div> <div t_num="0_2"></div> <div t_num="0_3"></div> <div t_num="0_4"></div> <div t_num="0_5"></div> <div t_num="0_6"></div> <div t_num="0_7"></div> <div t_num="0_8"></div> <div t_num="0_9"></div>
 						<div class="cell_unused" t_num="1_0"></div> <div t_num="1_1"></div> <div t_num="1_2"></div> <div t_num="1_3"></div> <div t_num="1_4"></div> <div t_num="1_5"></div> <div t_num="1_6"></div> <div t_num="1_7"></div> <div t_num="1_8"></div> <div t_num="1_9"></div>
 						<div class="cell_unused" t_num="2_0"></div> <div t_num="2_1"></div> <div t_num="2_2"></div> <div t_num="2_3"></div> <div t_num="2_4"></div> <div t_num="2_5"></div> <div t_num="2_6"></div> <div t_num="2_7"></div> <div t_num="2_8"></div> <div t_num="2_9"></div>
@@ -251,7 +272,7 @@
 						<input oninput="kbmodules.football_standard.filter_players(event, 'two')" type="text" class="player_picker_filter">
 						<div class="player_picker_pool"></div>
 					</div>
-					<div class="ftfield">
+					<div nosel class="ftfield">
 						<div class="cell_unused" t_num="0_0"></div> <div t_num="0_1"></div> <div t_num="0_2"></div> <div t_num="0_3"></div> <div t_num="0_4"></div> <div t_num="0_5"></div> <div t_num="0_6"></div> <div t_num="0_7"></div> <div t_num="0_8"></div> <div t_num="0_9"></div>
 						<div class="cell_unused" t_num="1_0"></div> <div t_num="1_1"></div> <div t_num="1_2"></div> <div t_num="1_3"></div> <div t_num="1_4"></div> <div t_num="1_5"></div> <div t_num="1_6"></div> <div t_num="1_7"></div> <div t_num="1_8"></div> <div t_num="1_9"></div>
 						<div class="cell_unused" t_num="2_0"></div> <div t_num="2_1"></div> <div t_num="2_2"></div> <div t_num="2_3"></div> <div t_num="2_4"></div> <div t_num="2_5"></div> <div t_num="2_6"></div> <div t_num="2_7"></div> <div t_num="2_8"></div> <div t_num="2_9"></div>
@@ -289,8 +310,8 @@
 				</div>
 
 				<div id="layout_buttons_vs_ctrl_body">
-					<vmixbtn btname="show_splash" onclick="kbmodules.football_standard.show_vs_title()">Show VS</vmixbtn>
-					<vmixbtn btname="hide_splash" onclick="kbmodules.football_standard.hide_vs_title()">Hide VS</vmixbtn>
+					<vmixbtn seq_info="update+vis_show" btname="show_splash" onclick="kbmodules.football_standard.show_vs_title()">Show VS</vmixbtn>
+					<vmixbtn seq_info="vis_hide" btname="hide_splash" onclick="kbmodules.football_standard.hide_vs_title()">Hide VS</vmixbtn>
 				</div>
 			</div>
 
@@ -304,12 +325,12 @@
 						<div vis_feedback="team1_name" class="layout_buttons_field_ctrl_command_name"></div>
 					</div>
 					<div class="layout_ctrl_body">
-						<vmixbtn btname="show_field_layout_command1" onclick="kbmodules.football_standard.show_field_layout(1)">Field Layout ONN</vmixbtn>
-						<vmixbtn btname="hide_field_layout_command1" onclick="kbmodules.football_standard.hide_field_layout(1)">Field Layout OFF</vmixbtn>
+						<vmixbtn seq_info="update+vis_show" btname="show_field_layout_command1" onclick="kbmodules.football_standard.show_field_layout(1)">Field Layout ONN</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="hide_field_layout_command1" onclick="kbmodules.football_standard.hide_field_layout(1)">Field Layout OFF</vmixbtn>
 					</div>
 					<div class="team_layout_coach_ctrl">
-						<vmixbtn btname="show_coach_team1" onclick="kbmodules.football_standard.show_coach(1)">Coach ONN</vmixbtn>
-						<vmixbtn btname="hide_coach_team1" onclick="kbmodules.football_standard.hide_coach(1)">Coach OFF</vmixbtn>
+						<vmixbtn seq_info="update+vis_show" btname="show_coach_team1" onclick="kbmodules.football_standard.show_coach(1)">Coach ONN</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="hide_coach_team1" onclick="kbmodules.football_standard.hide_coach(1)">Coach OFF</vmixbtn>
 					</div>
 
 				</div>
@@ -320,12 +341,12 @@
 						<div vis_feedback="team2_name" class="layout_buttons_field_ctrl_command_name"></div>
 					</div>
 					<div class="layout_ctrl_body">
-						<vmixbtn btname="show_field_layout_command2" onclick="kbmodules.football_standard.show_field_layout(2)">Field Layout ONN</vmixbtn>
-						<vmixbtn btname="hide_field_layout_command2" onclick="kbmodules.football_standard.hide_field_layout(2)">Field Layout OFF</vmixbtn>
+						<vmixbtn seq_info="update+vis_show" btname="show_field_layout_command2" onclick="kbmodules.football_standard.show_field_layout(2)">Field Layout ONN</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="hide_field_layout_command2" onclick="kbmodules.football_standard.hide_field_layout(2)">Field Layout OFF</vmixbtn>
 					</div>
 					<div class="team_layout_coach_ctrl">
-						<vmixbtn btname="show_coach_team2" onclick="kbmodules.football_standard.show_coach(2)">Coach ONN</vmixbtn>
-						<vmixbtn btname="hide_coach_team2" onclick="kbmodules.football_standard.hide_coach(2)">Coach OFF</vmixbtn>
+						<vmixbtn seq_info="update+vis_show" btname="show_coach_team2" onclick="kbmodules.football_standard.show_coach(2)">Coach ONN</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="hide_coach_team2" onclick="kbmodules.football_standard.hide_coach(2)">Coach OFF</vmixbtn>
 					</div>
 				</div>
 
@@ -342,30 +363,58 @@
 				<input oninput="kbmodules.football_standard.filter_players_to_punish(event)" type="text" id="card_player_filter_input">
 				<div id="card_player_filter_pool"></div>
 			</div>
+
+			<div nosel id="red_card_counter">
+				<div id="red_card_counter_team1" class="red_card_counter_team">
+					<div class="red_card_counter_head">
+						<img vis_feedback="team1_logo" contain src="./assets/red_cross.png">
+						<div vis_feedback="team1_name"></div>
+					</div>
+					<div onclick="kbmodules.football_standard.mod_penalty_red_card(event, 1)" oncontextmenu="kbmodules.football_standard.mod_penalty_red_card(event, 1, true)" class="red_card_counter_pool">
+						<img contain class="rcard1" src="./assets/red_card.png">
+						<img contain class="rcard2" src="./assets/red_card.png">
+						<img contain class="rcard3" src="./assets/red_card.png">
+					</div>
+				</div>
+
+				<div id="red_card_counter_team2" class="red_card_counter_team">
+					<div class="red_card_counter_head">
+						<img vis_feedback="team2_logo" contain src="./assets/red_cross.png">
+						<div vis_feedback="team2_name"></div>
+					</div>
+					<div onclick="kbmodules.football_standard.mod_penalty_red_card(event, 2)" oncontextmenu="kbmodules.football_standard.mod_penalty_red_card(event, 2, true)" class="red_card_counter_pool">
+						<img contain class="rcard1" src="./assets/red_card.png">
+						<img contain class="rcard2" src="./assets/red_card.png">
+						<img contain class="rcard3" src="./assets/red_card.png">
+					</div>
+				</div>
+			</div>
+
+
 			<div id="card_player_buttons">
 				<div id="card_player_buttons_cards">
 					<div id="card_player_buttons_turn_onn">
-						<vmixbtn titled btname="yellow_card" onclick="kbmodules.football_standard.show_card('yellow')">
+						<vmixbtn seq_info="auto_seq" titled btname="yellow_card" onclick="kbmodules.football_standard.show_card('yellow')">
 							<img draggable="false" contain class="punish_card_vis" src="./assets/yellow_card.png">
 							<div class="punish_card_title">YELLOW</div>
 						</vmixbtn>
-						<vmixbtn titled btname="red_card" onclick="kbmodules.football_standard.show_card('red')">
+						<vmixbtn seq_info="auto_tweaks+auto_seq" titled btname="red_card" onclick="kbmodules.football_standard.show_card('red')">
 							<img draggable="false" contain class="punish_card_vis" src="./assets/red_card.png">
 							<div class="punish_card_title">RED</div>
 						</vmixbtn>
 					</div>
 
 					<div id="card_player_buttons_turn_off">
-						<vmixbtn btname="kill_card" onclick="kbmodules.football_standard.hide_card()">OFF</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="kill_card" onclick="kbmodules.football_standard.hide_card()">OFF</vmixbtn>
 					</div>
 				</div>
 
 				<div id="card_player_buttons_score">
-					<vmixbtn titled btname="scored" onclick="kbmodules.football_standard.goal_score_on()">
+					<vmixbtn seq_info="auto_tweaks+auto_seq" titled btname="scored" onclick="kbmodules.football_standard.goal_score_on()">
 						<img draggable="false" contain class="punish_card_vis" src="./assets/ball.png">
 						<div class="punish_card_title">SCORE!</div>
 					</vmixbtn>
-					<vmixbtn titled btname="scored_off" onclick="kbmodules.football_standard.goal_score_off()">OFF</vmixbtn>
+					<vmixbtn seq_info="vis_hide" btname="scored_off" onclick="kbmodules.football_standard.goal_score_off()">OFF</vmixbtn>
 				</div>
 
 			</div>
@@ -376,8 +425,8 @@
 		<div id="replacement">
 			<div id="replacement_buttons">
 				<div>
-					<vmixbtn btname="exec_replacement_sequence" onclick="kbmodules.football_standard.replacement_player_title(event)">Execute Sequence</vmixbtn>
-					<vmixbtn btname="shadow_player_swap" onclick="kbmodules.football_standard.replacement_player_title(event)">Shadow swap</vmixbtn>
+					<vmixbtn seq_info="auto_tweaks+auto_seq" btname="exec_replacement_sequence" onclick="kbmodules.football_standard.replacement_player_title(event)">Execute Sequence</vmixbtn>
+					<vmixbtn seq_info="auto_tweaks" btname="shadow_player_swap" onclick="kbmodules.football_standard.shadow_swap(event)">Shadow swap</vmixbtn>
 					<!-- <vmixbtn btname="exec_replacement_sequences" onclick="kbmodules.football_standard.start_base_timer()">AAA</vmixbtn> -->
 				</div>
 			</div>
@@ -428,27 +477,37 @@
 			<div id="timer_ctrl">
 				<div id="timer_ctrl_base">
 					<div id="timer_ctrl_base_launchers">
-						<vmixbtn btname="launch_main_timer_r1" onclick="kbmodules.football_standard.start_base_timer(1)">Start Round 1</vmixbtn>
+						<vmixbtn seq_info="update+play" btname="launch_main_timer_r1" onclick="kbmodules.football_standard.start_base_timer(1)">Start Time 1</vmixbtn>
 						<!-- <vmixbtn btname="launch_main_timer_r2" onclick="kbmodules.football_standard.start_base_timer(2)">Arm Round 2</vmixbtn> -->
-						<vmixbtn btname="launch_main_timer_r2" onclick="kbmodules.football_standard.start_base_timer(2)">Start round 2</vmixbtn>
+						<vmixbtn seq_info="update+play" btname="launch_main_timer_r2" onclick="kbmodules.football_standard.start_base_timer(2)">Start Time 2</vmixbtn>
 					</div>
 
 					<div id="timer_ctrl_base_visibility">
-						<vmixbtn btname="show_main_timer" onclick="kbmodules.football_standard.main_timer_vis(true)">Show Main Timer</vmixbtn>
-						<vmixbtn btname="hide_main_timer" onclick="kbmodules.football_standard.main_timer_vis(false)">Hide Main Timer</vmixbtn>
+						<vmixbtn seq_info="vis_show" btname="show_main_timer" onclick="kbmodules.football_standard.main_timer_vis(true)">Show Main Timer</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="hide_main_timer" onclick="kbmodules.football_standard.main_timer_vis(false)">Hide Main Timer</vmixbtn>
 					</div>
 
+					<div id="timer_ctrl_base_resume">
+						<input placeholder="SECONDS (EXPR)" type="text">
+						<vmixbtn seq_info="update+play" btname="continue_from_time" onclick="kbmodules.football_standard.resume_main_timer_from_offset()">Start From</vmixbtn>
+					</div>
 				</div>
 
 				<div id="timer_ctrl_additional">
-					<input type="text">
-					<vmixbtn btname="launch_extra_timer" onclick="kbmodules.football_standard.launch_extra_time()">Launch Extra Time</vmixbtn>
+					<input type="text" placeholder="SECONDS (EXPR)">
+					<vmixbtn seq_info="update+play+vis_show" btname="launch_extra_timer" onclick="kbmodules.football_standard.launch_extra_time()">Launch Extra Time</vmixbtn>
 				</div>
-				<vmixbtn btname="hide_extra_timer" onclick="kbmodules.football_standard.extra_time_vis(false)">Hide Extra Time</vmixbtn>
-				<vmixbtn btname="show_extra_time" onclick="kbmodules.football_standard.extra_time_vis(true)">Show Extra Time</vmixbtn>
+				<vmixbtn seq_info="vis_show" btname="show_extra_time" onclick="kbmodules.football_standard.extra_time_vis(true)">Show Extra Time</vmixbtn>
+				<vmixbtn seq_info="vis_hide" btname="hide_extra_timer" onclick="kbmodules.football_standard.extra_time_vis(false)">Hide Extra Time</vmixbtn>
 			</div>
 
 			<div id="score_ctrl">
+
+				<div id="score_ctrl_player_search">
+					<input oninput="kbmodules.football_standard.filter_players_for_score(event)" type="text">
+					<div id="score_ctrl_player_search_pool"></div>
+				</div>
+
 				<div class="score_ctrl_team" id="score_ctrl_team1">
 					<div class="score_ctrl_head">
 						<img contain vis_feedback="team1_logo" src="./assets/red_cross.png" class="score_ctrl_head_img">
@@ -469,8 +528,8 @@
 			</div>
 
 			<div id="score_ctrl_buttons">
-				<vmixbtn btname="show_score_results" onclick="kbmodules.football_standard.score_sum_vis(true)">Show scores</vmixbtn>
-				<vmixbtn btname="show_score_results" onclick="kbmodules.football_standard.score_sum_vis(false)">Hide scores</vmixbtn>
+				<vmixbtn seq_info="update+vis_show" btname="show_score_results" onclick="kbmodules.football_standard.score_sum_vis(true)">Show scores</vmixbtn>
+				<vmixbtn seq_info="vis_hide" btname="show_score_results" onclick="kbmodules.football_standard.score_sum_vis(false)">Hide scores</vmixbtn>
 			</div>
 
 		</div>

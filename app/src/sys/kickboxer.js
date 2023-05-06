@@ -306,6 +306,12 @@ const sys_load = function(nm)
 	// refresh context
 	ksys.context.module.pull()
 
+	// Evaluate buttons
+	ksys.btns.sync_pool()
+
+	// images are not draggable by default
+	$('img:not(img[candrag])').attr('draggable', false);
+
 	// init load for module
 	try{
 		if (kbmodules[nm].load){

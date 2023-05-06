@@ -1,26 +1,33 @@
 
+const _ticker = {
+	sys_pool: {},
+	syskill: false,
+};
+
+const _stfu = true;
 
 class _kb_ticker{
 	constructor(params){
 
 		if (!params){
 			console.error('Ticker: Invalid params', params)
+			return
 		}
 
 		const defprms= {
-			'duration': 5,
-			'name': null,
-			'infinite': false,
-			'offset': 0,
-			'speed': 250,
-			'round': false,
-			'wait': false,
-			'callback': null,
-			'reversed': false,
+			'duration':     7,
+			'name':         null,
+			'infinite':     false,
+			'offset':       0,
+			'speed':        250,
+			'round':        false,
+			'wait':         false,
+			'callback':     null,
+			'reversed':     false,
 			'loopcallback': null,
 		}
 
-		const config = { ...params, ...defprms };
+		const config = { ...defprms, ...params };
 
 		this.duration 	=           config['duration'];
 		this.timer_name =           config['name'];
@@ -45,13 +52,14 @@ class _kb_ticker{
 
 
 		// tick
-		this.global_tick = 0 + this.offset;
+		// this.global_tick = 0 + this.offset;
+		this.global_tick = 0;
 	}
 
 	fire(){
 		// useless safety margins ?
 		if (!this.callback_func || this.fired == true){
-			console.log('Invalid timer config', this)
+			console.warn('Invalid timer config', this)
 			return 'dead_timer'
 		}
 		
@@ -60,49 +68,60 @@ class _kb_ticker{
 
 		// the holy hand grenade
 		// important todo: so should it be let or const ?
-		let self = this;
+		const _self = this;
 
 		// The timer has a heartbeat of 250ms between pulses
 		// Each one of these ticks returns the actual time
 		// by subtracting the newly constructed date from the zero mark
-		this.zero = (new Date()).getTime() + this.offset;
+		this.zero = (new Date()).getTime();
+
+		if(!_stfu){print('zero and offs:', this.timer_name, (new Date()).getTime(), this.zero, this.offset)};
 
 		return new Promise(async function(resolve, reject){
-			while (self.alive == true && ((self.global_tick < self.duration) || self.infinite == true)){
+			while (_self.alive == true && ((_self.global_tick < _self.duration) || _self.infinite == true)){
 
-				if (self.paused == true){
-					await self.pause_promise
+				if (_self.paused == true){
+					await _self.pause_promise
 				}
 
 				// global timer
 				const new_tick = Math.floor(
-					((new Date()).getTime() - self.zero) / 1000
+					((new Date()).getTime() - _self.zero) / 1000
 				);
 
+				if(!_stfu){print('New tick:', new_tick)};
+
 				// only trigger callback if 1 second has passed
-				if (self.global_tick != new_tick){
+				if (_self.global_tick != new_tick){
 					// wait for callback function to complete, if asked
-					if (self.wait_for_callback == true){
-						await self.callback_func(self.tick)
+					if (_self.wait_for_callback == true){
+						await _self.callback_func(_self.tick)
 					}else{
-						self.callback_func(self.tick)
+						_self.callback_func(_self.tick)
 					}
 				}
 
-				self.global_tick = new_tick;
+				_self.global_tick = new_tick;
 
 				// wait before executing next iteration
-				await jsleep(self.heartbeat)
+				await ksys.util.sleep(_self.heartbeat)
 			}
 
-			self.alive = false;
-			resolve(true)
+			if(!_stfu){print('terminating timer:', _self.timer_name, _self.alive, _self.zero, _self.offset, _self.global_tick, _self.duration)};
+			if(!_stfu){print('while status:', (_self.alive == true && ((_self.global_tick < _self.duration) || _self.infinite == true)))};
+
+			_self.alive = false;
+			if(!_stfu){print('whoami', _self)};
+			resolve(_self)
 			return
 		});
 	}
 
 
 	force_kill(){
+		if(!_stfu){print('ROOT OF THE FUCKING PROBLEM', this)};
+		if(!_stfu){console.trace()};
+		
 		this.alive = false;
 		// delete window.ksys.ticker.sys_pool[this.timer_name];
 		return null
@@ -114,12 +133,12 @@ class _kb_ticker{
 
 	_pause(){
 		// todo: Fuck javascript. Retarded shit
-		const self = this;
+		const _self = this;
 		// important: overwriting unresolved pause promise with a new one will fuck everything up
 		if (!this.paused){
 			this.pause_promise = 
 			new Promise(function(resolve, reject){
-				self.pause_promise_resolve = resolve;
+				_self.pause_promise_resolve = resolve;
 			});
 		}
 		this.paused = true;
@@ -174,9 +193,9 @@ class _kb_ticker{
 
 	get tick(){
 		return {
-			'global':    this.reversed ? (this.duration - this.global_tick) : this.global_tick,
-			'iteration': (this.reversed ? (this.duration - this.global_tick) : this.global_tick) % this.duration,
-			'loops':     Math.floor(this.global_tick / this.duration),
+			'global':    (this.reversed ? (this.duration - this.global_tick) : this.global_tick) + this.offset,
+			'iteration': ((this.reversed ? (this.duration - this.global_tick) : this.global_tick) + this.offset) % this.duration,
+			'loops':     Math.floor((this.global_tick + this.offset) / this.duration),
 			'all':       this,
 		}
 	}
@@ -192,24 +211,11 @@ class _kb_ticker{
 
 }
 
-const _ticker = {};
 
-_ticker.sys_pool = {};
-_ticker.syskill = false;
 
 _ticker.spawn = function(params)
 {
 	return new _kb_ticker(params)
-
-	var timename = params['name'] ? params['name'] : CryptoJS.SHA256(lizard.rndwave(512, 'flac')).toString();
-	var upt_params = params;
-	if (timename in ksys.ticker.sys_pool){
-		timename = CryptoJS.SHA256(lizard.rndwave(517, 'flac')).toString();
-		upt_params['name'] = timename
-	}
-	const zick = new _kb_ticker(upt_params)
-	ksys.ticker.sys_pool[timename] = zick;
-	return zick
 }
 
 _ticker.kill_all = function()

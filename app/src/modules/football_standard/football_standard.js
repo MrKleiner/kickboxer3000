@@ -152,65 +152,6 @@ $this.playerbase['1'] = $this.playerbase['one'];
 $this.playerbase[2] = $this.playerbase['two'];
 $this.playerbase['2'] = $this.playerbase['two'];
 
-
-
-$this.__playerbase_as_dict = function(){
-	// console.time('pbase as dict')
-	const pbase_dict = {
-		'one': {
-			'main': {},
-			'reserve': {},
-			'both': {},
-		},
-		'two': {
-			'main': {},
-			'reserve': {},
-			'both': {},
-		},
-		// important todo: This is a big fucking risk
-		// what if there's a player with the same name, surname and number in both teams ?
-		'global': {},
-	}
-	// todo: use map or whatever
-
-
-	// 
-	// TEAM 1 
-	// 
-
-	// MAIN
-	for (let player of $this.playerbase.one.main){
-		pbase_dict.one.main[player.namecode] = player;
-		pbase_dict.one.both[player.namecode] = player;
-	}
-	// RESERVE
-	for (let player of $this.playerbase.one.reserve){
-		pbase_dict.one.reserve[player.namecode] = player;
-		pbase_dict.one.both[player.namecode] = player;
-	}
-
-
-	// 
-	// TEAM 2 
-	// 
-
-	// MAIN
-	for (let player of $this.playerbase.two.main){
-		pbase_dict.two.main[player.namecode] = player;
-		pbase_dict.two.both[player.namecode] = player;
-	}
-	// RESERVE
-	for (let player of $this.playerbase.two.reserve){
-		pbase_dict.two.reserve[player.namecode] = player;
-		pbase_dict.two.both[player.namecode] = player;
-	}
-
-
-	// console.timeEnd('pbase as dict')
-
-	return pbase_dict
-}
-
 $this.tab_switch = function(event){
 	const id_pair = event.target.getAttribute('match_id');
 
@@ -222,6 +163,44 @@ $this.tab_switch = function(event){
 
 
 $this.load = async function(){
+	// 
+	// Index colours
+	// 
+	{
+		$this.team_colors = [
+			// '000000',
+			'0066c3',
+			'00984c',
+			'00aff1',
+			'69c62b',
+			'818181',
+			'9c82bb',
+			'c13dca',
+			'e43d3d',
+			'e43da5',
+			'f0ec00',
+			'fdda3d',
+			'ff0003',
+			'ff0282',
+			'ff0604',
+			'ffc938',
+			'ffe100',
+			'ffffff',
+		]
+
+		for (color of $this.team_colors){
+			const col = $(`<div class="tcolour" tc="${color}" style="background: #${color}"></div>`);
+
+			col.on('click', function(evt){
+				const event = evt;
+				$(event.target).closest('.colour_picker').find('.tcolour').removeClass('col_selected');
+				event.target.classList.add('col_selected');
+			})
+
+			$('.team_param .colour_picker').append(col)
+		}
+	}
+
 	$this.index_titles()
 	$this.postload()
 	$('#teams_layouts .team_layout .ftfield div, #teams_layouts .team_layout .ftfield .goalkeeper').addClass('player_slot');
@@ -232,8 +211,8 @@ $this.load = async function(){
 	await $this.titles.timer.toggle_text('time_added', false);
 	await $this.titles.timer.toggle_img('extra_time_bg', false);
 	await $this.titles.timer.toggle_text('extra_ticker', false);
-	await $this.titles.timer.set_text('extra_ticker', '0:00');
-	await $this.titles.timer.set_text('base_ticker', '0:00');
+	// await $this.titles.timer.set_text('extra_ticker', '00:00');
+	// await $this.titles.timer.set_text('base_ticker', '00:00');
 
 	const fresh_context = ksys.context.module.pull();
 
@@ -294,7 +273,7 @@ $this.load = async function(){
 		}
 	}
 
-	// last ream preset
+	// last team preset
 	{
 		const team1_sel = document.querySelector('#team1_def select.team_preset_selector')
 		const team2_sel = document.querySelector('#team2_def select.team_preset_selector')
@@ -321,11 +300,13 @@ $this.load = async function(){
 	{
 		const return_selectors = function(t){
 			return {
-				'logo_input': $(`#team${t}_def [prmname="team_logo"] input`)[0],
-				'team_name':  $(`#team${t}_def [prmname="team_name"] input`)[0],
-				'shorthand':  $(`#team${t}_def [prmname="club_shorthand"] input`)[0],
-				'team_coach': $(`#team${t}_def [prmname="team_coach"] input`)[0],
-				'score_pool': $(`#score_ctrl_team${t} .score_ctrl_table`)[0],
+				'logo_input':          $(`#team${t}_def [prmname="team_logo"] input`)[0],
+				'team_name':           $(`#team${t}_def [prmname="team_name"] input`)[0],
+				'shorthand':           $(`#team${t}_def [prmname="club_shorthand"] input`)[0],
+				'team_coach':          $(`#team${t}_def [prmname="team_coach"] input`)[0],
+				'player_color_picker': $(`#team${t}_def [prmname="team_player_color"] .colour_picker`)[0],
+				'gk_color_picker':     $(`#team${t}_def [prmname="team_gk_color"] .colour_picker`)[0],
+				'score_pool':          $(`#score_ctrl_team${t} .score_ctrl_table`)[0],
 				logo: function(){
 					const input_elem = $(`#team${t}_def [prmname="team_logo"] input`)[0]
 					if (!input_elem.files[0] && !$(`#team${t}_def`).attr(`logo_path`)){
@@ -364,6 +345,82 @@ $this.load = async function(){
 		}
 	}
 
+	// 
+	// String formatting binds
+	// 
+	{
+		document.querySelector('#text_formatting_params').onclick = function(){
+			// Coach translit
+			ksys.context.module.prm(
+				'coach_translit',
+				document.querySelector('#coach_text_format_translit').checked,
+			);
+			// Coach format
+			ksys.context.module.prm(
+				'coach_format',
+				document.querySelector('#coach_string_format input:checked').value,
+			);
+
+
+			// Players translit
+			ksys.context.module.prm(
+				'players_translit',
+				document.querySelector('#players_text_format_translit').checked,
+			);
+			// Players format
+			ksys.context.module.prm(
+				'players_format',
+				document.querySelector('#players_string_format input:checked').value,
+			);
+
+
+			// Club translit
+			ksys.context.module.prm(
+				'club_translit',
+				document.querySelector('#club_name_text_format_translit').checked,
+			);
+			// Club format
+			ksys.context.module.prm(
+				'club_format',
+				document.querySelector('#club_string_format input:checked').value,
+			);
+
+		}
+	}
+
+	// 
+	// String formatting load
+	// 
+	{
+		if ('coach_format' in ksys.context.module.cache){
+			const _ctx = ksys.context.module.cache;
+
+			document.querySelector('#coach_text_format_translit').checked =                                  _ctx.coach_translit;
+			document.querySelector(`#coach_string_format input[value="${_ctx.coach_format}"]`).checked =     true;
+			
+			document.querySelector('#players_text_format_translit').checked =                                _ctx.players_translit;
+			document.querySelector(`#players_string_format input[value="${_ctx.players_format}"]`).checked = true;
+			
+			document.querySelector('#club_name_text_format_translit').checked =                              _ctx.club_translit;
+			document.querySelector(`#club_string_format input[value="${_ctx.club_format}"]`).checked =       true;
+		}
+	}
+
+	// 
+	// Scores
+	// 
+	{
+		const prev_scores = JSON.parse(ksys.db.module.read('scores.fball')) || {'1':[], '2':[]};
+		for (let team of ['1', '2']){
+			for (let score of prev_scores[team]){
+				// $this.playerbase.global_index[score.namecode].score(team, score.time)
+				$this.push_score(team, score.surname, score.time)
+			}
+		}
+	}
+
+	$this.resync_red_penalty_cards()
+
 }
 // $this.load()
 
@@ -376,6 +433,7 @@ $this.postload = function(){
 		const tgt = event.target.closest('.team_layout .generic_player_item')
 		// also make sure it doesn't trigger on anything but LMB
 		if (tgt && tr_event.which == 1){
+			$('body').blur();
 			// set the current football field context
 			$this.player_item_drag_field_context = event.target.closest('.team_layout')
 			tgt.classList.add('dragging')
@@ -418,6 +476,8 @@ $this.postload = function(){
 			}else{
 				player_layout_drop_tgt.append(pldrag_item)
 			}
+
+			// $this.save_last_layout()
 		}
 
 		// remove hover effect from the cell
@@ -503,74 +563,6 @@ $this.quit_all_titles = async function(){
 	document.body.classList.remove('emergency_break')
 }
 
-$this.format_text = function(txt, case_sel, translit=false){
-	var result = txt;
-	if (translit){
-		result = ksys.translit(result);
-	}
-
-	// 1 = capital
-	if (case_sel == 1){
-		result = txt.lower().capitalize()
-	}
-	// 2 = all upper
-	if (case_sel == 2){
-		result = txt.upper()
-	}
-	// 3 = all lower
-	if (case_sel == 2){
-		result = txt.lower()
-	}
-
-	return result
-}
-
-
-$this._show_chosen_club_logo = function(team){
-	const _team_selector = {
-		1: {
-			field: '#team1_layout',
-			def: '#team1_def',
-			vfeed_name: '[vis_feedback="team1_name"]',
-			vfeed_logo: '[vis_feedback="team1_logo"]',
-		},
-		2: {
-			field: '#team2_layout',
-			def: '#team2_def',
-			vfeed_name: '[vis_feedback="team2_name"]',
-			vfeed_logo: '[vis_feedback="team2_logo"]',
-		},
-	}
-	const team_field = _team_selector[team].field;
-	const team_def = _team_selector[team].def;
-	const visfeed = _team_selector[team].vfeed_logo;
-	const logo_path = $(`${team_def} .team_param_input`)[0].files[0].path
-	$(team_def).attr('logo_path', logo_path)
-	// $(`${team_def} .team_logo_vis, ${team_field} .layout_club_logo`).attr('src', logo_path)
-	$(visfeed).attr('src', logo_path)
-}
-
-$this._club_name_dynamic_type = function(event, team){
-	const _team_selector = {
-		1: {
-			field: '#team1_layout',
-			def: '#team1_def',
-			vfeed_name: '[vis_feedback="team1_name"]',
-		},
-		2: {
-			field: '#team2_layout',
-			def: '#team2_def',
-			vfeed_name: '[vis_feedback="team2_name"]',
-		},
-	}
-	const team_field = _team_selector[team].field;
-	const team_def = _team_selector[team].def;
-	const visfeed = _team_selector[team].vfeed_name;
-
-	// important todo: pre-select all the stuff and store in the modules context
-	// document.querySelector(`${team_field} .team_layout_header .layout_club_name`).innerText = event.target.value;
-	$(visfeed).text(event.target.value.trim())
-}
 
 // update vis feedback of all the logos and team names
 // and write the logo path to the attributes of the team def table
@@ -587,7 +579,7 @@ $this.upd_vis_feedback = function(){
 		var team_logo = null;
 	}
 	$('[vis_feedback="team1_logo"]').attr('src', team_logo || $('#team1_def').attr('logo_path'));
-	$('[vis_feedback="team1_name"]').text($('#team1_def [prmname="team_name"] input').val());
+	$('[vis_feedback="team1_name"]').text($('#team1_def [prmname="team_name"] input').val().upper());
 	var team_logo = null;
 
 
@@ -600,7 +592,7 @@ $this.upd_vis_feedback = function(){
 		var team_logo = null;
 	}
 	$('[vis_feedback="team2_logo"]').attr('src', team_logo || $('#team2_def').attr('logo_path'));
-	$('[vis_feedback="team2_name"]').text($('#team2_def [prmname="team_name"] input').val());
+	$('[vis_feedback="team2_name"]').text($('#team2_def [prmname="team_name"] input').val().upper());
 }
 
 
@@ -628,7 +620,7 @@ $this.player_ctrl = class {
 		this.namecode = '';
 
 		// still, fuck javascript
-		const self = this;
+		const _self = this;
 
 		const ctrl_elem = $(`
 			<div class="player_item" namecode="${this.namecode}">
@@ -638,7 +630,7 @@ $this.player_ctrl = class {
 				</div>
 				<div class="player_param" prmname="psurname">
 					<div class="player_param_label">Surname</div>
-					<input type="text" class="player_param_input" value="${this.surname}">
+					<input type="text" class="player_param_input" value="${ksys.util.str_ops.format(this.surname, '2')}">
 				</div>
 				<div class="player_param" prmname="number">
 					<div class="player_param_label">Number</div>
@@ -655,21 +647,21 @@ $this.player_ctrl = class {
 		// todo: this is still not ideal
 		ctrl_elem.find('[prmname="pname"] input')[0].onchange = function(evt){
 			// print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
-			self.name = evt.target.value;
-			self._update_namecode(true);
+			_self.name = evt.target.value;
+			_self._update_namecode(true);
 		}
 		ctrl_elem.find('[prmname="psurname"] input')[0].onchange = function(evt){
-			// print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU', self, evt.target.value)
-			self.surname = evt.target.value;
-			self._update_namecode(true);
+			// print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU', _self, evt.target.value)
+			_self.surname = evt.target.value;
+			_self._update_namecode(true);
 		}
 		ctrl_elem.find('[prmname="number"] input')[0].onchange = function(evt){
-			self.number = evt.target.value;
-			self._update_namecode(true);
+			_self.number = evt.target.value;
+			_self._update_namecode(true);
 		}
 		ctrl_elem[0].oncontextmenu = function(evt){
 			if (evt.altKey){
-				self.kill()
+				_self.kill()
 			}
 		}
 
@@ -691,6 +683,7 @@ $this.player_ctrl = class {
 		delete $this.playerbase[this.team.num_word][reserve_or_main][this.namecode];
 		// current team combo of main and reserve
 		delete $this.playerbase[this.team.num_word].both[this.namecode];
+
 
 		// Forward update has to come BEFORE the class' namecode is updated,
 		// because all the other generic player items still have an old namecode
@@ -729,7 +722,7 @@ $this.player_ctrl = class {
 		const tgt_elems = $(`player[namecode="${this.namecode}"]`);
 
 		tgt_elems.find('.player_number').text(this.number)
-		tgt_elems.find('.player_surname').text(this.surname)
+		tgt_elems.find('.player_surname').text(ksys.util.str_ops.format(this.surname, '2'))
 
 		if (upd_namecode){
 			this._update_namecode(false)
@@ -747,7 +740,7 @@ $this.player_ctrl = class {
 			>
 				<img vis_feedback="team${this.team.num}_logo" src="${this.get_team_logo()}">
 				<div class="player_number">${this.number}</div>
-				<div class="player_surname">${this.surname.lower().capitalize()}</div>
+				<div class="player_surname">${ksys.util.str_ops.format(this.surname, '2')}</div>
 			</player>
 		`)
 
@@ -777,8 +770,91 @@ $this.player_ctrl = class {
 	is_on_field(){
 		return !!this.team.field[0].querySelector(`[namecode="${this.namecode}"]`)
 	}
+
+	async penalty_card(_card){
+		const _ctx = ksys.context.module.cache;
+
+		const card_selection = {
+			'yellow': 'yellow_card',
+			'red':    'red_card',
+		}
+		const card = $this.titles[card_selection[_card]];
+
+		$this.next_card_out = card;
+
+		await card.set_text(
+			'player_name',
+			`${this.number} ${ksys.util.str_ops.format(this.surname, _ctx.players_format, _ctx.players_translit)}`
+		)
+		await card.set_img_src('club_logo', this.get_team_logo())
+		
+		// disable buttons
+		ksys.btns.pool.red_card.vmixbtn(false)
+		ksys.btns.pool.yellow_card.vmixbtn(false)
+
+		ksys.context.module.prm(`team${this.team.num}_rcard_count`, (`team${this.team.num}_rcard_count` in _ctx) ? (_ctx[`team${this.team.num}_rcard_count`] += 1).clamp(0, 3) : 1)
+		$this.resync_red_penalty_cards()
+
+		// show the card in vmix
+		await card.overlay_in(1)
+
+		// let them hang for 7 seconds
+		await ksys.util.sleep(7000)
+		// hide card
+		$this.hide_card()
+
+		// re-enable buttons
+		ksys.btns.pool.red_card.vmixbtn(true)
+		ksys.btns.pool.yellow_card.vmixbtn(true)
+
+	}
 }
 
+
+// ================================
+//        Text formatting
+// ================================
+
+
+$this.resync_red_penalty_cards = function(){
+	const _ctx = ksys.context.module.cache;
+	// print('Resyncing cards...')
+	for (let team of ['1', '2']){
+
+		const team_card_count = _ctx[`team${team}_rcard_count`]
+		if (!(`team${team}_rcard_count` in _ctx)){continue};
+
+		// print('WTF', `team${team}_rcard_count`)
+
+		$(`#red_card_counter_team${team} .red_card_counter_pool img`).removeClass('rcard_shown')
+		for (let card of range(1, 4)){
+			if (card > team_card_count){
+				$this.titles.timer.toggle_img(`rcard_${team}_${card}`, false)
+				continue
+			}
+			// print('Syncing card', card)
+			$(`#red_card_counter_team${team} .red_card_counter_pool img.rcard${card}`).addClass('rcard_shown')
+			$this.titles.timer.toggle_img(`rcard_${team}_${card}`, true)
+		}
+	}
+}
+
+$this.mod_penalty_red_card = function(event, team, subtr=false){
+
+	if (!event.altKey){return};
+
+	const _ctx = ksys.context.module.cache;
+
+	if (subtr){
+		ksys.context.module.prm(`team${team}_rcard_count`, (`team${team}_rcard_count` in _ctx) ? (_ctx[`team${team}_rcard_count`] -= 1).clamp(0, 3) : 0)
+	}else{
+		ksys.context.module.prm(`team${team}_rcard_count`, (`team${team}_rcard_count` in _ctx) ? (_ctx[`team${team}_rcard_count`] += 1).clamp(0, 3) : 0)
+	}
+
+	print(ksys.context.module.cache.team1_rcard_count, ksys.context.module.cache.team2_rcard_count)
+
+	$this.resync_red_penalty_cards()
+}
 
 
 
@@ -826,6 +902,8 @@ $this.save_team_preset = function(team){
 		'club_name': club_name,
 		'coach': $(`${team_def} .team_base_params [prmname="team_coach"] input`).val(),
 		'shorthand': $(`${team_def} .team_base_params [prmname="club_shorthand"] input`).val(),
+		'player_color': $(`${team_def} .team_base_params [prmname="team_player_color"] .tcolour.col_selected`).attr('tc') || '000000',
+		'gk_color': $(`${team_def} .team_base_params [prmname="team_gk_color"] .tcolour.col_selected`).attr('tc') || '000000',
 		'logo': has_logo || null,
 		'main_players': [],
 		'reserve_players': [],
@@ -854,15 +932,24 @@ $this.save_team_preset = function(team){
 	// save the team to file
 	ksys.db.module.write(`${club_name}.tdef`, JSON.stringify(club_info, null, 4))
 
+	// 
 	// update index
+	// 
+
+	// Read existing index file, if any
 	const index_file = ksys.db.module.read('teams_index.index')
+	// Eval file into json
+	// If file doesn't exist - the db reader would return "null" which is a valid json
+	// and evaluates into false value
 	// important todo: Fuck
 	const team_presets_index = JSON.parse(index_file) || [];
 
+	// If index doesn't exist - create one. Empty
 	if (!index_file){
 		ksys.db.module.write('teams_index.index', JSON.stringify([], null, 4))
 	}
 
+	// If index doesn't contain the current team - add it
 	if (!team_presets_index.includes(club_name)){
 		team_presets_index.push(club_name)
 		ksys.db.module.write('teams_index.index', JSON.stringify(team_presets_index, null, 4))
@@ -898,15 +985,25 @@ $this.load_team_preset = function(event){
 	const tgt_team_info = _team_selector[tgt_team[0].id];
 
 	// Set team name input value
-	tgt_team.find('.team_base_params [prmname="team_name"] input')[0].value = team_preset.club_name;
+	tgt_team.find('.team_base_params [prmname="team_name"] input')[0].value = team_preset.club_name.upper();
 	// Set team coach name input value
-	tgt_team.find('.team_base_params [prmname="team_coach"] input')[0].value = team_preset.coach;
+	tgt_team.find('.team_base_params [prmname="team_coach"] input')[0].value = team_preset.coach.upper();
+
+
+	tgt_team.find('.team_base_params .tcolour').removeClass('col_selected');
+	// Set players colour
+	tgt_team.find(`.team_base_params [prmname="team_player_color"] .tcolour[tc="${team_preset.player_color}"]`).addClass('col_selected');
+	// Set goalkeeper colour
+	tgt_team.find(`.team_base_params [prmname="team_gk_color"] .tcolour[tc="${team_preset.gk_color}"]`).addClass('col_selected');
+
+
 	// empty both player pools of this team
 	tgt_team.find('.player_list .list_pool').empty()
 	// Set logo attribute of the current team
 	tgt_team.attr('logo_path', team_preset.logo)
 	// team shorthand
-	tgt_team.find('.team_base_params [prmname="club_shorthand"] input')[0].value = team_preset.shorthand || '';
+	// todo: there's option chaining in latest chromium
+	tgt_team.find('.team_base_params [prmname="club_shorthand"] input')[0].value = (team_preset.shorthand || '').upper();
 
 	// spawn main players
 	// team, is_reserve, pname='', psurname='', number=''
@@ -941,8 +1038,8 @@ $this.load_team_preset = function(event){
 }
 
 $this.save_last_team_presets = function(){
-	ksys.context.module.prm('last_team_def1', $('#team1_def [prmname="team_name"] input')[0].value, false)
-	ksys.context.module.prm('last_team_def2', $('#team2_def [prmname="team_name"] input')[0].value)
+	ksys.context.module.prm('last_team_def1', $('#team1_def [prmname="team_name"] input')[0].value.lower(), false)
+	ksys.context.module.prm('last_team_def2', $('#team2_def [prmname="team_name"] input')[0].value.lower())
 }
 
 
@@ -1139,6 +1236,8 @@ $this.mark_replacement_player = function(event){
 }
 
 $this.replacement_player_title = async function(event){
+	$this.shadow_swap()
+
 	const tgtbtn = event.target.closest('vmixbtn')
 
 	const leaving_player = $('#replacement .replacement_list.replacement_leaving .selected_replacement')
@@ -1177,28 +1276,10 @@ $this.select_player_for_punishment = function(event){
 	event.target.closest('.generic_player_item').classList.add('selected_to_punish')
 }
 
-$this.show_card = async function(_card){
-	const card_selection = {
-		'yellow': 'yellow_card',
-		'red':    'red_card',
-	}
-	const card = $this.titles[card_selection[_card]];
+$this.show_card = async function(card){
 	const selected_player = document.querySelector('#card_player_filter .generic_player_item.selected_to_punish')
 	if (selected_player){
-		const player_object = $this.playerbase.global_index[selected_player.getAttribute('namecode')];
-
-		$this.next_card_out = card;
-
-		await card.set_text('player_name', `${player_object.number} ${player_object.surname.toUpperCase()}`)
-		await card.set_img_src('club_logo', player_object.get_team_logo())
-		// disable buttons
-		ksys.btns.pool.red_card.vmixbtn(false)
-		ksys.btns.pool.yellow_card.vmixbtn(false)
-		await card.overlay_in(1)
-
-		// re-enable buttons
-		ksys.btns.pool.red_card.vmixbtn(true)
-		ksys.btns.pool.yellow_card.vmixbtn(true)
+		const player_object = $this.playerbase.global_index[selected_player.getAttribute('namecode')].penalty_card(card);
 	}
 }
 
@@ -1236,6 +1317,8 @@ $this.hide_card = async function(){
 // Должен ли таймер отображать доп время и т.д. ?
 $this.upd_player_layout = async function(team){
 
+	const _ctx = ksys.context.module.cache;
+
 	const title = $this.titles.team_layout;
 
 	const _team_selector = {
@@ -1260,12 +1343,19 @@ $this.upd_player_layout = async function(team){
 	// 
 	// player layout
 	// 
+
+	// player thshirt colour
+	const player_tshirt_col =
+	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
+	.join(`${$(team_def).find('[prmname="team_player_color"] .tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
+
 	for (let player_slot of document.querySelectorAll(`${team_field} .ftfield .player_slot`)){
-	// for (let player_slot of player_pool){
 		const player_item = player_slot.querySelector('.generic_player_item');
 		const slot_has_player = !!player_item;
 		const cell_id = player_slot.getAttribute('t_num');
 
+		// tshirt colour
+		await title.set_img_src(`plr_bg_${cell_id}`, str(player_tshirt_col))
 		
 		// player number
 		await title.toggle_text(`plr_num_${cell_id}`, slot_has_player)
@@ -1279,9 +1369,16 @@ $this.upd_player_layout = async function(team){
 			// player number
 			await title.set_text(`plr_num_${cell_id}`, player_object.number);
 			// player name
-			await title.set_text(`plr_name_${cell_id}`, player_object.surname);
+			await title.set_text(`plr_name_${cell_id}`, ksys.util.str_ops.format(player_object.surname, _ctx.players_format, _ctx.players_translit));
 		}
 	}
+
+	// goalkeeper tshirt colour
+	const gk_tshirt_col =
+	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
+	.join(`${$(team_def).find('[prmname="team_gk_color"] .tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
+	await title.set_img_src(`plr_bg_8_5`, str(gk_tshirt_col))
+
 
 
 	// 
@@ -1305,7 +1402,7 @@ $this.upd_player_layout = async function(team){
 	const player_nums = [];
 	for (let player of player_list_sorted){
 		player_nums.push(player.number)
-		player_list.push(player.surname)
+		player_list.push(ksys.util.str_ops.format(player.surname, _ctx.players_format, _ctx.players_translit))
 	}
 
 	// names
@@ -1330,7 +1427,7 @@ $this.upd_player_layout = async function(team){
 	const reserve_nums = [];
 	for (let player of reserve_list_sorted){
 		reserve_nums.push(player.number)
-		reserve_list.push(player.surname)
+		reserve_list.push(ksys.util.str_ops.format(player.surname, _ctx.players_format, _ctx.players_translit))
 	}
 	// names
 	await title.set_text('reserve_list', reserve_list.join('\n'))
@@ -1342,12 +1439,18 @@ $this.upd_player_layout = async function(team){
 	// 
 	// coach
 	// 
-	await title.set_text('coach_name', $(`${team_def} [prmname="team_coach"] input`).val())
+	await title.set_text(
+		'coach_name',
+		ksys.util.str_ops.format($(`${team_def} [prmname="team_coach"] input`).val(), _ctx.coach_format, _ctx.coach_translit)
+	)
 
 	// 
 	// team name
 	// 
-	await title.set_text('club_name', $(`${team_def} [prmname="team_name"] input`).val().upper())
+	await title.set_text(
+		'club_name',
+		ksys.util.str_ops.format($(`${team_def} [prmname="team_name"] input`).val().upper(), _ctx.club_format, _ctx.club_translit)
+	)
 
 	// 
 	// logo
@@ -1395,6 +1498,7 @@ $this.save_vs_sublines = function(){
 
 
 $this.show_vs_title = async function(){
+	const _ctx = ksys.context.module.cache;
 	ksys.btns.pool.show_splash.vmixbtn(false)
 	await $this.titles.splash.set_text('title_lower_top', $('#vs_text_bottom_upper').val())
 	await $this.titles.splash.set_text('title_lower_bot', $('#vs_text_bottom_lower').val())
@@ -1402,8 +1506,8 @@ $this.show_vs_title = async function(){
 	await $this.titles.splash.set_img_src('logo_l', $('#team1_def').attr('logo_path'))
 	await $this.titles.splash.set_img_src('logo_r', $('#team2_def').attr('logo_path'))
 
-	await $this.titles.splash.set_text('club_name_l', $('#team1_def [prmname="team_name"] input').val().upper())
-	await $this.titles.splash.set_text('club_name_r', $('#team2_def [prmname="team_name"] input').val().upper())
+	await $this.titles.splash.set_text('club_name_l', ksys.util.str_ops.format($('#team1_def [prmname="team_name"] input').val(), _ctx.club_format, _ctx.club_translit))
+	await $this.titles.splash.set_text('club_name_r', ksys.util.str_ops.format($('#team2_def [prmname="team_name"] input').val(), _ctx.club_format, _ctx.club_translit))
 
 	await $this.titles.splash.overlay_in(1)
 
@@ -1428,12 +1532,7 @@ $this.goal_score_on = async function(){
 	const player_object = $this.playerbase.global_index[selected_player.getAttribute('namecode')]
 
 	// register this goal
-	$($this.teams[player_object.team.num_word].score_pool).append(`
-		<div oncontextmenu="this.remove()" namecode="${player_object.namecode}" class="team_score_record">
-			<input value="${Math.floor($this.base_counter.tick.global / 60)}" type="text" class="score_record_time">
-			<input value="${player_object.surname}" type="text" class="score_record_player">
-		</div>
-	`);
+	$this.push_score(player_object.team.num, player_object.surname)
 
 	await $this.titles.gscore.set_text('player_name', `${player_object.number} ${player_object.surname.toUpperCase()}`)
 	await $this.titles.gscore.set_img_src('club_logo', player_object.get_team_logo())
@@ -1445,6 +1544,12 @@ $this.goal_score_on = async function(){
 	ksys.btns.pool.scored.vmixbtn(false)
 
 	await $this.titles.gscore.overlay_in(1)
+
+	// hold for 7 seconds
+	await ksys.util.sleep(7000)
+
+	// hide title
+	await $this.goal_score_off()
 
 	// re-enable buttons
 	ksys.btns.pool.scored.vmixbtn(true)
@@ -1476,12 +1581,14 @@ $this.show_coach = async function(team){
 
 	const teamdef = _team_selector[team].def
 
+	const _ctx = ksys.context.module.cache;
+
 	ksys.btns.pool.show_coach_team1.vmixbtn(false)
 	ksys.btns.pool.hide_coach_team1.vmixbtn(false)
 	ksys.btns.pool.show_coach_team2.vmixbtn(false)
 	ksys.btns.pool.hide_coach_team2.vmixbtn(false)
 
-	await $this.titles.coach.set_text('name', $(`${teamdef} [prmname="team_coach"] input`)[0].value)
+	await $this.titles.coach.set_text('name', ksys.util.str_ops.format($(`${teamdef} [prmname="team_coach"] input`)[0].value, _ctx.coach_format, _ctx.coach_translit))
 	await $this.titles.coach.overlay_in(1)
 
 	ksys.btns.pool.show_coach_team1.vmixbtn(true)
@@ -1507,14 +1614,14 @@ $this.hide_coach = async function(){
 $this.timer_callback = function(tick){
 	const minutes = Math.floor(tick.global / 60)
 	const seconds = tick.global - (60*minutes)
-	$this.titles.timer.set_text('base_ticker', `${minutes}:${str(seconds).zfill(2)}`)
+	$this.titles.timer.set_text('base_ticker', `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`)
 }
 
 
 $this.extra_timer_callback = function(tick){
 	const minutes = Math.floor(tick.global / 60)
 	const seconds = tick.global - (60*minutes)
-	$this.titles.timer.set_text('extra_ticker', `${minutes}:${str(seconds).zfill(2)}`)
+	$this.titles.timer.set_text('extra_ticker', `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`)
 }
 
 
@@ -1526,7 +1633,11 @@ $this.start_base_timer = async function(rnum){
 		$this.base_counter = null;
 	}
 
+	ksys.context.module.prm('round_num', rnum)
+
 	const dur = 45;
+
+	await $this.titles.timer.set_text('base_ticker', (rnum == 1) ? '00:00' : '45:00');
 
 	$this.base_counter = ksys.ticker.spawn({
 		'duration': (rnum == 2) ? (((dur*60)*2)+1) : ((dur*60)+1),
@@ -1539,10 +1650,13 @@ $this.start_base_timer = async function(rnum){
 	})
 
 	$this.base_counter.fire()
-	.then(function(response) {
+	.then(function(_ticker) {
 		// turn off automatically
-		if ($this.base_counter){
-			$this.base_counter.force_kill()
+		if (_ticker){
+			_ticker.force_kill()
+			if (document.querySelector('#timer_ctrl_additional input').value.trim()){
+				$this.launch_extra_time()
+			}
 		}
 	})
 
@@ -1552,17 +1666,33 @@ $this.start_base_timer = async function(rnum){
 
 
 $this.main_timer_vis = async function(state){
+	const title = $this.titles.timer;
+
 	if (state == true){
-		await $this.titles.timer.set_text('command_l', $this.teams[1].shorthand.value)
-		await $this.titles.timer.set_text('command_r', $this.teams[2].shorthand.value)
+		// player_color_picker
+		// gk_color_picker
 
-		await $this.titles.timer.set_text('score_l', $($this.teams[1].score_pool).find('.team_score_record').length)
-		await $this.titles.timer.set_text('score_r', $($this.teams[2].score_pool).find('.team_score_record').length)
+		// TEAM COLOR L
+		const team_col_l =
+		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
+		.join(`${$($this.teams[1].player_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}_l.png`);
+		await title.set_img_src(`team_col_l`, str(team_col_l))
+		// TEAM COLOR R
+		const team_col_r =
+		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
+		.join(`${$($this.teams[2].player_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}_r.png`);
+		await title.set_img_src(`team_col_r`, str(team_col_r))
 
-		$this.titles.timer.overlay_in(2)
+		await title.set_text('command_l', $this.teams[1].shorthand.value)
+		await title.set_text('command_r', $this.teams[2].shorthand.value)
+
+		await title.set_text('score_l', $($this.teams[1].score_pool).find('.team_score_record').length)
+		await title.set_text('score_r', $($this.teams[2].score_pool).find('.team_score_record').length)
+
+		title.overlay_in(2)
 	}
 	if (state == false){
-		$this.titles.timer.overlay_out(2)
+		title.overlay_out(2)
 	}
 }
 
@@ -1581,15 +1711,19 @@ $this.extra_time_vis = async function(state){
 
 
 $this.launch_extra_time = async function(){
-	const extra_amount = int($('#timer_ctrl_additional input').val())
+	if ($this.extra_counter){
+		$this.extra_counter.force_kill()
+		$this.extra_counter = null;
+	}
+
+	const _extra_amount = $('#timer_ctrl_additional input').val()
+	if (!_extra_amount){
+		return
+	}
+	const extra_amount = eval(_extra_amount);
 	if (!extra_amount){
 		return
 	}
-
-	await $this.titles.timer.set_text('time_added', $(`+${extra_amount}`))
-	await $this.titles.timer.toggle_text('time_added', true)
-	await $this.titles.timer.toggle_img('extra_time_bg', true)
-	await $this.titles.timer.toggle_text('extra_ticker', true)
 
 	$this.extra_counter = ksys.ticker.spawn({
 		'duration': extra_amount*60,
@@ -1601,12 +1735,19 @@ $this.launch_extra_time = async function(){
 	})
 
 	$this.extra_counter.fire()
-	.then(function(response) {
+	.then(function(_ticker) {
 		// turn off automatically
-		if ($this.extra_counter){
-			$this.extra_counter.force_kill()
+		if (_ticker){
+			_ticker.force_kill()
 		}
 	})
+
+	print('EXTRA AMOUNT?!', extra_amount)
+	await $this.titles.timer.set_text('extra_ticker', '00:00');
+	await $this.titles.timer.set_text('time_added', `+${Math.floor(extra_amount/60)}`)
+	await $this.titles.timer.toggle_text('time_added', true)
+	await $this.titles.timer.toggle_img('extra_time_bg', true)
+	await $this.titles.timer.toggle_text('extra_ticker', true)
 }
 
 
@@ -1617,7 +1758,7 @@ $this.score_sum_vis = async function(state){
 		const nums_l = [];
 		const names_l = [];
 		for (let player of document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record')){
-			nums_l.push(player.querySelector('.score_record_time').value)
+			nums_l.push(player.querySelector('.score_record_time').value + `'`)
 			names_l.push(player.querySelector('.score_record_player').value)
 		}
 		await $this.titles.final_scores.set_text('scores_l', names_l.join('\n'))
@@ -1626,7 +1767,7 @@ $this.score_sum_vis = async function(state){
 		const nums_r = [];
 		const names_r = [];
 		for (let player of document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record')){
-			nums_r.push(player.querySelector('.score_record_time').value)
+			nums_r.push(player.querySelector('.score_record_time').value + `'`)
 			names_r.push(player.querySelector('.score_record_player').value)
 		}
 		await $this.titles.final_scores.set_text('scores_r', names_r.join('\n'))
@@ -1647,7 +1788,7 @@ $this.score_sum_vis = async function(state){
 		// team logo RIGHT
 		await $this.titles.final_scores.set_img_src('team_logo_r', $this.teams.two.logo())
 
-		// show
+		// show the title
 		await $this.titles.final_scores.overlay_in(1)
 	}
 
@@ -1656,24 +1797,133 @@ $this.score_sum_vis = async function(state){
 	}
 }
 
+$this.update_scores = function(){
+	const score_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
+	const score_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
+	$this.titles.timer.set_text('score_l', score_l)
+	$this.titles.timer.set_text('score_r', score_r)
 
-$this.add_score = function(team){
-	$(`#score_ctrl_team${team} .score_ctrl_table`).append(`
-		<div oncontextmenu="this.remove()" class="team_score_record">
-			<input type="text" class="score_record_time">
-			<input type="text" class="score_record_player">
+	const score_map = {
+		'1': [],
+		'2': [],
+	};
+
+	for (let team of ['1', '2']){
+		for (let goal of document.querySelectorAll(`#score_ctrl_team${team} .score_ctrl_table .team_score_record`)){
+			score_map[team].push({
+				'time': goal.querySelector('.score_record_time').value,
+				'surname': goal.querySelector('.score_record_player').value,
+				'namecode': goal.getAttribute('namecode'),
+			})
+		}
+	}
+
+	ksys.db.module.write('scores.fball', JSON.stringify(score_map, null, 4))
+
+}
+
+$this.push_score = function(team, surname, time=null){
+	const score_elem = $(`
+		<div class="team_score_record">
+			<input onchange="$this.update_scores()" value="${time || Math.floor((($this?.base_counter?.tick?.global || 0) + $this?.extra_counter?.tick?.global || 0) / 60)}" type="text" class="score_record_time">
+			<input onchange="$this.update_scores()" value="${surname}" type="text" class="score_record_player">
 		</div>
 	`)
+
+	score_elem[0].oncontextmenu = function(event){
+		if (event.altKey){
+			event.target.closest('.team_score_record').remove()
+			$this.update_scores()
+		}
+	}
+
+	$(`#score_ctrl_team${team} .score_ctrl_table`)[0].append(score_elem[0])
+
+	$this.update_scores()
 }
 
 
+$this.add_score = function(team){
+	const selected_player = $('#score_ctrl_player_search_pool .generic_player_item.selected_to_punish').attr('namecode')
+	if (!selected_player){return};
+	const player_info = $this.playerbase.global_index[selected_player]
+	$this.push_score(team, player_info.surname)
+}
 
 
+$this.shadow_swap = async function(){
+	const leaving_player = $('#replacement .replacement_list.replacement_leaving .selected_replacement')
+	const incoming_player = $('#replacement .replacement_list.replacement_incoming .selected_replacement')
+	if (!leaving_player[0] || !incoming_player[0]){
+		return
+	}
+	const new_player_elem = $this.playerbase.global_index[incoming_player.attr('namecode')].get_generic_player_item(true)
+	$(`.ftfield [namecode="${leaving_player.attr('namecode')}"]`).replaceWith(new_player_elem)
+}
 
 
+$this.filter_players_for_score = function(event){
+
+	const pool = document.querySelector('#score_ctrl_player_search_pool')
+	// Query from the text input
+	const tquery = event.target.value.toLowerCase();
+
+	// Clear the filtered pool
+	pool.innerHTML = '';
+
+	for (let player_index in $this.playerbase.global_index){
+		const player = $this.playerbase.global_index[player_index]
+
+		if (player.namecode.includes(tquery)){
+			const player_elem = player.get_generic_player_item(false)
+			player_elem.onclick = function(event){
+				$(event.target).closest('#score_ctrl_player_search_pool').find('.generic_player_item').removeClass('selected_to_punish')
+				event.target.closest('.generic_player_item').classList.add('selected_to_punish')
+			}
+			pool.append(player_elem)
+		}
+	}
+}
 
 
+$this.resume_main_timer_from_offset = function(event){
 
+	if ($this.base_counter){
+		$this.base_counter.force_kill()
+		$this.base_counter = null;
+	}
+
+	const rnum = int(ksys.context.module.prm('round_num')) || 1;
+
+	const offs = eval(document.querySelector('#timer_ctrl_base_resume input').value);
+
+	const dur = (45*60);
+
+	$this.base_counter = ksys.ticker.spawn({
+		// 'duration': (rnum == 2) ? ((dur*2)+1) : (dur+1),
+		'duration': (dur-(offs%dur))+1,
+		'name': `giga_timer_offs${rnum}`,
+		// 'offset': (rnum == 2) ? (dur+offs) : (0+offs),
+		'offset': offs,
+		'infinite': false,
+		'reversed': false,
+		'callback': $this.timer_callback,
+		'wait': true,
+	})
+
+	$this.base_counter.fire()
+	.then(function(_ticker) {
+		// turn off automatically
+		if (_ticker){
+			_ticker.force_kill()
+			if (document.querySelector('#timer_ctrl_additional input').value.trim()){
+				$this.launch_extra_time()
+			}
+		}
+	})
+
+	// print($this.base_counter)
+}
 
 
 

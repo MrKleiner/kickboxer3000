@@ -80,7 +80,7 @@ class vmix_title
 			'Input': this.title_name,
 		})
 		if (this.timings && wait){
-			const margin = this.timings.margin || 0
+			const margin = (this.timings.margin || 0) + 500;
 			await ksys.util.sleep(((this.timings.frames_in / this.timings.fps)*1000) + margin)
 		}
 	}
@@ -91,7 +91,7 @@ class vmix_title
 			'Input': this.title_name,
 		})
 		if (this.timings && wait){
-			const margin = this.timings.margin || 0
+			const margin = (this.timings.margin || 0) + 500
 			const frames_out = this.timings.frames_out || this.timings.frames_in
 			await ksys.util.sleep(((frames_out / this.timings.fps)*1000) + margin)
 		}

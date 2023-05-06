@@ -16,12 +16,32 @@ class vmix_t_bottuns
 				}
 			}
 		}
+
+		this.icon_registry = {
+			'auto_seq':    './assets/auto_seq_icon_c.svg',
+			'vis_show':    './assets/eye_vis_on.svg',
+			'vis_hide':    './assets/eye_vis_off.svg',
+			'update':      './assets/update_icon.svg',
+			'play':        './assets/play_icon.svg',
+			'auto_tweaks': './assets/gear_icon.svg',
+		}
 	};
 
 	// register named buttons in a pool
 	sync_pool(){
 		for (let reg of document.querySelectorAll('vmixbtn[btname]')){
 			window.vmix_btns.pool[reg.getAttribute('btname')] = reg
+		}
+
+		for (let btn of document.querySelectorAll('vmixbtn[seq_info]')){
+			const _self = this;
+			const actions = btn.getAttribute('seq_info').split('+')
+			const seq = actions.map(function(act){
+				return `<img class="vmixbtn_info_icon" src="${_self.icon_registry[act.trim()]}">`
+			})
+			$(btn).append(`<div class="vmixbtn_info_icon_pool">${seq.join('')}</div>`)
+			btn.removeAttribute('seq_info')
+			btn.setAttribute('rel_pos', null)
 		}
 	}
 
