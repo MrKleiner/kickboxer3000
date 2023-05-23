@@ -1,6 +1,9 @@
 
+/*
+!~~ kbstandard
+*/
 
-kbstandard
+~~
 {
 	display: flex;
 	flex-direction: row;
@@ -8,7 +11,7 @@ kbstandard
 	flex-wrap: nowrap;
 }
 
-kbstandard vmixbtn
+~~ vmixbtn
 {
 	flex-shrink: 0;
 	width: 110px;
@@ -16,7 +19,7 @@ kbstandard vmixbtn
 	font-size: 17px;
 }
 
-kbstandard box
+~~ box
 {
 	display: flex;
 	flex-wrap: wrap;
@@ -24,12 +27,19 @@ kbstandard box
 }
 
 
-kbstandard #lside
+~~ #lside
 {
-	width: 450px;
+	width: 550px;
 }
 
-kbstandard #timer_ctrl bxtitle
+~~ #lside vmixbtn
+{
+	width: 150px;
+	height: 150px;
+	font-size: 20px;
+}
+
+~~ #timer_ctrl bxtitle
 {
 	width: 100%;
 	user-select: none;
@@ -38,20 +48,20 @@ kbstandard #timer_ctrl bxtitle
 	font-family: 'tahoma_bold';
 }
 
-kbstandard #timer_ctrl row
+~~ #timer_ctrl row
 {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: nowrap;
 }
 
-kbstandard input[newtime]
+~~ input[newtime]
 {
 	margin-left: 10px;
 	width: 120px;
 }
 
-kbstandard rounds
+~~ rounds
 {
 	display: flex;
 	padding: 5px;
@@ -62,14 +72,14 @@ kbstandard rounds
 	user-select: none;
 }
 
-kbstandard rounds pool
+~~ rounds pool
 {
 	display: flex;
 	flex-direction: row;
 	flex-wrap: wrap;
 }
 
-kbstandard rounds round
+~~ rounds round
 {
 	text-align: center;
 	width: 25px;
@@ -81,33 +91,33 @@ kbstandard rounds round
 	background: rgba(0, 0, 0, 0.2);
 }
 
-kbstandard rounds round:hover
+~~ rounds round:hover
 {
 	background: black;
 }
 
-kbstandard rounds round:active
+~~ rounds round:active
 {
 	color: lime;
 	outline: 3px solid cyan;
 }
 
-kbstandard input[round_duration]
+~~ input[round_duration]
 {
 	margin-left: 10px;
 }
 
-kbstandard rowlabel
+~~ rowlabel
 {
 	user-select: none;
 }
 
-kbstandard row[round_dur]
+~~ row[round_dur]
 {
 	margin-top: 30px;
 }
 
-kbstandard sysbtn[btname="set_round_duration"]
+~~ sysbtn[btname="set_round_duration"]
 {
 	margin-left: 10px;
 }
@@ -131,55 +141,56 @@ kbstandard sysbtn[btname="set_round_duration"]
 
 
 
-kbstandard #rside
+~~ #rside
 {
 	display: flex;
 	flex-grow: 1;
 	margin: 10px;
 	flex-direction: column;
+	height: 90vh;
 }
 
 
 
-kbstandard #pairs_pool
+~~ #pairs_pool
 {
 	display: flex;
 	flex-direction: column;
-	height: 700px;
 	overflow-y: scroll;
-	background: rgba(0, 0, 0, 0.2)
+	background: rgba(0, 0, 0, 0.2);
+	height: 100%;
 }
 
-kbstandard #pairs_pool::-webkit-scrollbar {
+~~ #pairs_pool::-webkit-scrollbar {
 	width: 5px;
 	background: rgba(0, 0, 0, 0.2);
 }
  
-kbstandard #pairs_pool::-webkit-scrollbar-track {
+~~ #pairs_pool::-webkit-scrollbar-track {
 	border-radius: 999px;
 	/*box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);*/
 }
  
-kbstandard #pairs_pool::-webkit-scrollbar-thumb {
+~~ #pairs_pool::-webkit-scrollbar-thumb {
 	border-radius: 999px;
 	background-color: rgb(60, 60, 60);
 	/*outline: 1px solid slategrey; */
 	/*border-radius: 10px;*/
 }
 
-kbstandard #pairs_pool sysbtn
+~~ #pairs_pool sysbtn
 {
 	margin-top: 10px;
 }
 
-kbstandard #pairs_pool pair
+~~ #pairs_pool pair
 {
 	display: flex;
 	flex-direction: column;
 	background: rgba(0, 0, 0, 0.2);
 	margin-top: 20px;
 }
-kbstandard #pairs_pool pair players
+~~ #pairs_pool pair players
 {
 	display: flex;
 	flex-direction: row;
@@ -189,7 +200,7 @@ kbstandard #pairs_pool pair players
 	margin-top: 10px;
 }
 
-kbstandard #pairs_pool pair display
+~~ #pairs_pool pair display
 {
 	user-select: none;
 	font-size: 18px;
@@ -197,7 +208,7 @@ kbstandard #pairs_pool pair display
     white-space: nowrap;
 }
 
-kbstandard #pairs_pool player
+~~ #pairs_pool player
 {
 	padding: 0px 5px 0px 5px;
 	display: flex;
@@ -206,39 +217,39 @@ kbstandard #pairs_pool player
 }
 
 
-kbstandard #pairs_pool player:hover
+~~ #pairs_pool player:hover
 {
 	background: rgba(255, 255, 255, 0.1);
 }
 
 
-kbstandard #pairs_pool player[left]
+~~ #pairs_pool player[left]
 {
 	border-left: 5px solid #bd3b3b;
 	width: 50%;
 	align-items: flex-start;
 }
 
-kbstandard #pairs_pool player[right]
+~~ #pairs_pool player[right]
 {
 	border-right: 5px solid #5b7a8c;
 	width: 50%;
 	align-items: flex-end;
 }
 
-kbstandard #pairs_pool player p_param
+~~ #pairs_pool player p_param
 {
 	display: flex;
 	flex-direction: row;
 	margin-top: 5px;
 }
 
-kbstandard #pairs_pool player p_param input
+~~ #pairs_pool player p_param input
 {
 	margin-left: 5px;
 }
 
-kbstandard #pairs_pool player descr
+~~ #pairs_pool player descr
 {
 	display: flex;
 	user-select: none;
@@ -246,7 +257,7 @@ kbstandard #pairs_pool player descr
 }
 
 
-kbstandard #pairs_pool pairnum
+~~ #pairs_pool pairnum
 {
 	user-select: none;
 	text-align: center;
@@ -255,7 +266,7 @@ kbstandard #pairs_pool pairnum
 }
 
 
-kbstandard #pairs_pool pairnum:hover
+~~ #pairs_pool pairnum:hover
 {
 	background: black;
 }

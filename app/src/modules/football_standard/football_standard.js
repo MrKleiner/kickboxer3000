@@ -18,7 +18,6 @@ $this.next_card_out = null;
 $this.base_timer = null;
 
 
-
 $this.index_titles = function(ctx){
 
 	$this.titles = {
@@ -126,10 +125,6 @@ $this.index_titles = function(ctx){
 	}
 
 }
-
-// important todo: this entire system STILL has a HUGE flaw:
-// Getting a player by his nameid is VERY expensive
-// because this operation requires looping through the entire list
 
 $this.playerbase = {
 	'one': {
@@ -307,6 +302,8 @@ $this.load = async function(){
 				'player_color_picker': $(`#team${t}_def [prmname="team_player_color"] .colour_picker`)[0],
 				'gk_color_picker':     $(`#team${t}_def [prmname="team_gk_color"] .colour_picker`)[0],
 				'score_pool':          $(`#score_ctrl_team${t} .score_ctrl_table`)[0],
+				'player_pool_main':    $(`#team${t}_def .player_lists .player_list.starters .list_pool`)[0],
+				'player_pool_reserve': $(`#team${t}_def .player_lists .player_list.reserve .list_pool`)[0],
 				logo: function(){
 					const input_elem = $(`#team${t}_def [prmname="team_logo"] input`)[0]
 					if (!input_elem.files[0] && !$(`#team${t}_def`).attr(`logo_path`)){
@@ -571,25 +568,25 @@ $this.upd_vis_feedback = function(){
 	// todo: this is rather stupid
 
 	// TEAM 1
-	var team_logo = $('#team1_def [prmname="team_logo"] input')[0];
+	let team_logo = $('#team1_def [prmname="team_logo"] input')[0];
 	if (team_logo.files[0]){
 		$('#team1_def').attr('logo_path', team_logo.files[0].path);
-		var team_logo = team_logo.files[0].path;
+		team_logo = team_logo.files[0].path;
 	}else{
-		var team_logo = null;
+		team_logo = null;
 	}
 	$('[vis_feedback="team1_logo"]').attr('src', team_logo || $('#team1_def').attr('logo_path'));
 	$('[vis_feedback="team1_name"]').text($('#team1_def [prmname="team_name"] input').val().upper());
-	var team_logo = null;
+	team_logo = null;
 
 
 	// TEAM 2
-	var team_logo = $('#team2_def [prmname="team_logo"] input')[0];
+	team_logo = $('#team2_def [prmname="team_logo"] input')[0];
 	if (team_logo.files[0]){
 		$('#team2_def').attr('logo_path', team_logo.files[0].path);
-		var team_logo = team_logo.files[0].path;
+		team_logo = team_logo.files[0].path;
 	}else{
-		var team_logo = null;
+		team_logo = null;
 	}
 	$('[vis_feedback="team2_logo"]').attr('src', team_logo || $('#team2_def').attr('logo_path'));
 	$('[vis_feedback="team2_name"]').text($('#team2_def [prmname="team_name"] input').val().upper());
@@ -784,16 +781,20 @@ $this.player_ctrl = class {
 
 		await card.set_text(
 			'player_name',
-			`${this.number} ${ksys.util.str_ops.format(this.surname, _ctx.players_format, _ctx.players_translit)}`
+			`${this.number} ${ksys.util.str_ops.format(this.surname, _ctx.players_format, _ctx.players_translit)}`,
 		)
 		await card.set_img_src('club_logo', this.get_team_logo())
 		
 		// disable buttons
-		ksys.btns.pool.red_card.vmixbtn(false)
-		ksys.btns.pool.yellow_card.vmixbtn(false)
+		ksys.btns.toggle({
+			'red_card':    false,
+			'yellow_card': false,
+		})
 
-		ksys.context.module.prm(`team${this.team.num}_rcard_count`, (`team${this.team.num}_rcard_count` in _ctx) ? (_ctx[`team${this.team.num}_rcard_count`] += 1).clamp(0, 3) : 1)
-		$this.resync_red_penalty_cards()
+		if (_card == 'red'){
+			ksys.context.module.prm(`team${this.team.num}_rcard_count`, (`team${this.team.num}_rcard_count` in _ctx) ? (_ctx[`team${this.team.num}_rcard_count`] += 1).clamp(0, 3) : 1)
+			$this.resync_red_penalty_cards()
+		}
 
 		// show the card in vmix
 		await card.overlay_in(1)
@@ -801,11 +802,13 @@ $this.player_ctrl = class {
 		// let them hang for 7 seconds
 		await ksys.util.sleep(7000)
 		// hide card
-		$this.hide_card()
+		await $this.hide_card()
 
 		// re-enable buttons
-		ksys.btns.pool.red_card.vmixbtn(true)
-		ksys.btns.pool.yellow_card.vmixbtn(true)
+		ksys.btns.toggle({
+			'red_card':    true,
+			'yellow_card': true,
+		})
 
 	}
 }
@@ -1170,8 +1173,7 @@ $this.load_last_layout = function(){
 }
 
 
-// Что должно выводиться в список?
-// Какие игроки из каких списков ?
+
 $this.filter_players_replacement = function(event, _team){
 	const team_relation = {
 		'one': 1,
@@ -1209,7 +1211,8 @@ $this.filter_players_replacement = function(event, _team){
 			// continue
 		}
 
-		if (reserve_demand && (!player.is_reserve || player_is_on_field)){
+		// if (reserve_demand && (!player.is_reserve || player_is_on_field)){
+		if (reserve_demand && !player.is_reserve){
 			continue
 		}
 
@@ -1254,12 +1257,12 @@ $this.replacement_player_title = async function(event){
 	const leaving_player_object = all_players[leaving_player.attr('namecode')];
 	const incoming_player_object = all_players[incoming_player.attr('namecode')];
 
-	await $this.titles.replacement_out.set_text('player_name', leaving_player_object.surname)
+	await $this.titles.replacement_out.set_text('player_name', leaving_player_object.number + ' ' + leaving_player_object.surname)
 	await $this.titles.replacement_out.set_img_src('club_logo', leaving_player_object.get_team_logo())
-	await $this.titles.replacement_in.set_text('player_name', incoming_player_object.surname)
+	await $this.titles.replacement_in.set_text('player_name', incoming_player_object.number + ' ' + incoming_player_object.surname)
 	await $this.titles.replacement_in.set_img_src('club_logo', incoming_player_object.get_team_logo())
 
-	ksys.btns.pool.exec_replacement_sequence.vmixbtn(false)
+	ksys.btns.pool.exec_replacement_sequence.toggle(false)
 
 	await $this.titles.replacement_out.overlay_in(1)
 	await ksys.util.sleep(5000)
@@ -1267,7 +1270,7 @@ $this.replacement_player_title = async function(event){
 	await ksys.util.sleep(5000)
 	await $this.titles.replacement_in.overlay_out(1)
 
-	ksys.btns.pool.exec_replacement_sequence.vmixbtn(true)
+	ksys.btns.pool.exec_replacement_sequence.toggle(true)
 }
 
 
@@ -1285,9 +1288,11 @@ $this.show_card = async function(card){
 
 $this.hide_card = async function(){
 	// disable buttons
-	ksys.btns.pool.red_card.vmixbtn(false)
-	ksys.btns.pool.yellow_card.vmixbtn(false)
-	ksys.btns.pool.kill_card.vmixbtn(false)
+	ksys.btns.toggle({
+		'red_card':    false,
+		'yellow_card': false,
+		'kill_card':   false,
+	})
 
 	if ($this.next_card_out){
 		print('Turning off', $this.next_card_out.title_name)
@@ -1295,26 +1300,14 @@ $this.hide_card = async function(){
 	}
 
 	// re-enable buttons
-	ksys.btns.pool.red_card.vmixbtn(true)
-	ksys.btns.pool.yellow_card.vmixbtn(true)
-	ksys.btns.pool.kill_card.vmixbtn(true)
+	ksys.btns.toggle({
+		'red_card':    true,
+		'yellow_card': true,
+		'kill_card':   true,
+	})
 }
 
 
-// В каком формате имена?
-// Фамилия + Имя? С большой буквы? Транслит?
-
-// Как отображать тех кто вышел на замену?
-// Показывать их в списке или нет? Если да - то в каком? И убирать ли их из списка замен?
-
-// Что насчёт заголовков списков?
-// В некоторыъ случая он отображал количество игроков
-// И что в них вообще писать? Нужны ли они вообще?
-
-// Что делать с запасными?
-// Что делать если запасной игрок вышел на поле ?
-
-// Должен ли таймер отображать доп время и т.д. ?
 $this.upd_player_layout = async function(team){
 
 	const _ctx = ksys.context.module.cache;
@@ -1386,18 +1379,20 @@ $this.upd_player_layout = async function(team){
 	// 
 
 	// 
-	// I sincerely fucking hate javascript retarded fucking useless pointless stupid stinky garbage
+	// I sincerely fucking hate javascript retarded fucking useless pointless stupid garbage
 	// Go fucking die in a car crash and then in a fire
 	// (fuck .map, especially)
 	// 
 	const player_list_sorted = [];
-	for (let player in $this.playerbase[team].main){
-		player_list_sorted.push($this.playerbase[team].main[player])
+	// for (let player in $this.playerbase[team].main){
+	for (let player of $this.teams[team].player_pool_main.querySelectorAll('.player_item')){
+		player = $this.playerbase[team].main[player.getAttribute('namecode')]
+		// player_list_sorted.push($this.playerbase[team].main[player])
+		player_list_sorted.push(player)
 	}
-	player_list_sorted.sort(function(a, b){
-		// print(a, b)
-		return int(a.number) - int(b.number)
-	})
+	// player_list_sorted.sort(function(a, b){
+	// 	return int(a.number) - int(b.number)
+	// })
 	const player_list = [];
 	const player_nums = [];
 	for (let player of player_list_sorted){
@@ -1462,32 +1457,32 @@ $this.upd_player_layout = async function(team){
 $this.show_field_layout = async function(team){
 	const btn_pool = ksys.btns.pool;
 
-	btn_pool.show_field_layout_command1.vmixbtn(false)
-	btn_pool.hide_field_layout_command1.vmixbtn(false)
-	btn_pool.show_field_layout_command2.vmixbtn(false)
-	btn_pool.hide_field_layout_command2.vmixbtn(false)
+	btn_pool.show_field_layout_command1.toggle(false)
+	btn_pool.hide_field_layout_command1.toggle(false)
+	btn_pool.show_field_layout_command2.toggle(false)
+	btn_pool.hide_field_layout_command2.toggle(false)
 	await $this.upd_player_layout(team)
 	await $this.titles.team_layout.overlay_in(1)
-	btn_pool.show_field_layout_command1.vmixbtn(true)
-	btn_pool.hide_field_layout_command1.vmixbtn(true)
-	btn_pool.show_field_layout_command2.vmixbtn(true)
-	btn_pool.hide_field_layout_command2.vmixbtn(true)
+	btn_pool.show_field_layout_command1.toggle(true)
+	btn_pool.hide_field_layout_command1.toggle(true)
+	btn_pool.show_field_layout_command2.toggle(true)
+	btn_pool.hide_field_layout_command2.toggle(true)
 }
 
 
 $this.hide_field_layout = async function(team){
 	const btn_pool = ksys.btns.pool;
 
-	btn_pool.show_field_layout_command1.vmixbtn(false)
-	btn_pool.hide_field_layout_command1.vmixbtn(false)
-	btn_pool.show_field_layout_command2.vmixbtn(false)
-	btn_pool.hide_field_layout_command2.vmixbtn(false)
+	btn_pool.show_field_layout_command1.toggle(false)
+	btn_pool.hide_field_layout_command1.toggle(false)
+	btn_pool.show_field_layout_command2.toggle(false)
+	btn_pool.hide_field_layout_command2.toggle(false)
 	// await $this.upd_player_layout(team)
 	await $this.titles.team_layout.overlay_out(1)
-	btn_pool.show_field_layout_command1.vmixbtn(true)
-	btn_pool.hide_field_layout_command1.vmixbtn(true)
-	btn_pool.show_field_layout_command2.vmixbtn(true)
-	btn_pool.hide_field_layout_command2.vmixbtn(true)
+	btn_pool.show_field_layout_command1.toggle(true)
+	btn_pool.hide_field_layout_command1.toggle(true)
+	btn_pool.show_field_layout_command2.toggle(true)
+	btn_pool.hide_field_layout_command2.toggle(true)
 }
 
 
@@ -1499,7 +1494,7 @@ $this.save_vs_sublines = function(){
 
 $this.show_vs_title = async function(){
 	const _ctx = ksys.context.module.cache;
-	ksys.btns.pool.show_splash.vmixbtn(false)
+	ksys.btns.pool.show_splash.toggle(false)
 	await $this.titles.splash.set_text('title_lower_top', $('#vs_text_bottom_upper').val())
 	await $this.titles.splash.set_text('title_lower_bot', $('#vs_text_bottom_lower').val())
 
@@ -1511,16 +1506,16 @@ $this.show_vs_title = async function(){
 
 	await $this.titles.splash.overlay_in(1)
 
-	ksys.btns.pool.show_splash.vmixbtn(true)
+	ksys.btns.pool.show_splash.toggle(true)
 }
 
 
 $this.hide_vs_title = async function(){
-	ksys.btns.pool.show_splash.vmixbtn(false)
-	ksys.btns.pool.hide_splash.vmixbtn(false)
+	ksys.btns.pool.show_splash.toggle(false)
+	ksys.btns.pool.hide_splash.toggle(false)
 	await $this.titles.splash.overlay_out(1)
-	ksys.btns.pool.show_splash.vmixbtn(true)
-	ksys.btns.pool.hide_splash.vmixbtn(true)
+	ksys.btns.pool.show_splash.toggle(true)
+	ksys.btns.pool.hide_splash.toggle(true)
 }
 
 
@@ -1541,7 +1536,7 @@ $this.goal_score_on = async function(){
 	await $this.titles.timer.set_text('score_r', $($this.teams[2].score_pool).find('.team_score_record').length)
 
 	// disable buttons
-	ksys.btns.pool.scored.vmixbtn(false)
+	ksys.btns.pool.scored.toggle(false)
 
 	await $this.titles.gscore.overlay_in(1)
 
@@ -1552,18 +1547,18 @@ $this.goal_score_on = async function(){
 	await $this.goal_score_off()
 
 	// re-enable buttons
-	ksys.btns.pool.scored.vmixbtn(true)
+	ksys.btns.pool.scored.toggle(true)
 }
 
 
 $this.goal_score_off = async function(){
-	ksys.btns.pool.scored.vmixbtn(false)
-	ksys.btns.pool.scored_off.vmixbtn(false)
+	ksys.btns.pool.scored.toggle(false)
+	ksys.btns.pool.scored_off.toggle(false)
 
 	await $this.titles.gscore.overlay_out(1)
 
-	ksys.btns.pool.scored.vmixbtn(true)
-	ksys.btns.pool.scored_off.vmixbtn(true)
+	ksys.btns.pool.scored.toggle(true)
+	ksys.btns.pool.scored_off.toggle(true)
 }
 
 
@@ -1583,31 +1578,31 @@ $this.show_coach = async function(team){
 
 	const _ctx = ksys.context.module.cache;
 
-	ksys.btns.pool.show_coach_team1.vmixbtn(false)
-	ksys.btns.pool.hide_coach_team1.vmixbtn(false)
-	ksys.btns.pool.show_coach_team2.vmixbtn(false)
-	ksys.btns.pool.hide_coach_team2.vmixbtn(false)
+	ksys.btns.pool.show_coach_team1.toggle(false)
+	ksys.btns.pool.hide_coach_team1.toggle(false)
+	ksys.btns.pool.show_coach_team2.toggle(false)
+	ksys.btns.pool.hide_coach_team2.toggle(false)
 
 	await $this.titles.coach.set_text('name', ksys.util.str_ops.format($(`${teamdef} [prmname="team_coach"] input`)[0].value, _ctx.coach_format, _ctx.coach_translit))
 	await $this.titles.coach.overlay_in(1)
 
-	ksys.btns.pool.show_coach_team1.vmixbtn(true)
-	ksys.btns.pool.hide_coach_team1.vmixbtn(true)
-	ksys.btns.pool.show_coach_team2.vmixbtn(true)
-	ksys.btns.pool.hide_coach_team2.vmixbtn(true)
+	ksys.btns.pool.show_coach_team1.toggle(true)
+	ksys.btns.pool.hide_coach_team1.toggle(true)
+	ksys.btns.pool.show_coach_team2.toggle(true)
+	ksys.btns.pool.hide_coach_team2.toggle(true)
 }
 
 
 $this.hide_coach = async function(){
-	ksys.btns.pool.show_coach_team1.vmixbtn(false)
-	ksys.btns.pool.hide_coach_team1.vmixbtn(false)
-	ksys.btns.pool.show_coach_team2.vmixbtn(false)
-	ksys.btns.pool.hide_coach_team2.vmixbtn(false)
+	ksys.btns.pool.show_coach_team1.toggle(false)
+	ksys.btns.pool.hide_coach_team1.toggle(false)
+	ksys.btns.pool.show_coach_team2.toggle(false)
+	ksys.btns.pool.hide_coach_team2.toggle(false)
 	await $this.titles.coach.overlay_out(1)
-	ksys.btns.pool.show_coach_team1.vmixbtn(true)
-	ksys.btns.pool.hide_coach_team1.vmixbtn(true)
-	ksys.btns.pool.show_coach_team2.vmixbtn(true)
-	ksys.btns.pool.hide_coach_team2.vmixbtn(true)
+	ksys.btns.pool.show_coach_team1.toggle(true)
+	ksys.btns.pool.hide_coach_team1.toggle(true)
+	ksys.btns.pool.show_coach_team2.toggle(true)
+	ksys.btns.pool.hide_coach_team2.toggle(true)
 }
 
 
@@ -1633,6 +1628,8 @@ $this.start_base_timer = async function(rnum){
 		$this.base_counter = null;
 	}
 
+	await $this.titles.timer.set_text('extra_ticker', '00:00');
+
 	ksys.context.module.prm('round_num', rnum)
 
 	const dur = 45;
@@ -1652,9 +1649,10 @@ $this.start_base_timer = async function(rnum){
 	$this.base_counter.fire()
 	.then(function(_ticker) {
 		// turn off automatically
+		const pre_killed = _ticker.killed;
 		if (_ticker){
 			_ticker.force_kill()
-			if (document.querySelector('#timer_ctrl_additional input').value.trim()){
+			if (document.querySelector('#timer_ctrl_additional input').value.trim() && !pre_killed){
 				$this.launch_extra_time()
 			}
 		}
@@ -1698,14 +1696,14 @@ $this.main_timer_vis = async function(state){
 
 $this.extra_time_vis = async function(state){
 	if (state == true){
-		await $this.titles.timer.toggle_text('time_added', true)
-		await $this.titles.timer.toggle_img('extra_time_bg', true)
-		await $this.titles.timer.toggle_text('extra_ticker', true)
+		$this.titles.timer.toggle_text('time_added', true)
+		$this.titles.timer.toggle_text('extra_ticker', true)
+		$this.titles.timer.toggle_img('extra_time_bg', true)
 	}
 	if (state == false){
-		await $this.titles.timer.toggle_text('time_added', false)
-		await $this.titles.timer.toggle_img('extra_time_bg', false)
-		await $this.titles.timer.toggle_text('extra_ticker', false)
+		$this.titles.timer.toggle_text('time_added', false)
+		$this.titles.timer.toggle_text('extra_ticker', false)
+		$this.titles.timer.toggle_img('extra_time_bg', false)
 	}
 }
 
@@ -1744,7 +1742,7 @@ $this.launch_extra_time = async function(){
 
 	print('EXTRA AMOUNT?!', extra_amount)
 	await $this.titles.timer.set_text('extra_ticker', '00:00');
-	await $this.titles.timer.set_text('time_added', `+${Math.floor(extra_amount/60)}`)
+	await $this.titles.timer.set_text('time_added', `+${Math.floor(extra_amount/1)}`)
 	await $this.titles.timer.toggle_text('time_added', true)
 	await $this.titles.timer.toggle_img('extra_time_bg', true)
 	await $this.titles.timer.toggle_text('extra_ticker', true)
@@ -1761,8 +1759,7 @@ $this.score_sum_vis = async function(state){
 			nums_l.push(player.querySelector('.score_record_time').value + `'`)
 			names_l.push(player.querySelector('.score_record_player').value)
 		}
-		await $this.titles.final_scores.set_text('scores_l', names_l.join('\n'))
-		await $this.titles.final_scores.set_text('scores_l_num', nums_l.join('\n'))
+
 
 		const nums_r = [];
 		const names_r = [];
@@ -1770,13 +1767,40 @@ $this.score_sum_vis = async function(state){
 			nums_r.push(player.querySelector('.score_record_time').value + `'`)
 			names_r.push(player.querySelector('.score_record_player').value)
 		}
-		await $this.titles.final_scores.set_text('scores_r', names_r.join('\n'))
-		await $this.titles.final_scores.set_text('scores_r_num', nums_r.join('\n'))
 
 
 
 		// composite
-		await $this.titles.final_scores.set_text('score_sum', `${document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length} : ${document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length}`)
+		const score_amt_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
+		const score_amt_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
+		await $this.titles.final_scores.set_text('score_sum', `${score_amt_l} : ${score_amt_r}`)
+
+		// Show the appropriate amount of fields
+		await $this.titles.final_scores.toggle_img('anim_full', false)
+		await $this.titles.final_scores.toggle_img('anim_half', false)
+		if (score_amt_l > 2 || score_amt_r > 2){
+			await $this.titles.final_scores.toggle_img('anim_full', true)
+		}else{
+			names_r.unshift(' ')
+			names_r.unshift(' ')
+			names_l.unshift(' ')
+			names_l.unshift(' ')
+
+			nums_r.unshift(' ')
+			nums_r.unshift(' ')
+			nums_l.unshift(' ')
+			nums_l.unshift(' ')
+			await $this.titles.final_scores.toggle_img('anim_half', true)
+		}
+
+		// Set the numbers/surnames
+		await $this.titles.final_scores.set_text('scores_r', names_r.join('\n'))
+		await $this.titles.final_scores.set_text('scores_r_num', nums_r.join('\n'))
+
+		await $this.titles.final_scores.set_text('scores_l', names_l.join('\n'))
+		await $this.titles.final_scores.set_text('scores_l_num', nums_l.join('\n'))
+
+
 
 		// team name LEFT
 		await $this.titles.final_scores.set_text('team_name_l', $this.teams.one.team_name.value.upper())
@@ -1823,9 +1847,24 @@ $this.update_scores = function(){
 }
 
 $this.push_score = function(team, surname, time=null){
+	// print(
+	// 	'kys',
+	// 	time,
+	// 	$this?.base_counter?.tick?.global,
+	// 	$this?.extra_counter?.tick?.global,
+	// )
+	const calc_time = Math.ceil(
+		(
+			($this?.base_counter?.tick?.global || 1)
+			+
+			($this?.extra_counter?.tick?.global || 1)
+		)
+		/
+		60
+	)
 	const score_elem = $(`
 		<div class="team_score_record">
-			<input onchange="$this.update_scores()" value="${time || Math.floor((($this?.base_counter?.tick?.global || 0) + $this?.extra_counter?.tick?.global || 0) / 60)}" type="text" class="score_record_time">
+			<input onchange="$this.update_scores()" value="${time || calc_time}" type="text" class="score_record_time">
 			<input onchange="$this.update_scores()" value="${surname}" type="text" class="score_record_player">
 		</div>
 	`)
@@ -1926,7 +1965,9 @@ $this.resume_main_timer_from_offset = function(event){
 }
 
 
-
+$this.stop_extra_time = function(){
+	$this?.extra_counter?.force_kill()
+}
 
 
 

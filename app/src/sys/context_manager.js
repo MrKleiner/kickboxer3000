@@ -24,8 +24,8 @@ const ctx = {
 ctx.global.save = function(){
 
 	// ensure that the destination folder exists
+	ksys.util.ensure_folder_exists(app_root.join('db', 'global'))
 	const context_file = app_root.join('db', 'global', 'context.ct')
-	ksys.util.ensure_folder_exists(context_file)
 
 	// Do save
 	context_file.writeSync(JSON.stringify(ksys.context.global.cache, null, 4))
@@ -41,7 +41,7 @@ ctx.global.prm = function(key=null, value=undefined, dosave=true){
 	}
 
 	// if value is defined - update cache and save if asked to
-	vmix.app_context[key] = value;
+	ksys.context.global.cache[key] = value;
 	if (dosave == true){
 		ksys.context.global.save()
 	}

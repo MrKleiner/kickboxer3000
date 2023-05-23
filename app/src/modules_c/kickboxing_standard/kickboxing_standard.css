@@ -1,4 +1,7 @@
 
+/*
+!~~ kbstandard
+*/
 
 kbstandard
 {
@@ -26,7 +29,14 @@ kbstandard box
 
 kbstandard #lside
 {
-	width: 450px;
+	width: 550px;
+}
+
+kbstandard #lside vmixbtn
+{
+	width: 150px;
+	height: 150px;
+	font-size: 20px;
 }
 
 kbstandard #timer_ctrl bxtitle
@@ -137,6 +147,7 @@ kbstandard #rside
 	flex-grow: 1;
 	margin: 10px;
 	flex-direction: column;
+	height: 90vh;
 }
 
 
@@ -145,9 +156,9 @@ kbstandard #pairs_pool
 {
 	display: flex;
 	flex-direction: column;
-	height: 700px;
 	overflow-y: scroll;
-	background: rgba(0, 0, 0, 0.2)
+	background: rgba(0, 0, 0, 0.2);
+	height: 100%;
 }
 
 kbstandard #pairs_pool::-webkit-scrollbar {

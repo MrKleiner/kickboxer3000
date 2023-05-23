@@ -11,10 +11,10 @@ $this.load = function()
 	// spawn rounds
 	print('kickboxing init')
 	const roundspool = document.querySelector('rounds pool');
-	const fresh_context = context.module.read();
+	const fresh_context = ksys.context.module.pull();
 
 	for (let rnd of range(int(document.querySelector('rounds').getAttribute('amount')))){
-		roundspool.append(lizard.ehtml(`<round round_index=${rnd+1} onclick="$this.set_round(${rnd+1}, true)">${rnd+1}</round>`))
+		roundspool.append($(`<round round_index=${rnd+1} onclick="$this.set_round(${rnd+1}, true)">${rnd+1}</round>`)[0])
 	}
 
 	// load pairs
@@ -47,69 +47,24 @@ $this.load = function()
 
 $this.add_pair = function()
 {
-	document.querySelector('#pairs_pool').append(lizard.ehtml(`
-		<pair oncontextmenu="$this.del_pair(this)">
-			<pairnum click_contrast></pairnum onclick="$this.upd_vs_title(this.getAttribute("pair_index"))">
-			<players>
-				<player left click_contrast noclick>
-					<display></display>
-					<p_param p_name>
-						<descr>Name</descr>
-						<input type="text" placeholder="Player Name">
-					</p_param>
-					<p_param p_age>
-						<descr>Age</descr>
-						<input type="text" placeholder="Player Age">
-					</p_param>
-					<p_param p_height>
-						<descr>Height</descr>
-						<input type="text" placeholder="Player Height">
-					</p_param>
-					<p_param p_weight>
-						<descr>Weight</descr>
-						<input type="text" placeholder="Player Weight">
-					</p_param>
-					<p_param p_country>
-						<descr>Country</descr>
-						<input type="text" placeholder="Player's Country of Origin">
-					</p_param>
-					<p_param p_record>
-						<descr>Record</descr>
-						<input type="text" placeholder="Player Record">
-					</p_param>
-				</player>
+	// oncontextmenu="$this.del_pair(this)"
+	// onclick="$this.upd_vs_title(this.getAttribute("pair_index"))"
+	const pair = ksys.tplates.index_tplate(
+		'#pair_asset',
+		{
+			'root':    'pair',
+			'pairnum': 'pairnum',
+		}
+	)
+	pair.index.root.oncontextmenu = function(_self){
+		$this.del_pair(_self.target.closest('pair'))
+	}
+	pair.index.pairnum.onclick = function(_self){
+		$this.upd_vs_title(_self.target.getAttribute('pair_index'))
+	}
 
+	document.querySelector('#pairs_pool').append(pair.elem)
 
-				<player right click_contrast noclick>
-					<display></display>
-					<p_param p_name>
-						<descr>Name</descr>
-						<input type="text" placeholder="Player Name">
-					</p_param>
-					<p_param p_age>
-						<descr>Age</descr>
-						<input type="text" placeholder="Player Age">
-					</p_param>
-					<p_param p_height>
-						<descr>Height</descr>
-						<input type="text" placeholder="Player Height">
-					</p_param>
-					<p_param p_weight>
-						<descr>Weight</descr>
-						<input type="text" placeholder="Player Weight">
-					</p_param>
-					<p_param p_country>
-						<descr>Country</descr>
-						<input type="text" placeholder="Player's Country of Origin">
-					</p_param>
-					<p_param p_record>
-						<descr>Record</descr>
-						<input type="text" placeholder="Player Record">
-					</p_param>
-				</player>
-			</players>
-		</pair>
-	`))
 
 	// enumarate pairs
 	$this.enumerate_pairs()
@@ -150,7 +105,7 @@ $this.toggle_edit = function(state=null)
 		$this.enumerate_pairs()
 
 		// unlimit height
-		$('kbstandard #pairs_pool').css('height', 'auto')
+		// $('kbstandard #pairs_pool').css('height', 'auto')
 
 		// hide display
 		$('kbstandard #pairs_pool display').css('display', 'none');
@@ -179,7 +134,7 @@ $this.toggle_edit = function(state=null)
 		$this.enumerate_pairs()
 
 		// limit height
-		$('kbstandard #pairs_pool').css('height', '600px');
+		// $('kbstandard #pairs_pool').css('height', '600px');
 
 		// block beauty clicks
 		$('kbstandard #pairs_pool player').removeAttr('noclick');
@@ -218,7 +173,7 @@ $this.save_pairs = function(tofile=false)
 	if (tofile == true){
 		return JSON.stringify(collected, null, 4)
 	}else{
-		db.module.write('pairs_dict.pootis', JSON.stringify(collected, null, 4))
+		ksys.db.module.write('pairs_dict.pootis', JSON.stringify(collected, null, 4))
 	}
 	
 }
@@ -231,7 +186,7 @@ $this.load_paris = function(overwrite=null)
 	$('#pairs_pool pair').remove();
 
 	// load saved, if any
-	var pairs_dict = db.module.read('pairs_dict.pootis') || overwrite;
+	var pairs_dict = ksys.db.module.read('pairs_dict.pootis') || overwrite;
 	// only if they exist in the first palce...
 	if (!pairs_dict){return}
 
@@ -315,14 +270,14 @@ $this.load_paris = function(overwrite=null)
 
 $this.save_res_path = function()
 {
-	context.module.prm('resource_path', document.querySelector('input[res_path]').value)
+	ksys.context.module.prm('resource_path', document.querySelector('input[res_path]').value)
 }
 
 
 $this.save_timer_duration = function()
 {
-	context.module.prm('round_duration', eval(document.querySelector('input[round_duration]').value) * 1000, false);
-	context.module.prm('round_duration_exp', document.querySelector('input[round_duration]').value)
+	ksys.context.module.prm('round_duration', eval(document.querySelector('input[round_duration]').value) * 1000, false);
+	ksys.context.module.prm('round_duration_exp', document.querySelector('input[round_duration]').value)
 }
 
 
@@ -357,7 +312,7 @@ $this.upd_vs_title = async function(p_index=null)
 
 
 	// save selected pair index
-	context.module.prm('active_pair_index', p_index)
+	ksys.context.module.prm('active_pair_index', p_index)
 
 	// select the corresponding pair in the gui
 	var pair_elem = $(`#pairs_pool pairnum[pair_index="${p_index}"]`).closest('pair');
@@ -420,7 +375,7 @@ $this.upd_vs_title = async function(p_index=null)
 	}
 
 	for (let apply in c_dict){
-		await talker.vmix_talk({
+		await vmix.talker.talk({
 			'Function': 'SetText',
 			'Value': $(pair_elem).find(c_dict[apply]['gui']).val().trim(),
 			'Input': 'vs_main.gtzip',
@@ -429,24 +384,24 @@ $this.upd_vs_title = async function(p_index=null)
 	}
 
 	// set countries
-	var ctx = context.module.read()
+	var ctx = ksys.context.module.pull()
 	if (ctx.resource_path && ctx.resource_path != ''){
 		// LEFT
-		await talker.vmix_talk({
+		await vmix.talker.talk({
 			'Function': 'SetImage',
 			'Value': str((new pathlib(ctx.resource_path)).join('flags', $(pair_elem).find(c_dict['country_l']['gui']).val().trim())).replaceAll('/', '\\'),
 			'Input': 'vs_main.gtzip',
 			'SelectedName': c_dict['country_l']['vmix']
 		})
 		// Right
-		await talker.vmix_talk({
+		await vmix.talker.talk({
 			'Function': 'SetImage',
 			'Value': str((new pathlib(ctx.resource_path)).join('flags', $(pair_elem).find(c_dict['country_r']['gui']).val().trim())).replaceAll('/', '\\'),
 			'Input': 'vs_main.gtzip',
 			'SelectedName': c_dict['country_r']['vmix']
 		})
 		// Background
-		await talker.vmix_talk({
+		await vmix.talker.talk({
 			'Function': 'SetImage',
 			'Value': str((new pathlib(ctx.resource_path)).join('pair_pool', `${p_index}.png`)).replaceAll('/', '\\'),
 			'Input': 'vs_main.gtzip',
@@ -468,22 +423,26 @@ $this.upd_personal_title = async function(player)
 	$('player.active_player').removeClass('active_player');
 	player_elem.addClass('active_player');
 
-	context.module.prm(
+	ksys.context.module.prm(
 		'current_player',
 		`${player_elem.closest('pair').find('pairnum').attr('pair_index')}-${(player_elem.attr('left') == '') ? 'left' : 'right'}`
 	)
 
-	const pname = ksys.translit(player_elem.find('p_param[p_name] input').val().trim()).split(' ');
+	// const pname = ksys.translit(player_elem.find('p_param[p_name] input').val().trim()).split(' ');
+
+	$('#category_change input').val($(player).find('p_param[p_weight] input').val().trim())
+
+	return
 
 	// surname
-	await talker.vmix_talk({
+	await vmix.talker.talk({
 		'Function': 'SetText',
 		'Value': pname.at(-1).trim(),
 		'Input': 'personal.gtzip',
 		'SelectedName': 'name.Text'
 	})
 	// name
-	await talker.vmix_talk({
+	await vmix.talker.talk({
 		'Function': 'SetText',
 		'Value': pname[0].trim(),
 		'Input': 'personal.gtzip',
@@ -491,7 +450,7 @@ $this.upd_personal_title = async function(player)
 	})
 
 	// height
-	await talker.vmix_talk({
+	await vmix.talker.talk({
 		'Function': 'SetText',
 		'Value': $(player).find('p_param[p_height] input').val().trim(),
 		'Input': 'personal.gtzip',
@@ -499,15 +458,17 @@ $this.upd_personal_title = async function(player)
 	})
 
 	// weight
-	await talker.vmix_talk({
+	await vmix.talker.talk({
 		'Function': 'SetText',
 		'Value': $(player).find('p_param[p_weight] input').val().trim(),
 		'Input': 'personal.gtzip',
 		'SelectedName': 'weight.Text'
 	})
 
+	
+
 	// record
-	await talker.vmix_talk({
+	await vmix.talker.talk({
 		'Function': 'SetText',
 		'Value': $(player).find('p_param[p_record] input').val().trim(),
 		'Input': 'personal.gtzip',
@@ -515,9 +476,9 @@ $this.upd_personal_title = async function(player)
 	})
 
 	// Country
-	await talker.vmix_talk({
+	await vmix.talker.talk({
 		'Function': 'SetImage',
-		'Value': str((new pathlib(context.module.read().resource_path)).join('flags', `${$(player).find('p_param[p_country] input').val().trim()}`)).replaceAll('/', '\\'),
+		'Value': str((new pathlib(ksys.context.module.pull().resource_path)).join('flags', `${$(player).find('p_param[p_country] input').val().trim()}`)).replaceAll('/', '\\'),
 		'Input': 'personal.gtzip',
 		'SelectedName': 'country.Source'
 	})
@@ -530,12 +491,12 @@ $this.upd_personal_title = async function(player)
 $this.set_round = function(r, resetround=false)
 {
 	// store current round number
-	context.module.prm('current_round', r)
+	ksys.context.module.prm('current_round', r)
 
 	$('round').css('color', '')
 	$(`round[round_index="${r}"]`).css('color', 'lime')
 
-	talker.vmix_talk({
+	vmix.talker.talk({
 		'Function': 'SetText',
 		'Value': `ROUND ${str(r).trim()}`,
 		'Input': 'timer.gtzip',
@@ -567,7 +528,7 @@ $this.timer_callback = async function(ticks)
 	}
 
 	// update
-	await talker.vmix_talk({
+	await vmix.talker.talk({
 		'Function': 'SetText',
 		'Value': `${minutes}:${str(seconds).zfill(2)}`,
 		'Input': 'timer.gtzip',
@@ -594,11 +555,11 @@ $this.respawn_manager = function(act)
 
 $this.respawn_timer = async function(show=false, st=false)
 {
-	var minutes = Math.floor((context.module.read().round_duration / 1000) / 60)
-	var seconds = (context.module.read().round_duration / 1000) - (60*minutes)
+	var minutes = Math.floor((ksys.context.module.pull().round_duration / 1000) / 60)
+	var seconds = (ksys.context.module.pull().round_duration / 1000) - (60*minutes)
 
 	// clear previous timer
-	await talker.vmix_talk({
+	await vmix.talker.talk({
 		'Function': 'SetText',
 		'Value': `${minutes}:${str(seconds).zfill(2)}`,
 		'Input': 'timer.gtzip',
@@ -608,11 +569,13 @@ $this.respawn_timer = async function(show=false, st=false)
 	// kill previous timer
 	try{
 		$this.counter.force_kill()
-	}catch (error){}
+	}catch (error){
+		console.log(error)
+	}
 
 	// spawn a timer
 	$this.counter = ksys.ticker.spawn({
-		'duration': context.module.read().round_duration / 1000,
+		'duration': ksys.context.module.pull().round_duration / 1000,
 		'name': 'giga_timer',
 		'infinite': false,
 		'reversed': true,
@@ -623,11 +586,8 @@ $this.respawn_timer = async function(show=false, st=false)
 	if (st == true){
 		// init
 		$this.counter.fire()
-		.then(function(response) {
-			// turn off automatically
-			if ($this.counter){
-				$this.counter.pause = true;
-			}
+		.then(function(_ticker) {
+			_ticker.force_kill()
 		})
 	}
 
@@ -641,7 +601,7 @@ $this.timer_hide = async function(dopause=false)
 {
 	$this.timer_pause(dopause)
 	// off
-	await talker.vmix_talk({
+	await vmix.talker.talk({
 		'Function': 'OverlayInput1Out',
 		'Input': 'timer.gtzip',
 	})
@@ -651,7 +611,7 @@ $this.timer_show = async function(unpause=true)
 {
 	$this.timer_pause(!unpause)
 	// off
-	await talker.vmix_talk({
+	await vmix.talker.talk({
 		'Function': 'OverlayInput1In',
 		'Input': 'timer.gtzip',
 	})
@@ -672,7 +632,28 @@ $this.timer_set_time = function(tm=null)
 {
 	if ($this.counter && tm){
 		// set time
-		$this.counter.set_global_tick(tm, true)
+		// $this.counter.set_global_tick(tm, true)
+
+		// kill previous timer
+		try{
+			$this.counter.force_kill()
+		}catch (error){}
+
+		// spawn a timer
+		$this.counter = ksys.ticker.spawn({
+			'duration': (ksys.context.module.pull().round_duration / 1000) - tm,
+			'name': 'giga_timer',
+			'infinite': false,
+			'reversed': true,
+			'callback': $this.timer_callback,
+			'wait': true
+		})
+		// init
+		$this.counter.fire()
+		.then(function(_ticker) {
+			_ticker.force_kill()
+		})
+
 	}
 }
 
@@ -684,7 +665,7 @@ $this.timer_set_time = function(tm=null)
 
 $this.vs_onn = function()
 {
-	talker.vmix_talk({
+	vmix.talker.talk({
 		'Function': 'OverlayInput1In',
 		'Input': 'vs_main.gtzip',
 	})
@@ -692,7 +673,7 @@ $this.vs_onn = function()
 
 $this.vs_off = function()
 {
-	talker.vmix_talk({
+	vmix.talker.talk({
 		'Function': 'OverlayInput1Out',
 		'Input': 'vs_main.gtzip',
 	})
@@ -707,7 +688,7 @@ $this.vs_off = function()
 
 $this.player_onn = function()
 {
-	talker.vmix_talk({
+	vmix.talker.talk({
 		'Function': 'OverlayInput1In',
 		'Input': 'personal.gtzip',
 	})
@@ -715,7 +696,7 @@ $this.player_onn = function()
 
 $this.player_off = function()
 {
-	talker.vmix_talk({
+	vmix.talker.talk({
 		'Function': 'OverlayInput1Out',
 		'Input': 'personal.gtzip',
 	})
@@ -745,30 +726,20 @@ $this.save_pairs_to_file = function()
 
 
 
+$this.set_category = async function()
+{
+	const v = $('#category_change input').val().trim();
+	if (!v){return};
+
+	await vmix.talker.talk({
+		'Function': 'SetText',
+		'Value': v + ' КГ',
+		'Input': 'category.gtzip',
+		'SelectedName': 'txt.Text'
+	})
+}
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// $this.load()

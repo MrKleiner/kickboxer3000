@@ -426,7 +426,7 @@
 			<div id="replacement_buttons">
 				<div>
 					<vmixbtn seq_info="auto_tweaks+auto_seq" btname="exec_replacement_sequence" onclick="$this.replacement_player_title(event)">Execute Sequence</vmixbtn>
-					<vmixbtn seq_info="auto_tweaks" btname="shadow_player_swap" onclick="$this.shadow_swap(event)">Shadow swap</vmixbtn>
+					<vmixbtn halfsize seq_info="auto_tweaks" btname="shadow_player_swap" onclick="$this.shadow_swap(event)">Shadow swap</vmixbtn>
 					<!-- <vmixbtn btname="exec_replacement_sequences" onclick="$this.start_base_timer()">AAA</vmixbtn> -->
 				</div>
 			</div>
@@ -475,7 +475,7 @@
 	<tab class="tab_hidden" tabid="timer_and_scores">
 		<div id="timer_and_scores">
 			<div id="timer_ctrl">
-				<div id="timer_ctrl_base">
+				<div regular_box id="timer_ctrl_base">
 					<div id="timer_ctrl_base_launchers">
 						<vmixbtn seq_info="update+play" btname="launch_main_timer_r1" onclick="$this.start_base_timer(1)">Start Time 1</vmixbtn>
 						<!-- <vmixbtn btname="launch_main_timer_r2" onclick="$this.start_base_timer(2)">Arm Round 2</vmixbtn> -->
@@ -493,12 +493,17 @@
 					</div>
 				</div>
 
-				<div id="timer_ctrl_additional">
-					<input type="text" placeholder="SECONDS (EXPR)">
-					<vmixbtn seq_info="update+play+vis_show" btname="launch_extra_timer" onclick="$this.launch_extra_time()">Launch Extra Time</vmixbtn>
-				</div>
-				<vmixbtn seq_info="vis_show" btname="show_extra_time" onclick="$this.extra_time_vis(true)">Show Extra Time</vmixbtn>
-				<vmixbtn seq_info="vis_hide" btname="hide_extra_timer" onclick="$this.extra_time_vis(false)">Hide Extra Time</vmixbtn>
+				<box regular_box style="flex-direction: row; display: flex; margin-left: 10px; align-items: center;">
+					<div id="timer_ctrl_additional">
+						<input type="text" placeholder="MINUTES">
+						<vmixbtn seq_info="update+play+vis_show" btname="launch_extra_timer" onclick="$this.launch_extra_time()">Launch Extra Time</vmixbtn>
+						<vmixbtn halfsize seq_info="stop" btname="stop_extra_timer" onclick="$this.stop_extra_time()">Stop Extra Time</vmixbtn>
+					</div>
+
+					<vmixbtn seq_info="vis_show" btname="show_extra_time" onclick="$this.extra_time_vis(true)">Show Extra Time</vmixbtn>
+					<vmixbtn seq_info="vis_hide" btname="hide_extra_timer" onclick="$this.extra_time_vis(false)">Hide Extra Time</vmixbtn>
+				</box>
+
 			</div>
 
 			<div id="score_ctrl">

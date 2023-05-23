@@ -702,6 +702,7 @@ tab.tab_hidden
 	flex-direction: column;
 	padding: 5px;
 	z-index: 33;
+	width: -webkit-fill-available;
 }
 .team_layout .ftfield .generic_player_item .player_number
 {
@@ -944,13 +945,6 @@ img[vis_feedback]
 	/*position: sticky;*/
 	position: fixed;
 	top: 100px;
-}
-
-#replacement_buttons [btname="shadow_player_swap"]
-{
-	/*margin-top: 10px;*/
-	transform: scale(0.5);
-	font-size: 40px !important;
 }
 
 

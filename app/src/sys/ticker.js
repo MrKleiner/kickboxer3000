@@ -43,6 +43,7 @@ class _kb_ticker{
 
 		// sys shit
 		this.alive = true;
+		this.killed = false;
 		this.paused = false;
 		this.fired = false;
 		// the Promise to await inside pause
@@ -78,30 +79,38 @@ class _kb_ticker{
 		if(!_stfu){print('zero and offs:', this.timer_name, (new Date()).getTime(), this.zero, this.offset)};
 
 		return new Promise(async function(resolve, reject){
+			let last_tick = _self.global_tick;
 			while (_self.alive == true && ((_self.global_tick < _self.duration) || _self.infinite == true)){
 
-				if (_self.paused == true){
-					await _self.pause_promise
-				}
-
 				// global timer
-				const new_tick = Math.floor(
+				let new_tick = Math.floor(
 					((new Date()).getTime() - _self.zero) / 1000
 				);
 
-				if(!_stfu){print('New tick:', new_tick)};
+				if (_self.paused == true){
+					await _self.pause_promise
+					_self.zero = (new Date()).getTime();
+					new_tick = Math.floor(
+						((new Date()).getTime() - _self.zero) / 1000
+					);
+					last_tick = 0;
+				}
+
+				if(!_stfu){print('New tick:', new_tick, _self.global_tick)};
 
 				// only trigger callback if 1 second has passed
-				if (_self.global_tick != new_tick){
+				if(!_stfu){print('Last and New:', last_tick, new_tick)};
+				if (last_tick != new_tick){
 					// wait for callback function to complete, if asked
 					if (_self.wait_for_callback == true){
 						await _self.callback_func(_self.tick)
 					}else{
 						_self.callback_func(_self.tick)
 					}
-				}
 
-				_self.global_tick = new_tick;
+					_self.global_tick += 1;
+					last_tick += 1;
+				}
 
 				// wait before executing next iteration
 				await ksys.util.sleep(_self.heartbeat)
@@ -123,6 +132,7 @@ class _kb_ticker{
 		if(!_stfu){console.trace()};
 		
 		this.alive = false;
+		this.killed = true;
 		// delete window.ksys.ticker.sys_pool[this.timer_name];
 		return null
 	}

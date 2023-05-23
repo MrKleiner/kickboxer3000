@@ -48,7 +48,10 @@ const ksys = {
 	context: require('./sys/context_manager.js'),
 	db:      require('./sys/db_manager.js'),
 	btns:    require('./sys/buttons.js'),
+	tplates: require('./sys/template_util.js'),
 };
+
+
 
 // Vmix-bound operations, like talker
 const vmix = {
@@ -203,7 +206,7 @@ ksys.util.url_get = async function(url=null, ctype='text'){
 			},
 			'method': 'GET',
 			'mode': 'cors',
-			'credentials': 'omit'
+			'credentials': 'omit',
 		})
 		.catch((error) => {
 			console.error(`fetching ${url} resulted in the following errror:`, error);
@@ -293,8 +296,9 @@ ksys.util.vmix_ok = function(txt){
 // ------------------------------------------------------------
 // ============================================================
 
-const sys_load = function(nm)
+const sys_load = function(nm, save_state=true)
 {
+	print('trying to load', nm, save_state)
 	// load html layout of the module
 	const page = fs.readFileSync(app_root.join('modules_c', nm, `${nm}.html`).toString(), {encoding:'utf8', flag:'r'});
 	// display loaded html on the page
@@ -303,22 +307,32 @@ const sys_load = function(nm)
 	$('head link#mdstyle')[0].href = app_root.join('modules_c', nm, `${nm}.css`).toString();
 	ksys.context.module_name = nm;
 
+	// save last loaded module to the context
+	if (save_state){
+		ksys.context.global.prm('last_module', nm)
+	}
+
 	// refresh context
 	ksys.context.module.pull()
 
 	// Evaluate buttons
-	ksys.btns.sync_pool()
+	ksys.btns.resync()
 
 	// images are not draggable by default
 	$('img:not(img[candrag])').attr('draggable', false);
 
 	// init load for module
 	try{
-		if (kbmodules[nm].load){
-			kbmodules[nm].load()
+		const module_loader = kbmodules[nm]?.load;
+
+		if (module_loader){
+			module_loader()
+		}else{
+			console.warn('Module', nm, `doesn't has a load function`)
 		}
 	}catch (error){
 		console.error('Error occured while loading a module:', error)
+		console.trace()
 	}
 }
 
@@ -344,9 +358,12 @@ async function app_init()
 		ksys.fbi.warn_critical('Do not forget to turn on alpha channel on the required outputs (sdi/ndi)!')
 	}
 
+	// pre-index button icons
+	await ksys.btns.icon_pre_load()
+
 	// starting page is ip:port selector
 	// this page gets overwritten with the homepage if ip:port is valid
-	sys_load('starting_page')
+	sys_load('starting_page', false)
 
 	// ping vmix
 	const reach = await vmix.talker.ping()
@@ -366,10 +383,13 @@ async function app_init()
 		// add ip:port to the window title
 		document.title = `${document.title}  |  ${ctx_cache.vmix_ip}:${ctx_cache.vmix_port}`;
 		// if vmix is reachable - display a list of available systems
-
-		// load welcome
-		// ksys.sys_load('welcome')
-		sys_load('football_standard')
+		// OR load previously active module
+		if (ctx_cache.last_module){
+			sys_load(ctx_cache.last_module)
+		}else{
+			sys_load('welcome', false)
+		}
+		// sys_load('welcome', false)
 	}
 }
 
@@ -391,9 +411,18 @@ $(document).ready(function(){
 
 
 
+// ============================================================
+// ------------------------------------------------------------
+//                  Going back to selector page
+// ------------------------------------------------------------
+// ============================================================
 
-
-
+// alt + w
+document.addEventListener('keydown', evt => {
+	if (evt.which == 87 && evt.altKey){
+		sys_load('welcome')
+	}
+});
 
 
 
