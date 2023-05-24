@@ -8,3 +8,6 @@ install/icon/icon_res/*
 compiler/run.cmd
 /release
 app/src/db
+static_bins/7z
+static_bins/python
+static_bins/rcedit

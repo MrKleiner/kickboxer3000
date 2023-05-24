@@ -353,6 +353,15 @@ async function app_init()
 	// load global context
 	const ctx_cache = ksys.context.global.pull()
 
+	// patch-based system: The base is empty by default.
+	// Patch has to be aplied immediately after installation
+	// Therefore, check whether this is a raw base or not
+	if (app_root.join('raw_base_is.bad').isFileSync()){
+		document.body.style.pointerEvents = 'none';
+		ksys.fbi.warn_critical('The current installation is a raw base. Patch has to be applied. Close the controller and apply the patch.')
+		return
+	}
+
 	// display a warning if it wasn't displayed before
 	if (ksys.context.global.cache['been_warned'] != true){
 		ksys.fbi.warn_critical('Do not forget to turn on alpha channel on the required outputs (sdi/ndi)!')
@@ -361,12 +370,16 @@ async function app_init()
 	// pre-index button icons
 	await ksys.btns.icon_pre_load()
 
+	// Create db folder if it doesnt exist
+	ksys.util.ensure_folder_exists(app_root.join('db'))
+
 	// starting page is ip:port selector
 	// this page gets overwritten with the homepage if ip:port is valid
 	sys_load('starting_page', false)
 
 	// ping vmix
 	const reach = await vmix.talker.ping()
+
 
 	// if vmix is not reachable - do not save the IP/port and simply prompt input again
 	if (reach == false){

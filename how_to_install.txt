@@ -1,0 +1,42 @@
+
+1 - Make sure npm stuff is available. Best way of achieving this is by using Fork.
+2 - Unpack "7z.zip", "python.7z" and "rcedit.zip" inside static_bins
+3 - Unpack "node_modules.7z" from "static_bins" to "app"
+4 - Create "release" folder in the root dir if it doesn't exist already
+5 - To avoid re-compiling the entire controller every time - patches exist.
+    A base is compiled (which never really changes) and then patches
+    only containing actual code are applied on the said base.
+    
+    Everything is 100% automated.
+    Simply look for the corresponding .cmd files inside "install" folder.
+    Compiled results are placed into "release" folder.
+    To apply a patch - drag-n-drop the root folder of an installed base onto the patch .exe
+    
+    Bases are completely standalone. It's totally possible to have multiple controllers installed
+    in different folders.
+
+
+6 - The javascript code is pre-processed by python scripts before being fed to the app.
+    The pre-processor script is called "bootlegger", it's available on github.
+    
+    To make it work it's required to download the bootlegger repository anywhere
+    and execute bootlegger.py with one single parameter: Path to the compile config.
+
+    The config is located at "app/src/compiler_conf.json".
+    It's also required to change the "project" key in the config
+    to absolute path pointing to "app/src"
+
+7 - To reload scripts on runtime it's required to run bootlegger (which only takes a second or two)
+    And press ctrl+r inside of the controller.
+
+
+8 - To build a base it's required to first compile it with npm itself.
+    Open console through Fork in the context of the current repository.
+    type "cd app"
+    Then, type "npm run make" and wait for it to finish.
+    Lastly, look for a self-explanatory .cmd file in the "install" folder.
+
+
+9 - To launch the app for testing - Open console through Fork in the context of the current repository.
+    Then, type "cd app",
+    Afterwards, type "npm run start" and wait for the controller to open.

@@ -572,25 +572,25 @@ kbmodules.football_standard.upd_vis_feedback = function(){
 	// todo: this is rather stupid
 
 	// TEAM 1
-	var team_logo = $('#team1_def [prmname="team_logo"] input')[0];
+	let team_logo = $('#team1_def [prmname="team_logo"] input')[0];
 	if (team_logo.files[0]){
 		$('#team1_def').attr('logo_path', team_logo.files[0].path);
-		var team_logo = team_logo.files[0].path;
+		team_logo = team_logo.files[0].path;
 	}else{
-		var team_logo = null;
+		team_logo = null;
 	}
 	$('[vis_feedback="team1_logo"]').attr('src', team_logo || $('#team1_def').attr('logo_path'));
 	$('[vis_feedback="team1_name"]').text($('#team1_def [prmname="team_name"] input').val().upper());
-	var team_logo = null;
+	team_logo = null;
 
 
 	// TEAM 2
-	var team_logo = $('#team2_def [prmname="team_logo"] input')[0];
+	team_logo = $('#team2_def [prmname="team_logo"] input')[0];
 	if (team_logo.files[0]){
 		$('#team2_def').attr('logo_path', team_logo.files[0].path);
-		var team_logo = team_logo.files[0].path;
+		team_logo = team_logo.files[0].path;
 	}else{
-		var team_logo = null;
+		team_logo = null;
 	}
 	$('[vis_feedback="team2_logo"]').attr('src', team_logo || $('#team2_def').attr('logo_path'));
 	$('[vis_feedback="team2_name"]').text($('#team2_def [prmname="team_name"] input').val().upper());
@@ -1177,8 +1177,7 @@ kbmodules.football_standard.load_last_layout = function(){
 }
 
 
-// Что должно выводиться в список?
-// Какие игроки из каких списков ?
+
 kbmodules.football_standard.filter_players_replacement = function(event, _team){
 	const team_relation = {
 		'one': 1,
@@ -1313,20 +1312,6 @@ kbmodules.football_standard.hide_card = async function(){
 }
 
 
-// В каком формате имена?
-// Фамилия + Имя? С большой буквы? Транслит?
-
-// Как отображать тех кто вышел на замену?
-// Показывать их в списке или нет? Если да - то в каком? И убирать ли их из списка замен?
-
-// Что насчёт заголовков списков?
-// В некоторыъ случая он отображал количество игроков
-// И что в них вообще писать? Нужны ли они вообще?
-
-// Что делать с запасными?
-// Что делать если запасной игрок вышел на поле ?
-
-// Должен ли таймер отображать доп время и т.д. ?
 kbmodules.football_standard.upd_player_layout = async function(team){
 
 	const _ctx = ksys.context.module.cache;
