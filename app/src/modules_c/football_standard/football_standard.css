@@ -231,7 +231,7 @@ tab.tab_hidden
 	margin-right: 5px;
 }
 
-#text_formatting_params .txt_format_opt_group .txt_format_option label
+#text_formatting_params .txt_format_opt_group .txt_format_option strf-opt-label
 {
 	padding: 5px 10px 5px 10px;
 }

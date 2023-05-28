@@ -12,102 +12,11 @@
 
 	<tab tabid="team_defs">
 
-		<div id="text_formatting_params">
-
-			<!-- COACH -->
-			<div class="format_param" format_param_name="coach">
-				<div class="format_param_label">Coach</div>
-				<div class="format_param_selector">
-					<div class="txt_format_opt_group">
-						<div class="txt_format_option">
-							<label for="coach_text_format_translit">Translit</label>
-							<input type="checkbox" id="coach_text_format_translit">
-						</div>
-					</div>
-
-					<div class="txt_format_opt_group" id="coach_string_format">
-						<div class="txt_format_option">
-							<label for="coach_text_format_capital">Capital</label>
-							<input value="1" type="radio" id="coach_text_format_capital" name="coach_text_format">
-						</div>
-
-						<div class="txt_format_option">
-							<label for="coach_text_format_all_upper">ALL UPPER</label>
-							<input value="2" checked="true" type="radio" id="coach_text_format_all_upper" name="coach_text_format">
-						</div>
-
-						<div class="txt_format_option">
-							<label for="coach_text_format_all_lower">all lower</label>
-							<input value="3" type="radio" id="coach_text_format_all_lower" name="coach_text_format">
-						</div>
-					</div>
-
-				</div>
-			</div>
-
-			<!-- PLAYERS -->
-			<div class="format_param" format_param_name="players">
-				<div class="format_param_label">Players</div>
-				<div class="format_param_selector">
-					<div class="txt_format_opt_group">
-						<div class="txt_format_option">
-							<label for="players_text_format_translit">Translit</label>
-							<input type="checkbox" id="players_text_format_translit">
-						</div>
-					</div>
-
-					<div class="txt_format_opt_group" id="players_string_format">
-						<div class="txt_format_option">
-							<label for="players_text_format_capital">Capital</label>
-							<input value="1" type="radio" id="players_text_format_capital" name="players_text_format">
-						</div>
-
-						<div class="txt_format_option">
-							<label for="players_text_format_all_upper">ALL UPPER</label>
-							<input checked="true" value="2" type="radio" id="players_text_format_all_upper" name="players_text_format">
-						</div>
-
-						<div class="txt_format_option">
-							<label for="players_text_format_all_lower">all lower</label>
-							<input value="3" type="radio" id="players_text_format_all_lower" name="players_text_format">
-						</div>
-					</div>
-
-				</div>
-			</div>
-
-			<!-- CLUB NAME -->
-			<div class="format_param" format_param_name="club_name">
-				<div class="format_param_label">Full club name</div>
-				<div class="format_param_selector">
-					<div class="txt_format_opt_group">
-						<div class="txt_format_option">
-							<label for="club_name_text_format_translit">Translit</label>
-							<input type="checkbox" id="club_name_text_format_translit">
-						</div>
-					</div>
-
-					<div class="txt_format_opt_group" id="club_string_format">
-						<div class="txt_format_option">
-							<label for="club_name_text_format_capital">Capital</label>
-							<input value="1" type="radio" id="club_name_text_format_capital" name="club_name_text_format">
-						</div>
-
-						<div class="txt_format_option">
-							<label for="club_name_text_format_all_upper">ALL UPPER</label>
-							<input checked="true" value="2" type="radio" id="club_name_text_format_all_upper" name="club_name_text_format">
-						</div>
-
-						<div class="txt_format_option">
-							<label for="club_name_text_format_all_lower">all lower</label>
-							<input value="3" type="radio" id="club_name_text_format_all_lower" name="club_name_text_format">
-						</div>
-					</div>
-
-				</div>
-			</div>
-
-		</div>
+		<string-formatting>
+			<f-param display_name="Coach" fpid="coach" translit_default="0" format_default="all_upper"></f-param>
+			<f-param display_name="Players" fpid="players" translit_default="0" format_default="all_upper"></f-param>
+			<f-param display_name="Full club name" fpid="club_name" translit_default="0" format_default="all_upper"></f-param>
+		</string-formatting>
 
 		<div id="team_defs">
 

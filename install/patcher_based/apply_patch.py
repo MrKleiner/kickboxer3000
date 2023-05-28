@@ -4,6 +4,16 @@ from szipper import szip
 
 
 def main():
+	if len(sys.argv) < 2:
+		# Display the instructions
+		ctypes.windll.user32.MessageBoxW(
+			None,
+			"""To apply the patch you have to drag-n-drop the root folder of the controller on this exe file. The folder is called something like "KickBoxer3000-win32-x64" and has a bunch of files inside.""",
+			'INFO',
+			0,
+		)
+		return
+
 	bin_root = Path(__file__).parent
 	patch_target = Path(sys.argv[1])
 

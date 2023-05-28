@@ -1,7 +1,7 @@
 (function() {
 
 const _lizard = {
-	info: `Lizard's toybox. Version 0.43`,
+	info: `Lizard's toybox. Version 0.45`,
 	obsolete: {},
 };
 
@@ -26,6 +26,7 @@ const _lizard = {
 
 	// Strings
 	String.prototype.capitalize = function() {
+		if (!this[0]){return this};
 		return this[0].toUpperCase() + this.slice(1);
 	}
 	String.prototype.lower = function() {
@@ -42,8 +43,8 @@ const _lizard = {
 	// }
 
 	String.prototype.rstrip = function(chars='') {
-		const start = 0;
-		const end = this.length - 1;
+		let start = 0;
+		let end = this.length - 1;
 		while (chars.indexOf(this[end]) >= 0) {
 			end -= 1;
 		}
@@ -51,21 +52,21 @@ const _lizard = {
 	}
 
 	String.prototype.lstrip = function(chars='') {
-		var start = 0;
+		let start = 0;
 		while (chars.indexOf(x[start]) >= 0) {
 			start += 1;
 		}
-		var end = x.length - 1;
+		let end = x.length - 1;
 		return x.substr(start);
 	}
 
 	String.prototype.strip = function(chars='') {
-		var start = 0;
-		var trimmerd = this.trim()
+		let start = 0;
+		let trimmerd = this.trim()
 		while (chars.indexOf(trimmerd[start]) >= 0) {
 			start += 1;
 		}
-		var end = trimmerd.length - 1;
+		let end = trimmerd.length - 1;
 		while (chars.indexOf(trimmerd[end]) >= 0) {
 			end -= 1;
 		}
@@ -103,7 +104,7 @@ const _lizard = {
 		return Math.min(Math.max(this, min), max);
 	};
 
-	// clamp a number to min/max
+	// LEGACY
 	Number.prototype.zfill = function(max_l, pad_char) {
 		return str(this).padStart(max_l, pad_char)
 	};
@@ -120,6 +121,7 @@ const _lizard = {
 //         Arrays
 // -----------------------
 {
+	// IMPORTANT TODO: WHY IS THIS ALWAYS CAUSING PROBLEMS ????
 	// Array.prototype.rmdupli = function(){
 	// 	const _to_set = new Set(this);
 	// 	return Array.from(_to_set);
@@ -158,6 +160,7 @@ const _lizard = {
 			stop = parseInt(stop)
 			step = parseInt(step)
 		} catch (error) {
+			console.error('Range iterator: Invalid parameters', start, stop, step)
 			return []
 		}
 		
@@ -179,11 +182,11 @@ const _lizard = {
 //    Extend URL class
 // -----------------------
 {
-	const _ext_url_identifier = window.URL ? 'URL' : 'webkitURL'
+	const _ext_url_identifier = window.URL ? 'URL' : 'webkitURL';
 	const _more_url = class extends (window.URL || window.webkitURL){
 		get target(){
 			const base = this.pathname.split('/');
-			var stem = base.at(-1).split('.');
+			let stem = base.at(-1).split('.');
 			stem.pop()
 			const sex = {
 				'name': base.at(-1) || null,
@@ -305,7 +308,7 @@ const _buffer_types = [
 		if (v == null || v == undefined){
 			return false
 		}
-		for (let i of _prohibited_is_dict){
+		for (const i of _prohibited_is_dict){
 			if (v instanceof i){
 				return false
 			}
@@ -323,33 +326,36 @@ const _buffer_types = [
 // --------------------------------
 //     Random string generator
 // --------------------------------
-_lizard.rndwave = function(len=8, method='def', addchars='', crypto=true) {
-	var result = '';
-
-	const addon_chars = addchars.toString().replaceAll(' ', '');
-
-	const methods = {
+{
+	const _methods = {
 		'flac': 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-()=+*#/!&?<>$~',
 		'num': '1234567890',
 		'def': 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-',
 		'custom': '',
 	}
 
-	const characters = (methods[method] || methods.def) + addon_chars;
-	const charactersLength = characters.length;
+	_lizard.rndwave = function(len=8, method='def', addchars='', crypto=true) {
+		let result = '';
 
-    if (crypto == true){
-        var cryptonums = window.crypto.getRandomValues(new Uint32Array(len + 1))
-    }
-	for ( let i = 0; i < len; i++ ) {
-        if (crypto == true){
-            result += characters.charAt(cryptonums[i] % charactersLength);
-        }else{
-            result += characters.charAt(Math.floor(Math.random() * charactersLength));
-        }
+		const addon_chars = addchars.toString().replaceAll(' ', '');
+
+		const characters = (_methods[method] || _methods.def) + addon_chars;
+		const charactersLength = characters.length;
+
+	    if (crypto == true){
+	        var cryptonums = window.crypto.getRandomValues(new Uint32Array(len + 1))
+	    }
+		for ( let i = 0; i < len; i++ ) {
+	        if (crypto == true){
+	            result += characters.charAt(cryptonums[i] % charactersLength);
+	        }else{
+	            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+	        }
+		}
+		return result;
 	}
-	return result;
 }
+
 
 
 // ----------------------------------------
@@ -362,7 +368,12 @@ _lizard.rnd_interval = function(min, max, fixed_len=false) {
 	return (rnd % (max - min + 1)) + min;
 }
 // random int of a fixed length
-_lizard.rnd_int_fixed = function(digit_count){
+_lizard.rnd_int_fixed = function(digit_count=3){
+	if (digit_count > 19){
+		console.error('Requested Integer is longer than 19 characters, returning pseudo-int (a string)')
+		const nums = Array.from(window.crypto.getRandomValues(new Uint32Array(digit_count + 1)))
+		return nums.join('').slice(0, digit_count)
+	}
 	const rnd = window.crypto.getRandomValues(new BigUint64Array(1));
 	return Math.floor(int('1' + '0'.repeat(digit_count-1)) + rnd % int('9' + '0'.repeat(digit_count-1)))
 }
@@ -423,14 +434,17 @@ _lizard.text2clipboard = function(tgt_text){
 // --------------------------------
 //     rgb string to hex string
 // --------------------------------
-_lizard.rgb2hex = function(input_rgb) {
-	// Using RegExp
-	const rgb = input_rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-	function hex(x) {
+{
+	const _hex = function(x) {
 		return ('0' + parseInt(x).toString(16)).slice(-2);
 	}
-	return '#' + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
+	_lizard.rgb2hex = function(input_rgb) {
+		// Using RegExp
+		const rgb = input_rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+		return '#' + _hex(rgb[1]) + _hex(rgb[2]) + _hex(rgb[3]);
+	}
 }
+
 
 
 
@@ -762,6 +776,7 @@ _lizard.delnthelem = function(st, nth, use=false)
 	}
 }
 
+_lizard.delnthchar = _lizard.delnthelem;
 
 
 // --------------------------------
@@ -860,8 +875,8 @@ _lizard.delnthelem = function(st, nth, use=false)
 // pass true to return the blob itself
 _lizard.b64toblob = function(b64s){
 	if (b64 == ''){return null}
-	const bytes = _lizard.base64DecToArr(b64)
-	const blob = new Blob([bytes], {type: `image/${imgtype}`});
+	const bytes = _lizard.base64DecToArr(b64.split(',').at(-1))
+	const blob = new Blob([bytes]);
 	const imageUrl = (window.URL || window.webkitURL).createObjectURL(blob);
 	return imageUrl
 }
@@ -872,8 +887,8 @@ _lizard.b64toblob = function(b64s){
 // --------------------------------
 _lizard.collect_text_nodes = function(nd) {
 	const element = nd;
-	var text = '';
-	for (var i = 0; i < element.childNodes.length; ++i){
+	let text = '';
+	for (let i = 0; i < element.childNodes.length; ++i){
 		if (element.childNodes[i].nodeType === Node.TEXT_NODE){
 			text += element.childNodes[i].textContent;
 		}

@@ -1,5 +1,5 @@
 
-1 - Make sure npm stuff is available. Best way of achieving this is by using Fork.
+1 - Make sure npm and stuff is available. Best way of achieving this is by using Fork.
 2 - Unpack "7z.zip", "python.7z" and "rcedit.zip" inside static_bins
 3 - Unpack "node_modules.7z" from "static_bins" to "app"
 4 - Create "release" folder in the root dir if it doesn't exist already
@@ -9,8 +9,9 @@
     
     Everything is 100% automated.
     Simply look for the corresponding .cmd files inside "install" folder.
+    (python installed system-wide is required)
     Compiled results are placed into "release" folder.
-    To apply a patch - drag-n-drop the root folder of an installed base onto the patch .exe
+    To apply a patch - drag-n-drop the root folder of the installed base onto the patch .exe
     
     Bases are completely standalone. It's totally possible to have multiple controllers installed
     in different folders.
@@ -27,7 +28,7 @@
     to absolute path pointing to "app/src"
 
 7 - To reload scripts on runtime it's required to run bootlegger (which only takes a second or two)
-    And press ctrl+r inside of the controller.
+    And then press ctrl+r inside of the controller.
 
 
 8 - To build a base it's required to first compile it with npm itself.

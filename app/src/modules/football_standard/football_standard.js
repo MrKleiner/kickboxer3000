@@ -343,67 +343,6 @@ $this.load = async function(){
 	}
 
 	// 
-	// String formatting binds
-	// 
-	{
-		document.querySelector('#text_formatting_params').onclick = function(){
-			// Coach translit
-			ksys.context.module.prm(
-				'coach_translit',
-				document.querySelector('#coach_text_format_translit').checked,
-			);
-			// Coach format
-			ksys.context.module.prm(
-				'coach_format',
-				document.querySelector('#coach_string_format input:checked').value,
-			);
-
-
-			// Players translit
-			ksys.context.module.prm(
-				'players_translit',
-				document.querySelector('#players_text_format_translit').checked,
-			);
-			// Players format
-			ksys.context.module.prm(
-				'players_format',
-				document.querySelector('#players_string_format input:checked').value,
-			);
-
-
-			// Club translit
-			ksys.context.module.prm(
-				'club_translit',
-				document.querySelector('#club_name_text_format_translit').checked,
-			);
-			// Club format
-			ksys.context.module.prm(
-				'club_format',
-				document.querySelector('#club_string_format input:checked').value,
-			);
-
-		}
-	}
-
-	// 
-	// String formatting load
-	// 
-	{
-		if ('coach_format' in ksys.context.module.cache){
-			const _ctx = ksys.context.module.cache;
-
-			document.querySelector('#coach_text_format_translit').checked =                                  _ctx.coach_translit;
-			document.querySelector(`#coach_string_format input[value="${_ctx.coach_format}"]`).checked =     true;
-			
-			document.querySelector('#players_text_format_translit').checked =                                _ctx.players_translit;
-			document.querySelector(`#players_string_format input[value="${_ctx.players_format}"]`).checked = true;
-			
-			document.querySelector('#club_name_text_format_translit').checked =                              _ctx.club_translit;
-			document.querySelector(`#club_string_format input[value="${_ctx.club_format}"]`).checked =       true;
-		}
-	}
-
-	// 
 	// Scores
 	// 
 	{
@@ -781,7 +720,7 @@ $this.player_ctrl = class {
 
 		await card.set_text(
 			'player_name',
-			`${this.number} ${ksys.util.str_ops.format(this.surname, _ctx.players_format, _ctx.players_translit)}`,
+			`${this.number} ${ksys.strf.params.players.format(this.surname)}`,
 		)
 		await card.set_img_src('club_logo', this.get_team_logo())
 		
@@ -1257,9 +1196,18 @@ $this.replacement_player_title = async function(event){
 	const leaving_player_object = all_players[leaving_player.attr('namecode')];
 	const incoming_player_object = all_players[incoming_player.attr('namecode')];
 
-	await $this.titles.replacement_out.set_text('player_name', leaving_player_object.number + ' ' + leaving_player_object.surname)
-	await $this.titles.replacement_out.set_img_src('club_logo', leaving_player_object.get_team_logo())
-	await $this.titles.replacement_in.set_text('player_name', incoming_player_object.number + ' ' + incoming_player_object.surname)
+	await $this.titles.replacement_out.set_text(
+		'player_name',
+		leaving_player_object.number + ' ' + ksys.strf.params.players.format(leaving_player_object.surname)
+	)
+	await $this.titles.replacement_out.set_img_src(
+		'club_logo',
+		leaving_player_object.get_team_logo()
+	)
+	await $this.titles.replacement_in.set_text(
+		'player_name',
+		incoming_player_object.number + ' ' + ksys.strf.params.players.format(incoming_player_object.surname)
+	)
 	await $this.titles.replacement_in.set_img_src('club_logo', incoming_player_object.get_team_logo())
 
 	ksys.btns.pool.exec_replacement_sequence.toggle(false)
@@ -1362,7 +1310,7 @@ $this.upd_player_layout = async function(team){
 			// player number
 			await title.set_text(`plr_num_${cell_id}`, player_object.number);
 			// player name
-			await title.set_text(`plr_name_${cell_id}`, ksys.util.str_ops.format(player_object.surname, _ctx.players_format, _ctx.players_translit));
+			await title.set_text(`plr_name_${cell_id}`, ksys.strf.params.players.format(player_object.surname));
 		}
 	}
 
@@ -1397,7 +1345,7 @@ $this.upd_player_layout = async function(team){
 	const player_nums = [];
 	for (let player of player_list_sorted){
 		player_nums.push(player.number)
-		player_list.push(ksys.util.str_ops.format(player.surname, _ctx.players_format, _ctx.players_translit))
+		player_list.push(ksys.strf.params.players.format(player.surname))
 	}
 
 	// names
@@ -1422,7 +1370,7 @@ $this.upd_player_layout = async function(team){
 	const reserve_nums = [];
 	for (let player of reserve_list_sorted){
 		reserve_nums.push(player.number)
-		reserve_list.push(ksys.util.str_ops.format(player.surname, _ctx.players_format, _ctx.players_translit))
+		reserve_list.push(ksys.strf.params.players.format(player.surname))
 	}
 	// names
 	await title.set_text('reserve_list', reserve_list.join('\n'))
@@ -1436,7 +1384,7 @@ $this.upd_player_layout = async function(team){
 	// 
 	await title.set_text(
 		'coach_name',
-		ksys.util.str_ops.format($(`${team_def} [prmname="team_coach"] input`).val(), _ctx.coach_format, _ctx.coach_translit)
+		ksys.strf.params.coach.format($(`${team_def} [prmname="team_coach"] input`).val())
 	)
 
 	// 
@@ -1444,7 +1392,7 @@ $this.upd_player_layout = async function(team){
 	// 
 	await title.set_text(
 		'club_name',
-		ksys.util.str_ops.format($(`${team_def} [prmname="team_name"] input`).val().upper(), _ctx.club_format, _ctx.club_translit)
+		ksys.strf.params.club_name.format($(`${team_def} [prmname="team_name"] input`).val())
 	)
 
 	// 
@@ -1501,8 +1449,14 @@ $this.show_vs_title = async function(){
 	await $this.titles.splash.set_img_src('logo_l', $('#team1_def').attr('logo_path'))
 	await $this.titles.splash.set_img_src('logo_r', $('#team2_def').attr('logo_path'))
 
-	await $this.titles.splash.set_text('club_name_l', ksys.util.str_ops.format($('#team1_def [prmname="team_name"] input').val(), _ctx.club_format, _ctx.club_translit))
-	await $this.titles.splash.set_text('club_name_r', ksys.util.str_ops.format($('#team2_def [prmname="team_name"] input').val(), _ctx.club_format, _ctx.club_translit))
+	await $this.titles.splash.set_text(
+		'club_name_l',
+		ksys.strf.params.club_name.format($('#team1_def [prmname="team_name"] input').val())
+	)
+	await $this.titles.splash.set_text(
+		'club_name_r',
+		ksys.strf.params.club_name.format($('#team2_def [prmname="team_name"] input').val())
+	)
 
 	await $this.titles.splash.overlay_in(1)
 
@@ -1529,7 +1483,10 @@ $this.goal_score_on = async function(){
 	// register this goal
 	$this.push_score(player_object.team.num, player_object.surname)
 
-	await $this.titles.gscore.set_text('player_name', `${player_object.number} ${player_object.surname.toUpperCase()}`)
+	await $this.titles.gscore.set_text(
+		'player_name',
+		`${player_object.number} ${ksys.strf.params.players.format(player_object.surname)}`
+	)
 	await $this.titles.gscore.set_img_src('club_logo', player_object.get_team_logo())
 
 	await $this.titles.timer.set_text('score_l', $($this.teams[1].score_pool).find('.team_score_record').length)
@@ -1583,7 +1540,10 @@ $this.show_coach = async function(team){
 	ksys.btns.pool.show_coach_team2.toggle(false)
 	ksys.btns.pool.hide_coach_team2.toggle(false)
 
-	await $this.titles.coach.set_text('name', ksys.util.str_ops.format($(`${teamdef} [prmname="team_coach"] input`)[0].value, _ctx.coach_format, _ctx.coach_translit))
+	await $this.titles.coach.set_text(
+		'name',
+		ksys.strf.params.coach.format($(`${teamdef} [prmname="team_coach"] input`)[0].value)
+	)
 	await $this.titles.coach.overlay_in(1)
 
 	ksys.btns.pool.show_coach_team1.toggle(true)

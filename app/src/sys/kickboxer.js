@@ -28,9 +28,6 @@ require('./apis/crypto_js/4_1_1/crypto-js.min.js')
 
 
 
-
-
-
 // ===================================
 //           Define modules
 // ===================================
@@ -49,6 +46,9 @@ const ksys = {
 	db:      require('./sys/db_manager.js'),
 	btns:    require('./sys/buttons.js'),
 	tplates: require('./sys/template_util.js'),
+	strf:    require('./sys/str_format_gui.js'),
+	pgview:  require('./sys/pgview.js'),
+	tabsys:  require('./sys/tabsys.js'),
 };
 
 
@@ -277,7 +277,40 @@ ksys.util.vmix_ok = function(txt){
 }
 
 
+ksys.util.get_key = function(){
+	return new Promise(function(resolve, reject){
+		$('.__kb_shadow_input').remove()
+		const shadow_input = $(`
+		<input
+			class="__kb_shadow_input"
+			type="text"
+			style="
+				position: fixed;
+				opacity: 0;
+				z-index: -99999;
+				width: 0px;
+				height: 0px;
+			"
+		>`)[0]
 
+		shadow_input.onblur = function(){
+			try{
+				resolve(null)
+				shadow_input.remove()
+				print('Resolving:', null)
+			}catch (e){}
+		}
+		shadow_input.onkeydown = function(evt){
+			resolve(evt)
+			try{shadow_input.remove()}catch(e){};
+			print('Resolving:', evt)
+		}
+
+		document.body.append(shadow_input)
+
+		shadow_input.focus()
+	});
+}
 
 
 
@@ -315,8 +348,14 @@ const sys_load = function(nm, save_state=true)
 	// refresh context
 	ksys.context.module.pull()
 
-	// Evaluate buttons
+	// resync buttons
 	ksys.btns.resync()
+
+	// resync string formatting
+	ksys.strf.resync()
+
+	// resync tabs
+	ksys.tabsys.resync()
 
 	// images are not draggable by default
 	$('img:not(img[candrag])').attr('draggable', false);
@@ -376,6 +415,9 @@ async function app_init()
 	// starting page is ip:port selector
 	// this page gets overwritten with the homepage if ip:port is valid
 	sys_load('starting_page', false)
+
+	// init pgview
+	ksys.pgview.reload()
 
 	// ping vmix
 	const reach = await vmix.talker.ping()

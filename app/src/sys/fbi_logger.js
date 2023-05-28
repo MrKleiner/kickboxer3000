@@ -50,13 +50,9 @@ class _fbi_logger
 		}
 
 		// make the module name
-		if (predef_styles.hasOwnProperty(md)){
-			var module_name = `%c${predef_styles[md]['text']}`;
-			var module_style = `background: ${predef_styles[md]['bg']}; color: ${predef_styles[md]['fg']}`;
-		}else{
-			var module_name = `[${md}]`;
-			var module_style = '';
-		}
+
+		const module_name = predef_styles.hasOwnProperty(md) ? `%c${predef_styles[md]['text']}` : `[${md}]`;
+		const module_style = predef_styles.hasOwnProperty(md) ? `background: ${predef_styles[md]['bg']}; color: ${predef_styles[md]['fg']}` : '';
 		
 		// absolute genius
 		// return [module_name, module_style, ...clear_log]

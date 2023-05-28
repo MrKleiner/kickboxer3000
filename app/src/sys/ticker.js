@@ -80,6 +80,14 @@ class _kb_ticker{
 
 		return new Promise(async function(resolve, reject){
 			let last_tick = _self.global_tick;
+
+			// wait for callback function to complete, if asked
+			// if (_self.wait_for_callback == true){
+			// 	await _self.callback_func(_self.tick)
+			// }else{
+			// 	_self.callback_func(_self.tick)
+			// }
+
 			while (_self.alive == true && ((_self.global_tick < _self.duration) || _self.infinite == true)){
 
 				// global timer

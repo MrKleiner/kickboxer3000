@@ -44,6 +44,12 @@ kbmodules.kickboxing_standard.load = function()
 		$(`pairnum[pair_index="${selected_player[0]}"]`).closest('pair').find(`player[${selected_player[1]}]`).addClass('active_player')
 	}
 
+	kbmodules.kickboxing_standard.titles = {
+		'personal': new vmix.title({
+			'title_name': 'personal_anim_single.gtzip',
+		}),
+	}
+
 }
 
 
@@ -318,6 +324,8 @@ kbmodules.kickboxing_standard.upd_vs_title = async function(p_index=null)
 	// save selected pair index
 	ksys.context.module.prm('active_pair_index', p_index)
 
+	return
+
 	// select the corresponding pair in the gui
 	var pair_elem = $(`#pairs_pool pairnum[pair_index="${p_index}"]`).closest('pair');
 	print('PAIR ITEM', pair_elem)
@@ -429,63 +437,48 @@ kbmodules.kickboxing_standard.upd_personal_title = async function(player)
 
 	ksys.context.module.prm(
 		'current_player',
-		`${player_elem.closest('pair').find('pairnum').attr('pair_index')}-${(player_elem.attr('left') == '') ? 'left' : 'right'}`
+		`${player_elem.closest('pair').find('pairnum').attr('pair_index')}-${(player_elem.attr('left') == '') ? 'left' : 'right'}`,
 	)
 
-	// const pname = ksys.translit(player_elem.find('p_param[p_name] input').val().trim()).split(' ');
+	// $('#category_change input').val($(player).find('p_param[p_weight] input').val().trim())
 
-	$('#category_change input').val($(player).find('p_param[p_weight] input').val().trim())
+	const player_info = ksys.tplates.index_elem(
+		player_elem,
+		{
+			'name':    'p_param[p_name] input',
+			'age':     'p_param[p_age] input',
+			'height':  'p_param[p_height] input',
+			'weight':  'p_param[p_weight] input',
+			'country': 'p_param[p_country] input',
+			'record':  'p_param[p_record] input',
+		}
+	).index
 
-	return
+	const title = kbmodules.kickboxing_standard.titles.personal
 
-	// surname
-	await vmix.talker.talk({
-		'Function': 'SetText',
-		'Value': pname.at(-1).trim(),
-		'Input': 'personal.gtzip',
-		'SelectedName': 'name.Text'
-	})
-	// name
-	await vmix.talker.talk({
-		'Function': 'SetText',
-		'Value': pname[0].trim(),
-		'Input': 'personal.gtzip',
-		'SelectedName': 'surname.Text'
-	})
+	const p_name = player_info.name.value.split(' ')
+	const frmt = ksys.strf.params.players
 
-	// height
-	await vmix.talker.talk({
-		'Function': 'SetText',
-		'Value': $(player).find('p_param[p_height] input').val().trim(),
-		'Input': 'personal.gtzip',
-		'SelectedName': 'height.Text'
-	})
+	await title.set_text('name',    frmt.format(p_name[0]))
+	await title.set_text('surname', frmt.format(p_name.at(-1)))
 
-	// weight
-	await vmix.talker.talk({
-		'Function': 'SetText',
-		'Value': $(player).find('p_param[p_weight] input').val().trim(),
-		'Input': 'personal.gtzip',
-		'SelectedName': 'weight.Text'
-	})
+	await title.set_text('weight_text', frmt.format(player_info.weight.value))
+	await title.set_text('height_text', frmt.format(player_info.height.value))
 
-	
+	await title.set_text('weight_text', frmt.format(player_info.weight.value + ' KG'))
+	await title.set_text('height_text', frmt.format(player_info.height))
 
-	// record
-	await vmix.talker.talk({
-		'Function': 'SetText',
-		'Value': $(player).find('p_param[p_record] input').val().trim(),
-		'Input': 'personal.gtzip',
-		'SelectedName': 'record.Text'
-	})
+	await title.set_text('record_text', frmt.format(player_info.record.value))
+
+	// await title.set_text('height_text', player_info.record.value)
 
 	// Country
-	await vmix.talker.talk({
-		'Function': 'SetImage',
-		'Value': str((new pathlib(ksys.context.module.pull().resource_path)).join('flags', `${$(player).find('p_param[p_country] input').val().trim()}`)).replaceAll('/', '\\'),
-		'Input': 'personal.gtzip',
-		'SelectedName': 'country.Source'
-	})
+	// await vmix.talker.talk({
+	// 	'Function': 'SetImage',
+	// 	'Value': str((new pathlib(ksys.context.module.pull().resource_path)).join('flags', `${$(player).find('p_param[p_country] input').val().trim()}`)).replaceAll('/', '\\'),
+	// 	'Input': 'personal.gtzip',
+	// 	'SelectedName': 'country.Source'
+	// })
 }
 
 
@@ -522,13 +515,14 @@ kbmodules.kickboxing_standard.set_round = function(r, resetround=false)
 kbmodules.kickboxing_standard.timer_callback = async function(ticks)
 {
 
-	var minutes = Math.floor(ticks.global / 60)
-	var seconds = ticks.global - (60*minutes)
+	const minutes = Math.floor(ticks.global / 60)
+	const seconds = ticks.global - (60*minutes)
 	// print('minutes:', minutes, 'seconds', seconds)
 	// print('global:', ticks.global)
 
-	if (ticks.global <= 6){
-		kbmodules.kickboxing_standard.timer_hide(true)
+	if (ticks.global <= 9){
+		await kbmodules.kickboxing_standard.timer_hide(true)
+		kbmodules.kickboxing_standard.counter.force_kill()
 	}
 
 	// update
@@ -643,9 +637,12 @@ kbmodules.kickboxing_standard.timer_set_time = function(tm=null)
 			kbmodules.kickboxing_standard.counter.force_kill()
 		}catch (error){}
 
+		const total_dur = (ksys.context.module.pull().round_duration / 1000)
+
 		// spawn a timer
 		kbmodules.kickboxing_standard.counter = ksys.ticker.spawn({
-			'duration': (ksys.context.module.pull().round_duration / 1000) - tm,
+			'duration': total_dur - (total_dur - tm),
+			// 'offset': tm,
 			'name': 'giga_timer',
 			'infinite': false,
 			'reversed': true,
@@ -692,18 +689,12 @@ kbmodules.kickboxing_standard.vs_off = function()
 
 kbmodules.kickboxing_standard.player_onn = function()
 {
-	vmix.talker.talk({
-		'Function': 'OverlayInput1In',
-		'Input': 'personal.gtzip',
-	})
+	kbmodules.kickboxing_standard.titles.personal.overlay_in(1)
 }
 
 kbmodules.kickboxing_standard.player_off = function()
 {
-	vmix.talker.talk({
-		'Function': 'OverlayInput1Out',
-		'Input': 'personal.gtzip',
-	})
+	kbmodules.kickboxing_standard.titles.personal.overlay_out(1)
 }
 
 

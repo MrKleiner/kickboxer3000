@@ -12,12 +12,16 @@ const createWindow = () => {
 		webPreferences: {
 			nodeIntegration: true,
 			contextIsolation: false,
+			webviewTag: true,
 		},
 		width: 1280,
 		height: 720,
 		minWidth: 400,
 		minHeight: 300,
-		icon: path.join(__dirname, 'assets', 'pink_panther.png')
+		// frame: false,
+		// titleBarOverlay: true,
+		icon: path.join(__dirname, 'assets', 'pink_panther.png'),
+		// transparent: true,
 	});
 
 	// and load the index.html of the app.
@@ -25,6 +29,25 @@ const createWindow = () => {
 
 	// Open the DevTools.
 	mainWindow.webContents.openDevTools();
+
+	// pwnt lolololololol
+	mainWindow.webContents.session.webRequest.onHeadersReceived(
+		{ urls: [ "*://*/*" ] },
+		(d, c)=>{
+			if(d.responseHeaders['X-Frame-Options']){
+				delete d.responseHeaders['X-Frame-Options'];
+			} else if(d.responseHeaders['x-frame-options']) {
+				delete d.responseHeaders['x-frame-options'];
+			}
+
+			c({cancel: false, responseHeaders: d.responseHeaders});
+		}
+	);
+
+	mainWindow.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
+		details.requestHeaders['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36';
+		callback({ cancel: false, requestHeaders: details.requestHeaders });
+	});
 
 	globalShortcut.register('CommandOrControl+R', function() {
 		mainWindow.reload();
@@ -63,19 +86,3 @@ app.on('browser-window-created',function(e,window) {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
-/*
-const {PythonShell} = require('python-shell');
-
-let options = {
-	mode: 'text',
-	pythonPath: 'c:/custom/python/python_3_8_9/python.exe',
-	pythonOptions: ['-u'],
-	scriptPath: path.join(__dirname, '/app/'),
-	args: [10]
-  };
-
-  PythonShell.run('tst.py',options,function(err,results) {
-	if(err) throw err;
-	// console.log('pootis')
-  });
-*/

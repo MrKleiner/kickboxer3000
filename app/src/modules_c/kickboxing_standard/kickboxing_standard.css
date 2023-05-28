@@ -144,10 +144,11 @@ kbstandard sysbtn[btname="set_round_duration"]
 kbstandard #rside
 {
 	display: flex;
-	flex-grow: 1;
+	/*flex-grow: 1;*/
 	margin: 10px;
 	flex-direction: column;
 	height: 90vh;
+	width: 50%;
 }
 
 
@@ -159,6 +160,7 @@ kbstandard #pairs_pool
 	overflow-y: scroll;
 	background: rgba(0, 0, 0, 0.2);
 	height: 100%;
+	width: 100%;
 }
 
 kbstandard #pairs_pool::-webkit-scrollbar {
@@ -300,4 +302,14 @@ column[res_loc] *
 player.active_player display
 {
 	color: lime;
+}
+
+
+
+
+tab[tabid="ctrl"]
+{
+	flex-direction: row;
+	width: 100%;
+	justify-content: space-around;
 }

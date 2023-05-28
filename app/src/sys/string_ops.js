@@ -129,11 +129,11 @@ ops.format = function(_txt, _to_case, transliteration=false, overwrite_prev_form
 	const to_case = str(_to_case).lower()
 	// print('Input params:', _txt, _to_case, transliteration)
 	if (to_case == '1'){
-		// const words = txt.split(' ')
+
 		const upper_words = txt.split(' ').map(function(word){
 			return word.capitalize()
 		})
-		// return txt.capitalize()
+
 		return upper_words.join(' ')
 	}
 	if (to_case == '2'){
@@ -141,6 +141,9 @@ ops.format = function(_txt, _to_case, transliteration=false, overwrite_prev_form
 	}
 	if (to_case == '3'){
 		return txt.lower()
+	}
+	if (to_case == '4'){
+		return _txt
 	}
 }
 
