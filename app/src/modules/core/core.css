@@ -463,6 +463,12 @@ vmix buttons
 	opacity: 0.6;
 }
 
+~~[horizontal]
+{
+	aspect-ratio: 2/1;
+}
+
+
 
 
 
@@ -678,6 +684,11 @@ sys buttons
 	padding: 5px 10px 5px 10px;
 	padding-right: calc(10px + 16px);
 }
+
+
+
+
+
 
 
 

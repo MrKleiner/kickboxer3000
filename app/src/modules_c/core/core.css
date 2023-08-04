@@ -463,6 +463,12 @@ vmixbtn .vmixbtn_info_icon_pool
 	opacity: 0.6;
 }
 
+vmixbtn[horizontal]
+{
+	aspect-ratio: 2/1;
+}
+
+
 
 
 
@@ -678,6 +684,11 @@ string-formatting strf-opt-group strf-opt label
 	padding: 5px 10px 5px 10px;
 	padding-right: calc(10px + 16px);
 }
+
+
+
+
+
 
 
 

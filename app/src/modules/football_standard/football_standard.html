@@ -1,14 +1,13 @@
 <div id="football_standard">
 
-	<div id="tabs">
-		<div onmousedown="$this.tab_switch(event)" match_id="team_defs" class="tab">Config/Lists</div>
-		<div onmousedown="$this.tab_switch(event)" match_id="teams_layouts" class="tab">Layout</div>
-		<div onmousedown="$this.tab_switch(event)" match_id="layout_buttons" class="tab">Layout Ctrl</div>
-		<div onmousedown="$this.tab_switch(event)" match_id="punisher" class="tab">Cards/Goals</div>
-		<div onmousedown="$this.tab_switch(event)" match_id="replacement" class="tab">Substitute</div>
-		<div onmousedown="$this.tab_switch(event)" match_id="timer_and_scores" class="tab">Timer/Scores</div>
-	</div>
-
+	<tabsys>
+		<sys-tab match_id="team_defs" default>Config/Lists</sys-tab>
+		<sys-tab match_id="teams_layouts">Layout</sys-tab>
+		<sys-tab match_id="layout_buttons">Layout Ctrl</sys-tab>
+		<sys-tab match_id="punisher">Cards/Goals</sys-tab>
+		<sys-tab match_id="replacement">Substitute</sys-tab>
+		<sys-tab match_id="timer_and_scores">Timer/Scores</sys-tab>
+	</tabsys>
 
 	<tab tabid="team_defs">
 
@@ -49,12 +48,18 @@
 						<input type="text" class="team_param_input">
 					</div>
 
-					<div class="team_param" prmname="team_player_color">
-						<div class="team_param_label">Player colour</div>
+
+					<div class="team_param palette_hover_vis" prmname="team_player_color">
+						<div class="team_param_label">T-shirt colour</div>
 						<div class="colour_picker"></div>
 					</div>
 
-					<div class="team_param" prmname="team_gk_color">
+					<div class="team_param palette_hover_vis" prmname="team_shorts_color">
+						<div class="team_param_label">Shorts colour</div>
+						<div class="colour_picker"></div>
+					</div>
+
+					<div class="team_param palette_hover_vis" prmname="team_gk_color">
 						<div class="team_param_label">Goalkeeper colour</div>
 						<div class="colour_picker"></div>
 					</div>
@@ -104,12 +109,17 @@
 						<input type="text" class="team_param_input">
 					</div>
 
-					<div class="team_param" prmname="team_player_color">
-						<div class="team_param_label">Player colour</div>
+					<div class="team_param palette_hover_vis" prmname="team_player_color">
+						<div class="team_param_label">T-shirt colour</div>
 						<div class="colour_picker"></div>
 					</div>
 
-					<div class="team_param" prmname="team_gk_color">
+					<div class="team_param palette_hover_vis" prmname="team_shorts_color">
+						<div class="team_param_label">Shorts colour</div>
+						<div class="colour_picker"></div>
+					</div>
+
+					<div class="team_param palette_hover_vis" prmname="team_gk_color">
 						<div class="team_param_label">Goalkeeper colour</div>
 						<div class="colour_picker"></div>
 					</div>
@@ -208,6 +218,22 @@
 
 	<tab class="tab_hidden" tabid="layout_buttons">
 		<div id="layout_buttons">
+
+			<h1>Commenter</h1>
+			<!-- Сукманский is the best commenter ever -->
+			<div id="commenter_ctrl">
+				<div id="commenter_ctrl_head">
+					<div class="layout_buttons_vs_ctrl_head_minititle">Commenter's Name. No post-formatting applied</div>
+					<input onchange="$this.save_commenter()" type="text" id="commenter_name_input">
+				</div>
+
+				<div id="commenter_ctrl_body">
+					<vmixbtn seq_info="update+vis_show" btname="show_commenter" onclick="$this.show_commenter()">Show Commenter</vmixbtn>
+					<vmixbtn seq_info="vis_hide" btname="hide_commenter" onclick="$this.hide_commenter()">Hide Commenter</vmixbtn>
+				</div>
+			</div>
+
+
 
 			<h1>Splash (VS) Control</h1>
 			<div id="layout_buttons_vs_ctrl">
@@ -333,11 +359,9 @@
 	<tab class="tab_hidden" tabid="replacement">
 		<div id="replacement">
 			<div id="replacement_buttons">
-				<div>
-					<vmixbtn seq_info="auto_tweaks+auto_seq" btname="exec_replacement_sequence" onclick="$this.replacement_player_title(event)">Execute Sequence</vmixbtn>
-					<vmixbtn halfsize seq_info="auto_tweaks" btname="shadow_player_swap" onclick="$this.shadow_swap(event)">Shadow swap</vmixbtn>
-					<!-- <vmixbtn btname="exec_replacement_sequences" onclick="$this.start_base_timer()">AAA</vmixbtn> -->
-				</div>
+				<vmixbtn seq_info="auto_tweaks+auto_seq" btname="exec_replacement_sequence" onclick="$this.replacement_player_title(event)">Execute Sequence</vmixbtn>
+				<vmixbtn halfsize seq_info="auto_tweaks" btname="shadow_player_swap" onclick="$this.shadow_swap(event)">Shadow swap</vmixbtn>
+				<!-- <vmixbtn btname="exec_replacement_sequences" onclick="$this.start_base_timer()">AAA</vmixbtn> -->
 			</div>
 			<div id="replacement_teams">
 				<div class="replacement_team" id="replacement_team1">

@@ -1,7 +1,7 @@
 (function() {
 
 const _lizard = {
-	info: `Lizard's toybox. Version 0.45`,
+	info: `Lizard's toybox. Version 1.17`,
 	obsolete: {},
 };
 
@@ -18,8 +18,8 @@ const _lizard = {
 {
 	// LEGACY
 	String.prototype.zfill = function(amt=1, char='0') {
-		var pad_char = typeof char !== 'undefined' ? char : '0';
-		var pad = new Array(1 + amt).join(pad_char);
+		const pad_char = typeof char !== 'undefined' ? char : '0';
+		let pad = new Array(1 + amt).join(pad_char);
 		return (pad + this).slice(-pad.length);
 	}
 

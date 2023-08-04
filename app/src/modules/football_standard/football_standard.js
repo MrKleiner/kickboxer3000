@@ -27,8 +27,8 @@ $this.index_titles = function(ctx){
 		'team_layout': new vmix.title({
 			'title_name': 'command_layout.gtzip',
 			'timings': {
-				'fps': 30,
-				'frames_in': 91,
+				'fps': 25,
+				'frames_in': 41,
 				'margin': 100,
 			},
 		}),
@@ -38,7 +38,7 @@ $this.index_titles = function(ctx){
 		'yellow_card': new vmix.title({
 			'title_name': 'yellow_card.gtzip',
 			'timings': {
-				'fps': 30,
+				'fps': 25,
 				'frames_in': 72,
 				'margin': 100,
 			}
@@ -46,8 +46,8 @@ $this.index_titles = function(ctx){
 		'red_card': new vmix.title({
 			'title_name': 'red_card.gtzip',
 			'timings': {
-				'fps': 30,
-				'frames_in': 72,
+				'fps': 25,
+				'frames_in': 20,
 				'margin': 100,
 			}
 		}),
@@ -56,18 +56,16 @@ $this.index_titles = function(ctx){
 		'replacement_out': new vmix.title({
 			'title_name': 'replacement_leaving.gtzip',
 			'timings': {
-				'fps': 30,
-				'frames_in': 72,
-				'frames_out': 65,
+				'fps': 25,
+				'frames_in': 35,
 				'margin': 100,
 			}
 		}),
 		'replacement_in': new vmix.title({
 			'title_name': 'replacement_incoming.gtzip',
 			'timings': {
-				'fps': 30,
-				'frames_in': 72,
-				'frames_out': 65,
+				'fps': 25,
+				'frames_in': 42,
 				'margin': 100,
 			}
 		}),
@@ -76,8 +74,9 @@ $this.index_titles = function(ctx){
 		'splash': new vmix.title({
 			'title_name': 'splash.gtzip',
 			'timings': {
-				'fps': 30,
-				'frames_in': 55,
+				'fps': 25,
+				'frames_in': 37,
+				'frames_out': 41,
 				'margin': 100,
 			}
 		}),
@@ -86,9 +85,8 @@ $this.index_titles = function(ctx){
 		'gscore': new vmix.title({
 			'title_name': 'scored.gtzip',
 			'timings': {
-				'fps': 30,
-				'frames_in': 71,
-				'frames_out': 69,
+				'fps': 25,
+				'frames_in': 36,
 				'margin': 100,
 			}
 		}),
@@ -97,8 +95,18 @@ $this.index_titles = function(ctx){
 		'coach': new vmix.title({
 			'title_name': 'coach.gtzip',
 			'timings': {
-				'fps': 30,
-				'frames_in': 60,
+				'fps': 25,
+				'frames_in': 26,
+				'margin': 100,
+			}
+		}),
+
+		// Commenter
+		'commenter': new vmix.title({
+			'title_name': 'commenter.gtzip',
+			'timings': {
+				'fps': 25,
+				'frames_in': 26,
 				'margin': 100,
 			}
 		}),
@@ -107,8 +115,8 @@ $this.index_titles = function(ctx){
 		'timer': new vmix.title({
 			'title_name': 'score_and_time.gtzip',
 			'timings': {
-				'fps': 30,
-				'frames_in': 70,
+				'fps': 25,
+				'frames_in': 23,
 				'margin': 100,
 			}
 		}),
@@ -117,7 +125,7 @@ $this.index_titles = function(ctx){
 		'final_scores': new vmix.title({
 			'title_name': 'final_scores.gtzip',
 			'timings': {
-				'fps': 30,
+				'fps': 25,
 				'frames_in': 59,
 				'margin': 100,
 			}
@@ -183,7 +191,7 @@ $this.load = async function(){
 			'ffffff',
 		]
 
-		for (color of $this.team_colors){
+		for (const color of $this.team_colors){
 			const col = $(`<div class="tcolour" tc="${color}" style="background: #${color}"></div>`);
 
 			col.on('click', function(evt){
@@ -300,6 +308,7 @@ $this.load = async function(){
 				'shorthand':           $(`#team${t}_def [prmname="club_shorthand"] input`)[0],
 				'team_coach':          $(`#team${t}_def [prmname="team_coach"] input`)[0],
 				'player_color_picker': $(`#team${t}_def [prmname="team_player_color"] .colour_picker`)[0],
+				'shorts_color_picker': $(`#team${t}_def [prmname="team_shorts_color"] .colour_picker`)[0],
 				'gk_color_picker':     $(`#team${t}_def [prmname="team_gk_color"] .colour_picker`)[0],
 				'score_pool':          $(`#score_ctrl_team${t} .score_ctrl_table`)[0],
 				'player_pool_main':    $(`#team${t}_def .player_lists .player_list.starters .list_pool`)[0],
@@ -350,10 +359,17 @@ $this.load = async function(){
 		for (let team of ['1', '2']){
 			for (let score of prev_scores[team]){
 				// $this.playerbase.global_index[score.namecode].score(team, score.time)
-				$this.push_score(team, score.surname, score.time)
+				$this.push_score(team, score.surname, score.time, score.ag)
 			}
 		}
 	}
+
+	// 
+	// Misc
+	// 
+
+	// Commenter
+	$('#commenter_name_input')[0].value = ksys.context.module.cache.todays_commenter || '';
 
 	$this.resync_red_penalty_cards()
 
@@ -845,6 +861,7 @@ $this.save_team_preset = function(team){
 		'coach': $(`${team_def} .team_base_params [prmname="team_coach"] input`).val(),
 		'shorthand': $(`${team_def} .team_base_params [prmname="club_shorthand"] input`).val(),
 		'player_color': $(`${team_def} .team_base_params [prmname="team_player_color"] .tcolour.col_selected`).attr('tc') || '000000',
+		'shorts_color': $(`${team_def} .team_base_params [prmname="team_shorts_color"] .tcolour.col_selected`).attr('tc') || '000000',
 		'gk_color': $(`${team_def} .team_base_params [prmname="team_gk_color"] .tcolour.col_selected`).attr('tc') || '000000',
 		'logo': has_logo || null,
 		'main_players': [],
@@ -935,6 +952,8 @@ $this.load_team_preset = function(event){
 	tgt_team.find('.team_base_params .tcolour').removeClass('col_selected');
 	// Set players colour
 	tgt_team.find(`.team_base_params [prmname="team_player_color"] .tcolour[tc="${team_preset.player_color}"]`).addClass('col_selected');
+	// Set player shorts colour
+	tgt_team.find(`.team_base_params [prmname="team_shorts_color"] .tcolour[tc="${team_preset.shorts_color}"]`).addClass('col_selected');
 	// Set goalkeeper colour
 	tgt_team.find(`.team_base_params [prmname="team_gk_color"] .tcolour[tc="${team_preset.gk_color}"]`).addClass('col_selected');
 
@@ -1434,11 +1453,13 @@ $this.hide_field_layout = async function(team){
 }
 
 
+
+
+
 $this.save_vs_sublines = function(){
 	ksys.context.module.prm('vs_title_bottom_upper_line', $('#vs_text_bottom_upper')[0].value, false)
 	ksys.context.module.prm('vs_title_bottom_lower_line', $('#vs_text_bottom_lower')[0].value)
 }
-
 
 $this.show_vs_title = async function(){
 	const _ctx = ksys.context.module.cache;
@@ -1463,7 +1484,6 @@ $this.show_vs_title = async function(){
 	ksys.btns.pool.show_splash.toggle(true)
 }
 
-
 $this.hide_vs_title = async function(){
 	ksys.btns.pool.show_splash.toggle(false)
 	ksys.btns.pool.hide_splash.toggle(false)
@@ -1471,6 +1491,24 @@ $this.hide_vs_title = async function(){
 	ksys.btns.pool.show_splash.toggle(true)
 	ksys.btns.pool.hide_splash.toggle(true)
 }
+
+$this.save_commenter = function(){
+	ksys.context.module.prm('todays_commenter', $('#commenter_name_input')[0].value)
+}
+
+$this.show_commenter = async function(){
+	await $this.titles.commenter.set_text(
+		'name',
+		$('#commenter_name_input')[0].value
+	)
+	await $this.titles.commenter.overlay_in(1)
+}
+
+$this.hide_commenter = async function(){
+	await $this.titles.commenter.overlay_out(1)
+}
+
+
 
 
 $this.goal_score_on = async function(){
@@ -1544,6 +1582,10 @@ $this.show_coach = async function(team){
 		'name',
 		ksys.strf.params.coach.format($(`${teamdef} [prmname="team_coach"] input`)[0].value)
 	)
+	await $this.titles.coach.set_img_src(
+		'club_logo',
+		$(teamdef).attr('logo_path')
+	)
 	await $this.titles.coach.overlay_in(1)
 
 	ksys.btns.pool.show_coach_team1.toggle(true)
@@ -1565,21 +1607,233 @@ $this.hide_coach = async function(){
 	ksys.btns.pool.hide_coach_team2.toggle(true)
 }
 
-
-$this.timer_callback = function(tick){
-	const minutes = Math.floor(tick.global / 60)
-	const seconds = tick.global - (60*minutes)
-	$this.titles.timer.set_text('base_ticker', `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`)
+$this.shadow_swap = async function(){
+	const leaving_player = $('#replacement .replacement_list.replacement_leaving .selected_replacement')
+	const incoming_player = $('#replacement .replacement_list.replacement_incoming .selected_replacement')
+	if (!leaving_player[0] || !incoming_player[0]){
+		return
+	}
+	const new_player_elem = $this.playerbase.global_index[incoming_player.attr('namecode')].get_generic_player_item(true)
+	$(`.ftfield [namecode="${leaving_player.attr('namecode')}"]`).replaceWith(new_player_elem)
 }
 
 
-$this.extra_timer_callback = function(tick){
-	const minutes = Math.floor(tick.global / 60)
-	const seconds = tick.global - (60*minutes)
-	$this.titles.timer.set_text('extra_ticker', `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`)
+$this.filter_players_for_score = function(event){
+
+	const pool = document.querySelector('#score_ctrl_player_search_pool')
+	// Query from the text input
+	const tquery = event.target.value.toLowerCase();
+
+	// Clear the filtered pool
+	pool.innerHTML = '';
+
+	for (let player_index in $this.playerbase.global_index){
+		const player = $this.playerbase.global_index[player_index]
+
+		if (player.namecode.includes(tquery)){
+			const player_elem = player.get_generic_player_item(false)
+			player_elem.onclick = function(event){
+				$(event.target).closest('#score_ctrl_player_search_pool').find('.generic_player_item').removeClass('selected_to_punish')
+				event.target.closest('.generic_player_item').classList.add('selected_to_punish')
+			}
+			pool.append(player_elem)
+		}
+	}
 }
 
 
+
+
+
+
+
+// ================================
+//        Scores
+// ================================
+
+$this.add_score = function(team){
+	const selected_player = $('#score_ctrl_player_search_pool .generic_player_item.selected_to_punish').attr('namecode')
+	if (!selected_player){return};
+	const player_info = $this.playerbase.global_index[selected_player]
+	$this.push_score(team, player_info.surname)
+}
+
+$this.push_score = function(team, surname, time=null, ag=false){
+	// print(
+	// 	'kys',
+	// 	time,
+	// 	$this?.base_counter?.tick?.global,
+	// 	$this?.extra_counter?.tick?.global,
+	// )
+	const calc_time = Math.ceil(
+		(
+			($this?.base_counter?.tick?.global || 1)
+			+
+			($this?.extra_counter?.tick?.global || 1)
+		)
+		/
+		60
+	)
+	const score_elem = $(`
+		<div class="team_score_record">
+			<input onchange="$this.update_scores()" value="${time || calc_time}" type="text" class="score_record_time">
+			<input onchange="$this.update_scores()" value="${surname}" type="text" class="score_record_player">
+			АГ:
+			<input${ag ? ' checked' : ''} type="checkbox" onchange="$this.update_scores()" class="score_record_ag">
+		</div>
+	`)
+
+	score_elem[0].oncontextmenu = function(event){
+		if (event.altKey){
+			event.target.closest('.team_score_record').remove()
+			$this.update_scores()
+		}
+	}
+
+	$(`#score_ctrl_team${team} .score_ctrl_table`)[0].append(score_elem[0])
+
+	$this.update_scores()
+}
+
+$this.update_scores = function(){
+	const score_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
+	const score_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
+	$this.titles.timer.set_text('score_l', score_l)
+	$this.titles.timer.set_text('score_r', score_r)
+
+	const score_map = {
+		'1': [],
+		'2': [],
+	};
+
+	for (let team of ['1', '2']){
+		for (let goal of document.querySelectorAll(`#score_ctrl_team${team} .score_ctrl_table .team_score_record`)){
+			score_map[team].push({
+				'time': goal.querySelector('.score_record_time').value,
+				'surname': goal.querySelector('.score_record_player').value,
+				'namecode': goal.getAttribute('namecode'),
+				'ag': goal.querySelector('.score_record_ag').checked,
+			})
+		}
+	}
+
+	ksys.db.module.write('scores.fball', JSON.stringify(score_map, null, 4))
+
+}
+
+$this.score_sum_vis = async function(state){
+	if (state == true){
+
+		const nums_l = [];
+		const names_l = [];
+		for (let player of document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record')){
+			// nums_l.push(player.querySelector('.score_record_time').value + `'`)
+			names_l.push(
+				ksys.strf.params.players.format(player.querySelector('.score_record_player').value)
+				+
+				' '
+				+
+				player.querySelector('.score_record_time').value
+				+
+				`'`
+				+
+				(player.querySelector('.score_record_ag').checked ? ' (АГ)' : '')
+			)
+		}
+
+
+		const nums_r = [];
+		const names_r = [];
+		for (let player of document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record')){
+			// nums_r.push(player.querySelector('.score_record_time').value + `'`)
+			names_r.push(
+				(player.querySelector('.score_record_ag').checked ? '(АГ) ' : '')
+				+
+				player.querySelector('.score_record_time').value
+				+
+				`'`
+				+
+				' '
+				+
+				ksys.strf.params.players.format(player.querySelector('.score_record_player').value)
+			)
+		}
+
+
+
+		// composite
+		const score_amt_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
+		const score_amt_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
+		await $this.titles.final_scores.set_text('score_sum', `${score_amt_l} : ${score_amt_r}`)
+
+		// Show the appropriate amount of fields
+		await $this.titles.final_scores.toggle_img('anim_full', false)
+		await $this.titles.final_scores.toggle_img('anim_half', false)
+		/*
+		if (score_amt_l > 2 || score_amt_r > 2){
+			await $this.titles.final_scores.toggle_img('anim_full', true)
+		}else{
+			names_r.unshift(' ')
+			names_r.unshift(' ')
+			names_l.unshift(' ')
+			names_l.unshift(' ')
+
+			nums_r.unshift(' ')
+			nums_r.unshift(' ')
+			nums_l.unshift(' ')
+			nums_l.unshift(' ')
+			await $this.titles.final_scores.toggle_img('anim_half', true)
+		}*/
+		const need_rows = Math.max(score_amt_l, score_amt_r).clamp(1, 5)
+		$this.titles.final_scores.set_img_src(
+			'upper_bg',
+			Path('C:/custom/vmix_assets/differential').join(`${need_rows}.png`)
+		)
+
+		// Set the numbers/surnames
+		await $this.titles.final_scores.set_text('scores_r', names_r.join('\n'))
+		// await $this.titles.final_scores.set_text('scores_r_num', nums_r.join('\n'))
+
+		await $this.titles.final_scores.set_text('scores_l', names_l.join('\n'))
+		// await $this.titles.final_scores.set_text('scores_l_num', nums_l.join('\n'))
+
+
+
+		// team name LEFT
+		await $this.titles.final_scores.set_text('team_name_l', $this.teams.one.team_name.value.upper())
+		// team logo LEFT
+		await $this.titles.final_scores.set_img_src('team_logo_l', $this.teams.one.logo())
+
+		// team name RIGHT
+		await $this.titles.final_scores.set_text('team_name_r', $this.teams.two.team_name.value.upper())
+		// team logo RIGHT
+		await $this.titles.final_scores.set_img_src('team_logo_r', $this.teams.two.logo())
+
+		// show the title
+		await $this.titles.final_scores.overlay_in(1)
+	}
+
+	if (state == false){
+		await $this.titles.final_scores.overlay_out(1)
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ================================
+//        Timers
+// ================================
 
 
 $this.start_base_timer = async function(rnum){
@@ -1588,7 +1842,10 @@ $this.start_base_timer = async function(rnum){
 		$this.base_counter = null;
 	}
 
+	$this?.extra_counter?.force_kill()
+
 	await $this.titles.timer.set_text('extra_ticker', '00:00');
+	await $this.extra_time_vis(false)
 
 	ksys.context.module.prm('round_num', rnum)
 
@@ -1597,7 +1854,8 @@ $this.start_base_timer = async function(rnum){
 	await $this.titles.timer.set_text('base_ticker', (rnum == 1) ? '00:00' : '45:00');
 
 	$this.base_counter = ksys.ticker.spawn({
-		'duration': (rnum == 2) ? (((dur*60)*2)+1) : ((dur*60)+1),
+		// 'duration': (rnum == 2) ? (((dur*60)*1)+1) : ((dur*60)+1),
+		'duration': ((dur*60)+1),
 		'name': `giga_timer${rnum}`,
 		'offset': (rnum == 2) ? (dur*60) : 0,
 		'infinite': false,
@@ -1613,6 +1871,7 @@ $this.start_base_timer = async function(rnum){
 		if (_ticker){
 			_ticker.force_kill()
 			if (document.querySelector('#timer_ctrl_additional input').value.trim() && !pre_killed){
+			// if (document.querySelector('#timer_ctrl_additional input').value.trim()){
 				$this.launch_extra_time()
 			}
 		}
@@ -1622,6 +1881,50 @@ $this.start_base_timer = async function(rnum){
 
 }
 
+$this.timer_callback = function(tick){
+	const minutes = Math.floor(tick.global / 60)
+	const seconds = tick.global - (60*minutes)
+	$this.titles.timer.set_text('base_ticker', `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`)
+}
+
+$this.resume_main_timer_from_offset = function(event){
+
+	if ($this.base_counter){
+		$this.base_counter.force_kill()
+		$this.base_counter = null;
+	}
+
+	const rnum = int(ksys.context.module.prm('round_num')) || 1;
+
+	const offs = eval(document.querySelector('#timer_ctrl_base_resume input').value);
+
+	const dur = (45*60);
+
+	$this.base_counter = ksys.ticker.spawn({
+		// 'duration': (rnum == 2) ? ((dur*2)+1) : (dur+1),
+		'duration': (dur-(offs%dur))+1,
+		'name': `giga_timer_offs${rnum}`,
+		// 'offset': (rnum == 2) ? (dur+offs) : (0+offs),
+		'offset': offs,
+		'infinite': false,
+		'reversed': false,
+		'callback': $this.timer_callback,
+		'wait': true,
+	})
+
+	$this.base_counter.fire()
+	.then(function(_ticker) {
+		// turn off automatically
+		if (_ticker){
+			_ticker.force_kill()
+			if (document.querySelector('#timer_ctrl_additional input').value.trim()){
+				$this.launch_extra_time()
+			}
+		}
+	})
+
+	// print($this.base_counter)
+}
 
 $this.main_timer_vis = async function(state){
 	const title = $this.titles.timer;
@@ -1630,16 +1933,33 @@ $this.main_timer_vis = async function(state){
 		// player_color_picker
 		// gk_color_picker
 
+
+
 		// TEAM COLOR L
-		const team_col_l =
+		// t-shirts
+		const team_col_l_top =
 		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`${$($this.teams[1].player_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}_l.png`);
-		await title.set_img_src(`team_col_l`, str(team_col_l))
+		.join(`l_top_${$($this.teams[1].player_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
+		await title.set_img_src(`team_col_l_top`, str(team_col_l_top))
+		// shorts
+		const team_col_l_bot =
+		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
+		.join(`l_bot_${$($this.teams[1].shorts_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
+		await title.set_img_src(`team_col_l_bot`, str(team_col_l_bot))
+
 		// TEAM COLOR R
-		const team_col_r =
+		// t-shirts
+		const team_col_r_top =
 		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`${$($this.teams[2].player_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}_r.png`);
-		await title.set_img_src(`team_col_r`, str(team_col_r))
+		.join(`r_top_${$($this.teams[2].player_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
+		await title.set_img_src(`team_col_r_top`, str(team_col_r_top))
+		// shorts
+		const team_col_r_bot =
+		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
+		.join(`r_bot_${$($this.teams[2].shorts_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
+		await title.set_img_src(`team_col_r_bot`, str(team_col_r_bot))
+
+
 
 		await title.set_text('command_l', $this.teams[1].shorthand.value)
 		await title.set_text('command_r', $this.teams[2].shorthand.value)
@@ -1654,18 +1974,7 @@ $this.main_timer_vis = async function(state){
 	}
 }
 
-$this.extra_time_vis = async function(state){
-	if (state == true){
-		$this.titles.timer.toggle_text('time_added', true)
-		$this.titles.timer.toggle_text('extra_ticker', true)
-		$this.titles.timer.toggle_img('extra_time_bg', true)
-	}
-	if (state == false){
-		$this.titles.timer.toggle_text('time_added', false)
-		$this.titles.timer.toggle_text('extra_ticker', false)
-		$this.titles.timer.toggle_img('extra_time_bg', false)
-	}
-}
+
 
 
 $this.launch_extra_time = async function(){
@@ -1708,228 +2017,29 @@ $this.launch_extra_time = async function(){
 	await $this.titles.timer.toggle_text('extra_ticker', true)
 }
 
+$this.extra_timer_callback = function(tick){
+	const minutes = Math.floor(tick.global / 60)
+	const seconds = tick.global - (60*minutes)
+	$this.titles.timer.set_text('extra_ticker', `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`)
+}
 
-
-$this.score_sum_vis = async function(state){
+$this.extra_time_vis = async function(state){
 	if (state == true){
-
-		const nums_l = [];
-		const names_l = [];
-		for (let player of document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record')){
-			nums_l.push(player.querySelector('.score_record_time').value + `'`)
-			names_l.push(player.querySelector('.score_record_player').value)
-		}
-
-
-		const nums_r = [];
-		const names_r = [];
-		for (let player of document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record')){
-			nums_r.push(player.querySelector('.score_record_time').value + `'`)
-			names_r.push(player.querySelector('.score_record_player').value)
-		}
-
-
-
-		// composite
-		const score_amt_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
-		const score_amt_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
-		await $this.titles.final_scores.set_text('score_sum', `${score_amt_l} : ${score_amt_r}`)
-
-		// Show the appropriate amount of fields
-		await $this.titles.final_scores.toggle_img('anim_full', false)
-		await $this.titles.final_scores.toggle_img('anim_half', false)
-		if (score_amt_l > 2 || score_amt_r > 2){
-			await $this.titles.final_scores.toggle_img('anim_full', true)
-		}else{
-			names_r.unshift(' ')
-			names_r.unshift(' ')
-			names_l.unshift(' ')
-			names_l.unshift(' ')
-
-			nums_r.unshift(' ')
-			nums_r.unshift(' ')
-			nums_l.unshift(' ')
-			nums_l.unshift(' ')
-			await $this.titles.final_scores.toggle_img('anim_half', true)
-		}
-
-		// Set the numbers/surnames
-		await $this.titles.final_scores.set_text('scores_r', names_r.join('\n'))
-		await $this.titles.final_scores.set_text('scores_r_num', nums_r.join('\n'))
-
-		await $this.titles.final_scores.set_text('scores_l', names_l.join('\n'))
-		await $this.titles.final_scores.set_text('scores_l_num', nums_l.join('\n'))
-
-
-
-		// team name LEFT
-		await $this.titles.final_scores.set_text('team_name_l', $this.teams.one.team_name.value.upper())
-		// team logo LEFT
-		await $this.titles.final_scores.set_img_src('team_logo_l', $this.teams.one.logo())
-
-		// team name RIGHT
-		await $this.titles.final_scores.set_text('team_name_r', $this.teams.two.team_name.value.upper())
-		// team logo RIGHT
-		await $this.titles.final_scores.set_img_src('team_logo_r', $this.teams.two.logo())
-
-		// show the title
-		await $this.titles.final_scores.overlay_in(1)
+		await $this.titles.timer.toggle_text('time_added', true)
+		await $this.titles.timer.toggle_text('extra_ticker', true)
+		await $this.titles.timer.toggle_img('extra_time_bg', true)
 	}
-
 	if (state == false){
-		await $this.titles.final_scores.overlay_out(1)
-	}
-}
-
-$this.update_scores = function(){
-	const score_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
-	const score_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
-	$this.titles.timer.set_text('score_l', score_l)
-	$this.titles.timer.set_text('score_r', score_r)
-
-	const score_map = {
-		'1': [],
-		'2': [],
-	};
-
-	for (let team of ['1', '2']){
-		for (let goal of document.querySelectorAll(`#score_ctrl_team${team} .score_ctrl_table .team_score_record`)){
-			score_map[team].push({
-				'time': goal.querySelector('.score_record_time').value,
-				'surname': goal.querySelector('.score_record_player').value,
-				'namecode': goal.getAttribute('namecode'),
-			})
-		}
-	}
-
-	ksys.db.module.write('scores.fball', JSON.stringify(score_map, null, 4))
-
-}
-
-$this.push_score = function(team, surname, time=null){
-	// print(
-	// 	'kys',
-	// 	time,
-	// 	$this?.base_counter?.tick?.global,
-	// 	$this?.extra_counter?.tick?.global,
-	// )
-	const calc_time = Math.ceil(
-		(
-			($this?.base_counter?.tick?.global || 1)
-			+
-			($this?.extra_counter?.tick?.global || 1)
-		)
-		/
-		60
-	)
-	const score_elem = $(`
-		<div class="team_score_record">
-			<input onchange="$this.update_scores()" value="${time || calc_time}" type="text" class="score_record_time">
-			<input onchange="$this.update_scores()" value="${surname}" type="text" class="score_record_player">
-		</div>
-	`)
-
-	score_elem[0].oncontextmenu = function(event){
-		if (event.altKey){
-			event.target.closest('.team_score_record').remove()
-			$this.update_scores()
-		}
-	}
-
-	$(`#score_ctrl_team${team} .score_ctrl_table`)[0].append(score_elem[0])
-
-	$this.update_scores()
-}
-
-
-$this.add_score = function(team){
-	const selected_player = $('#score_ctrl_player_search_pool .generic_player_item.selected_to_punish').attr('namecode')
-	if (!selected_player){return};
-	const player_info = $this.playerbase.global_index[selected_player]
-	$this.push_score(team, player_info.surname)
-}
-
-
-$this.shadow_swap = async function(){
-	const leaving_player = $('#replacement .replacement_list.replacement_leaving .selected_replacement')
-	const incoming_player = $('#replacement .replacement_list.replacement_incoming .selected_replacement')
-	if (!leaving_player[0] || !incoming_player[0]){
-		return
-	}
-	const new_player_elem = $this.playerbase.global_index[incoming_player.attr('namecode')].get_generic_player_item(true)
-	$(`.ftfield [namecode="${leaving_player.attr('namecode')}"]`).replaceWith(new_player_elem)
-}
-
-
-$this.filter_players_for_score = function(event){
-
-	const pool = document.querySelector('#score_ctrl_player_search_pool')
-	// Query from the text input
-	const tquery = event.target.value.toLowerCase();
-
-	// Clear the filtered pool
-	pool.innerHTML = '';
-
-	for (let player_index in $this.playerbase.global_index){
-		const player = $this.playerbase.global_index[player_index]
-
-		if (player.namecode.includes(tquery)){
-			const player_elem = player.get_generic_player_item(false)
-			player_elem.onclick = function(event){
-				$(event.target).closest('#score_ctrl_player_search_pool').find('.generic_player_item').removeClass('selected_to_punish')
-				event.target.closest('.generic_player_item').classList.add('selected_to_punish')
-			}
-			pool.append(player_elem)
-		}
+		await $this.titles.timer.toggle_text('time_added', false)
+		await $this.titles.timer.toggle_text('extra_ticker', false)
+		await $this.titles.timer.toggle_img('extra_time_bg', false)
 	}
 }
 
 
-$this.resume_main_timer_from_offset = function(event){
 
-	if ($this.base_counter){
-		$this.base_counter.force_kill()
-		$this.base_counter = null;
-	}
-
-	const rnum = int(ksys.context.module.prm('round_num')) || 1;
-
-	const offs = eval(document.querySelector('#timer_ctrl_base_resume input').value);
-
-	const dur = (45*60);
-
-	$this.base_counter = ksys.ticker.spawn({
-		// 'duration': (rnum == 2) ? ((dur*2)+1) : (dur+1),
-		'duration': (dur-(offs%dur))+1,
-		'name': `giga_timer_offs${rnum}`,
-		// 'offset': (rnum == 2) ? (dur+offs) : (0+offs),
-		'offset': offs,
-		'infinite': false,
-		'reversed': false,
-		'callback': $this.timer_callback,
-		'wait': true,
-	})
-
-	$this.base_counter.fire()
-	.then(function(_ticker) {
-		// turn off automatically
-		if (_ticker){
-			_ticker.force_kill()
-			if (document.querySelector('#timer_ctrl_additional input').value.trim()){
-				$this.launch_extra_time()
-			}
-		}
-	})
-
-	// print($this.base_counter)
-}
 
 
 $this.stop_extra_time = function(){
 	$this?.extra_counter?.force_kill()
 }
-
-
-
-
-

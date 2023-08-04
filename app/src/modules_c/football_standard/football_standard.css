@@ -34,6 +34,12 @@ body.emergency_break
 .team_param .colour_picker .tcolour.col_selected
 {
 	outline: 2px solid cyan;
+	outline-offset: 1px;
+}
+
+.team_param.palette_hover_vis:hover
+{
+	background: rgba(60, 60, 60, 1);
 }
 
 
@@ -82,7 +88,7 @@ body.emergency_break
 
 tab
 {
-	padding-top: 100px;
+	/*padding-top: 100px;*/
 	display: flex;
 	flex-direction: column;
 }
@@ -769,6 +775,7 @@ tab.tab_hidden
 {
 	min-width: 120px;
 	min-height: 120px;
+	width: fit-content;
 	background: #1B1B1B;
 }
 
@@ -918,43 +925,43 @@ img[vis_feedback]
 
 
 
-
+[tabid="replacement"]{
+	padding-top: 50px;
+	overflow: hidden;
+}
 
 #replacement
 {
 	/*margin-top: 25px;*/
 	display: flex;
-	flex-direction: row;
+	flex-direction: column;
 	/*background: blue;*/
 	justify-content: space-around;
+	/*padding-top: 10px !important;*/
+	overflow: hidden;
 }
 
 #replacement #replacement_teams
 {
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
 	align-self: center;
-
+	width: 100%;
+	justify-content: space-around;
 }
 
-#replacement_buttons > div
-{
-	display: flex;
-	flex-direction: column;
-	height: fit-content;
-	/*position: sticky;*/
-	position: fixed;
-	top: 100px;
-}
 
 
 #replacement .replacement_team
 {
-	margin-top: 50px;
+	/*margin-top: 50px;*/
 	display: flex;
 	flex-direction: column;
 	/*justify-content: center;*/
 	/*background: cyan;*/
+	background: rgba(0, 0, 0, 0.3);
+	padding: 7px;
+	outline: 1px solid rgb(70, 70, 70)
 }
 
 #replacement .replacement_team .replacement_team_head
@@ -1031,7 +1038,7 @@ img[vis_feedback]
 	/*background: red;*/
 	font-size: 70px;
 	font-family: 'tahoma_bold';
-	margin: 0px 40px 0px 40px;
+	margin: 0px 10px 0px 10px;
 	justify-content: center;
 	align-items: center;
 	height: 100%;
@@ -1051,7 +1058,8 @@ img[vis_feedback]
 	outline: 1px solid rgb(90, 90, 90);
 	padding: 15px;
 
-	height: 500px;
+	/*height: 500px;*/
+	height: 420px;
 	width: 350px;
 	position: relative;
 }
@@ -1073,7 +1081,7 @@ img[vis_feedback]
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
-	margin-top: 75px;
+	/*margin-top: 75px;*/
 }
 
 
@@ -1109,7 +1117,7 @@ img[vis_feedback]
 }
 
 
-#layout_buttons_vs_ctrl
+#layout_buttons_vs_ctrl, #commenter_ctrl
 {
 	/*margin-top: 75px;*/
 	display: flex;
@@ -1121,13 +1129,15 @@ img[vis_feedback]
 	outline: 1px solid rgb(90, 90, 90);
 }
 
-#layout_buttons_vs_ctrl_head
+#layout_buttons_vs_ctrl_head,
+#commenter_ctrl_head
 {
 	display: flex;
 	flex-direction: column;
 }
 
-#layout_buttons_vs_ctrl_head .layout_buttons_vs_ctrl_head_minititle
+#layout_buttons_vs_ctrl_head .layout_buttons_vs_ctrl_head_minititle,
+#commenter_ctrl_head .layout_buttons_vs_ctrl_head_minititle
 {
 	user-select: none;
 	display: flex;
@@ -1136,19 +1146,22 @@ img[vis_feedback]
 	justify-content: center;
 }
 
-#layout_buttons_vs_ctrl_head input
+#layout_buttons_vs_ctrl_head input,
+#commenter_ctrl_head input
 {
 	width: 750px;
 	font-size: 21px;
 }
 
-#layout_buttons_vs_ctrl_body
+#layout_buttons_vs_ctrl_body,
+#commenter_ctrl_body
 {
 	display: flex;
 	flex-direction: row;
 }
 
-#layout_buttons_vs_ctrl vmixbtn
+#layout_buttons_vs_ctrl vmixbtn,
+#commenter_ctrl vmixbtn
 {
 	width: 200px;
 	height: 200px;
@@ -1368,6 +1381,16 @@ img[vis_feedback]
 #score_ctrl .score_ctrl_table .team_score_record
 {
 	margin-top: 7px;
+	display: flex;
+}
+
+#score_ctrl .score_ctrl_table .team_score_record .score_record_ag{
+	/*height: 15px;*/
+	width: 40px;
+}
+
+#score_ctrl .score_ctrl_table .team_score_record .score_record_player{
+	margin-right: 10px;
 }
 
 #score_ctrl_buttons

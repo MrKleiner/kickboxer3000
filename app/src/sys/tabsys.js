@@ -17,11 +17,18 @@ _tabsys.resync = function(){
 			$('tabsys sys-tab').removeClass('active_tab')
 			$(elem.target).closest('sys-tab').addClass('active_tab')
 			$(`tab[tabid="${self_id}"]`).removeClass('tab_hidden')
+			ksys.context.module.prm('_tabsys_active_tab_id', self_id)
 		}
 	}
 
-	// activate default tab
-	$('tabsys sys-tab[default]').click()
+	// activate default tab, if no saved tab was found
+	const last_tab = ksys.context.module.prm('_tabsys_active_tab_id')
+	if (last_tab){
+		print('Switching to', last_tab)
+		$(`tabsys sys-tab[match_id="${last_tab}"]`).click()
+	}else{
+		$('tabsys sys-tab[default]').click()
+	}
 
 }
 
