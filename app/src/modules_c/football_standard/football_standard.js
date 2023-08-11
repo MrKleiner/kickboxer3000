@@ -55,6 +55,14 @@ kbmodules.football_standard.index_titles = function(ctx){
 				'margin': 100,
 			}
 		}),
+		'ycbr_card': new vmix.title({
+			'title_name': 'ycbr.gtzip',
+			'timings': {
+				'fps': 25,
+				'frames_in': 36,
+				'margin': 100,
+			}
+		}),
 
 		// replacements
 		'replacement_out': new vmix.title({
@@ -131,6 +139,17 @@ kbmodules.football_standard.index_titles = function(ctx){
 			'timings': {
 				'fps': 25,
 				'frames_in': 59,
+				'margin': 100,
+			}
+		}),
+
+		// Statistics
+		'stats': new vmix.title({
+			'title_name': 'stats.gtzip',
+			'timings': {
+				'fps': 10,
+				'frames_in': 30,
+				'frames_out': 10,
 				'margin': 100,
 			}
 		}),
@@ -363,7 +382,7 @@ kbmodules.football_standard.load = async function(){
 		for (let team of ['1', '2']){
 			for (let score of prev_scores[team]){
 				// kbmodules.football_standard.playerbase.global_index[score.namecode].score(team, score.time)
-				kbmodules.football_standard.push_score(team, score.surname, score.time, score.ag)
+				kbmodules.football_standard.push_score(team, score.surname, score.time, score.ag, score.penalty)
 			}
 		}
 	}
@@ -374,8 +393,46 @@ kbmodules.football_standard.load = async function(){
 
 	// Commenter
 	$('#commenter_name_input')[0].value = ksys.context.module.cache.todays_commenter || '';
-
 	kbmodules.football_standard.resync_red_penalty_cards()
+
+	//
+	// stats
+	//
+	{
+		const prev_stats = JSON.parse(ksys.db.module.read('stats.fball')) || {'1':{}, '2':{}};
+
+		kbmodules.football_standard.stats_unit_pool = {};
+
+		const stats = [
+			['1',            'l_text_r1', 'r_text_r1', 'УДАРИ'],
+			['2',            'l_text_r2', 'r_text_r2', 'УДАРИ У ПЛОЩИНУ'],
+			['3',            'l_text_r3', 'r_text_r3', 'КУТОВІ'],
+			['4',            'l_text_r4', 'r_text_r4', 'ОФСАЙДИ'],
+			['5',            'l_text_r5', 'r_text_r5', 'ФОЛИ'],
+			['yellow_cards', 'l_text_r6', 'r_text_r6', 'ЖОВТІ КАРТКИ'],
+			['red_cards',    'l_text_r7', 'r_text_r7', 'ЧЕРВОНІ КАРТКИ'],
+		]
+
+		for (const stat_info of stats){
+			const stat_name = str(stat_info[0]);
+
+			const stat_class = 
+				new kbmodules.football_standard.stat_unit(
+					kbmodules.football_standard.titles.stats,
+					stat_info[1],
+					stat_info[2],
+					stat_info[3],
+
+					// init val team 1
+					prev_stats?.[stat_name]?.['1'],
+					// init val team 2
+					prev_stats?.[stat_name]?.['2'],
+				)
+
+			kbmodules.football_standard.stats_unit_pool[stat_name] = stat_class;
+		}
+
+	}
 
 }
 // kbmodules.football_standard.load()
@@ -561,6 +618,10 @@ kbmodules.football_standard.player_ctrl = class {
 		this.number = number;
 		this.is_reserve = is_reserve;
 		this.scores = 0;
+		this.stats = {
+			'yellow_cards': 0,
+			'red_cards': 0,
+		}
 		// important todo: WHAT THE FUCK IS THIS ?!!!
 		const _team_selector = {
 			1: 'one',
@@ -727,14 +788,18 @@ kbmodules.football_standard.player_ctrl = class {
 		return !!this.team.field[0].querySelector(`[namecode="${this.namecode}"]`)
 	}
 
-	async penalty_card(_card){
+	async penalty_card(_card, selected_elem){
 		const _ctx = ksys.context.module.cache;
 
 		const card_selection = {
 			'yellow': 'yellow_card',
 			'red':    'red_card',
+			'ycbr':   'ycbr_card',
 		}
-		const card = kbmodules.football_standard.titles[card_selection[_card]];
+		let card = kbmodules.football_standard.titles[card_selection[_card]];
+		if (_card == 'yellow' && this.stats.yellow_cards >= 1){
+			card = kbmodules.football_standard.titles['ycbr_card']
+		}
 
 		kbmodules.football_standard.next_card_out = card;
 
@@ -751,8 +816,14 @@ kbmodules.football_standard.player_ctrl = class {
 		})
 
 		if (_card == 'red'){
+			kbmodules.football_standard.stats_unit_pool.red_cards.upd_value(this.team.num, 1)
 			ksys.context.module.prm(`team${this.team.num}_rcard_count`, (`team${this.team.num}_rcard_count` in _ctx) ? (_ctx[`team${this.team.num}_rcard_count`] += 1).clamp(0, 3) : 1)
 			kbmodules.football_standard.resync_red_penalty_cards()
+			this.stats.red_cards += 1;
+		}else{
+			kbmodules.football_standard.stats_unit_pool.yellow_cards.upd_value(this.team.num, 1)
+			this.stats.yellow_cards += 1;
+			selected_elem.click()
 		}
 
 		// show the card in vmix
@@ -770,7 +841,189 @@ kbmodules.football_standard.player_ctrl = class {
 		})
 
 	}
+
+	pardon(elem){
+		kbmodules.football_standard.stats_unit_pool.yellow_cards.upd_value(this.team.num, -1)
+		this.stats.yellow_cards -= 1;
+		elem.click();
+	}
 }
+
+
+kbmodules.football_standard.save_match_stats = function(){
+	const save = {};
+	console.time('Saving stats')
+	for (const stat_name in kbmodules.football_standard.stats_unit_pool){
+		const stat = kbmodules.football_standard.stats_unit_pool[stat_name];
+		save[stat_name] = {
+			1: int(stat.val_selector[1]),
+			2: int(stat.val_selector[2]),
+		}
+	}
+
+	ksys.db.module.write('stats.fball', JSON.stringify(save, null, 4))
+
+	console.timeEnd('Saving stats')
+}
+
+// stat unit
+kbmodules.football_standard.stat_unit = class {
+	constructor(related_title, team1_txt_block, team2_txt_block, visname, init_val_t1=0, init_val_t2=0){
+		this.related_title = related_title;
+		this.visname = visname;
+		this.elem_index = {};
+		const _self = this;
+
+		this.text_field_selector = {
+			1: team1_txt_block,
+			2: team2_txt_block,
+		}
+
+		this.val_selector = {
+			1: int(init_val_t1) || 0,
+			2: int(init_val_t2) || 0,
+		}
+
+		this.vis_echo = {
+			1: [],
+			2: [],
+		};
+
+
+		//
+		// append table row to both tables
+		//
+
+		for (const tnum of [1, 2]){
+			$(`.tstats_table_${tnum}`).append(this.table_row_elem(tnum))
+		}
+
+		//
+		// Create quick buttons
+		//
+		for (const tnum of [1, 2]){
+			$(`.tstats_buttons_team_${tnum}`).append(this.quick_button(tnum))
+		}
+
+	}
+
+	// get html element of a quick button
+	quick_button(team){
+		const _self = this;
+
+		const qbtn_html = `
+			<div class="team_stat_quick_btn_pair">
+				<div class="team_stat_quick_btn_vis_value">${this.val_selector[team]}</div>
+				<sysbtn stat_action="add" class="team_stat_quick_btn_add">+ ${this.visname}</sysbtn>
+				<sysbtn stat_action="subt" class="team_stat_quick_btn_subt">- ${this.visname}</sysbtn>
+			</div>
+		`
+
+		const qbtn_index = ksys.tplates.index_elem(
+			qbtn_html,
+			{
+				'add': '.team_stat_quick_btn_add',
+				'subt': '.team_stat_quick_btn_subt',
+				'vis_val': '.team_stat_quick_btn_vis_value',
+			}
+		);
+
+		qbtn_index.index.add.onclick = function(){
+			_self.upd_value(team, 1)
+		}
+		qbtn_index.index.subt.onclick = function(){
+			_self.upd_value(team, -1)
+		}
+
+		// register for echo
+		this.vis_echo[team].push({
+			'echo_type': 'elem_text',
+			'tgt': qbtn_index.index.vis_val,
+		})
+
+		return qbtn_index.elem
+	}
+
+	table_row_elem(team){
+		const _self = this;
+
+		const stat_unit_table_row_html = `
+			<div class="stat_unit_table_row">
+				${this.visname}
+				<input noctrl type="number">
+			</div>
+		`
+		// create and index row element
+		const row_elem = ksys.tplates.index_elem(
+			stat_unit_table_row_html,
+			{'inp': 'input'}
+		)
+		row_elem.index.inp.value = this.val_selector[team]
+		row_elem.index.inp.onchange = function(evt){
+			_self.set_value(team, int(evt.target.value) || 0)
+		}
+		row_elem.index.inp.onclick = function(evt){
+			evt.target.select()
+		}
+
+		// register for echo
+		this.vis_echo[team].push({
+			'echo_type': 'input',
+			'tgt': row_elem.index.inp,
+		})
+
+		return row_elem.elem
+	}
+
+	// set value to a specific number
+	set_value(team, val){
+		// update vmix title
+		this.related_title.set_text(this.text_field_selector[team], val)
+		// update self info
+		this.val_selector[team] = val;
+		// update values in the table rows, etc
+		this.forward_vis_echo()
+		// save stats to file
+		kbmodules.football_standard.save_match_stats()
+	}
+
+	// addition subtraction
+	// addition/subtraction is determined by the input value
+	// which means to subtract from the value - pass a negative integer
+	upd_value(team, val){
+		// basically same as set_value, except it's addition/subtraction
+		const new_val = this.val_selector[team] + val;
+		this.val_selector[team] = Math.max(new_val, 0);
+		this.related_title.set_text(this.text_field_selector[team], this.val_selector[team]);
+		// update values in the table rows, etc
+		this.forward_vis_echo()
+		// save stats to file
+		kbmodules.football_standard.save_match_stats()
+	}
+
+	// update values in the table rows, etc
+	forward_vis_echo(){
+		// each element of the echo array should have a value property
+		for (const team of [1, 2]){
+			for (const echo of this.vis_echo[team]){
+				if (echo.echo_type == 'input'){
+					echo.tgt.value = this.val_selector[team];
+				}
+				if (echo.echo_type == 'elem_text'){
+					echo.tgt.innerText = this.val_selector[team];
+				}
+			}
+		}
+	}
+
+	async push_to_vmix(){
+		await this.related_title.set_text(this.text_field_selector[1], this.val_selector[1]);
+		await this.related_title.set_text(this.text_field_selector[2], this.val_selector[2]);
+	}
+
+}
+
+
 
 
 // ================================
@@ -1055,7 +1308,16 @@ kbmodules.football_standard.filter_players_to_punish = function(event){
 		const player = kbmodules.football_standard.playerbase.global_index[player_index];
 		if (player.namecode.includes(tquery)){
 			const filtered_item = player.get_generic_player_item()
-			filtered_item[0].onclick = kbmodules.football_standard.select_player_for_punishment;
+			// filtered_item[0].onclick = kbmodules.football_standard.select_player_for_punishment;
+			filtered_item[0].onclick = function(event){
+				$('#card_player_filter_pool .generic_player_item').removeClass('selected_to_punish')
+				event.target.closest('.generic_player_item').classList.add('selected_to_punish')
+				if (player.stats.yellow_cards > 0){
+					ksys.btns.pool.pardon_yellow_card.toggle(true)
+				}else{
+					ksys.btns.pool.pardon_yellow_card.toggle(false)
+				}
+			}
 			punish_pool.append(filtered_item)
 		}
 	}
@@ -1248,14 +1510,28 @@ kbmodules.football_standard.replacement_player_title = async function(event){
 kbmodules.football_standard.select_player_for_punishment = function(event){
 	$('#card_player_filter_pool .generic_player_item').removeClass('selected_to_punish')
 	event.target.closest('.generic_player_item').classList.add('selected_to_punish')
+	if (player.stats.yellow_cards > 0){
+		ksys.btns.pool.pardon_yellow_card.toggle(true)
+	}else{
+		ksys.btns.pool.pardon_yellow_card.toggle(false)
+	}
 }
 
 kbmodules.football_standard.show_card = async function(card){
 	const selected_player = document.querySelector('#card_player_filter .generic_player_item.selected_to_punish')
 	if (selected_player){
-		const player_object = kbmodules.football_standard.playerbase.global_index[selected_player.getAttribute('namecode')].penalty_card(card);
+		const player_object = kbmodules.football_standard.playerbase.global_index[selected_player.getAttribute('namecode')].penalty_card(card, selected_player);
 	}
 }
+
+kbmodules.football_standard.pardon_player = async function(){
+	const selected_player = document.querySelector('#card_player_filter .generic_player_item.selected_to_punish')
+	if (selected_player){
+		const player_object = kbmodules.football_standard.playerbase.global_index[selected_player.getAttribute('namecode')].pardon(selected_player);
+	}
+}
+
+
 
 kbmodules.football_standard.hide_card = async function(){
 	// disable buttons
@@ -1639,13 +1915,17 @@ kbmodules.football_standard.filter_players_for_score = function(event){
 			player_elem.onclick = function(event){
 				$(event.target).closest('#score_ctrl_player_search_pool').find('.generic_player_item').removeClass('selected_to_punish')
 				event.target.closest('.generic_player_item').classList.add('selected_to_punish')
+				// console.log('kys', player)
+				// if (player.stats.yellow_cards > 0){
+				// 	ksys.btns.pool.pardon_yellow_card.toggle(true)
+				// }else{
+				// 	ksys.btns.pool.pardon_yellow_card.toggle(false)
+				// }
 			}
 			pool.append(player_elem)
 		}
 	}
 }
-
-
 
 
 
@@ -1662,7 +1942,7 @@ kbmodules.football_standard.add_score = function(team){
 	kbmodules.football_standard.push_score(team, player_info.surname)
 }
 
-kbmodules.football_standard.push_score = function(team, surname, time=null, ag=false){
+kbmodules.football_standard.push_score = function(team, surname, time=null, ag=false, penalty=false){
 	// print(
 	// 	'kys',
 	// 	time,
@@ -1683,7 +1963,9 @@ kbmodules.football_standard.push_score = function(team, surname, time=null, ag=f
 			<input onchange="kbmodules.football_standard.update_scores()" value="${time || calc_time}" type="text" class="score_record_time">
 			<input onchange="kbmodules.football_standard.update_scores()" value="${surname}" type="text" class="score_record_player">
 			АГ:
-			<input${ag ? ' checked' : ''} type="checkbox" onchange="kbmodules.football_standard.update_scores()" class="score_record_ag">
+			<input${ag ? ' checked' : ''} type="checkbox" onchange="kbmodules.football_standard.update_scores(); $(event.target).closest('.team_score_record').find('.score_record_penalty').prop('checked', false)" class="score_record_ag score_record_cbox">
+			П:
+			<input${penalty ? ' checked' : ''} type="checkbox" onchange="kbmodules.football_standard.update_scores(); $(event.target).closest('.team_score_record').find('.score_record_ag').prop('checked', false)" class="score_record_penalty score_record_cbox">
 		</div>
 	`)
 
@@ -1717,6 +1999,7 @@ kbmodules.football_standard.update_scores = function(){
 				'surname': goal.querySelector('.score_record_player').value,
 				'namecode': goal.getAttribute('namecode'),
 				'ag': goal.querySelector('.score_record_ag').checked,
+				'penalty': goal.querySelector('.score_record_penalty').checked,
 			})
 		}
 	}
@@ -1732,7 +2015,7 @@ kbmodules.football_standard.score_sum_vis = async function(state){
 		const names_l = [];
 		for (let player of document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record')){
 			// nums_l.push(player.querySelector('.score_record_time').value + `'`)
-			names_l.push(
+			names_l.unshift(
 				ksys.strf.params.players.format(player.querySelector('.score_record_player').value)
 				+
 				' '
@@ -1742,6 +2025,8 @@ kbmodules.football_standard.score_sum_vis = async function(state){
 				`'`
 				+
 				(player.querySelector('.score_record_ag').checked ? ' (АГ)' : '')
+				+
+				(player.querySelector('.score_record_penalty').checked ? ' (П)' : '')
 			)
 		}
 
@@ -1750,8 +2035,10 @@ kbmodules.football_standard.score_sum_vis = async function(state){
 		const names_r = [];
 		for (let player of document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record')){
 			// nums_r.push(player.querySelector('.score_record_time').value + `'`)
-			names_r.push(
+			names_r.unshift(
 				(player.querySelector('.score_record_ag').checked ? '(АГ) ' : '')
+				+
+				(player.querySelector('.score_record_penalty').checked ? '(П) ' : '')
 				+
 				player.querySelector('.score_record_time').value
 				+
@@ -1804,14 +2091,22 @@ kbmodules.football_standard.score_sum_vis = async function(state){
 
 
 		// team name LEFT
-		await kbmodules.football_standard.titles.final_scores.set_text('team_name_l', kbmodules.football_standard.teams.one.team_name.value.upper())
+		await kbmodules.football_standard.titles.final_scores.set_text(
+			'team_name_l',
+			ksys.strf.params.club_name.format(kbmodules.football_standard.teams.one.team_name.value)
+		)
 		// team logo LEFT
 		await kbmodules.football_standard.titles.final_scores.set_img_src('team_logo_l', kbmodules.football_standard.teams.one.logo())
 
 		// team name RIGHT
-		await kbmodules.football_standard.titles.final_scores.set_text('team_name_r', kbmodules.football_standard.teams.two.team_name.value.upper())
+		await kbmodules.football_standard.titles.final_scores.set_text(
+			'team_name_r',
+			ksys.strf.params.club_name.format(kbmodules.football_standard.teams.two.team_name.value)
+		)
 		// team logo RIGHT
 		await kbmodules.football_standard.titles.final_scores.set_img_src('team_logo_r', kbmodules.football_standard.teams.two.logo())
+
+		await kbmodules.football_standard.titles.final_scores.set_text('bottom_text', $('#vs_text_bottom_lower').val())
 
 		// show the title
 		await kbmodules.football_standard.titles.final_scores.overlay_in(1)
@@ -1847,6 +2142,7 @@ kbmodules.football_standard.start_base_timer = async function(rnum){
 	}
 
 	kbmodules.football_standard?.extra_counter?.force_kill()
+	kbmodules.football_standard.extra_counter = null;
 
 	await kbmodules.football_standard.titles.timer.set_text('extra_ticker', '00:00');
 	await kbmodules.football_standard.extra_time_vis(false)
@@ -1874,8 +2170,13 @@ kbmodules.football_standard.start_base_timer = async function(rnum){
 		const pre_killed = _ticker.killed;
 		if (_ticker){
 			_ticker.force_kill()
+			/*
 			if (document.querySelector('#timer_ctrl_additional input').value.trim() && !pre_killed){
 			// if (document.querySelector('#timer_ctrl_additional input').value.trim()){
+				kbmodules.football_standard.launch_extra_time()
+			}
+			*/
+			if (!pre_killed){
 				kbmodules.football_standard.launch_extra_time()
 			}
 		}
@@ -1921,9 +2222,10 @@ kbmodules.football_standard.resume_main_timer_from_offset = function(event){
 		// turn off automatically
 		if (_ticker){
 			_ticker.force_kill()
-			if (document.querySelector('#timer_ctrl_additional input').value.trim()){
-				kbmodules.football_standard.launch_extra_time()
-			}
+			// if (document.querySelector('#timer_ctrl_additional input').value.trim()){
+			// 	kbmodules.football_standard.launch_extra_time()
+			// }
+			kbmodules.football_standard.launch_extra_time()
 		}
 	})
 
@@ -1987,14 +2289,19 @@ kbmodules.football_standard.launch_extra_time = async function(){
 		kbmodules.football_standard.extra_counter = null;
 	}
 
-	const _extra_amount = $('#timer_ctrl_additional input').val()
-	if (!_extra_amount){
-		return
-	}
-	const extra_amount = eval(_extra_amount);
+	await kbmodules.football_standard.update_extra_time_amount()
+
+	/*
+	let extra_amount = $('#timer_ctrl_additional input').val()
 	if (!extra_amount){
 		return
 	}
+	extra_amount = eval(_extra_amount);
+	if (!extra_amount){
+		return
+	}
+	*/
+	const extra_amount = 60;
 
 	kbmodules.football_standard.extra_counter = ksys.ticker.spawn({
 		'duration': extra_amount*60,
@@ -2015,10 +2322,10 @@ kbmodules.football_standard.launch_extra_time = async function(){
 
 	print('EXTRA AMOUNT?!', extra_amount)
 	await kbmodules.football_standard.titles.timer.set_text('extra_ticker', '00:00');
-	await kbmodules.football_standard.titles.timer.set_text('time_added', `+${Math.floor(extra_amount/1)}`)
-	await kbmodules.football_standard.titles.timer.toggle_text('time_added', true)
-	await kbmodules.football_standard.titles.timer.toggle_img('extra_time_bg', true)
-	await kbmodules.football_standard.titles.timer.toggle_text('extra_ticker', true)
+	// await kbmodules.football_standard.titles.timer.set_text('time_added', `+${Math.floor(extra_amount/1)}`)
+	// await kbmodules.football_standard.titles.timer.toggle_text('time_added', true)
+	// await kbmodules.football_standard.titles.timer.toggle_img('extra_time_bg', true)
+	// await kbmodules.football_standard.titles.timer.toggle_text('extra_ticker', true)
 }
 
 kbmodules.football_standard.extra_timer_callback = function(tick){
@@ -2040,10 +2347,67 @@ kbmodules.football_standard.extra_time_vis = async function(state){
 	}
 }
 
-
+kbmodules.football_standard.update_extra_time_amount = async function(){
+	const amount = $('#timer_ctrl_additional input').val()
+	await kbmodules.football_standard.titles.timer.set_text(
+		'time_added',
+		amount ? `+${amount}` : '',
+	)
+}
 
 
 
 kbmodules.football_standard.stop_extra_time = function(){
 	kbmodules.football_standard?.extra_counter?.force_kill()
+	kbmodules.football_standard.extra_counter = null;
+}
+
+
+
+
+
+
+// ================================
+//        Stats
+// ================================
+
+kbmodules.football_standard.show_team_stats = async function(){
+
+	ksys.btns.pool.show_team_stats.toggle(false)
+
+	for (const stat_name in kbmodules.football_standard.stats_unit_pool){
+		kbmodules.football_standard.stats_unit_pool[stat_name].push_to_vmix()
+	}
+
+	const score_amt_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
+	const score_amt_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
+	await kbmodules.football_standard.titles.stats.set_text('scores', `${score_amt_l} : ${score_amt_r}`)
+
+	await kbmodules.football_standard.titles.stats.set_img_src('team_logo_l', $('#team1_def').attr('logo_path'))
+	await kbmodules.football_standard.titles.stats.set_img_src('team_logo_r', $('#team2_def').attr('logo_path'))
+
+	await kbmodules.football_standard.titles.stats.set_text('bottom_text', $('#vs_text_bottom_lower').val())
+
+	await kbmodules.football_standard.titles.stats.set_text(
+		'team_name_l',
+		ksys.strf.params.club_name.format($('#team1_def [prmname="team_name"] input').val())
+	)
+	await kbmodules.football_standard.titles.stats.set_text(
+		'team_name_r',
+		ksys.strf.params.club_name.format($('#team2_def [prmname="team_name"] input').val())
+	)
+
+	await kbmodules.football_standard.titles.stats.overlay_in(1)
+
+	ksys.btns.pool.show_team_stats.toggle(true)
+}
+
+kbmodules.football_standard.hide_team_stats = async function(){
+
+	ksys.btns.pool.hide_team_stats.toggle(false)
+
+	await kbmodules.football_standard.titles.stats.overlay_out(1)
+
+	ksys.btns.pool.hide_team_stats.toggle(true)
+	ksys.btns.pool.show_team_stats.toggle(true)
 }

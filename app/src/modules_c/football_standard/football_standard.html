@@ -6,7 +6,9 @@
 		<sys-tab match_id="layout_buttons">Layout Ctrl</sys-tab>
 		<sys-tab match_id="punisher">Cards/Goals</sys-tab>
 		<sys-tab match_id="replacement">Substitute</sys-tab>
-		<sys-tab match_id="timer_and_scores">Timer/Scores</sys-tab>
+		<sys-tab match_id="timer_and_scores">Timer</sys-tab>
+		<sys-tab match_id="stats">Stats</sys-tab>
+		<sys-tab quick_access match_id="stats_buttons">Stats Counter</sys-tab>
 	</tabsys>
 
 	<tab tabid="team_defs">
@@ -300,6 +302,7 @@
 			</div>
 
 			<div nosel id="red_card_counter">
+				<vmixbtn seq_info="auto_tweaks" titled btname="pardon_yellow_card" onclick="kbmodules.football_standard.pardon_player()">PARDON</vmixbtn>
 				<div id="red_card_counter_team1" class="red_card_counter_team">
 					<div class="red_card_counter_head">
 						<img vis_feedback="team1_logo" contain src="./assets/red_cross.png">
@@ -428,8 +431,8 @@
 
 				<box regular_box style="flex-direction: row; display: flex; margin-left: 10px; align-items: center;">
 					<div id="timer_ctrl_additional">
-						<input type="text" placeholder="MINUTES">
-						<vmixbtn seq_info="update+play+vis_show" btname="launch_extra_timer" onclick="kbmodules.football_standard.launch_extra_time()">Launch Extra Time</vmixbtn>
+						<input onchange="kbmodules.football_standard.update_extra_time_amount()" type="text" placeholder="MINUTES">
+						<!-- <vmixbtn seq_info="update+play+vis_show" btname="launch_extra_timer" onclick="kbmodules.football_standard.launch_extra_time()">Launch Extra Time</vmixbtn> -->
 						<vmixbtn halfsize seq_info="stop" btname="stop_extra_timer" onclick="kbmodules.football_standard.stop_extra_time()">Stop Extra Time</vmixbtn>
 					</div>
 
@@ -439,35 +442,91 @@
 
 			</div>
 
-			<div id="score_ctrl">
+		</div>
+	</tab>
 
-				<div id="score_ctrl_player_search">
-					<input oninput="kbmodules.football_standard.filter_players_for_score(event)" type="text">
-					<div id="score_ctrl_player_search_pool"></div>
-				</div>
 
-				<div class="score_ctrl_team" id="score_ctrl_team1">
-					<div class="score_ctrl_head">
-						<img contain vis_feedback="team1_logo" src="./assets/red_cross.png" class="score_ctrl_head_img">
-						<div vis_feedback="team1_name" class="score_ctrl_head_tname">Pootis</div>
-					</div>
-					<div class="score_ctrl_table"></div>
-					<sysbtn btname="add_team_score" onclick="kbmodules.football_standard.add_score(1)">Add</sysbtn>
-				</div>
 
-				<div class="score_ctrl_team" id="score_ctrl_team2">
-					<div class="score_ctrl_head">
-						<img contain vis_feedback="team2_logo" src="./assets/red_cross.png" class="score_ctrl_head_img">
-						<div vis_feedback="team2_name" class="score_ctrl_head_tname">Pootis</div>
-					</div>
-					<div class="score_ctrl_table"></div>
-					<sysbtn btname="add_team_score" onclick="kbmodules.football_standard.add_score(2)">Add</sysbtn>
-				</div>
+	<tab class="tab_hidden" tabid="stats">
+		<div id="score_ctrl" regular_box>
+
+			<div id="score_ctrl_player_search">
+				<input oninput="kbmodules.football_standard.filter_players_for_score(event)" type="text">
+				<div id="score_ctrl_player_search_pool"></div>
 			</div>
 
-			<div id="score_ctrl_buttons">
-				<vmixbtn seq_info="update+vis_show" btname="show_score_results" onclick="kbmodules.football_standard.score_sum_vis(true)">Show scores</vmixbtn>
-				<vmixbtn seq_info="vis_hide" btname="show_score_results" onclick="kbmodules.football_standard.score_sum_vis(false)">Hide scores</vmixbtn>
+			<div class="score_ctrl_team" id="score_ctrl_team1">
+				<div class="score_ctrl_head">
+					<img contain vis_feedback="team1_logo" src="./assets/red_cross.png" class="score_ctrl_head_img">
+					<div vis_feedback="team1_name" class="score_ctrl_head_tname">Pootis</div>
+				</div>
+				<div class="score_ctrl_table"></div>
+				<sysbtn btname="add_team_score" onclick="kbmodules.football_standard.add_score(1)">Add</sysbtn>
+			</div>
+
+			<div class="score_ctrl_team" id="score_ctrl_team2">
+				<div class="score_ctrl_head">
+					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png" class="score_ctrl_head_img">
+					<div vis_feedback="team2_name" class="score_ctrl_head_tname">Pootis</div>
+				</div>
+				<div class="score_ctrl_table"></div>
+				<sysbtn btname="add_team_score" onclick="kbmodules.football_standard.add_score(2)">Add</sysbtn>
+			</div>
+		</div>
+
+		<div id="score_ctrl_buttons">
+			<vmixbtn seq_info="update+vis_show" btname="show_score_results" onclick="kbmodules.football_standard.score_sum_vis(true)">Show scores</vmixbtn>
+			<vmixbtn seq_info="vis_hide" btname="show_score_results" onclick="kbmodules.football_standard.score_sum_vis(false)">Hide scores</vmixbtn>
+		</div>
+
+		<div id="team_stats_tables">
+
+			<!-- Team L -->
+			<div class="team_stats_table_container">
+				<div class="team_stats_table_header">
+					<img contain vis_feedback="team1_logo" src="./assets/red_cross.png">
+					<h1 vis_feedback="team1_name">_t1</h1>
+				</div>
+				<div class="team_stats_table tstats_table_1"></div>
+			</div>
+			<!-- Team R -->
+			<div class="team_stats_table_container">
+				<div class="team_stats_table_header">
+					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png">
+					<h1 vis_feedback="team2_name">_t1</h1>
+				</div>
+				<div class="team_stats_table tstats_table_2"></div>
+			</div>
+
+		</div>
+
+		<div id="stats_ctrl_btns">
+			<vmixbtn seq_info="update+vis_show" btname="show_team_stats" onclick="kbmodules.football_standard.show_team_stats()">Show stats</vmixbtn>
+			<vmixbtn seq_info="vis_hide" btname="hide_team_stats" onclick="kbmodules.football_standard.hide_team_stats()">Hide stats</vmixbtn>
+		</div>
+	</tab>
+
+
+
+	<!-- buttons for quick addition/subtraction -->
+	<tab class="tab_hidden" tabid="stats_buttons">
+		<div id="stats_buttons">
+
+			<!-- Team L -->
+			<div class="team_stats" regular_box>
+				<div class="team_stats_head">
+					<img contain vis_feedback="team1_logo" src="./assets/red_cross.png">
+					<h1 vis_feedback="team1_name">_t1</h1>
+				</div>
+				<div class="team_stats_buttons tstats_buttons_team_1"></div>
+			</div>
+			<!-- Team R -->
+			<div class="team_stats" regular_box>
+				<div class="team_stats_head">
+					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png">
+					<h1 vis_feedback="team2_name">_t1</h1>
+				</div>
+				<div class="team_stats_buttons tstats_buttons_team_2"></div>
 			</div>
 
 		</div>

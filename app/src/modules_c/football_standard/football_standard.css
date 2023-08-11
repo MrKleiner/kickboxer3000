@@ -1333,9 +1333,13 @@ img[vis_feedback]
 	margin-top: 50px;
 	display: flex;
 	flex-direction: row;
-	width: 100%;
+	width: 95%;
+	/*width: fit-content;*/
+	align-self: center;
 	justify-content: space-around;
 	align-items: flex-start;
+	padding-top: 20px;
+	padding-bottom: 20px;
 }
 
 #score_ctrl .score_ctrl_team
@@ -1384,7 +1388,7 @@ img[vis_feedback]
 	display: flex;
 }
 
-#score_ctrl .score_ctrl_table .team_score_record .score_record_ag{
+#score_ctrl .score_ctrl_table .team_score_record .score_record_cbox{
 	/*height: 15px;*/
 	width: 40px;
 }
@@ -1393,7 +1397,7 @@ img[vis_feedback]
 	margin-right: 10px;
 }
 
-#score_ctrl_buttons
+#score_ctrl_buttons, #stats_ctrl_btns
 {
 	margin-top: 50px;
 	display: flex;
@@ -1402,7 +1406,11 @@ img[vis_feedback]
 	align-items: center;
 }
 
-#score_ctrl_buttons vmixbtn
+#stats_ctrl_btns{
+	margin-bottom: 200px;
+}
+
+#score_ctrl_buttons vmixbtn, #stats_ctrl_btns vmixbtn
 {
 	width: 150px;
 	height: 150px;
@@ -1439,7 +1447,7 @@ img[vis_feedback]
 
 /*
 ===============================================
-             Text formatting config
+             Red card counter
 ===============================================
 
 !~~ #red_card_counter .red_card_counter_team
@@ -1498,4 +1506,201 @@ img[vis_feedback]
 {
 	filter: grayscale(1);
 	opacity: 0.2;
+}
+
+
+
+
+
+
+
+
+/*
+===============================================
+                     Stats
+===============================================
+
+!~~ #stats_buttons
+*/
+
+#stats_buttons{
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+}
+
+#stats_buttons .team_stats{
+	display: flex;
+	flex-direction: column;
+	width: 40%;
+}
+
+
+/*
+!~~ #stats_buttons .team_stats .team_stats_head
+*/
+#stats_buttons .team_stats .team_stats_head{
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	/*height: 150px;*/
+}
+
+#stats_buttons .team_stats .team_stats_head img{
+	width: 100%;
+	height: 150px;
+}
+
+#stats_buttons .team_stats .team_stats_head h1{
+	display: flex;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	/*color: white;*/
+	font-size: 50px;
+}
+
+
+/*
+!~~ #stats_buttons .team_stats
+*/
+#stats_buttons .team_stats .team_stats_buttons{
+	display: flex;
+	flex-direction: column;
+	margin-top: 20px;
+	align-items: center;
+}
+
+
+
+/*
+!~~ #stats_buttons .team_stats .team_stat_quick_btn_pair
+*/
+
+#stats_buttons .team_stats .team_stat_quick_btn_pair{
+	display: flex;
+	flex-direction: row;
+	margin-top: 15px;
+	width: 100%;
+}
+
+#stats_buttons .team_stats .team_stat_quick_btn_pair .team_stat_quick_btn_vis_value{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	width: 40px;
+	font-size: 40px;
+}
+
+#stats_buttons .team_stats .team_stat_quick_btn_pair sysbtn{
+	border-radius: 10px;
+	font-size: 27px;
+	width: fit-content;
+	/*padding: 20px 25px 20px 25px ;*/
+	padding: 20px;
+	outline-width: 3px;
+	width: 35%;
+	white-space: nowrap;
+	justify-content: flex-start;
+}
+
+#stats_buttons .team_stats .team_stat_quick_btn_pair sysbtn{
+	margin-left: 30px;
+}
+
+#stats_buttons .team_stats .team_stat_quick_btn_pair sysbtn[stat_action="add"]{
+	color: lime;
+}
+
+#stats_buttons .team_stats .team_stat_quick_btn_pair sysbtn[stat_action="subt"]{
+	color: red;
+}
+
+
+
+
+/*
+!~~ #team_stats_tables
+*/
+
+#team_stats_tables{
+	display: flex;
+	flex-direction: row;
+	width: 100%;
+	/*margin-bottom: 500px;*/
+	justify-content: space-evenly;
+	margin-top: 100px;
+}
+
+
+/*
+!~~ #team_stats_tables .team_stats_table_container
+*/
+#team_stats_tables .team_stats_table_container{
+	display: flex;
+	flex-direction: column;
+	width: 40%;
+	background: rgba(0, 0, 0, 0.5);
+	outline: 1px solid rgba(255, 255, 255, 0.2);
+	padding: 20px;
+}
+
+/*
+!~~ #team_stats_tables .team_stats_table_container .team_stats_table_header
+*/
+#team_stats_tables .team_stats_table_container .team_stats_table_header{
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	align-items: center;
+}
+
+#team_stats_tables .team_stats_table_container .team_stats_table_header img{
+	height: 150px;
+	width: 100%;
+}
+
+#team_stats_tables .team_stats_table_container .team_stats_table_header h1{
+	/*width: 100%;*/
+	font-size: 40px;
+	/*text-align: center;*/
+}
+
+
+/*
+!~~ #team_stats_tables .team_stats_table
+*/
+#team_stats_tables .team_stats_table{
+	margin-top: 30px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+
+/*
+!~~ #team_stats_tables .team_stats_table .stat_unit_table_row
+*/
+#team_stats_tables .team_stats_table .stat_unit_table_row{
+	width: 50%;
+	padding: 4px 15px 4px 15px ;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	font-size: 25px;
+	/*background: rgba(100, 100, 100, 0.6);*/
+	background: hsl(0deg 0% 25% / 60%);
+}
+
+#team_stats_tables .team_stats_table .stat_unit_table_row:nth-child(odd) {
+	background: hsl(0deg 0% 15% / 60%);
+}
+
+#team_stats_tables .team_stats_table .stat_unit_table_row input{
+	text-align: center;
+	font-size: 25px;
+	width: 70px;
 }

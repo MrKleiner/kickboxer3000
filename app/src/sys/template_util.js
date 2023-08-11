@@ -3,13 +3,35 @@ const _tmpl_util = {};
 
 
 
-// idict:
 
-// return selection as raw js:
-// {'prop_name':'selector'}
+/*
 
-// return selection as jqeury object
-// {'prop_name':'$selector'}
+This function simplifies instantiating HTML templates
+and quickly selecting elements inside them.
+
+The idea is to pass a dictionary,
+where KEY is a shorthand for the selected element
+and VALUE is a querySelector string.
+
+Dictionary with the same KEYs would be returned,
+where VALUES were transformed into DOM elements.
+
+	- tplate:HTMLstr|DOMElem|JQuery
+		This parameter should either represent a raw HTML string
+		to be evaulated into a real DOMElement
+		OR pre-evaluated DOMElement
+
+	- idict:dict
+		Dictionary used to map querySelectors to simple names.
+			- KEY is the name of the indexed element.
+			- VALUE is querySelector string.
+				Add $ in the beginning of the VALUE for this value
+				to be a JQuery object and not vanilla JS DOM Element
+		Example:
+		{'prop_name':'selector'}
+		Or as JQuery
+		{'prop_name':'$selector'}
+*/
 _tmpl_util.index_elem = function(tplate, idict){
 	const jq_tplate = $(tplate);
 
@@ -19,7 +41,7 @@ _tmpl_util.index_elem = function(tplate, idict){
 		const e_selector = idict[pname];
 		const elem = (e_selector[0] == '$') ? jq_tplate.find(e_selector) : jq_tplate.find(e_selector)[0]
 		if (!elem){
-			console.warn('Template indexer: Cannot find', e_selector, 'inside', tsel)
+			console.warn('Template indexer: Cannot find', e_selector, 'inside', jq_tplate[0])
 		}
 
 		indexed[pname] = elem;
@@ -27,13 +49,16 @@ _tmpl_util.index_elem = function(tplate, idict){
 
 	return {
 		// 'tplate': tplate,
-		'elem': tplate,
+		'elem': jq_tplate[0],
 		index: indexed,
 	}
 
 }
 
-
+/*
+Same as index_elem, except this function ONLY accepts
+querySelectors pointing to a <template> element
+*/
 _tmpl_util.index_tplate = function(tsel, idict){
 	if (!tsel || !idict){
 		// console.error('Unable to index a template: Invalid input params', tsel, idict);
@@ -66,14 +91,6 @@ _tmpl_util.index_attributes = function(_elem, attrs){
 
 	return outp_dict
 }
-
-
-
-
-
-
-
-
 
 
 
