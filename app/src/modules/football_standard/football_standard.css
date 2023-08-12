@@ -1185,7 +1185,16 @@ img[vis_feedback]
 	width: 100%;
 }
 
+#layout_buttons_field_ctrl .prepare_team_layout
+{
+	width: 100%;
+	font-size: 30px;
+}
 
+#layout_buttons_field_ctrl .prepare_team_layout .vmixbtn_info_icon_pool
+{
+	height: 36%;
+}
 
 .layout_buttons_field_ctrl_command
 {

@@ -1704,7 +1704,7 @@ $this.show_field_layout = async function(team){
 	btn_pool.hide_field_layout_command1.toggle(false)
 	btn_pool.show_field_layout_command2.toggle(false)
 	btn_pool.hide_field_layout_command2.toggle(false)
-	await $this.upd_player_layout(team)
+	// await $this.upd_player_layout(team)
 	await $this.titles.team_layout.overlay_in(1)
 	btn_pool.show_field_layout_command1.toggle(true)
 	btn_pool.hide_field_layout_command1.toggle(true)
