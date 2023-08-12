@@ -100,13 +100,13 @@ _pgview.pgview_entry = class{
 			}
 		)
 
-		const _self = this;
+		const self = this;
 		ctrl_index.index.link_input.onchange = function(elem){
 			print('just fuckoff', elem.target.value)
-			_self.webv.src = elem.target.value;
-			_self.tgt_url = elem.target.value;
+			self.webv.src = elem.target.value;
+			self.tgt_url = elem.target.value;
 
-			if (_self.keybind){
+			if (self.keybind){
 				_pgview.save_pool()
 			}
 		}
@@ -115,24 +115,24 @@ _pgview.pgview_entry = class{
 			elem.target.textContent = '...'
 			const bind = await ksys.util.get_key()
 			if (bind != null && bind?.keyCode != 192){
-				_self.keybind_name = bind.key;
+				self.keybind_name = bind.key;
 
 				// re-register in the pool
-				delete _pgview.pool[_self.keybind]
-				_pgview.pool[bind.keyCode] = _self;
-				_self.keybind = bind.keyCode;
+				delete _pgview.pool[self.keybind]
+				_pgview.pool[bind.keyCode] = self;
+				self.keybind = bind.keyCode;
 
 				// save pool
 				_pgview.save_pool()
 			}
 
-			elem.target.textContent = _self.keybind_name;
+			elem.target.textContent = self.keybind_name;
 
 		}
 
 		ctrl_index.index.qview_inp.onchange = function(elem){
 			print('QV changed:', elem)
-			_pgview.quick_view = _self;
+			_pgview.quick_view = self;
 		}
 
 		return ctrl[0]

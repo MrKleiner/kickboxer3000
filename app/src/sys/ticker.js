@@ -69,7 +69,7 @@ class _kb_ticker{
 
 		// the holy hand grenade
 		// important todo: so should it be let or const ?
-		const _self = this;
+		const self = this;
 
 		// The timer has a heartbeat of 250ms between pulses
 		// Each one of these ticks returns the actual time
@@ -79,57 +79,57 @@ class _kb_ticker{
 		if(!_stfu){print('zero and offs:', this.timer_name, (new Date()).getTime(), this.zero, this.offset)};
 
 		return new Promise(async function(resolve, reject){
-			let last_tick = _self.global_tick;
+			let last_tick = self.global_tick;
 
 			// wait for callback function to complete, if asked
-			// if (_self.wait_for_callback == true){
-			// 	await _self.callback_func(_self.tick)
+			// if (self.wait_for_callback == true){
+			// 	await self.callback_func(self.tick)
 			// }else{
-			// 	_self.callback_func(_self.tick)
+			// 	self.callback_func(self.tick)
 			// }
 
-			while (_self.alive == true && ((_self.global_tick < _self.duration) || _self.infinite == true)){
+			while (self.alive == true && ((self.global_tick < self.duration) || self.infinite == true)){
 
 				// global timer
 				let new_tick = Math.floor(
-					((new Date()).getTime() - _self.zero) / 1000
+					((new Date()).getTime() - self.zero) / 1000
 				);
 
-				if (_self.paused == true){
-					await _self.pause_promise
-					_self.zero = (new Date()).getTime();
+				if (self.paused == true){
+					await self.pause_promise
+					self.zero = (new Date()).getTime();
 					new_tick = Math.floor(
-						((new Date()).getTime() - _self.zero) / 1000
+						((new Date()).getTime() - self.zero) / 1000
 					);
 					last_tick = 0;
 				}
 
-				if(!_stfu){print('New tick:', new_tick, _self.global_tick)};
+				if(!_stfu){print('New tick:', new_tick, self.global_tick)};
 
 				// only trigger callback if 1 second has passed
 				if(!_stfu){print('Last and New:', last_tick, new_tick)};
 				if (last_tick != new_tick){
 					// wait for callback function to complete, if asked
-					if (_self.wait_for_callback == true){
-						await _self.callback_func(_self.tick)
+					if (self.wait_for_callback == true){
+						await self.callback_func(self.tick)
 					}else{
-						_self.callback_func(_self.tick)
+						self.callback_func(self.tick)
 					}
 
-					_self.global_tick += 1;
+					self.global_tick += 1;
 					last_tick += 1;
 				}
 
 				// wait before executing next iteration
-				await ksys.util.sleep(_self.heartbeat)
+				await ksys.util.sleep(self.heartbeat)
 			}
 
-			if(!_stfu){print('terminating timer:', _self.timer_name, _self.alive, _self.zero, _self.offset, _self.global_tick, _self.duration)};
-			if(!_stfu){print('while status:', (_self.alive == true && ((_self.global_tick < _self.duration) || _self.infinite == true)))};
+			if(!_stfu){print('terminating timer:', self.timer_name, self.alive, self.zero, self.offset, self.global_tick, self.duration)};
+			if(!_stfu){print('while status:', (self.alive == true && ((self.global_tick < self.duration) || self.infinite == true)))};
 
-			_self.alive = false;
-			if(!_stfu){print('whoami', _self)};
-			resolve(_self)
+			self.alive = false;
+			if(!_stfu){print('whoami', self)};
+			resolve(self)
 			return
 		});
 	}
@@ -151,12 +151,12 @@ class _kb_ticker{
 
 	_pause(){
 		// todo: Fuck javascript. Retarded shit
-		const _self = this;
+		const self = this;
 		// important: overwriting unresolved pause promise with a new one will fuck everything up
 		if (!this.paused){
 			this.pause_promise = 
 			new Promise(function(resolve, reject){
-				_self.pause_promise_resolve = resolve;
+				self.pause_promise_resolve = resolve;
 			});
 		}
 		this.paused = true;

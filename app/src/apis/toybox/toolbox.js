@@ -1,7 +1,7 @@
 (function() {
 
 const _lizard = {
-	info: `Lizard's toybox. Version 1.17`,
+	info: `Lizard's toybox. Version 1.18`,
 	obsolete: {},
 };
 

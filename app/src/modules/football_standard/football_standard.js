@@ -18,7 +18,7 @@ $this.next_card_out = null;
 $this.base_timer = null;
 
 
-$this.index_titles = function(ctx){
+$this.index_titles = function(){
 
 	$this.titles = {
 		// 'team_layout': new vmix_title('command_layout.gtzip'),
@@ -633,7 +633,7 @@ $this.player_ctrl = class {
 		this.namecode = '';
 
 		// still, fuck javascript
-		const _self = this;
+		const self = this;
 
 		const ctrl_elem = $(`
 			<div class="player_item" namecode="${this.namecode}">
@@ -660,21 +660,21 @@ $this.player_ctrl = class {
 		// todo: this is still not ideal
 		ctrl_elem.find('[prmname="pname"] input')[0].onchange = function(evt){
 			// print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
-			_self.name = evt.target.value;
-			_self._update_namecode(true);
+			self.name = evt.target.value;
+			self._update_namecode(true);
 		}
 		ctrl_elem.find('[prmname="psurname"] input')[0].onchange = function(evt){
-			// print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU', _self, evt.target.value)
-			_self.surname = evt.target.value;
-			_self._update_namecode(true);
+			// print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU', self, evt.target.value)
+			self.surname = evt.target.value;
+			self._update_namecode(true);
 		}
 		ctrl_elem.find('[prmname="number"] input')[0].onchange = function(evt){
-			_self.number = evt.target.value;
-			_self._update_namecode(true);
+			self.number = evt.target.value;
+			self._update_namecode(true);
 		}
 		ctrl_elem[0].oncontextmenu = function(evt){
 			if (evt.altKey){
-				_self.kill()
+				self.kill()
 			}
 		}
 
@@ -868,7 +868,7 @@ $this.stat_unit = class {
 		this.related_title = related_title;
 		this.visname = visname;
 		this.elem_index = {};
-		const _self = this;
+		const self = this;
 
 		this.text_field_selector = {
 			1: team1_txt_block,
@@ -905,7 +905,7 @@ $this.stat_unit = class {
 
 	// get html element of a quick button
 	quick_button(team){
-		const _self = this;
+		const self = this;
 
 		const qbtn_html = `
 			<div class="team_stat_quick_btn_pair">
@@ -925,10 +925,10 @@ $this.stat_unit = class {
 		);
 
 		qbtn_index.index.add.onclick = function(){
-			_self.upd_value(team, 1)
+			self.upd_value(team, 1)
 		}
 		qbtn_index.index.subt.onclick = function(){
-			_self.upd_value(team, -1)
+			self.upd_value(team, -1)
 		}
 
 		// register for echo
@@ -941,7 +941,7 @@ $this.stat_unit = class {
 	}
 
 	table_row_elem(team){
-		const _self = this;
+		const self = this;
 
 		const stat_unit_table_row_html = `
 			<div class="stat_unit_table_row">
@@ -956,7 +956,7 @@ $this.stat_unit = class {
 		)
 		row_elem.index.inp.value = this.val_selector[team]
 		row_elem.index.inp.onchange = function(evt){
-			_self.set_value(team, int(evt.target.value) || 0)
+			self.set_value(team, int(evt.target.value) || 0)
 		}
 		row_elem.index.inp.onclick = function(evt){
 			evt.target.select()
@@ -1028,12 +1028,12 @@ $this.stat_unit = class {
 
 
 $this.resync_red_penalty_cards = function(){
-	const _ctx = ksys.context.module.cache;
+	const ctx = ksys.context.module.cache;
 	// print('Resyncing cards...')
 	for (let team of ['1', '2']){
 
-		const team_card_count = _ctx[`team${team}_rcard_count`]
-		if (!(`team${team}_rcard_count` in _ctx)){continue};
+		const team_card_count = ctx[`team${team}_rcard_count`]
+		if (!(`team${team}_rcard_count` in ctx)){continue};
 
 		// print('WTF', `team${team}_rcard_count`)
 
@@ -1054,12 +1054,12 @@ $this.mod_penalty_red_card = function(event, team, subtr=false){
 
 	if (!event.altKey){return};
 
-	const _ctx = ksys.context.module.cache;
+	const ctx = ksys.context.module.cache;
 
 	if (subtr){
-		ksys.context.module.prm(`team${team}_rcard_count`, (`team${team}_rcard_count` in _ctx) ? (_ctx[`team${team}_rcard_count`] -= 1).clamp(0, 3) : 0)
+		ksys.context.module.prm(`team${team}_rcard_count`, (`team${team}_rcard_count` in ctx) ? (ctx[`team${team}_rcard_count`] -= 1).clamp(0, 3) : 0)
 	}else{
-		ksys.context.module.prm(`team${team}_rcard_count`, (`team${team}_rcard_count` in _ctx) ? (_ctx[`team${team}_rcard_count`] += 1).clamp(0, 3) : 0)
+		ksys.context.module.prm(`team${team}_rcard_count`, (`team${team}_rcard_count` in ctx) ? (ctx[`team${team}_rcard_count`] += 1).clamp(0, 3) : 0)
 	}
 
 	print(ksys.context.module.cache.team1_rcard_count, ksys.context.module.cache.team2_rcard_count)
