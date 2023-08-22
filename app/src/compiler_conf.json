@@ -37,7 +37,7 @@
 	// Path to the root folder containing modules folder, variables, fonts, etc
 	// If not present, false, empty, null or invalid - each path field would require an absolute path
 	// otherwise - hybrid: If absoulte, then use absolute, if relative then use relative
-	"project": "E:/!webdesign/kickboxer/kickboxer3000/app/src",
+	"project": "C:/Users/kserh/github/kickboxer3000/app/src",
 
 	// folder name with compiled modules
 	// auto = use original modules folder name

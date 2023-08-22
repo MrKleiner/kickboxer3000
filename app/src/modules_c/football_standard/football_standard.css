@@ -362,17 +362,48 @@ tab.tab_hidden
 }
 
 
+
 .teamdef .player_lists .player_list
 {
 	display: flex;
 	flex-direction: column;
-	width: 350px;
+	width: 200px;
 	/*background: #2F3339;*/
 	background: #25282D;
 	box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 1);
 	/*background: #222222;*/
 	outline: 1px solid rgb(90, 90, 90);
 	padding: 10px;
+}
+
+
+.pibn, .current_line_up_div
+{
+	flex: 1;
+}
+
+.current_line_up_div
+{
+	margin-left: 1em;
+	font-size: 0.75em;
+	display: flex;
+}
+
+.current_line_up_div div
+{
+	flex: 1;
+	text-align: center;
+}
+
+.current_line_up_div div input
+{
+	width: 2em;
+	height: 2em;
+}
+
+.teamdef .player_lists .player_list.all_players
+{
+	width: 420px;
 }
 
 .teamdef .player_lists .player_list .list_pool
@@ -391,7 +422,7 @@ tab.tab_hidden
 .player_lists .player_list .player_item
 {
 	display: flex;
-	flex-direction: column;
+	flex-direction: row;
 	margin-top: 10px;
 	border-left: 2px solid rgba(255, 255, 255, 0.5);
 	padding-left: 3px;
@@ -414,11 +445,15 @@ tab.tab_hidden
 
 
 
+.teamdef .player_lists .player_list:first-child
+{
+	margin-right: 40px;
+}
 
 
 .teamdef .player_lists .player_list:last-child
 {
-	margin-left: 50px;
+	margin-left: 40px;
 }
 
 

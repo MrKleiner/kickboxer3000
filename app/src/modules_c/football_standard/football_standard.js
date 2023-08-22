@@ -610,13 +610,22 @@ kbmodules.football_standard.upd_vis_feedback = function(){
 
 
 
+
+kbmodules.football_standard.line_up_changed = function (e)
+{
+	console.log(e.target.name);
+	console.log(e.target.value);
+}
+
+
 // player parameters input
 kbmodules.football_standard.player_ctrl = class {
-	constructor(team, is_reserve, pname='', psurname='', number=''){
+	constructor(team, is_reserve, pname='', psurname='', number='', current_line_up='none'){
 		this.name = pname;
 		this.surname = psurname;
 		this.number = number;
 		this.is_reserve = is_reserve;
+		this.current_line_up = current_line_up;
 		this.scores = 0;
 		this.stats = {
 			'yellow_cards': 0,
@@ -638,9 +647,9 @@ kbmodules.football_standard.player_ctrl = class {
 
 		// still, fuck javascript
 		const self = this;
-
 		const ctrl_elem = $(`
 			<div class="player_item" namecode="${this.namecode}">
+			  <div class="pibn">
 				<div class="player_param" prmname="pname">
 					<div class="player_param_label">Name</div>
 					<input type="text" class="player_param_input" value="${this.name}">
@@ -653,6 +662,12 @@ kbmodules.football_standard.player_ctrl = class {
 					<div class="player_param_label">Number</div>
 					<input type="text" class="player_param_input" value="${this.number}">
 				</div>
+			  </div>
+			  <div class="current_line_up_div" prmname="current_line_up">
+				<div>Start<br><input type="radio" name="current_line_up_${this.name}_${this.surname}_${this.number}" value="start"></div>
+				<div>Rez<br><input type="radio" name="current_line_up_${this.name}_${this.surname}_${this.number}" value="reserve"></div>
+				<div>None<br><input type="radio" name="current_line_up_${this.name}_${this.surname}_${this.number}" value="none" checked></div>
+			  </div>
 			</div>
 		`)
 
@@ -1123,6 +1138,7 @@ kbmodules.football_standard.save_team_preset = function(team){
 		'logo': has_logo || null,
 		'main_players': [],
 		'reserve_players': [],
+		'all_players': []
 	}
 
 	// main players
@@ -1143,8 +1159,24 @@ kbmodules.football_standard.save_team_preset = function(team){
 		})
 	}
 
-	print(club_info)
 
+	// All players
+	for (let player of document.querySelectorAll(`${team_def} .player_lists .player_list.all_players .player_item`)){
+		const nnn = player.querySelector('[prmname="current_line_up"] input').name;
+		club_info.all_players.push({
+			'name': player.querySelector('[prmname="pname"] .player_param_input').value,
+			'surname': player.querySelector('[prmname="psurname"] .player_param_input').value,
+			'number': player.querySelector('[prmname="number"] .player_param_input').value,
+			'current_line_up': player.querySelector('[prmname="current_line_up"] input:checked').value
+		})
+	}
+
+
+	//club_info.all_players.push(club_info.main_players);
+	//club_info.all_players.push(club_info.reserve_players);
+
+
+	print(club_info)
 	// save the team to file
 	ksys.db.module.write(`${club_name}.tdef`, JSON.stringify(club_info, null, 4))
 
@@ -1223,6 +1255,20 @@ kbmodules.football_standard.load_team_preset = function(event){
 	// todo: there's option chaining in latest chromium
 	tgt_team.find('.team_base_params [prmname="club_shorthand"] input')[0].value = (team_preset.shorthand || '').upper();
 
+
+
+	// spawn all players
+	for (let player of team_preset.all_players){
+		const new_player = new kbmodules.football_standard.player_ctrl(
+			tgt_team_info.num,
+			true,
+			player.name,
+			player.surname,
+			player.number,
+		);
+		tgt_team.find('.player_list.all_players .list_pool').append(new_player.ctrl_elem)
+	}
+
 	// spawn main players
 	// team, is_reserve, pname='', psurname='', number=''
 	for (let player of team_preset.main_players){
@@ -1247,6 +1293,9 @@ kbmodules.football_standard.load_team_preset = function(event){
 		);
 		tgt_team.find('.player_list.reserve .list_pool').append(new_player.ctrl_elem)
 	}
+
+
+
 
 	// Update vis feedback, like team logos and team names
 	kbmodules.football_standard.upd_vis_feedback()

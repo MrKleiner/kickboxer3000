@@ -69,14 +69,19 @@
 					<img contain src="./assets/red_cross.png" vis_feedback="team1_logo" class="team_logo_vis">
 				</div>
 
-				<div class="player_lists">
-					<div class="player_list starters">
+				<div class="player_lists" onchange="kbmodules.football_standard.line_up_changed(event)">
+					<div class="player_list all_players">
 						<sysbtn class="create_player" btname="define_player" onclick="kbmodules.football_standard.spawn_player(event, 1)">Add</sysbtn>
 						<!-- <div onclick="kbmodules.football_standard.spawn_player(event)" class="create_player">Add</div> -->
 						<div class="list_pool"></div>
 					</div>
+					<div class="player_list starters">
+						<!-- <sysbtn class="create_player" btname="define_player" onclick="kbmodules.football_standard.spawn_player(event, 1)">Add</sysbtn> -->
+						<!-- <div onclick="kbmodules.football_standard.spawn_player(event)" class="create_player">Add</div> -->
+						<div class="list_pool"></div>
+					</div>
 					<div class="player_list reserve">
-						<sysbtn class="create_player" btname="define_player" onclick="kbmodules.football_standard.spawn_player(event, 1)">Add</sysbtn>
+						<!-- <sysbtn class="create_player" btname="define_player" onclick="kbmodules.football_standard.spawn_player(event, 1)">Add</sysbtn> -->
 						<!-- <div onclick="kbmodules.football_standard.spawn_player(event)" class="create_player">Add</div> -->
 						<div class="list_pool"></div>
 					</div>
@@ -299,7 +304,7 @@
 		<!-- score now counts as punishment. Amazing -->
 		<div id="punisher">
 			<div id="card_player_filter">
-				<input oninput="kbmodules.football_standard.filter_players_to_punish(event)" type="text" id="card_player_filter_input">
+				<input oninput="kbmodules.football_standard.filter_players_to_punish(event)" type="text" id="card_player_filter_input" placeholder="Ім'я/Прізвище/Номер">
 				<div id="card_player_filter_pool"></div>
 			</div>
 
