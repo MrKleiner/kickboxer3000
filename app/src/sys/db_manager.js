@@ -28,16 +28,16 @@ const db_module_read_file = function(fname=null, load_as='text'){
 
 // write file
 const db_module_write_file = function(fname=null, data=null){
-	const module_folder = app_root.join('db', 'module', ksys.context.module_name)
 	// obviously, both filename and data should be present and valid
 	if (!fname || !data){
 		console.warn('Tried writing invalid data to the module db', fname, data)
 		return false
 	}
-	// ensure that the target module folder exists
-	ksys.util.ensure_folder_exists(module_folder)
+	const tgt_file = app_root.join('db', 'module', ksys.context.module_name, fname)
+	// ensure that the target folder exists
+	ksys.util.ensure_folder_exists(tgt_file.parent())
 	// write the desired file to the module folder
-	module_folder.join(fname).writeSync(data)
+	tgt_file.writeSync(data)
 }
 
 // read file
@@ -77,12 +77,17 @@ const db_global_write_file = function(fname=null, data=null){
 	global_folder.join(fname).writeSync(data)
 }
 
+// return path to the current module folder
+const db_path_to_module_dir = function(){
+	return app_root.join('db', 'module', ksys.context.module_name)
+}
 
 
 module.exports = {
 	module: {
 		read: db_module_read_file,
 		write: db_module_write_file,
+		path: db_path_to_module_dir,
 	},
 	global: {
 		read: db_global_read_file,

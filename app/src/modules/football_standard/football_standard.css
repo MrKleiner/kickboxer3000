@@ -18,6 +18,624 @@ body.emergency_break
 }
 
 
+
+
+
+
+/*
+===============================================
+           Generic player list item
+===============================================
+!~~ player.generic_player_list_item
+*/
+~~ {
+	height: 37px;
+	display: flex;
+	flex-direction: row;
+	/*padding: 10px;*/
+	margin: 3px;
+	margin-top: 7px;
+	outline: 1px solid rgb(100, 100, 100);
+	background: #1B1B1B;
+	font-size: 25px;
+	align-items: center;
+	overflow: hidden;
+}
+
+~~:hover{
+	background: #2B2B2B;
+	outline-color: rgb(138, 138, 138);
+}
+
+~~ img.player_club_logo{
+	width: 30px;
+	height: 90%;
+	padding: 0px 4px 0px 4px;
+}
+
+~~ .player_number{
+	width: 37px;
+	height: 100%;
+	display: flex;
+	flex-shrink: 0;
+	align-items: center;
+	justify-content: center;
+	background: rgba(245, 245, 255, 0.07);
+	border-right: 2px solid black;
+}
+
+~~ .player_surname{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding-left: 5px;
+}
+
+
+
+
+
+
+
+
+
+
+
+/*
+===============================================
+                Player pickers
+===============================================
+!~~ player-picker
+*/
+~~{
+	display: flex;
+	flex-direction: column;
+	min-width: 200px;
+	max-width: 450px;
+	background: #25282D;
+	box-shadow: inset 0px 0px 5px 0px rgb(0 0 0);
+	outline: 1px solid rgb(90, 90, 90);
+	padding: 15px;
+	margin-left: 20px;
+}
+
+~~ input.player_picker_input{
+	font-size: 25px;
+}
+
+~~ player-picker-result{
+	margin-top: 15px;
+	/*height: 400px;*/
+	overflow-y: scroll;
+	overflow-x: hidden;
+	padding-right: 10px;
+}
+
+~~ player-picker-result > .selected_entry{
+	outline: 2px solid lime !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+===============================================
+                Club definition
+===============================================
+*/
+
+#club_definition{
+	width: fill-available;
+	display: flex;
+	flex-direction: row;
+	/*width: fit-content;*/
+	padding-left: 40px;
+	margin-left: 20px;
+	padding: 20px;
+}
+
+
+/*
+!~~ #club_definition club-def
+*/
+
+~~{
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	position: relative;
+	/*justify-content: space-between;*/
+}
+
+~~ .club_def_logo_visfeedback{
+	position: absolute;
+	width: 150px;
+	height: 150px;
+	right: -160px;
+	margin-right: -20px;
+}
+
+
+~~ club-base-params{
+	/*position: relative;*/
+	padding: 15px;
+	display: flex;
+	flex-direction: column;
+	padding-left: 10px;
+	margin-left: 500px;
+	position: fixed;
+}
+
+~~ club-def-actions{
+	display: flex;
+	flex-direction: column;
+}
+
+~~ club-base-params club-param{
+	display: flex;
+	flex-direction: row;
+	margin-top: 5px;
+	padding: 3px;
+}
+
+~~ club-base-params club-param .club_base_param_label{
+	width: 140px;
+}
+
+
+/*
+-------------------
+    Player Pool
+-------------------
+*/
+~~ club-playerbase{
+	/*margin-top: 10px;*/
+	display: flex;
+	flex-direction: column;
+	width: 380px;
+	background: #25282D;
+	box-shadow: inset 0px 0px 5px 0px rgb(0 0 0);
+	outline: 1px solid rgb(90, 90, 90);
+	padding: 10px;
+}
+
+~~ club-playerbase playerbase-pool{
+	display: flex;
+	flex-direction: column;
+	overflow-x: hidden;
+	/*overflow-y: scroll;*/
+	/*max-height: 900px;*/
+	/*margin-top: 10px;*/
+	height: -webkit-fill-available;
+}
+
+~~ club-playerbase > sysbtn{
+	position: sticky;
+	height: fit-content;
+	top: 70px;
+	width: 80%;
+	align-self: center;
+	text-align: center;
+	padding: 2px;
+	user-select: none;
+}
+
+
+
+
+/*
+-------------------
+ Player config box
+-------------------
+!~~ player-config
+*/
+~~{
+	display: flex;
+	flex-direction: column;
+	margin-top: 10px;
+	border-left: 2px solid rgba(255, 255, 255, 0.5);
+	padding: 2px 0px 4px 3px;
+}
+
+~~:hover{
+	background: rgba(255, 255, 255, 0.05)
+}
+
+~~ player-param{
+	display: flex;
+	flex-direction: row;
+	margin-top: 4px;
+	width: -webkit-fill-available;
+}
+
+~~ player-param .player_param_label{
+	width: 100px;
+	flex-shrink: 0;
+}
+
+~~ player-param .player_param_input{
+	width: 60%;
+}
+
+~~ player-param[prmname="player_num"] .player_param_input{
+	width: 40px;
+}
+
+
+
+
+
+/*
+===============================================
+                Club global control
+===============================================
+!~~ #club_definition club-control-global
+*/
+
+~~ {
+	position: fixed;
+	display: flex;
+	flex-direction: column;
+	right: 100px;
+	z-index: 100;
+	padding: 15px;
+}
+
+~~ sysbtn{
+	margin-top: 10px;
+}
+
+~~ #club_ctrl_save_to_file_target{
+	margin-top: 5px;
+	display: flex;
+	flex-direction: column;
+}
+
+~~ #club_ctrl_save_to_file_target .tgtdir{
+	width: 450px;
+}
+
+
+~~ #club_ctrl_save_to_file_target .tgtfname{
+	margin-top: 5px;
+	width: 150px;
+}
+
+
+~~ [btname="save_club_to_file"],
+~~ [btname="delete_current_club"]{
+	margin-top: 20px;
+}
+
+
+/*
+-------------------
+ Club selector dropdown
+-------------------
+
+!~~ #load_existing_club_dropdown
+*/
+
+#load_existing_club_dropdown{
+	position: absolute;
+	bottom: -50px;
+	padding: 8px;
+	background: rgba(0, 0, 0, 0.2);
+	border-radius: 5px;
+	outline: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+~~ select{
+	padding: 2px;
+	background: #1D1D22;
+	font-size: 15px;
+}
+
+~~ select:hover{
+	background: #202026;
+}
+
+~~ select:focus-visible{
+	outline: 0px;
+}
+
+
+
+
+
+
+/*
+===============================================
+                Team lineup
+===============================================
+!~~ #team_lineup
+*/
+~~{
+	display: flex;
+	flex-direction: column;
+}
+
+~~ club-lineup{
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	padding: 10px;
+	width: 90%;
+	margin-left: 20px;
+	background: rgba(0, 0, 0, 0.2);
+	outline: 1px solid rgba(100, 100, 100);
+}
+
+/*
+Header
+!~~ #team_lineup club-lineup club-header
+*/
+~~ {
+	display: flex;
+	flex-direction: row-reverse;
+	align-items: center;
+	position: absolute;
+	right: 0px;
+	top: -160px;
+}
+
+~~ > img{
+	width: 150px;
+	height: 150px;
+}
+
+~~ > club-header-title{
+	font-size: 40px;
+	margin-right: 50px;
+}
+
+
+/*
+-------------------
+ Lineup params
+-------------------
+!~~ #team_lineup lineup-config
+*/
+
+~~ {
+	/*position: relative;*/
+	padding: 15px;
+	display: flex;
+	flex-direction: column;
+	padding-left: 10px;
+}
+
+~~ sysbtn[btname="edit_club_from_lineup"]{
+	width: fit-content;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+~~ lineup-param{
+	display: flex;
+	flex-direction: row;
+	margin-top: 5px;
+	padding: 3px;
+}
+
+~~ lineup-param.lineup_param_add_hover:hover{
+	background: rgba(60, 60, 60, 1);
+}
+
+~~ lineup-param .param_label{
+	width: 140px;
+}
+
+~~ lineup-param .param_content{
+	display: flex;
+	flex-direction: row;
+}
+
+/*
+-------------------
+ params colour picker
+-------------------
+!~~ #team_lineup lineup-config lineup-param lineup-color-picker
+*/
+~~ {
+	display: flex;
+	flex-direction: row;
+	height: 100%;
+	/*width: fit-content;*/
+}
+
+~~ picker-color{
+	height: 20px;
+	aspect-ratio: 1/1;
+	margin-left: 7px;
+}
+
+~~ picker-color.active_color{
+	outline: 2px solid cyan;
+	outline-offset: 1px;
+}
+
+
+
+/*
+-------------------
+ Lineup lists
+-------------------
+!~~ #team_lineup lineup-lists
+*/
+
+~~ {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+}
+
+~~ player-picker{
+	width: 28%;
+}
+
+~~ [lineup_list]{
+	display: flex;
+	flex-direction: column;
+	/*width: 400px;*/
+	width: 28%;
+	background: #25282D;
+	box-shadow: inset 0px 0px 5px 0px rgb(0 0 0);
+	outline: 1px solid rgb(90, 90, 90);
+	padding: 10px;
+}
+
+~~ [lineup_list] sysbtn{
+	height: fit-content;
+	top: 70px;
+	width: 80%;
+	align-self: center;
+	text-align: center;
+	padding: 2px;
+	user-select: none;
+}
+
+~~ lineup-pool{
+	margin-top: 15px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .team_param .colour_picker{
 	display: flex;
 	flex-direction: row;
@@ -1206,6 +1824,11 @@ img[vis_feedback]
 	padding: 15px;
 	justify-content: center;
 	align-items: center;
+}
+
+.layout_buttons_field_ctrl_command.prepared_team_layout
+{
+	outline-color: lime;
 }
 
 .team_layout_coach_ctrl

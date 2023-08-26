@@ -1,196 +1,127 @@
-// Team params:
-// logo image
-// Name
-// Coach
-
-// Player params:
-// Name
-// Surname
-// Number
-
-// kbmodules.football_standard = {};
-
-// kbmodules.football_standard.playerbase
-
-// field context is needed to ensure that a player item can only be dropped into the corresponding field
-$this.player_item_drag_field_context = null
-$this.next_card_out = null;
-$this.base_timer = null;
 
 
-$this.index_titles = function(){
+/*
+Previous system was a total embarrassment and offense for real programming.
 
-	$this.titles = {
-		// 'team_layout': new vmix_title('command_layout.gtzip'),
+Long story short, previous system indexed players by a string composed
+of the players' name + surname + number.
+This could totally lead to collisions when creating player lists from
+scratch. It's completely unreliable and utterly fucking retarded.
 
-		// field layout
-		'team_layout': new vmix.title({
-			'title_name': 'command_layout.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 41,
-				'margin': 100,
-			},
-		}),
+The new system doesn't has any of these problems.
+It may or may not be slower because of that, but who cares.
+
+The new system utilizes registers pointing to JS objects.
+This introduces a risk of redundant data, but garbage collection
+is very simple in this situation and the only sacrifice is a few
+milliseconds lost due to all the iterations needed for registers.
 
 
-		// cards
-		'yellow_card': new vmix.title({
-			'title_name': 'yellow_card.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 72,
-				'margin': 100,
-			}
-		}),
-		'red_card': new vmix.title({
-			'title_name': 'red_card.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 20,
-				'margin': 100,
-			}
-		}),
-		'ycbr_card': new vmix.title({
-			'title_name': 'ycbr.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 36,
-				'margin': 100,
-			}
-		}),
++------------------+
+| Home/Enemy Club  |
++-----+------------+
+      |
+      +---+
+          |
+          v
+        +------------+
+    +-->|    Club    |
+    |   +------------+
+    |         |
+    |         |     +------------------+
+    |         +-----+    Club Info     |
+    |         |     +------------------+
+    |         |
+    |         |     +-----------------------------------+
+    |         +-----+ Visual header reference registry  |
+    |         |     +-----------------------------------+
+    |         |
+    |         |     +----------------+
+    |         +-----+ Control Panel  |
+    |         |     +--------+-------+
+    |         |              |
+    |         |              |
+    |         |              |   +------------------+
+    |         |              +---+ Player List DOM  |
+    |         |                  +---------+--------+
+    |         |                            |
+    |         |                            |
+    |         |                            |   +------------------+
+    |         |                            +---+  Player cfg DOM  |
+    |         |                            |   +---------+--------+
+    |         |                            |             |
+    |         |                            ...           |
+    |         |                                          |
+    |         |     +------------------+                 |
+    |         +-----+ Player registry  |                 |
+    |               +--------+---------+                 |
+    |                        |            +--------------+
+    |                        |            |  +----------------------------------------------+
+    |                        |            |  |                                              |
+    |                        |            v  v                                              |
+    |                        |     +------------+                                           |
+    |                        +-----+   Player   |<--------------------------------------+   |
+    |                              +------+-----+                                       |   |
+    |                                     |                                             |   |
+    |                                     |   +------------+                            |   |
+    |                                     +---+    Info    |                            |   |
+    |                                     |   +------------+                            |   |
+    |                                     |                                             |   |
+    |                                     |   +-----------------------------------+     |   |
+    |                                     +---+ DOM element reference registry    |     |   |
+    |                                     |   +-----------------------------------+     |   |
+    |                                     |                             v               |   |
+    |                                     |   +---------------------+   |               |   |
+    |                                     +-->| List item DOM elem  |<--+               ^   |
+    |                                     |   +---------------------+                   |   |
+    |                                     |                                             |   |
+    |                                     |   +----------------+                        |   |
+    |                                     +-->| cfg DOM elem   |                        |   |
+    |                                         +----------------+                        |   |
+    |                                                                                   |   |
+    |   +-------------+                                                                 |   ^
+    +--<| Team Lineup |                                                                 |   |
+        +------+------+                                                                 |   |
+               |                                                                        |   |
+               |   +----------------+                                                   |   |
+               +---+   Main List    |                                                   |   |
+               |   +--------+-------+                                                   |   |
+               |            |                                                           |   |
+               |            |   +----------------+                                      |   |
+               |            +---+   List entry   |>-------------------------------------+   |
+               |            |   +----------------+                                          |
+               |            |                                                               |
+               |            ...                                                             |
+               |                                                                            |
+               |                                                                            |
+               |   +----------------+                                                       |
+               +---+ Reserve List   |                                                       |
+               |   +--------+-------+                                                       |
+               |            |                                                               |
+               |            |   +----------------+                                          |
+               |            +---+   List entry   |>-----------------------------------------+
+               |            |   +----------------+
+               |            |
+               |            ...
+               |
+               |    +----------------+
+               +----+ Control panel  |
+                    +----------------+
 
-		// replacements
-		'replacement_out': new vmix.title({
-			'title_name': 'replacement_leaving.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 35,
-				'margin': 100,
-			}
-		}),
-		'replacement_in': new vmix.title({
-			'title_name': 'replacement_incoming.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 42,
-				'margin': 100,
-			}
-		}),
 
-		// VS
-		'splash': new vmix.title({
-			'title_name': 'splash.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 37,
-				'frames_out': 41,
-				'margin': 100,
-			}
-		}),
+*/
 
-		// Goal / score
-		'gscore': new vmix.title({
-			'title_name': 'scored.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 36,
-				'margin': 100,
-			}
-		}),
 
-		// Coach l4d2
-		'coach': new vmix.title({
-			'title_name': 'coach.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 26,
-				'margin': 100,
-			}
-		}),
 
-		// Commenter
-		'commenter': new vmix.title({
-			'title_name': 'commenter.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 26,
-				'margin': 100,
-			}
-		}),
 
-		// Timer and scores
-		'timer': new vmix.title({
-			'title_name': 'score_and_time.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 23,
-				'margin': 100,
-			}
-		}),
 
-		// Composed scores
-		'final_scores': new vmix.title({
-			'title_name': 'final_scores.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 59,
-				'margin': 100,
-			}
-		}),
 
-		// Statistics
-		'stats': new vmix.title({
-			'title_name': 'stats.gtzip',
-			'timings': {
-				'fps': 10,
-				'frames_in': 30,
-				'frames_out': 10,
-				'margin': 100,
-			}
-		}),
-	}
 
-}
-
-$this.playerbase = {
-	'one': {
-		'main': {},
-		'reserve': {},
-		'both': {},
-	},
-	'two': {
-		'main': {},
-		'reserve': {},
-		'both': {},
-	},
-
-	// todo: is this collision safe ?
-	'global_index': {},
-}
-$this.playerbase[1] = $this.playerbase['one'];
-$this.playerbase['1'] = $this.playerbase['one'];
-
-$this.playerbase[2] = $this.playerbase['two'];
-$this.playerbase['2'] = $this.playerbase['two'];
-
-$this.tab_switch = function(event){
-	const id_pair = event.target.getAttribute('match_id');
-
-	$('tab').addClass('tab_hidden');
-	$(`tab[tabid="${id_pair}"]`).removeClass('tab_hidden');
-	$('#tabs .tab').removeClass('active_tab');
-	event.target.classList.add('active_tab');
-}
 
 
 $this.load = async function(){
-	// 
-	// Index colours
-	// 
-	{
-		$this.team_colors = [
-			// '000000',
+	$this.resource_index = {
+		available_colors: [
 			'0066c3',
 			'00984c',
 			'00aff1',
@@ -208,2202 +139,872 @@ $this.load = async function(){
 			'ffc938',
 			'ffe100',
 			'ffffff',
-		]
+		],
+	};
 
-		for (const color of $this.team_colors){
-			const col = $(`<div class="tcolour" tc="${color}" style="background: #${color}"></div>`);
 
-			col.on('click', function(evt){
-				const event = evt;
-				$(event.target).closest('.colour_picker').find('.tcolour').removeClass('col_selected');
-				event.target.classList.add('col_selected');
-			})
-
-			$('.team_param .colour_picker').append(col)
-		}
-	}
-
-	$this.index_titles()
-	$this.postload()
-	$('#teams_layouts .team_layout .ftfield div, #teams_layouts .team_layout .ftfield .goalkeeper').addClass('player_slot');
-	// important todo: such startup info has to be evaluated by the core
-	// const vmix_state = (new DOMParser()).parseFromString((await window.talker.vmix_talk({'Function': ''})), 'application/xml');
-	const vmix_state = await vmix.talker.project();
-
-	await $this.titles.timer.toggle_text('time_added', false);
-	await $this.titles.timer.toggle_img('extra_time_bg', false);
-	await $this.titles.timer.toggle_text('extra_ticker', false);
-	// await $this.titles.timer.set_text('extra_ticker', '00:00');
-	// await $this.titles.timer.set_text('base_ticker', '00:00');
-
-	const fresh_context = ksys.context.module.pull();
-
-	// important todo: Fuck VMIX
+	// --------------------------
+	// Create club control
+	// --------------------------
 	{
-		const yellow_card_sel = vmix_state.querySelector(`vmix inputs input[title="${$this.titles.yellow_card.title_name}"]`)
-		const red_card_sel = vmix_state.querySelector(`vmix inputs input[title="${$this.titles.red_card.title_name}"]`)
-
-		if (yellow_card_sel && red_card_sel){
-			const yellow_card_num = str(yellow_card_sel.getAttribute('number'))
-			const red_card_num = str(red_card_sel.getAttribute('number'))
-
-			const card_corelation = {};
-			// also, fuck js
-			// todo: use map() ?
-			card_corelation[yellow_card_num] = $this.titles.yellow_card;
-			card_corelation[red_card_num] = $this.titles.red_card;
-
-			print(yellow_card_num, red_card_num)
-			print(vmix_state)
-
-			// important todo: I sincerely hate VMIX
-			// If both cards are overlayed, but on different overlays - ded
-			for (let overlay of vmix_state.querySelectorAll('vmix overlays overlay')){
-				const occupied_by = overlay.textContent;
-				print('InnerText:', occupied_by)
-				if (!occupied_by){continue}
-				print(occupied_by, 'in', card_corelation)
-				if (occupied_by.trim() in card_corelation){
-					$this.next_card_out = card_corelation[occupied_by.trim()]
-					print('Found overlay occupied by a card:', occupied_by, $this.next_card_out.title_name)
-					break
-				}
-			}
-		}
-	}
-
-	// presets
-	{
-		const index_file = JSON.parse(ksys.db.module.read('teams_index.index'))
-		const preset_targets = $('.team_base_params_ctrl .team_preset_selector')
-		if (index_file){
-			for (let team of index_file){
-				preset_targets.append(`
-					<option value="${team}">${team}</option>
-				`)
-			}
-		}
-	}
-
-	// context stuff
-	{
-		if (fresh_context.vs_title_bottom_upper_line){
-			$('#vs_text_bottom_upper')[0].value = fresh_context.vs_title_bottom_upper_line
-		}
-		if (fresh_context.vs_title_bottom_lower_line){
-			$('#vs_text_bottom_lower')[0].value = fresh_context.vs_title_bottom_lower_line
-		}
-	}
-
-	// last team preset
-	{
-		const team1_sel = document.querySelector('#team1_def select.team_preset_selector')
-		const team2_sel = document.querySelector('#team2_def select.team_preset_selector')
-		if (fresh_context.last_team_def1){
-			team1_sel.value = fresh_context.last_team_def1
-			team1_sel.dispatchEvent(new Event('change'));
-		}
-		if (fresh_context.last_team_def2){
-			team2_sel.value = fresh_context.last_team_def2
-			team2_sel.dispatchEvent(new Event('change'));
-		}
-		
-	}
-
-	// it's important that the layout is loaded AFTER the player items were created in the control panel
-	$this.load_last_layout()
-
-	// the time number
-	$this.time_num = fresh_context.time_num || 1;
-
-	// 
-	// index all the selectors and whatever the fucknot
-	// 
-	{
-		const return_selectors = function(t){
-			return {
-				'logo_input':          $(`#team${t}_def [prmname="team_logo"] input`)[0],
-				'team_name':           $(`#team${t}_def [prmname="team_name"] input`)[0],
-				'shorthand':           $(`#team${t}_def [prmname="club_shorthand"] input`)[0],
-				'team_coach':          $(`#team${t}_def [prmname="team_coach"] input`)[0],
-				'player_color_picker': $(`#team${t}_def [prmname="team_player_color"] .colour_picker`)[0],
-				'shorts_color_picker': $(`#team${t}_def [prmname="team_shorts_color"] .colour_picker`)[0],
-				'gk_color_picker':     $(`#team${t}_def [prmname="team_gk_color"] .colour_picker`)[0],
-				'score_pool':          $(`#score_ctrl_team${t} .score_ctrl_table`)[0],
-				'player_pool_main':    $(`#team${t}_def .player_lists .player_list.starters .list_pool`)[0],
-				'player_pool_reserve': $(`#team${t}_def .player_lists .player_list.reserve .list_pool`)[0],
-				logo: function(){
-					const input_elem = $(`#team${t}_def [prmname="team_logo"] input`)[0]
-					if (!input_elem.files[0] && !$(`#team${t}_def`).attr(`logo_path`)){
-						return null
-					}
-					if (input_elem.files[0]){
-						return input_elem.files[0].path
-					}else{
-						return $(`#team${t}_def`).attr(`logo_path`)
-					}
-				},
-
-				'field': {
-					'filter_pool': $(`#teams_layouts #team${t}_layout .player_picker_pool`)[0],
-					'field': $(`#teams_layouts #team${t}_layout .ftfield`)[0],
-				},
-
-				'replace': {
-					'leaving': $(`#replacement #replacement_team${t} .replacement_leaving .replacement_filtered_list`)[0],
-					'inbound': $(`#replacement #replacement_team${t} .replacement_incoming .replacement_filtered_list`)[0],
-				},
-			}
-		}
-
-		const team1_sel = return_selectors(1);
-		const team2_sel = return_selectors(2);
-
-		$this.teams = {
-			1: team1_sel,
-			'1': team1_sel,
-			'one': team1_sel,
-
-			2: team2_sel,
-			'2': team2_sel,
-			'two': team2_sel,
-		}
-	}
-
-	// 
-	// Scores
-	// 
-	{
-		const prev_scores = JSON.parse(ksys.db.module.read('scores.fball')) || {'1':[], '2':[]};
-		for (let team of ['1', '2']){
-			for (let score of prev_scores[team]){
-				// $this.playerbase.global_index[score.namecode].score(team, score.time)
-				$this.push_score(team, score.surname, score.time, score.ag, score.penalty)
-			}
-		}
-	}
-
-	// 
-	// Misc
-	// 
-
-	// Commenter
-	$('#commenter_name_input')[0].value = ksys.context.module.cache.todays_commenter || '';
-	$this.resync_red_penalty_cards()
-
-	//
-	// stats
-	//
-	{
-		const prev_stats = JSON.parse(ksys.db.module.read('stats.fball')) || {'1':{}, '2':{}};
-
-		$this.stats_unit_pool = {};
-
-		const stats = [
-			['1',            'l_text_r1', 'r_text_r1', 'УДАРИ'],
-			['2',            'l_text_r2', 'r_text_r2', 'УДАРИ У ПЛОЩИНУ'],
-			['3',            'l_text_r3', 'r_text_r3', 'КУТОВІ'],
-			['4',            'l_text_r4', 'r_text_r4', 'ОФСАЙДИ'],
-			['5',            'l_text_r5', 'r_text_r5', 'ФОЛИ'],
-			['yellow_cards', 'l_text_r6', 'r_text_r6', 'ЖОВТІ КАРТКИ'],
-			['red_cards',    'l_text_r7', 'r_text_r7', 'ЧЕРВОНІ КАРТКИ'],
-		]
-
-		for (const stat_info of stats){
-			const stat_name = str(stat_info[0]);
-
-			const stat_class = 
-				new $this.stat_unit(
-					$this.titles.stats,
-					stat_info[1],
-					stat_info[2],
-					stat_info[3],
-
-					// init val team 1
-					prev_stats?.[stat_name]?.['1'],
-					// init val team 2
-					prev_stats?.[stat_name]?.['2'],
-				)
-
-			$this.stats_unit_pool[stat_name] = stat_class;
-		}
-
-	}
-
-}
-// $this.load()
-
-
-$this.postload = function(){
-	// picking the player item up
-	document.addEventListener('mousedown', tr_event => {
-
-		// the item can be picked both from the filter menu and field
-		const tgt = event.target.closest('.team_layout .generic_player_item')
-		// also make sure it doesn't trigger on anything but LMB
-		if (tgt && tr_event.which == 1){
-			$('body').blur();
-			// set the current football field context
-			$this.player_item_drag_field_context = event.target.closest('.team_layout')
-			tgt.classList.add('dragging')
-			tgt.style.left = tr_event.x + 'px'
-			tgt.style.top = tr_event.y + 'px'
-		}
-
-	});
-
-
-	// dropping/swapping player items
-
-	// important todo: just fucking add some sort of "is dragging" attribute to the field
-	// AND FOR FUCKS SAKE USE JQUERY. AT THIS POINT IT MIGHT AS WELL BE FASTER THAN ALL THIS VANILLA BDSM
-	document.addEventListener('mouseup', tr_event => {
-
-		// the player item which is being dragged
-		const pldrag_item = document.querySelector('.generic_player_item.dragging');
-		// the table cell to drop the player to
-		// important: it has to be a cell related to the current field
-		const player_layout_drop_tgt = tr_event.target.closest('.ftfield .player_slot');
-
-		// if there's a cell underneath the cursor - drop the player item there
-		// AND if this cell is related to the current field
-		if (player_layout_drop_tgt && pldrag_item && $this.player_item_drag_field_context.contains(player_layout_drop_tgt)){
-			// if the drop target is a cell already containing a player - swap the players
-			if (player_layout_drop_tgt.querySelector('.generic_player_item')){
-				const player_from_target = player_layout_drop_tgt.querySelector('.generic_player_item');
-				const dragged_player = pldrag_item;
-
-				// todo: WHAT THE FUCK ?!!!!!!
-				const tmp1 = $('<div></div>')[0];
-				const tmp2 = $('<div></div>')[0];
-
-				player_from_target.replaceWith(tmp1);
-				dragged_player.replaceWith(tmp2);
-
-				tmp1.replaceWith(dragged_player)
-				tmp2.replaceWith(player_from_target)
-			}else{
-				player_layout_drop_tgt.append(pldrag_item)
-			}
-
-			// $this.save_last_layout()
-		}
-
-		// remove hover effect from the cell
-		const remove_cell_hover_effect = document.querySelector('.ftfield .field_cell_hover')
-		if (remove_cell_hover_effect){
-			remove_cell_hover_effect.classList.remove('field_cell_hover')
-		}
-
-		// if there's an element being currently dragged on the page - remove dragging state from it
-		// (this is something that happens no matter where the player item was droped off)
-		if (pldrag_item){
-			pldrag_item.classList.remove('dragging');
-			pldrag_item.removeAttribute('style');
-		}
-
-		// clear football field context
-		$this.player_item_drag_field_context = null;
-
-	});
-
-	// sticking the dragged player item to cursor
-	document.addEventListener('mousemove', tr_event => {
-		// if there's a player element which is marked as dragging - apply XY position to it
-		const player_field_layout_player = document.querySelector('.generic_player_item.dragging')
-		if (player_field_layout_player){
-			player_field_layout_player.style.left = tr_event.x + 'px'
-			player_field_layout_player.style.top = tr_event.y + 'px'
-		}
-	});
-
-
-	// fancy hover effect
-	document.addEventListener('mouseover', tr_event => {
-
-		// whether or not a dragged element exists
-		const is_dragging = document.querySelector('.generic_player_item.dragging')
-		// the target cell the cursor is hovering over
-		// important: it has to be a cell related to the current field
-		const target_cell = tr_event.target.closest('.ftfield .player_slot')
-		// remove hover effect from all the other cells
-		for (let deselect of document.querySelectorAll('.field_cell_hover')){
-			deselect.classList.remove('field_cell_hover')
-		}
-		// add hover effect to the cell, if any
-		if (is_dragging && target_cell && $this.player_item_drag_field_context.contains(target_cell)){
-			target_cell.classList.add('field_cell_hover')
-		}
-
-	})
-
-
-	document.addEventListener('contextmenu', tr_event => {
-
-		const field_player = tr_event.target.closest('.generic_player_item')
-		if (field_player && tr_event.altKey){
-			field_player.remove()
-		}
-
-		// delete player from the player definition list
-		const del_player_def = tr_event.target.closest('.teamdef .player_list .player_item')
-		if (del_player_def && tr_event.altKey){
-			del_player_def.remove()
-		}
-	});
-
-
-	document.addEventListener('keydown', tr_event => {
-		if (tr_event.ctrlKey && tr_event.which == 83){
-			$this.save_last_layout()
-		}
-		if (tr_event.altKey && tr_event.which == 19){
-			$this.quit_all_titles()
-		}
-	});
-}
-
-
-$this.quit_all_titles = async function(){
-	document.body.classList.add('emergency_break')
-	for (let quit_title in $this.titles){
-		await $this.titles[quit_title].overlay_out(1)
-	}
-	document.body.classList.remove('emergency_break')
-}
-
-
-// update vis feedback of all the logos and team names
-// and write the logo path to the attributes of the team def table
-// important todo: make teams use dict system and not this retarded on-demand manual garbage
-$this.upd_vis_feedback = function(){
-	// todo: this is rather stupid
-
-	// TEAM 1
-	let team_logo = $('#team1_def [prmname="team_logo"] input')[0];
-	if (team_logo.files[0]){
-		$('#team1_def').attr('logo_path', team_logo.files[0].path);
-		team_logo = team_logo.files[0].path;
-	}else{
-		team_logo = null;
-	}
-	$('[vis_feedback="team1_logo"]').attr('src', team_logo || $('#team1_def').attr('logo_path'));
-	$('[vis_feedback="team1_name"]').text($('#team1_def [prmname="team_name"] input').val().upper());
-	team_logo = null;
-
-
-	// TEAM 2
-	team_logo = $('#team2_def [prmname="team_logo"] input')[0];
-	if (team_logo.files[0]){
-		$('#team2_def').attr('logo_path', team_logo.files[0].path);
-		team_logo = team_logo.files[0].path;
-	}else{
-		team_logo = null;
-	}
-	$('[vis_feedback="team2_logo"]').attr('src', team_logo || $('#team2_def').attr('logo_path'));
-	$('[vis_feedback="team2_name"]').text($('#team2_def [prmname="team_name"] input').val().upper());
-}
-
-
-
-// player parameters input
-$this.player_ctrl = class {
-	constructor(team, is_reserve, pname='', psurname='', number=''){
-		this.name = pname;
-		this.surname = psurname;
-		this.number = number;
-		this.is_reserve = is_reserve;
-		this.scores = 0;
-		this.stats = {
-			'yellow_cards': 0,
-			'red_cards': 0,
-		}
-		// important todo: WHAT THE FUCK IS THIS ?!!!
-		const _team_selector = {
-			1: 'one',
-			2: 'two',
-		};
-		this.team = {
-			'num': team,
-			'num_word': _team_selector[team],
-			// 'elem': $(`${_team_elem_selector[team]}`),
-			'elem': $(`#team${team}_def`),
-			'field': $(`#team${team}_layout .ftfield`),
-		};
-		this.namecode = '';
-
-		// still, fuck javascript
-		const self = this;
-
-		const ctrl_elem = $(`
-			<div class="player_item" namecode="${this.namecode}">
-				<div class="player_param" prmname="pname">
-					<div class="player_param_label">Name</div>
-					<input type="text" class="player_param_input" value="${this.name}">
-				</div>
-				<div class="player_param" prmname="psurname">
-					<div class="player_param_label">Surname</div>
-					<input type="text" class="player_param_input" value="${ksys.util.str_ops.format(this.surname, '2')}">
-				</div>
-				<div class="player_param" prmname="number">
-					<div class="player_param_label">Number</div>
-					<input type="text" class="player_param_input" value="${this.number}">
-				</div>
-			</div>
-		`)
-
-		this.ctrl_elem = ctrl_elem[0];
-
-		// update the namecode in case player info was passed to the class
-		this._update_namecode(false)
-
-		// todo: this is still not ideal
-		ctrl_elem.find('[prmname="pname"] input')[0].onchange = function(evt){
-			// print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
-			self.name = evt.target.value;
-			self._update_namecode(true);
-		}
-		ctrl_elem.find('[prmname="psurname"] input')[0].onchange = function(evt){
-			// print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU', self, evt.target.value)
-			self.surname = evt.target.value;
-			self._update_namecode(true);
-		}
-		ctrl_elem.find('[prmname="number"] input')[0].onchange = function(evt){
-			self.number = evt.target.value;
-			self._update_namecode(true);
-		}
-		ctrl_elem[0].oncontextmenu = function(evt){
-			if (evt.altKey){
-				self.kill()
-			}
-		}
-
-		// register this player in the index
-		$this.playerbase[this.team.num_word][this.is_reserve ? 'reserve' : 'main'][this.namecode] = this;
-		$this.playerbase[this.team.num_word]['both'][this.namecode] = this;
-		$this.playerbase.global_index[this.namecode] = this;
-	}
-
-	// important todo: this retarded shit logic does an extra lap. TOO BAD
-
-	// update the namecode including the control element
-	_update_namecode(forward){
-		const reserve_or_main = this.is_reserve ? 'reserve' : 'main';
-
-		// global player index
-		delete $this.playerbase.global_index[this.namecode];
-		// current team reserve/main
-		delete $this.playerbase[this.team.num_word][reserve_or_main][this.namecode];
-		// current team combo of main and reserve
-		delete $this.playerbase[this.team.num_word].both[this.namecode];
-
-
-		// Forward update has to come BEFORE the class' namecode is updated,
-		// because all the other generic player items still have an old namecode
-		if (forward){
-			this.forward_update(true)
-		}
-		this.namecode = `${this.name.lower()} ${this.surname.lower()} ${this.number}`;
-		this.ctrl_elem.setAttribute('namecode', this.namecode);
-
-		$this.playerbase[this.team.num_word][reserve_or_main][this.namecode] = this;
-		$this.playerbase[this.team.num_word].both[this.namecode] = this;
-		$this.playerbase.global_index[this.namecode] = this;
-	}
-
-	// remove, destroy, kill, annihilate, obliterate this player from the face of Earth
-	kill(){
-		const reserve_or_main = this.is_reserve ? 'reserve' : 'main';
-
-		// global player index
-		delete $this.playerbase.global_index[this.namecode];
-		// current team reserve/main
-		delete $this.playerbase[this.team.num_word][reserve_or_main][this.namecode];
-		// current team combo of main and reserve
-		delete $this.playerbase[this.team.num_word].both[this.namecode];
-
-		this.ctrl_elem.remove();
-
-		$(`player[namecode="${this.namecode}"]`).remove();
-	}
-
-	// update all the player elements on the page with new data
-	// todo: is this too expensive? Shouldn't be...
-	// Because just how often is this going to be triggered ?
-	forward_update(upd_namecode=true){
-		// print('Forward update...', this.namecode)
-		const tgt_elems = $(`player[namecode="${this.namecode}"]`);
-
-		tgt_elems.find('.player_number').text(this.number)
-		tgt_elems.find('.player_surname').text(ksys.util.str_ops.format(this.surname, '2'))
-
-		if (upd_namecode){
-			this._update_namecode(false)
-		}
-
-		tgt_elems.attr('namecode', this.namecode)
-		
-	}
-
-	get_generic_player_item(asjq=true){
-		const generic_item = $(`
-			<player
-				class="generic_player_item"
-				namecode="${this.namecode}"
-			>
-				<img vis_feedback="team${this.team.num}_logo" src="${this.get_team_logo()}">
-				<div class="player_number">${this.number}</div>
-				<div class="player_surname">${ksys.util.str_ops.format(this.surname, '2')}</div>
-			</player>
-		`)
-
-		if (asjq){
-			return generic_item
-		}else{
-			return generic_item[0]
-		}
-	}
-
-	// get logo filepath of this player's team
-	// returns null if nothing's present
-	get_team_logo(){
-		const input_elem = this.team.elem.find('[prmname="team_logo"] input')[0]
-		if (!input_elem.files[0] && !this.team.elem.attr('logo_path')){
-			return null
-		}
-		if (input_elem.files[0]){
-			return input_elem.files[0].path
-		}else{
-			return this.team.elem.attr('logo_path')
-		}
-		// return (input_elem.files[0].path || this.team.elem.attr('logo_path'))
-	}
-
-	// whether this player is on the field or not
-	is_on_field(){
-		return !!this.team.field[0].querySelector(`[namecode="${this.namecode}"]`)
-	}
-
-	async penalty_card(_card, selected_elem){
-		const _ctx = ksys.context.module.cache;
-
-		const card_selection = {
-			'yellow': 'yellow_card',
-			'red':    'red_card',
-			'ycbr':   'ycbr_card',
-		}
-		let card = $this.titles[card_selection[_card]];
-		if (_card == 'yellow' && this.stats.yellow_cards >= 1){
-			card = $this.titles['ycbr_card']
-		}
-
-		$this.next_card_out = card;
-
-		await card.set_text(
-			'player_name',
-			`${this.number} ${ksys.strf.params.players.format(this.surname)}`,
-		)
-		await card.set_img_src('club_logo', this.get_team_logo())
-		
-		// disable buttons
-		ksys.btns.toggle({
-			'red_card':    false,
-			'yellow_card': false,
+		print('Loading clubs')
+		// create the class
+		const club_ctrl = new $this.FootballClub({
+			'club_name': 'лівий берег',
+			'club_name_shorthand': 'лБк',
+			'main_coach': 'Віталій ПЕРВАК',
 		})
-
-		if (_card == 'red'){
-			$this.stats_unit_pool.red_cards.upd_value(this.team.num, 1)
-			ksys.context.module.prm(`team${this.team.num}_rcard_count`, (`team${this.team.num}_rcard_count` in _ctx) ? (_ctx[`team${this.team.num}_rcard_count`] += 1).clamp(0, 3) : 1)
-			$this.resync_red_penalty_cards()
-			this.stats.red_cards += 1;
-		}else{
-			$this.stats_unit_pool.yellow_cards.upd_value(this.team.num, 1)
-			this.stats.yellow_cards += 1;
-			selected_elem.click()
-		}
-
-		// show the card in vmix
-		await card.overlay_in(1)
-
-		// let them hang for 7 seconds
-		await ksys.util.sleep(7000)
-		// hide card
-		await $this.hide_card()
-
-		// re-enable buttons
-		ksys.btns.toggle({
-			'red_card':    true,
-			'yellow_card': true,
-		})
-
-	}
-
-	pardon(elem){
-		$this.stats_unit_pool.yellow_cards.upd_value(this.team.num, -1)
-		this.stats.yellow_cards -= 1;
-		elem.click();
-	}
-}
+		// store the class globally
+		$this.resource_index.club_ctrl = club_ctrl;
+		// Append control panel to the DOM
+		$('#club_definition').append(club_ctrl.control_panel_elem().elem)
 
 
-$this.save_match_stats = function(){
-	const save = {};
-	console.time('Saving stats')
-	for (const stat_name in $this.stats_unit_pool){
-		const stat = $this.stats_unit_pool[stat_name];
-		save[stat_name] = {
-			1: int(stat.val_selector[1]),
-			2: int(stat.val_selector[2]),
-		}
-	}
-
-	ksys.db.module.write('stats.fball', JSON.stringify(save, null, 4))
-
-	console.timeEnd('Saving stats')
-}
-
-// stat unit
-$this.stat_unit = class {
-	constructor(related_title, team1_txt_block, team2_txt_block, visname, init_val_t1=0, init_val_t2=0){
-		this.related_title = related_title;
-		this.visname = visname;
-		this.elem_index = {};
-		const self = this;
-
-		this.text_field_selector = {
-			1: team1_txt_block,
-			2: team2_txt_block,
-		}
-
-		this.val_selector = {
-			1: int(init_val_t1) || 0,
-			2: int(init_val_t2) || 0,
-		}
-
-		this.vis_echo = {
-			1: [],
-			2: [],
-		};
-
-
-		//
-		// append table row to both tables
-		//
-
-		for (const tnum of [1, 2]){
-			$(`.tstats_table_${tnum}`).append(this.table_row_elem(tnum))
-		}
-
-		//
-		// Create quick buttons
-		//
-		for (const tnum of [1, 2]){
-			$(`.tstats_buttons_team_${tnum}`).append(this.quick_button(tnum))
-		}
-
-	}
-
-	// get html element of a quick button
-	quick_button(team){
-		const self = this;
-
-		const qbtn_html = `
-			<div class="team_stat_quick_btn_pair">
-				<div class="team_stat_quick_btn_vis_value">${this.val_selector[team]}</div>
-				<sysbtn stat_action="add" class="team_stat_quick_btn_add">+ ${this.visname}</sysbtn>
-				<sysbtn stat_action="subt" class="team_stat_quick_btn_subt">- ${this.visname}</sysbtn>
-			</div>
-		`
-
-		const qbtn_index = ksys.tplates.index_elem(
-			qbtn_html,
+		const _test = [
 			{
-				'add': '.team_stat_quick_btn_add',
-				'subt': '.team_stat_quick_btn_subt',
-				'vis_val': '.team_stat_quick_btn_vis_value',
+				'name':    'Олександр',
+				'surname': 'Чернятинський',
+				'num':     '1',
+			},
+			{
+				'name':    'Ернест',
+				'surname': 'Астахов',
+				'num':     '27',
+			},
+			{
+				'name':    'Роман',
+				'surname': 'Андрієшин',
+				'num':     '44',
+			},
+			{
+				'name':    'Андрій',
+				'surname': 'Якимів',
+				'num':     '97',
+			},
+			{
+				'name':    'Олександр',
+				'surname': 'Дударенко',
+				'num':     '3',
+			},
+			{
+				'name':    'Руслан',
+				'surname': 'Дедух',
+				'num':     '18',
+			},
+			{
+				'name':    'Андрій',
+				'surname': 'Співаков',
+				'num':     '14',
+			},
+			{
+				'name':    'Микола',
+				'surname': 'Когут',
+				'num':     '19',
+			},
+			{
+				'name':    'Іван',
+				'surname': 'Когут',
+				'num':     '17',
+			},
+			{
+				'name':    'Владислав',
+				'surname': 'Войцеховський',
+				'num':     '11',
+			},
+			{
+				'name':    'Даниїл',
+				'surname': 'Сухоручко',
+				'num':     '21',
+			},
+		]
+
+		for (const _testing of _test){
+			club_ctrl.register_player(_testing)
+		}
+
+		const team_lineup = new $this.TeamLineup(
+			club_ctrl,
+			$this.resource_index.available_colors
+		)
+
+		$('#team_lineup').append(team_lineup.control_panel_elem())
+
+		$this.index_existing_clubs()
+
+	}
+
+
+}
+
+
+
+
+
+
+/*
+
+Each club has:
+	- Logo
+	- Official name
+	- Official name shorthand
+	- Main coach
+	- Players
+
+*/
+
+
+// club_struct is a dict where:
+// 	- logo_path: String representing an absolute path
+// 	             pointing to the club's logo on the LOCAL disk.
+// 
+//  - club_name: Official, full name of the club.
+// 
+//  - club_name_shorthand: Club's name shorthand, like ОБОЛОНЬ - ОБО
+// 
+//  - main_coach: Club's main coach.
+// 
+//  - playerbase: An array of dictionaries representing players and their info:
+//                {
+//                    'name':    player's name,
+//                    'surname': player's surname,
+//                    'num':     player's number,
+//                }
+//                This dictionary gets transformed
+//                into a ClubPlayer class after initialization.
+$this.FootballClub = class{
+	constructor(input_club_struct=null, is_enemy=false){
+		const club_struct = input_club_struct || {};
+
+		// Base info
+		this.logo_path =           club_struct.logo_path || './assets/red_cross.png';
+		this.club_name =           club_struct.club_name || '';
+		this.club_name_shorthand = club_struct.club_name_shorthand || '';
+		this.main_coach =          (club_struct.main_coach || '').lower();
+		this.is_enemy =            is_enemy;
+
+		// An array of ClubPlayer classes
+		this.playerbase =          new Set();
+
+		// populate internal registry with initial data, if any
+		for (const player_info of (club_struct.playerbase || [])){
+			this.playerbase.add(new $this.ClubPlayer(this, player_info))
+		}
+
+		// Control panel reference
+		this.control_panel = null;
+
+		// visual headers references
+		this.vis_header_references = new Set();
+	}
+
+	// forward update logos and club name
+	forward_update(){
+		// update visual headers
+		for (const vheader of this.vis_header_references){
+			vheader.index.logo.src = this.logo_path;
+			vheader.index.title.innerText = this.club_name.upper();
+		}
+		// update player items
+		for (const player of this.playerbase){
+			player.forward_update()
+		}
+
+		// update self
+		this.control_panel.index.logo_feedback.src = this.logo_path;
+	}
+
+	// get visual header: an element with club logo + name
+	// this data is expected to be persistent
+	vis_header_elem(){
+		const tplate = ksys.tplates.index_tplate(
+			'#club_header_template',
+			{
+				'logo':    'img',
+				'title':   'club-header-title',
 			}
 		);
 
-		qbtn_index.index.add.onclick = function(){
-			self.upd_value(team, 1)
-		}
-		qbtn_index.index.subt.onclick = function(){
-			self.upd_value(team, -1)
+		tplate.index.logo.src = this.logo_path;
+		tplate.index.title.innerText = this.club_name.upper();
+
+		if (this.is_enemy){
+			tplate.elem.setAttribute('is_enemy', true)
 		}
 
-		// register for echo
-		this.vis_echo[team].push({
-			'echo_type': 'elem_text',
-			'tgt': qbtn_index.index.vis_val,
-		})
+		// register reference
+		this.vis_header_references.add(tplate)
 
-		return qbtn_index.elem
+		return tplate.elem
 	}
 
-	table_row_elem(team){
+	// Register a new player in this club
+	// - input_player_info:dict player info as described in FootballClub class
+	register_player(input_player_info=null){
+		// create player class
+		const player = new $this.ClubPlayer(this, input_player_info);
+		// add player to the registry
+		this.playerbase.add(player);
+		// add player cfg box to the club pool
+		this.control_panel.index.player_pool.append(player.player_params_elem().elem)
+		// return the player class
+		return player
+	}
+
+	// Create club control panel
+	control_panel_elem(){
 		const self = this;
 
-		const stat_unit_table_row_html = `
-			<div class="stat_unit_table_row">
-				${this.visname}
-				<input noctrl type="number">
-			</div>
-		`
-		// create and index row element
-		const row_elem = ksys.tplates.index_elem(
-			stat_unit_table_row_html,
-			{'inp': 'input'}
-		)
-		row_elem.index.inp.value = this.val_selector[team]
-		row_elem.index.inp.onchange = function(evt){
-			self.set_value(team, int(evt.target.value) || 0)
-		}
-		row_elem.index.inp.onclick = function(evt){
-			evt.target.select()
+		if (this.control_panel){
+			return this.control_panel
 		}
 
-		// register for echo
-		this.vis_echo[team].push({
-			'echo_type': 'input',
-			'tgt': row_elem.index.inp,
-		})
+		const tplate = ksys.tplates.index_tplate(
+			'#club_def_template',
+			{
+				'logo_feedback':    'img.club_def_logo_visfeedback',
 
-		return row_elem.elem
-	}
+				// base params
+				'logo_input':      'club-base-params club-param[prmname="logo"] input',
+				'club_title':      'club-base-params club-param[prmname="title"] input',
+				'title_shorthand': 'club-base-params club-param[prmname="title_shorthand"] input',
+				'main_coach':      'club-base-params club-param[prmname="main_coach"] input',
 
-	// set value to a specific number
-	set_value(team, val){
-		// update vmix title
-		this.related_title.set_text(this.text_field_selector[team], val)
-		// update self info
-		this.val_selector[team] = val;
-		// update values in the table rows, etc
-		this.forward_vis_echo()
-		// save stats to file
-		$this.save_match_stats()
-	}
-
-	// addition subtraction
-	// addition/subtraction is determined by the input value
-	// which means to subtract from the value - pass a negative integer
-	upd_value(team, val){
-		// basically same as set_value, except it's addition/subtraction
-		const new_val = this.val_selector[team] + val;
-		this.val_selector[team] = Math.max(new_val, 0);
-		this.related_title.set_text(this.text_field_selector[team], this.val_selector[team]);
-		// update values in the table rows, etc
-		this.forward_vis_echo()
-		// save stats to file
-		$this.save_match_stats()
-	}
-
-	// update values in the table rows, etc
-	forward_vis_echo(){
-		// each element of the echo array should have a value property
-		for (const team of [1, 2]){
-			for (const echo of this.vis_echo[team]){
-				if (echo.echo_type == 'input'){
-					echo.tgt.value = this.val_selector[team];
-				}
-				if (echo.echo_type == 'elem_text'){
-					echo.tgt.innerText = this.val_selector[team];
-				}
+				// Playerbase
+				'reg_player_btn':  'club-playerbase sysbtn[btname="register_player_in_club"]',
+				'player_pool':     'club-playerbase playerbase-pool',
 			}
-		}
-	}
-
-	async push_to_vmix(){
-		await this.related_title.set_text(this.text_field_selector[1], this.val_selector[1]);
-		await this.related_title.set_text(this.text_field_selector[2], this.val_selector[2]);
-	}
-
-}
-
-
-
-
-// ================================
-//        Text formatting
-// ================================
-
-
-$this.resync_red_penalty_cards = function(){
-	const ctx = ksys.context.module.cache;
-	// print('Resyncing cards...')
-	for (let team of ['1', '2']){
-
-		const team_card_count = ctx[`team${team}_rcard_count`]
-		if (!(`team${team}_rcard_count` in ctx)){continue};
-
-		// print('WTF', `team${team}_rcard_count`)
-
-		$(`#red_card_counter_team${team} .red_card_counter_pool img`).removeClass('rcard_shown')
-		for (let card of range(1, 4)){
-			if (card > team_card_count){
-				$this.titles.timer.toggle_img(`rcard_${team}_${card}`, false)
-				continue
-			}
-			// print('Syncing card', card)
-			$(`#red_card_counter_team${team} .red_card_counter_pool img.rcard${card}`).addClass('rcard_shown')
-			$this.titles.timer.toggle_img(`rcard_${team}_${card}`, true)
-		}
-	}
-}
-
-$this.mod_penalty_red_card = function(event, team, subtr=false){
-
-	if (!event.altKey){return};
-
-	const ctx = ksys.context.module.cache;
-
-	if (subtr){
-		ksys.context.module.prm(`team${team}_rcard_count`, (`team${team}_rcard_count` in ctx) ? (ctx[`team${team}_rcard_count`] -= 1).clamp(0, 3) : 0)
-	}else{
-		ksys.context.module.prm(`team${team}_rcard_count`, (`team${team}_rcard_count` in ctx) ? (ctx[`team${team}_rcard_count`] += 1).clamp(0, 3) : 0)
-	}
-
-	print(ksys.context.module.cache.team1_rcard_count, ksys.context.module.cache.team2_rcard_count)
-
-	$this.resync_red_penalty_cards()
-}
-
-
-
-
-
-$this.spawn_player = function(event, team){
-	const pool = $(event.target.closest('.player_list')).find('.list_pool')
-	if (!team){
-		console.error('INVALID TEAM')
-		return
-	}
-	const new_player = new $this.player_ctrl(team, pool[0].closest('.player_list').classList.contains('reserve'));
-	pool.append(new_player.ctrl_elem)
-}
-
-
-$this.save_team_preset = function(team){
-	const _team_selector = {
-		1: {
-			field: '#team1_layout',
-			def: '#team1_def',
-		},
-		2: {
-			field: '#team2_layout',
-			def: '#team2_def',
-		},
-	}
-	const team_def = _team_selector[team].def;
-	const team_field = _team_selector[team].field;
-	
-	// check whether the team name is null or not
-	// this is needed not to save nameless malformed files
-	const club_name = $(`${team_def} .team_base_params [prmname="team_name"] input`).val().trim().lower()
-	// fuck me
-	// const has_logo = $(`${team_def} .team_base_params [prmname="team_logo"] input`)[0].files[0]
-	const has_logo = $(team_def).attr('logo_path')
-
-
-	if (!club_name){
-		// alert('Malformed Club Name OPEN YOUR EYES PLEASE ?!!')
-		return
-	}
-
-	const club_info = {
-		'club_name': club_name,
-		'coach': $(`${team_def} .team_base_params [prmname="team_coach"] input`).val(),
-		'shorthand': $(`${team_def} .team_base_params [prmname="club_shorthand"] input`).val(),
-		'player_color': $(`${team_def} .team_base_params [prmname="team_player_color"] .tcolour.col_selected`).attr('tc') || '000000',
-		'shorts_color': $(`${team_def} .team_base_params [prmname="team_shorts_color"] .tcolour.col_selected`).attr('tc') || '000000',
-		'gk_color': $(`${team_def} .team_base_params [prmname="team_gk_color"] .tcolour.col_selected`).attr('tc') || '000000',
-		'logo': has_logo || null,
-		'main_players': [],
-		'reserve_players': [],
-	}
-
-	// main players
-	for (let player of document.querySelectorAll(`${team_def} .player_lists .player_list.starters .player_item`)){
-		club_info.main_players.push({
-			'name': player.querySelector('[prmname="pname"] .player_param_input').value,
-			'surname': player.querySelector('[prmname="psurname"] .player_param_input').value,
-			'number': player.querySelector('[prmname="number"] .player_param_input').value,
-		})
-	}
-
-	// reserve
-	for (let player of document.querySelectorAll(`${team_def} .player_lists .player_list.reserve .player_item`)){
-		club_info.reserve_players.push({
-			'name': player.querySelector('[prmname="pname"] .player_param_input').value,
-			'surname': player.querySelector('[prmname="psurname"] .player_param_input').value,
-			'number': player.querySelector('[prmname="number"] .player_param_input').value,
-		})
-	}
-
-	print(club_info)
-
-	// save the team to file
-	ksys.db.module.write(`${club_name}.tdef`, JSON.stringify(club_info, null, 4))
-
-	// 
-	// update index
-	// 
-
-	// Read existing index file, if any
-	const index_file = ksys.db.module.read('teams_index.index')
-	// Eval file into json
-	// If file doesn't exist - the db reader would return "null" which is a valid json
-	// and evaluates into false value
-	// important todo: Fuck
-	const team_presets_index = JSON.parse(index_file) || [];
-
-	// If index doesn't exist - create one. Empty
-	if (!index_file){
-		ksys.db.module.write('teams_index.index', JSON.stringify([], null, 4))
-	}
-
-	// If index doesn't contain the current team - add it
-	if (!team_presets_index.includes(club_name)){
-		team_presets_index.push(club_name)
-		ksys.db.module.write('teams_index.index', JSON.stringify(team_presets_index, null, 4))
-	}
-
-	$this.save_last_team_presets()
-}
-
-$this.load_team_preset = function(event){
-	print(event)
-	// get preset by file name and evaluate to JSON
-	const team_preset = JSON.parse(ksys.db.module.read(`${event.target.value}.tdef`))
-	// if this files does not exist - don't do anything
-	if (!team_preset){return};
-
-	// Get current team control panel element for later use
-	const tgt_team = $(event.target.closest('.teamdef'))
-
-	// element selectors
-	const _team_selector = {
-		'team1_def': {
-			field: '#team1_layout',
-			// def: '#team1_def',
-			num: 1,
-		},
-		'team2_def': {
-			field: '#team2_layout',
-			// def: '#team2_def',
-			num: 2,
-		},
-	}
-
-	const tgt_team_info = _team_selector[tgt_team[0].id];
-
-	// Set team name input value
-	tgt_team.find('.team_base_params [prmname="team_name"] input')[0].value = team_preset.club_name.upper();
-	// Set team coach name input value
-	tgt_team.find('.team_base_params [prmname="team_coach"] input')[0].value = team_preset.coach.upper();
-
-
-	tgt_team.find('.team_base_params .tcolour').removeClass('col_selected');
-	// Set players colour
-	tgt_team.find(`.team_base_params [prmname="team_player_color"] .tcolour[tc="${team_preset.player_color}"]`).addClass('col_selected');
-	// Set player shorts colour
-	tgt_team.find(`.team_base_params [prmname="team_shorts_color"] .tcolour[tc="${team_preset.shorts_color}"]`).addClass('col_selected');
-	// Set goalkeeper colour
-	tgt_team.find(`.team_base_params [prmname="team_gk_color"] .tcolour[tc="${team_preset.gk_color}"]`).addClass('col_selected');
-
-
-	// empty both player pools of this team
-	tgt_team.find('.player_list .list_pool').empty()
-	// Set logo attribute of the current team
-	tgt_team.attr('logo_path', team_preset.logo)
-	// team shorthand
-	// todo: there's option chaining in latest chromium
-	tgt_team.find('.team_base_params [prmname="club_shorthand"] input')[0].value = (team_preset.shorthand || '').upper();
-
-	// spawn main players
-	// team, is_reserve, pname='', psurname='', number=''
-	for (let player of team_preset.main_players){
-		const new_player = new $this.player_ctrl(
-			tgt_team_info.num,
-			false,
-			player.name,
-			player.surname,
-			player.number,
 		);
-		tgt_team.find('.player_list.starters .list_pool').append(new_player.ctrl_elem)
+
+		// save the template
+		// todo: only one definition panel can exist for now
+		this.control_panel = tplate;
+
+		// populate pool with existing players
+		for (const player of this.playerbase){
+			tplate.index.player_pool.append(player.player_params_elem().elem)
+		}
+
+		// write other info
+		tplate.index.club_title.value = this.club_name
+		tplate.index.title_shorthand.value = this.club_name_shorthand
+		tplate.index.main_coach.value = this.main_coach
+		tplate.index.logo_feedback.src = this.logo_path
+
+		// bind button for adding new players
+		tplate.index.reg_player_btn.onclick = function(){
+			self.register_player()
+		}
+		// bind logo change
+		tplate.index.logo_input.onchange = function(evt){
+			self.logo_path = evt.target?.files?.[0].path;
+			self.forward_update()
+		}
+		// bind club name change
+		tplate.index.club_title.onchange = function(evt){
+			self.club_name = evt.target.value
+			self.forward_update()
+		}
+
+		return tplate
 	}
 
-	// spawn reserve players
-	for (let player of team_preset.reserve_players){
-		const new_player = new $this.player_ctrl(
-			tgt_team_info.num,
-			true,
-			player.name,
-			player.surname,
-			player.number,
+	// open club control panel in the club tab
+	open_panel(){
+		// delete previous control panel
+		$('#club_definition club-def').remove();
+		// Append new club
+		$('#club_definition').append(this.control_panel_elem().elem);
+	}
+
+	// return a json representing this club
+	to_json(){
+		const dump = {
+			'logo_path':           this.logo_path,
+			'club_name':           this.club_name,
+			'club_name_shorthand': this.club_name_shorthand,
+			'main_coach':          this.main_coach,
+			'playerbase':          [],
+		};
+
+		for (const player of this.playerbase){
+			dump.playerbase.push(player.as_dict())
+		}
+
+		print('Club dump info:', dump)
+
+		return dump
+	}
+}
+
+
+
+// - input_player_info:dict player info as described in FootballClub class
+// - parent_club:FootballClub parent football club.
+// This data is persistent, unless killed
+$this.ClubPlayer = class{
+	constructor(parent_club, input_player_info=null){
+		const player_info = input_player_info || {};
+
+		this.club = parent_club;
+
+		this.player_name =    (player_info.name || '').lower();
+		this.player_surname = (player_info.surname || '').lower();
+		this.player_num =     (player_info.num || '').lower();
+
+		// stats
+		this.yellow_cards = 0;
+		this.red_cards = 0;
+
+		// todo: is this really a good idea???
+		// treating JS like C ??!?!?!
+		// POINTERS???
+		// CONSPIRACIES?????
+		this.references = new Set();
+	}
+
+	// forward player data (name, surname, number)
+	// to all the related elements
+	forward_update(){
+		for (const generic_list_elem of this.references){
+			generic_list_elem.index.logo.src =          this.club.logo_path;
+			generic_list_elem.index.num.innerText =     this.player_num.upper();
+			generic_list_elem.index.surname.innerText = this.player_surname.upper();
+		}
+	}
+
+	// Remove the player from EVERYWHERE
+	disqualify(){
+		// Remove DOM elements
+		this.unlist()
+		// Delete self from the club's registry
+		this.club.playerbase.delete(this)
+	}
+
+	// Unlist the player ftom the current match
+	unlist(){
+		// Delete all the GUI elements from the page
+		for (const reference of this.references){
+			reference.elem.remove();
+		}
+	}
+
+	// delete obsolete references
+	// todo: this means there are always redundant
+	// elements until this method is called
+	collect_garbage(){
+		for (const rubbish of this.references){
+			if (!document.body.contains(rubbish.elem)){
+				this.references.delete(rubbish)
+			}
+		}
+	}
+
+	// return an indexed template from ksys.tplates.index_tplate
+	generic_list_elem(collect_rubbish=true){
+		const self = this;
+
+		const tplate = ksys.tplates.index_tplate(
+			'#generic_player_list_item_template',
+			{
+				'logo':    'img.player_club_logo',
+				'num':     '.player_number',
+				'surname': '.player_surname',
+			}
 		);
-		tgt_team.find('.player_list.reserve .list_pool').append(new_player.ctrl_elem)
+
+		// delete redundant references
+		if (collect_rubbish){
+			this.collect_garbage()
+		}
+
+		// Write down data
+		tplate.index.logo.src = this.club.logo_path;
+		tplate.index.num.innerText = this.player_num.upper();
+		tplate.index.surname.innerText = this.player_surname.upper();
+
+		// Write down reference to this element
+		self.references.add(tplate)
+
+		// too bad JS doesn't support cool python unpacking
+		// (aka return a, b)
+		return tplate
 	}
 
-	// Update vis feedback, like team logos and team names
-	$this.upd_vis_feedback()
-	// save the names of the currently selected teams
-	$this.save_last_team_presets()
+	// return player config element
+	// (inputs with name, surname, name, ...)
+	player_params_elem(){
+		const self = this;
 
-}
+		const tplate = ksys.tplates.index_tplate(
+			'#generic_player_config_template',
+			{
+				'name':    'player-param[prmname="player_name"] input',
+				'surname': 'player-param[prmname="player_surname"] input',
+				'num':     'player-param[prmname="player_num"] input',
+			}
+		);
 
-$this.save_last_team_presets = function(){
-	ksys.context.module.prm('last_team_def1', $('#team1_def [prmname="team_name"] input')[0].value.lower(), false)
-	ksys.context.module.prm('last_team_def2', $('#team2_def [prmname="team_name"] input')[0].value.lower())
-}
+		// Populate params
+		tplate.index.name.value = this.player_name.upper();
+		tplate.index.surname.value = this.player_surname.upper();
+		tplate.index.num.value = this.player_num.upper();
 
+		tplate.index.name.onchange = function(evt){
+			self.player_name = evt.target.value.lower();
+			self.forward_update();
+		}
+		tplate.index.surname.onchange = function(evt){
+			self.player_surname = evt.target.value.lower();
+			self.forward_update();
+		}
+		tplate.index.num.onchange = function(evt){
+			self.player_num = evt.target.value.lower();
+			self.forward_update();
+		}
 
-$this.filter_players = function(event, team){
-	// Worst timing result: 2.5 ms
+		// bind deletion of the player from the registry
+		// (alt+RMB)
+		tplate.elem.oncontextmenu = function(evt){
+			if (evt.altKey){
+				// self combustion moment (real)
+				self.disqualify()
+				// remove the box DOM element
+				tplate.elem.remove()
+			}
+		}
 
-	// current team's field/players
-	const field_context = event.target.closest('.team_layout');
-	const pool = $(field_context).find('.player_picker .player_picker_pool');
-	// Query from the text input
-	const tquery = event.target.value.toLowerCase();
+		return tplate
+	}
 
-	// Clear the filtered pool
-	pool.empty()
+	get name_id(){
+		return `${this.player_name} ${this.player_surname} ${this.player_num}`.lower()
+	}
 
-	for (let player_index in $this.playerbase[team].both){
-		const player = $this.playerbase[team].both[player_index]
+	// test whether the player is inside another player array
+	is_in(target_array){
+		for (const player of target_array){
+			if (this.name_id == player.name_id){
+				return true
+			}
+		}
+		return false
+	}
 
-		//    match player name or number           make sure the player is not on the field
-		if (  player.namecode.includes(tquery)  &&  !player.is_on_field()  ){
-			pool.append(player.get_generic_player_item())
+	// return a dictionary representing this player
+	as_dict(){
+		return {
+			'name':    this.player_name,
+			'surname': this.player_surname,
+			'num':     this.player_num,
 		}
 	}
 }
 
 
-$this.filter_players_to_punish = function(event){
 
-	// the query from the text input
-	const tquery = event.target.value.lower();
+/*
+Club lineup for the upcoming match.
+	- club is the FootballClub class the lineup is constructed from.
 
-	// todo: get the fuck rid of Jquery
-	const punish_pool = $('#card_player_filter_pool');
-	punish_pool.empty()
+	- input_lineup_info is a dictionary containing lineup info:
+	    - main_players: An array of player info dicts.
+	    - reserve_players: An array of player info dicts.
+	    - shorts_color: Shorts colour identifier for the match.
+	    - tshirt_color: T-shirt colour identifier for the match.
+	    - gk_color: Goalkeeper colour identifier for the match.
+	    - field_layout: A dictionary where key is field cell id
+	                    and value is player info dict.
+	    - colors: array of HEX colours available in the colour picker.
+*/
+$this.TeamLineup = class{
+	constructor(club, colors=null, input_lineup_info=null){
+		this.club = club;
+		const lineup_info = input_lineup_info || {};
 
-	// todo: is this too slow ?
-	// and is this faster than getting indexed shit ?
-	// const all_players = [
-	// 	...$this.playerbase.one.main,
-	// 	...$this.playerbase.one.reserve,
+		// basic config
+		this.shorts_color = lineup_info.shorts_color || null;
+		this.tshirt_color = lineup_info.tshirt_color || null;
+		this.gk_color =     lineup_info.gk_color || null;
+		this.field_layout = lineup_info.field_layout || {};
 
-	// 	...$this.playerbase.two.main,
-	// 	...$this.playerbase.two.reserve,
-	// ];
+		// Team colours to pick from
+		this.available_colors = colors || [];
 
-	for (let player_index in $this.playerbase.global_index){
-		// match player name or number
-		const player = $this.playerbase.global_index[player_index];
-		if (player.namecode.includes(tquery)){
-			const filtered_item = player.get_generic_player_item()
-			// filtered_item[0].onclick = $this.select_player_for_punishment;
-			filtered_item[0].onclick = function(event){
-				$('#card_player_filter_pool .generic_player_item').removeClass('selected_to_punish')
-				event.target.closest('.generic_player_item').classList.add('selected_to_punish')
-				if (player.stats.yellow_cards > 0){
-					ksys.btns.pool.pardon_yellow_card.toggle(true)
-				}else{
-					ksys.btns.pool.pardon_yellow_card.toggle(false)
+		// Color picker classes
+		this.shorts_colpick = null;
+		this.tshirt_colpick = null;
+		this.gk_colpick = null;
+
+		// These sets contain player classes
+		this.main_players = new Set();
+		this.reserve_players = new Set();
+
+		this.tplate = null;
+	}
+
+	// get control panel element for the lineup
+	control_panel_elem(){
+		const self = this;
+
+		if (self.tplate){
+			return self.tplate.elem
+		}
+
+		// Create the control panel itself
+		this.tplate = ksys.tplates.index_tplate(
+			'#club_match_lineup_template',
+			{
+				// Config (colour pickers)
+				'shorts_color_picker': 'lineup-param[prmname="shorts_color"] .param_content',
+				'tshirt_color_picker': 'lineup-param[prmname="tshirt_color"] .param_content',
+				'gk_color_picker':     'lineup-param[prmname="gk_color"] .param_content',
+
+				// lists
+				'player_picker_placeholder': 'lineup-lists lineup-player-picker',
+				'main_list':                 'lineup-lists lineup-main lineup-pool',
+				'reserve_list':              'lineup-lists lineup-reserve lineup-pool',
+
+				// buttons
+				'append_to_main_list_btn':    'lineup-lists lineup-main sysbtn[btname="append_player_to_main_lineup"]',
+				'append_to_reserve_list_btn': 'lineup-lists lineup-reserve sysbtn[btname="append_player_to_reserve_lineup"]',
+				'edit_club_btn':              'sysbtn[btname="edit_club_from_lineup"]',
+			}
+		);
+
+		//
+		// create player picker
+		// 
+		const player_picker = new $this.PlayerPicker(
+			this.club.playerbase,
+			function(target_player){
+				for (const existing_player of [...self.main_players, ...self.reserve_players]){
+					if (existing_player.name_id == target_player.name_id){
+						return false
+					}
 				}
+				return true
 			}
-			punish_pool.append(filtered_item)
-		}
-	}
-
-}
-
-
-$this.save_last_layout = function(){
-	console.time('Saved laout')
-	const layout = {
-		'team1': {},
-		'team2': {},
-	};
-
-	const playerbase_keyed = $this.playerbase;
-
-	for (let team of [1, 2]){
-		for (let player of document.querySelectorAll(`#team${team}_layout .ftfield .player_slot`)){
-			const player_info = player.querySelector('.generic_player_item')
-			if (!player_info){
-				layout[`team${team}`][player.getAttribute('t_num')] = null
-				continue
-			}
-			const player_item = playerbase_keyed[team].both[player_info.getAttribute('namecode')]
-			layout[`team${team}`][player.getAttribute('t_num')] = {
-				'player_num': player_item.number,
-				'name':       player_item.name,
-				'surname':    player_item.surname,
-				'namecode':   player_item.namecode,
-			}
-		}
-	}
-
-	ksys.db.module.write('last_layout.lol', JSON.stringify(layout, null, 4))
-
-	// print('saved last layout')
-	console.timeEnd('Saved laout')
-}
-
-$this.load_last_layout = function(){
-	// get last layout file and evaluate it as JSON
-	const last_layout = JSON.parse(ksys.db.module.read('last_layout.lol'))
-	print(last_layout)
-	// if file does not exist/invalid - return
-	// Yes, it works, because JSON.parse(null) returns null
-	if (!last_layout){return};
-
-	// get playerbase as an indexed dict
-	const pbase_indexed = $this.playerbase;
-
-	print('WHAT THE FUCK', pbase_indexed)
-	// Go through each slot number in the last layout dict
-	// and see if value of this key contains something that is not null
-
-	// TEAM 1
-	for (let slotnum in last_layout.team1){
-		// Get player info from the last layout dict by slot number, if any (can map to null if cell is empty)
-		const player_info = last_layout.team1[slotnum]
-		// todo: empty the cell ?
-		if (!player_info){continue};
-		// Get the corresponding slot on the field grid
-		const slot = document.querySelector(`#team1_layout .ftfield [t_num="${slotnum}"]`)
-		// append generic player element to the cell
-		// print('GO FUCKING DIE', player_info.namecode)
-		$(slot).append(pbase_indexed.one.both[player_info.namecode].get_generic_player_item())
-	}
-
-	// TEAM 2
-	for (let slotnum in last_layout.team2){
-		const player_info = last_layout.team2[slotnum]
-		if (!player_info){continue};
-
-		const slot = document.querySelector(`#team2_layout .ftfield [t_num="${slotnum}"]`)
-
-		$(slot).append(pbase_indexed.two.both[player_info.namecode].get_generic_player_item())
-	}
-}
-
-
-
-$this.filter_players_replacement = function(event, _team){
-	const team_relation = {
-		'one': 1,
-		'two': 2,
-	}
-	// todo: FUUUUUUUUUUUU
-	// although this is still a slight improvement
-	const team = team_relation[_team];
-
-	// the query from the text input
-	const tquery = event.target.value.toLowerCase();
-
-	// important todo: get rid of jquery
-	// get the player pool to append the filtered items to
-	const replacement_pool = $(event.target.closest('.replacement_list').querySelector('.replacement_filtered_list'));
-	replacement_pool.empty();
-
-	// main, replacement
-	// const pools = $this.playerbase[_team][event.target.closest('')];
-	// const all_players = $this.playerbase_as_dict()[_team];
-	// const all_players = [...$this.playerbase[_team].main, ...$this.playerbase[_team].reserve];
-
-	// important todo: create a function to return players on the field or reservees or whatever
-	// basically groups
-	const on_field_demand = !!event.target.closest('.replacement_leaving');
-	const reserve_demand = !!event.target.closest('.replacement_incoming');
-
-	// for (let player of document.querySelectorAll(`${team} .list_pool .player_item`)){
-	for (let player_index in $this.playerbase[team].both){
-		const player = $this.playerbase[team].both[player_index];
-
-		const player_is_on_field = player.is_on_field()
-
-		if (on_field_demand && !player_is_on_field){
-			// continue
-		}
-
-		// if (reserve_demand && (!player.is_reserve || player_is_on_field)){
-		if (reserve_demand && !player.is_reserve){
-			continue
-		}
-
-		// todo: do the same for other filters
-		if (!player.namecode.includes(tquery)){
-			continue
-		}
-
-		const player_item = player.get_generic_player_item()
-		// todo: make this selection generic
-		player_item[0].onclick = $this.mark_replacement_player;
-		replacement_pool.append(player_item);
-
-	}
-}
-
-$this.mark_replacement_player = function(event){
-	var list_pair = '.replacement_incoming';
-	if (event.target.closest('.replacement_list').classList.contains('replacement_leaving')){
-		var list_pair = '.replacement_leaving';
-	}
-	$(`#replacement .replacement_team .replacement_list${list_pair} .replacement_filtered_list .generic_player_item`).removeClass('selected_replacement')
-	event.target.closest('.generic_player_item').classList.add('selected_replacement');
-}
-
-$this.replacement_player_title = async function(event){
-	$this.shadow_swap()
-
-	const tgtbtn = event.target.closest('vmixbtn')
-
-	const leaving_player = $('#replacement .replacement_list.replacement_leaving .selected_replacement')
-	const incoming_player = $('#replacement .replacement_list.replacement_incoming .selected_replacement')
-
-	if (!leaving_player[0] || !incoming_player[0]){
-		return
-	}
-
-	// todo: do the same for other titles
-	// const pdict = $this.playerbase_as_dict()
-	const all_players = $this.playerbase.global_index;
-
-	const leaving_player_object = all_players[leaving_player.attr('namecode')];
-	const incoming_player_object = all_players[incoming_player.attr('namecode')];
-
-	await $this.titles.replacement_out.set_text(
-		'player_name',
-		leaving_player_object.number + ' ' + ksys.strf.params.players.format(leaving_player_object.surname)
-	)
-	await $this.titles.replacement_out.set_img_src(
-		'club_logo',
-		leaving_player_object.get_team_logo()
-	)
-	await $this.titles.replacement_in.set_text(
-		'player_name',
-		incoming_player_object.number + ' ' + ksys.strf.params.players.format(incoming_player_object.surname)
-	)
-	await $this.titles.replacement_in.set_img_src('club_logo', incoming_player_object.get_team_logo())
-
-	ksys.btns.pool.exec_replacement_sequence.toggle(false)
-
-	await $this.titles.replacement_out.overlay_in(1)
-	await ksys.util.sleep(5000)
-	await $this.titles.replacement_in.overlay_in(1)
-	await ksys.util.sleep(5000)
-	await $this.titles.replacement_in.overlay_out(1)
-
-	ksys.btns.pool.exec_replacement_sequence.toggle(true)
-}
-
-
-$this.select_player_for_punishment = function(event){
-	$('#card_player_filter_pool .generic_player_item').removeClass('selected_to_punish')
-	event.target.closest('.generic_player_item').classList.add('selected_to_punish')
-	if (player.stats.yellow_cards > 0){
-		ksys.btns.pool.pardon_yellow_card.toggle(true)
-	}else{
-		ksys.btns.pool.pardon_yellow_card.toggle(false)
-	}
-}
-
-$this.show_card = async function(card){
-	const selected_player = document.querySelector('#card_player_filter .generic_player_item.selected_to_punish')
-	if (selected_player){
-		const player_object = $this.playerbase.global_index[selected_player.getAttribute('namecode')].penalty_card(card, selected_player);
-	}
-}
-
-$this.pardon_player = async function(){
-	const selected_player = document.querySelector('#card_player_filter .generic_player_item.selected_to_punish')
-	if (selected_player){
-		const player_object = $this.playerbase.global_index[selected_player.getAttribute('namecode')].pardon(selected_player);
-	}
-}
-
-
-
-$this.hide_card = async function(){
-	// disable buttons
-	ksys.btns.toggle({
-		'red_card':    false,
-		'yellow_card': false,
-		'kill_card':   false,
-	})
-
-	if ($this.next_card_out){
-		print('Turning off', $this.next_card_out.title_name)
-		await $this.next_card_out.overlay_out(1)
-	}
-
-	// re-enable buttons
-	ksys.btns.toggle({
-		'red_card':    true,
-		'yellow_card': true,
-		'kill_card':   true,
-	})
-}
-
-
-$this.upd_player_layout = async function(team){
-
-	const _ctx = ksys.context.module.cache;
-
-	const title = $this.titles.team_layout;
-
-	const _team_selector = {
-		1: {
-			field: '#team1_layout',
-			def: '#team1_def',
-			num: 'one',
-		},
-		2: {
-			field: '#team2_layout',
-			def: '#team2_def',
-			num: 'two',
-		},
-	}
-
-	const team_field = _team_selector[team].field;
-	const team_def = _team_selector[team].def;
-
-	const player_pool = $this.playerbase[_team_selector[team].num].both;
-	// const player_pool = [...$this.playerbase[_team_selector[team].num].main, ...$this.playerbase[_team_selector[team].num].reserve]
-
-	// 
-	// player layout
-	// 
-
-	// player thshirt colour
-	const player_tshirt_col =
-	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
-	.join(`${$(team_def).find('[prmname="team_player_color"] .tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-
-	for (let player_slot of document.querySelectorAll(`${team_field} .ftfield .player_slot`)){
-		const player_item = player_slot.querySelector('.generic_player_item');
-		const slot_has_player = !!player_item;
-		const cell_id = player_slot.getAttribute('t_num');
-
-		// tshirt colour
-		await title.set_img_src(`plr_bg_${cell_id}`, str(player_tshirt_col))
-		
-		// player number
-		await title.toggle_text(`plr_num_${cell_id}`, slot_has_player)
-		// player name
-		await title.toggle_text(`plr_name_${cell_id}`, slot_has_player)
-		// tshirt image
-		await title.toggle_img(`plr_bg_${cell_id}`, slot_has_player)
-
-		if (slot_has_player){
-			const player_object = player_pool[player_item.getAttribute('namecode')];
-			// player number
-			await title.set_text(`plr_num_${cell_id}`, player_object.number);
-			// player name
-			await title.set_text(`plr_name_${cell_id}`, ksys.strf.params.players.format(player_object.surname));
-		}
-	}
-
-	// goalkeeper tshirt colour
-	const gk_tshirt_col =
-	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
-	.join(`${$(team_def).find('[prmname="team_gk_color"] .tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-	await title.set_img_src(`plr_bg_8_5`, str(gk_tshirt_col))
-
-
-
-	// 
-	// main player list
-	// 
-
-	// 
-	// I sincerely fucking hate javascript retarded fucking useless pointless stupid garbage
-	// Go fucking die in a car crash and then in a fire
-	// (fuck .map, especially)
-	// 
-	const player_list_sorted = [];
-	// for (let player in $this.playerbase[team].main){
-	for (let player of $this.teams[team].player_pool_main.querySelectorAll('.player_item')){
-		player = $this.playerbase[team].main[player.getAttribute('namecode')]
-		// player_list_sorted.push($this.playerbase[team].main[player])
-		player_list_sorted.push(player)
-	}
-	// player_list_sorted.sort(function(a, b){
-	// 	return int(a.number) - int(b.number)
-	// })
-	const player_list = [];
-	const player_nums = [];
-	for (let player of player_list_sorted){
-		player_nums.push(player.number)
-		player_list.push(ksys.strf.params.players.format(player.surname))
-	}
-
-	// names
-	await title.set_text('playerlist', player_list.join('\n'))
-	// numbers
-	await title.set_text('playerlist_nums', player_nums.join('\n'))
-
-
-
-	// 
-	// reserve list
-	// 
-	const reserve_list_sorted = [];
-	for (let player in $this.playerbase[team].reserve){
-		reserve_list_sorted.push($this.playerbase[team].reserve[player])
-	}
-	reserve_list_sorted.sort(function(a, b){
-		// print(a, b)
-		return int(a.number) - int(b.number)
-	})
-	const reserve_list = [];
-	const reserve_nums = [];
-	for (let player of reserve_list_sorted){
-		reserve_nums.push(player.number)
-		reserve_list.push(ksys.strf.params.players.format(player.surname))
-	}
-	// names
-	await title.set_text('reserve_list', reserve_list.join('\n'))
-	// numbers
-	await title.set_text('reserve_list_nm', reserve_nums.join('\n'))
-
-
-
-	// 
-	// coach
-	// 
-	await title.set_text(
-		'coach_name',
-		ksys.strf.params.coach.format($(`${team_def} [prmname="team_coach"] input`).val())
-	)
-
-	// 
-	// team name
-	// 
-	await title.set_text(
-		'club_name',
-		ksys.strf.params.club_name.format($(`${team_def} [prmname="team_name"] input`).val())
-	)
-
-	// 
-	// logo
-	// 
-	await title.set_img_src('club_logo', $(team_def).attr('logo_path'))
-}
-
-
-$this.show_field_layout = async function(team){
-	const btn_pool = ksys.btns.pool;
-
-	btn_pool.show_field_layout_command1.toggle(false)
-	btn_pool.hide_field_layout_command1.toggle(false)
-	btn_pool.show_field_layout_command2.toggle(false)
-	btn_pool.hide_field_layout_command2.toggle(false)
-	// await $this.upd_player_layout(team)
-	await $this.titles.team_layout.overlay_in(1)
-	btn_pool.show_field_layout_command1.toggle(true)
-	btn_pool.hide_field_layout_command1.toggle(true)
-	btn_pool.show_field_layout_command2.toggle(true)
-	btn_pool.hide_field_layout_command2.toggle(true)
-}
-
-
-$this.hide_field_layout = async function(team){
-	const btn_pool = ksys.btns.pool;
-
-	btn_pool.show_field_layout_command1.toggle(false)
-	btn_pool.hide_field_layout_command1.toggle(false)
-	btn_pool.show_field_layout_command2.toggle(false)
-	btn_pool.hide_field_layout_command2.toggle(false)
-	// await $this.upd_player_layout(team)
-	await $this.titles.team_layout.overlay_out(1)
-	btn_pool.show_field_layout_command1.toggle(true)
-	btn_pool.hide_field_layout_command1.toggle(true)
-	btn_pool.show_field_layout_command2.toggle(true)
-	btn_pool.hide_field_layout_command2.toggle(true)
-}
-
-
-
-
-
-$this.save_vs_sublines = function(){
-	ksys.context.module.prm('vs_title_bottom_upper_line', $('#vs_text_bottom_upper')[0].value, false)
-	ksys.context.module.prm('vs_title_bottom_lower_line', $('#vs_text_bottom_lower')[0].value)
-}
-
-$this.show_vs_title = async function(){
-	const _ctx = ksys.context.module.cache;
-	ksys.btns.pool.show_splash.toggle(false)
-	await $this.titles.splash.set_text('title_lower_top', $('#vs_text_bottom_upper').val())
-	await $this.titles.splash.set_text('title_lower_bot', $('#vs_text_bottom_lower').val())
-
-	await $this.titles.splash.set_img_src('logo_l', $('#team1_def').attr('logo_path'))
-	await $this.titles.splash.set_img_src('logo_r', $('#team2_def').attr('logo_path'))
-
-	await $this.titles.splash.set_text(
-		'club_name_l',
-		ksys.strf.params.club_name.format($('#team1_def [prmname="team_name"] input').val())
-	)
-	await $this.titles.splash.set_text(
-		'club_name_r',
-		ksys.strf.params.club_name.format($('#team2_def [prmname="team_name"] input').val())
-	)
-
-	await $this.titles.splash.overlay_in(1)
-
-	ksys.btns.pool.show_splash.toggle(true)
-}
-
-$this.hide_vs_title = async function(){
-	ksys.btns.pool.show_splash.toggle(false)
-	ksys.btns.pool.hide_splash.toggle(false)
-	await $this.titles.splash.overlay_out(1)
-	ksys.btns.pool.show_splash.toggle(true)
-	ksys.btns.pool.hide_splash.toggle(true)
-}
-
-$this.save_commenter = function(){
-	ksys.context.module.prm('todays_commenter', $('#commenter_name_input')[0].value)
-}
-
-$this.show_commenter = async function(){
-	await $this.titles.commenter.set_text(
-		'name',
-		$('#commenter_name_input')[0].value
-	)
-	await $this.titles.commenter.overlay_in(1)
-}
-
-$this.hide_commenter = async function(){
-	await $this.titles.commenter.overlay_out(1)
-}
-
-
-
-
-$this.goal_score_on = async function(){
-	const selected_player = document.querySelector('#card_player_filter .generic_player_item.selected_to_punish')
-
-	if (!selected_player){return};
-
-	const player_object = $this.playerbase.global_index[selected_player.getAttribute('namecode')]
-
-	// register this goal
-	$this.push_score(player_object.team.num, player_object.surname)
-
-	await $this.titles.gscore.set_text(
-		'player_name',
-		`${player_object.number} ${ksys.strf.params.players.format(player_object.surname)}`
-	)
-	await $this.titles.gscore.set_img_src('club_logo', player_object.get_team_logo())
-
-	await $this.titles.timer.set_text('score_l', $($this.teams[1].score_pool).find('.team_score_record').length)
-	await $this.titles.timer.set_text('score_r', $($this.teams[2].score_pool).find('.team_score_record').length)
-
-	// disable buttons
-	ksys.btns.pool.scored.toggle(false)
-
-	await $this.titles.gscore.overlay_in(1)
-
-	// hold for 7 seconds
-	await ksys.util.sleep(7000)
-
-	// hide title
-	await $this.goal_score_off()
-
-	// re-enable buttons
-	ksys.btns.pool.scored.toggle(true)
-}
-
-
-$this.goal_score_off = async function(){
-	ksys.btns.pool.scored.toggle(false)
-	ksys.btns.pool.scored_off.toggle(false)
-
-	await $this.titles.gscore.overlay_out(1)
-
-	ksys.btns.pool.scored.toggle(true)
-	ksys.btns.pool.scored_off.toggle(true)
-}
-
-
-$this.show_coach = async function(team){
-	const _team_selector = {
-		1: {
-			field: '#team1_layout',
-			def: '#team1_def',
-		},
-		2: {
-			field: '#team2_layout',
-			def: '#team2_def',
-		},
-	}
-
-	const teamdef = _team_selector[team].def
-
-	const _ctx = ksys.context.module.cache;
-
-	ksys.btns.pool.show_coach_team1.toggle(false)
-	ksys.btns.pool.hide_coach_team1.toggle(false)
-	ksys.btns.pool.show_coach_team2.toggle(false)
-	ksys.btns.pool.hide_coach_team2.toggle(false)
-
-	await $this.titles.coach.set_text(
-		'name',
-		ksys.strf.params.coach.format($(`${teamdef} [prmname="team_coach"] input`)[0].value)
-	)
-	await $this.titles.coach.set_img_src(
-		'club_logo',
-		$(teamdef).attr('logo_path')
-	)
-	await $this.titles.coach.overlay_in(1)
-
-	ksys.btns.pool.show_coach_team1.toggle(true)
-	ksys.btns.pool.hide_coach_team1.toggle(true)
-	ksys.btns.pool.show_coach_team2.toggle(true)
-	ksys.btns.pool.hide_coach_team2.toggle(true)
-}
-
-
-$this.hide_coach = async function(){
-	ksys.btns.pool.show_coach_team1.toggle(false)
-	ksys.btns.pool.hide_coach_team1.toggle(false)
-	ksys.btns.pool.show_coach_team2.toggle(false)
-	ksys.btns.pool.hide_coach_team2.toggle(false)
-	await $this.titles.coach.overlay_out(1)
-	ksys.btns.pool.show_coach_team1.toggle(true)
-	ksys.btns.pool.hide_coach_team1.toggle(true)
-	ksys.btns.pool.show_coach_team2.toggle(true)
-	ksys.btns.pool.hide_coach_team2.toggle(true)
-}
-
-$this.shadow_swap = async function(){
-	const leaving_player = $('#replacement .replacement_list.replacement_leaving .selected_replacement')
-	const incoming_player = $('#replacement .replacement_list.replacement_incoming .selected_replacement')
-	if (!leaving_player[0] || !incoming_player[0]){
-		return
-	}
-	const new_player_elem = $this.playerbase.global_index[incoming_player.attr('namecode')].get_generic_player_item(true)
-	$(`.ftfield [namecode="${leaving_player.attr('namecode')}"]`).replaceWith(new_player_elem)
-}
-
-
-$this.filter_players_for_score = function(event){
-
-	const pool = document.querySelector('#score_ctrl_player_search_pool')
-	// Query from the text input
-	const tquery = event.target.value.toLowerCase();
-
-	// Clear the filtered pool
-	pool.innerHTML = '';
-
-	for (let player_index in $this.playerbase.global_index){
-		const player = $this.playerbase.global_index[player_index]
-
-		if (player.namecode.includes(tquery)){
-			const player_elem = player.get_generic_player_item(false)
-			player_elem.onclick = function(event){
-				$(event.target).closest('#score_ctrl_player_search_pool').find('.generic_player_item').removeClass('selected_to_punish')
-				event.target.closest('.generic_player_item').classList.add('selected_to_punish')
-				// console.log('kys', player)
-				// if (player.stats.yellow_cards > 0){
-				// 	ksys.btns.pool.pardon_yellow_card.toggle(true)
-				// }else{
-				// 	ksys.btns.pool.pardon_yellow_card.toggle(false)
-				// }
-			}
-			pool.append(player_elem)
-		}
-	}
-}
-
-
-
-
-
-// ================================
-//        Scores
-// ================================
-
-$this.add_score = function(team){
-	const selected_player = $('#score_ctrl_player_search_pool .generic_player_item.selected_to_punish').attr('namecode')
-	if (!selected_player){return};
-	const player_info = $this.playerbase.global_index[selected_player]
-	$this.push_score(team, player_info.surname)
-}
-
-$this.push_score = function(team, surname, time=null, ag=false, penalty=false){
-	// print(
-	// 	'kys',
-	// 	time,
-	// 	$this?.base_counter?.tick?.global,
-	// 	$this?.extra_counter?.tick?.global,
-	// )
-	const calc_time = Math.ceil(
-		(
-			($this?.base_counter?.tick?.global || 1)
-			+
-			($this?.extra_counter?.tick?.global || 1)
-		)
-		/
-		60
-	)
-	const score_elem = $(`
-		<div class="team_score_record">
-			<input onchange="$this.update_scores()" value="${time || calc_time}" type="text" class="score_record_time">
-			<input onchange="$this.update_scores()" value="${surname}" type="text" class="score_record_player">
-			АГ:
-			<input${ag ? ' checked' : ''} type="checkbox" onchange="$this.update_scores(); $(event.target).closest('.team_score_record').find('.score_record_penalty').prop('checked', false)" class="score_record_ag score_record_cbox">
-			П:
-			<input${penalty ? ' checked' : ''} type="checkbox" onchange="$this.update_scores(); $(event.target).closest('.team_score_record').find('.score_record_ag').prop('checked', false)" class="score_record_penalty score_record_cbox">
-		</div>
-	`)
-
-	score_elem[0].oncontextmenu = function(event){
-		if (event.altKey){
-			event.target.closest('.team_score_record').remove()
-			$this.update_scores()
-		}
-	}
-
-	$(`#score_ctrl_team${team} .score_ctrl_table`)[0].append(score_elem[0])
-
-	$this.update_scores()
-}
-
-$this.update_scores = function(){
-	const score_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
-	const score_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
-	$this.titles.timer.set_text('score_l', score_l)
-	$this.titles.timer.set_text('score_r', score_r)
-
-	const score_map = {
-		'1': [],
-		'2': [],
-	};
-
-	for (let team of ['1', '2']){
-		for (let goal of document.querySelectorAll(`#score_ctrl_team${team} .score_ctrl_table .team_score_record`)){
-			score_map[team].push({
-				'time': goal.querySelector('.score_record_time').value,
-				'surname': goal.querySelector('.score_record_player').value,
-				'namecode': goal.getAttribute('namecode'),
-				'ag': goal.querySelector('.score_record_ag').checked,
-				'penalty': goal.querySelector('.score_record_penalty').checked,
-			})
-		}
-	}
-
-	ksys.db.module.write('scores.fball', JSON.stringify(score_map, null, 4))
-
-}
-
-$this.score_sum_vis = async function(state){
-	if (state == true){
-
-		const nums_l = [];
-		const names_l = [];
-		for (let player of document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record')){
-			// nums_l.push(player.querySelector('.score_record_time').value + `'`)
-			names_l.unshift(
-				ksys.strf.params.players.format(player.querySelector('.score_record_player').value)
-				+
-				' '
-				+
-				player.querySelector('.score_record_time').value
-				+
-				`'`
-				+
-				(player.querySelector('.score_record_ag').checked ? ' (АГ)' : '')
-				+
-				(player.querySelector('.score_record_penalty').checked ? ' (П)' : '')
+		);
+		// replace the placeholder in the template with a real picker
+		this.tplate.index.player_picker_placeholder.replaceWith(player_picker.box);
+
+
+		//
+		// create colour pickers
+		// 
+		this.shorts_colpick = new $this.TeamLineupColorPicker(this.available_colors);
+		this.tplate.index.shorts_color_picker.append(this.shorts_colpick.list)
+
+		this.tshirt_colpick = new $this.TeamLineupColorPicker(this.available_colors);
+		this.tplate.index.tshirt_color_picker.append(this.tshirt_colpick.list)
+
+		this.gk_colpick = new $this.TeamLineupColorPicker(this.available_colors);
+		this.tplate.index.gk_color_picker.append(this.gk_colpick.list)
+
+		//
+		// create header (visual identifier)
+		// 
+		this.tplate.elem.append(this.club.vis_header_elem())
+
+
+		// 
+		// Bind button actions
+		// 
+
+		// Append chosen player to the main player list
+		this.tplate.index.append_to_main_list_btn.onclick = function(){
+			if (!player_picker.selected_entry){return};
+			self.add_player_to_list(
+				player_picker.selected_entry.player,
+				'main'
 			)
+			player_picker.pull_out_selection()
 		}
-
-
-		const nums_r = [];
-		const names_r = [];
-		for (let player of document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record')){
-			// nums_r.push(player.querySelector('.score_record_time').value + `'`)
-			names_r.unshift(
-				(player.querySelector('.score_record_ag').checked ? '(АГ) ' : '')
-				+
-				(player.querySelector('.score_record_penalty').checked ? '(П) ' : '')
-				+
-				player.querySelector('.score_record_time').value
-				+
-				`'`
-				+
-				' '
-				+
-				ksys.strf.params.players.format(player.querySelector('.score_record_player').value)
+		// Append chosen player to the reserve player list
+		this.tplate.index.append_to_reserve_list_btn.onclick = function(){
+			if (!player_picker.selected_entry){return};
+			self.add_player_to_list(
+				player_picker.selected_entry.player,
+				'reserve'
 			)
+			player_picker.pull_out_selection()
+		}
+		// Edit related club in the club panel
+		this.tplate.index.edit_club_btn.onclick = function(){
+			self.club.open_panel();
+			$('sys-tab[match_id="club_def"]').click();
 		}
 
+		return self.tplate.elem
+	}
 
+	// Add a player to either main player list or reserve
+	// - player: ClubPlayer
+	// - which_list: 'main' | 'reserve'
+	add_player_to_list(player, which_list){
+		const self = this;
 
-		// composite
-		const score_amt_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
-		const score_amt_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
-		await $this.titles.final_scores.set_text('score_sum', `${score_amt_l} : ${score_amt_r}`)
+		const tgt_list = which_list == 'main' ? this.main_players : this.reserve_players;
+		// print('Target list:', tgt_list, this.main_players, this.reserve_players)
+		// if the player is already in the list - return
+		if (this.main_players.has(player) || this.reserve_players.has(player)){return};
+		// Create generic list item
+		const list_elem = player.generic_list_elem();
+		// Bind actions to the generic list item
+		list_elem.elem.oncontextmenu = function(evt){
+			if (!evt.altKey){return};
+			// delete self from the DOM list
+			evt.target.closest('player').remove();
+			// delete self from the lineup registry
+			self.remove_player_from_list(player, which_list)
+		}
+		// Add generic list item to the internal registry
+		tgt_list.add(player)
 
-		// Show the appropriate amount of fields
-		await $this.titles.final_scores.toggle_img('anim_full', false)
-		await $this.titles.final_scores.toggle_img('anim_half', false)
-		/*
-		if (score_amt_l > 2 || score_amt_r > 2){
-			await $this.titles.final_scores.toggle_img('anim_full', true)
+		// Append DOM element to the list
+		if (which_list == 'main'){
+			this.tplate.index.main_list.append(list_elem.elem)
 		}else{
-			names_r.unshift(' ')
-			names_r.unshift(' ')
-			names_l.unshift(' ')
-			names_l.unshift(' ')
+			this.tplate.index.reserve_list.append(list_elem.elem)
+		}
 
-			nums_r.unshift(' ')
-			nums_r.unshift(' ')
-			nums_l.unshift(' ')
-			nums_l.unshift(' ')
-			await $this.titles.final_scores.toggle_img('anim_half', true)
-		}*/
-		const need_rows = Math.max(score_amt_l, score_amt_r).clamp(1, 5)
-		$this.titles.final_scores.set_img_src(
-			'upper_bg',
-			Path('C:/custom/vmix_assets/differential').join(`${need_rows}.png`)
-		)
-
-		// Set the numbers/surnames
-		await $this.titles.final_scores.set_text('scores_r', names_r.join('\n'))
-		// await $this.titles.final_scores.set_text('scores_r_num', nums_r.join('\n'))
-
-		await $this.titles.final_scores.set_text('scores_l', names_l.join('\n'))
-		// await $this.titles.final_scores.set_text('scores_l_num', nums_l.join('\n'))
-
-
-
-		// team name LEFT
-		await $this.titles.final_scores.set_text(
-			'team_name_l',
-			ksys.strf.params.club_name.format($this.teams.one.team_name.value)
-		)
-		// team logo LEFT
-		await $this.titles.final_scores.set_img_src('team_logo_l', $this.teams.one.logo())
-
-		// team name RIGHT
-		await $this.titles.final_scores.set_text(
-			'team_name_r',
-			ksys.strf.params.club_name.format($this.teams.two.team_name.value)
-		)
-		// team logo RIGHT
-		await $this.titles.final_scores.set_img_src('team_logo_r', $this.teams.two.logo())
-
-		await $this.titles.final_scores.set_text('bottom_text', $('#vs_text_bottom_lower').val())
-
-		// show the title
-		await $this.titles.final_scores.overlay_in(1)
 	}
 
-	if (state == false){
-		await $this.titles.final_scores.overlay_out(1)
+	// - player: ClubPlayer
+	// - which_list: 'main' | 'reserve'
+	remove_player_from_list(player, which_list){
+		// todo: this is stupid
+		let target_list = null;
+		if (which_list == 'main'){target_list = this.main_players};
+		if (which_list == 'reserve'){target_list = this.reserve_players};
+
+		target_list.delete(player)
 	}
 }
 
+/*
+Colour picker for the lineup.
+	- colors: An array of HEX colours to create.
+	- callback: Callback function to trigger on color change.
+	            The function receives exactly 1 argument:
+	            HEX value of the selected colour.
+*/
+$this.TeamLineupColorPicker = class{
+	constructor(color_codes, callback=null){
+		const self = this;
 
+		this.color_codes = color_codes || [];
+		this.callback = callback;
 
+		// currently active colour by colour code
+		this._selected_color = null;
 
+		// colour objects
+		this.colors = {};
 
+		this.tplate = ksys.tplates.index_tplate(
+			'#team_lineup_color_picker_template',
+			{},
+		);
 
+		// the dom element itself
+		this.list = this.tplate.elem;
 
+		for (const col of this.color_codes){
+			const clear_hex = str(col).replaceAll('#', '');
 
-
-
-
-
-
-
-// ================================
-//        Timers
-// ================================
-
-
-$this.start_base_timer = async function(rnum){
-	if ($this.base_counter){
-		$this.base_counter.force_kill()
-		$this.base_counter = null;
-	}
-
-	$this?.extra_counter?.force_kill()
-	$this.extra_counter = null;
-
-	await $this.titles.timer.set_text('extra_ticker', '00:00');
-	await $this.extra_time_vis(false)
-
-	ksys.context.module.prm('round_num', rnum)
-
-	const dur = 45;
-
-	await $this.titles.timer.set_text('base_ticker', (rnum == 1) ? '00:00' : '45:00');
-
-	$this.base_counter = ksys.ticker.spawn({
-		// 'duration': (rnum == 2) ? (((dur*60)*1)+1) : ((dur*60)+1),
-		'duration': ((dur*60)+1),
-		'name': `giga_timer${rnum}`,
-		'offset': (rnum == 2) ? (dur*60) : 0,
-		'infinite': false,
-		'reversed': false,
-		'callback': $this.timer_callback,
-		'wait': true,
-	})
-
-	$this.base_counter.fire()
-	.then(function(_ticker) {
-		// turn off automatically
-		const pre_killed = _ticker.killed;
-		if (_ticker){
-			_ticker.force_kill()
-			/*
-			if (document.querySelector('#timer_ctrl_additional input').value.trim() && !pre_killed){
-			// if (document.querySelector('#timer_ctrl_additional input').value.trim()){
-				$this.launch_extra_time()
-			}
-			*/
-			if (!pre_killed){
-				$this.launch_extra_time()
+			// create colour DOM element
+			const color_elem = $(`<picker-color style="background: #${clear_hex}"></picker-color>`)[0];
+			// write down colour into palette registry
+			this.colors[clear_hex] = color_elem;
+			// append the DOM element to the list
+			this.tplate.elem.append(color_elem)
+			// Bind actions
+			color_elem.onclick = function(){
+				$(self.tplate.elem).find('picker-color').removeClass('active_color');
+				color_elem.classList.add('active_color');
+				self._selected_color = clear_hex;
+				self?.callback?.(clear_hex)
 			}
 		}
-	})
-
-	// print($this.base_counter)
-
-}
-
-$this.timer_callback = function(tick){
-	const minutes = Math.floor(tick.global / 60)
-	const seconds = tick.global - (60*minutes)
-	$this.titles.timer.set_text('base_ticker', `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`)
-}
-
-$this.resume_main_timer_from_offset = function(event){
-
-	if ($this.base_counter){
-		$this.base_counter.force_kill()
-		$this.base_counter = null;
 	}
 
-	const rnum = int(ksys.context.module.prm('round_num')) || 1;
+	get selected_color(){
+		return this._selected_color
+	}
 
-	const offs = eval(document.querySelector('#timer_ctrl_base_resume input').value);
-
-	const dur = (45*60);
-
-	$this.base_counter = ksys.ticker.spawn({
-		// 'duration': (rnum == 2) ? ((dur*2)+1) : (dur+1),
-		'duration': (dur-(offs%dur))+1,
-		'name': `giga_timer_offs${rnum}`,
-		// 'offset': (rnum == 2) ? (dur+offs) : (0+offs),
-		'offset': offs,
-		'infinite': false,
-		'reversed': false,
-		'callback': $this.timer_callback,
-		'wait': true,
-	})
-
-	$this.base_counter.fire()
-	.then(function(_ticker) {
-		// turn off automatically
-		if (_ticker){
-			_ticker.force_kill()
-			// if (document.querySelector('#timer_ctrl_additional input').value.trim()){
-			// 	$this.launch_extra_time()
-			// }
-			$this.launch_extra_time()
+	set selected_color(newval){
+		const col = this.colors[str(newval).replaceAll('#', '')];
+		if (!col){
+			console.warn('Cannot find target colour:', newval);
 		}
-	})
 
-	// print($this.base_counter)
-}
-
-$this.main_timer_vis = async function(state){
-	const title = $this.titles.timer;
-
-	if (state == true){
-		// player_color_picker
-		// gk_color_picker
-
-
-
-		// TEAM COLOR L
-		// t-shirts
-		const team_col_l_top =
-		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`l_top_${$($this.teams[1].player_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-		await title.set_img_src(`team_col_l_top`, str(team_col_l_top))
-		// shorts
-		const team_col_l_bot =
-		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`l_bot_${$($this.teams[1].shorts_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-		await title.set_img_src(`team_col_l_bot`, str(team_col_l_bot))
-
-		// TEAM COLOR R
-		// t-shirts
-		const team_col_r_top =
-		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`r_top_${$($this.teams[2].player_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-		await title.set_img_src(`team_col_r_top`, str(team_col_r_top))
-		// shorts
-		const team_col_r_bot =
-		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`r_bot_${$($this.teams[2].shorts_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-		await title.set_img_src(`team_col_r_bot`, str(team_col_r_bot))
-
-
-
-		await title.set_text('command_l', $this.teams[1].shorthand.value)
-		await title.set_text('command_r', $this.teams[2].shorthand.value)
-
-		await title.set_text('score_l', $($this.teams[1].score_pool).find('.team_score_record').length)
-		await title.set_text('score_r', $($this.teams[2].score_pool).find('.team_score_record').length)
-
-		title.overlay_in(2)
-	}
-	if (state == false){
-		title.overlay_out(2)
+		col.click()
 	}
 }
 
 
 
 
-$this.launch_extra_time = async function(){
-	if ($this.extra_counter){
-		$this.extra_counter.force_kill()
-		$this.extra_counter = null;
-	}
+/*
+A regular filter box for quick player lookup.
+	- data_source: Iterable array of player classes.
+	
+	- filter: Filter function.
+	          The class checks for name/surname/number match
+	          automatically, then the filter function must
+	          return true for the player to appear in the list.
+	          The function receives exactly 1 argument: Player Class.
+	
+	- post_filter_action: function to call after the player was added
+	                      to the list.
+	                      The function receives exactly 1 argument:
+	                      indexed generic player list item.
+*/
+$this.PlayerPicker = class{
+	constructor(data_source, filter, post_filter_action=null){
+		const self = this;
 
-	await $this.update_extra_time_amount()
+		this.data_source = data_source;
+		this.filter = filter;
+		this.post_filter_action = post_filter_action;
 
-	/*
-	let extra_amount = $('#timer_ctrl_additional input').val()
-	if (!extra_amount){
-		return
-	}
-	extra_amount = eval(_extra_amount);
-	if (!extra_amount){
-		return
-	}
-	*/
-	const extra_amount = 60;
+		this.selected_entry = null;
 
-	$this.extra_counter = ksys.ticker.spawn({
-		'duration': extra_amount*60,
-		'name': `gigas_timer${1}`,
-		'infinite': true,
-		'reversed': false,
-		'callback': $this.extra_timer_callback,
-		'wait': true,
-	})
+		// Create the filter box DOM element
+		this.tplate = ksys.tplates.index_tplate(
+			'#player_picker_template',
+			{
+				'input':    'input.player_picker_input',
+				'result':   'player-picker-result',
+			}
+		);
 
-	$this.extra_counter.fire()
-	.then(function(_ticker) {
-		// turn off automatically
-		if (_ticker){
-			_ticker.force_kill()
+		// The DOM element itself
+		this.box = this.tplate.elem;
+
+		// bind events
+		// todo: this can directly point to this.match_query
+		this.tplate.index.input.oninput = function(evt){
+			// const query = evt.target.value;
+			self.match_query(evt.target.value)
 		}
-	})
-
-	print('EXTRA AMOUNT?!', extra_amount)
-	await $this.titles.timer.set_text('extra_ticker', '00:00');
-	// await $this.titles.timer.set_text('time_added', `+${Math.floor(extra_amount/1)}`)
-	// await $this.titles.timer.toggle_text('time_added', true)
-	// await $this.titles.timer.toggle_img('extra_time_bg', true)
-	// await $this.titles.timer.toggle_text('extra_ticker', true)
-}
-
-$this.extra_timer_callback = function(tick){
-	const minutes = Math.floor(tick.global / 60)
-	const seconds = tick.global - (60*minutes)
-	$this.titles.timer.set_text('extra_ticker', `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`)
-}
-
-$this.extra_time_vis = async function(state){
-	if (state == true){
-		await $this.titles.timer.toggle_text('time_added', true)
-		await $this.titles.timer.toggle_text('extra_ticker', true)
-		await $this.titles.timer.toggle_img('extra_time_bg', true)
 	}
-	if (state == false){
-		await $this.titles.timer.toggle_text('time_added', false)
-		await $this.titles.timer.toggle_text('extra_ticker', false)
-		await $this.titles.timer.toggle_img('extra_time_bg', false)
+
+	// Filter data source according to query and display the results
+	// - query: query string
+	match_query(query){
+		const self = this;
+
+		// clear previous selection
+		this.selected_entry = null;
+		// clear pool
+		this.tplate.index.result.innerHTML = '';
+
+		// look for matches
+		for (const player of this.data_source){
+			const name_id = `${player.player_name} ${player.player_surname} ${player.player_num}`;
+			// todo: str() is very slow
+			if (!name_id.includes(str(query).lower())){continue};
+			if (!this.filter(player)){continue};
+
+			// checks passed - append to the list
+			const list_item = player.generic_list_elem()
+			list_item.elem.onclick = function(){
+				// Remove previous selection highlighting
+				if (self.selected_entry){
+					self.selected_entry.list_elem.classList.remove('selected_entry')
+				}
+				// Write down new selection
+				self.selected_entry = {
+					'player': player,
+					'list_elem': list_item.elem,
+				}
+				// Highlight currently selected element
+				list_item.elem.classList.add('selected_entry')
+			}
+			this.tplate.index.result.append(list_item.elem)
+
+			// apply post-filter actions
+			this?.post_filter_action?.(list_item)
+		}
+	}
+
+	// remove selection from the filtered list
+	// and deselect
+	pull_out_selection(){
+		if (!this.selected_entry){return};
+		this.selected_entry.list_elem.remove()
+		this.selected_entry = null;
 	}
 }
 
-$this.update_extra_time_amount = async function(){
-	const amount = $('#timer_ctrl_additional input').val()
-	await $this.titles.timer.set_text(
-		'time_added',
-		amount ? `+${amount}` : '',
+
+
+$this.create_new_club = function(club_resources=null){
+	// create new club class
+	const new_club = new $this.FootballClub(club_resources);
+	// write club reference to the registry
+	$this.resource_index.club_ctrl = new_club;
+	new_club.open_panel()
+}
+
+
+$this.save_club_to_file = function(){
+	const tgt_dir = $('#club_ctrl_save_to_file_target .tgtdir').val();
+	if (!tgt_dir || !$this.resource_index.club_ctrl){return};
+	
+	// construct path
+	const tgt_file = Path(
+		tgt_dir,
+		($('#club_ctrl_save_to_file_target .tgtfname').val() || 'club_info') + '.clubdef',
+	);
+
+	// Write the json file
+	tgt_file.writeFileSync(
+		JSON.stringify($this.resource_index.club_ctrl.to_json(), null, '\t')
 	)
 }
 
 
+$this.save_club_to_local_db = function(){
+	// Make sure there's a club to save
+	if (!$this.resource_index.club_ctrl || !$this.resource_index?.club_ctrl?.club_name){return};
+	// ensure that the club title is not empty
+	const club_info = $this.resource_index.club_ctrl.to_json();
 
-$this.stop_extra_time = function(){
-	$this?.extra_counter?.force_kill()
-	$this.extra_counter = null;
+	// write file
+	ksys.db.module.write(
+		`clubs/${club_info.club_name}.clubdef`,
+		JSON.stringify(club_info, null, '\t')
+	)
+
+	// re-index dropdown
+	$this.index_existing_clubs()
 }
 
 
-
-
-
-
-// ================================
-//        Stats
-// ================================
-
-$this.show_team_stats = async function(){
-
-	ksys.btns.pool.show_team_stats.toggle(false)
-
-	for (const stat_name in $this.stats_unit_pool){
-		$this.stats_unit_pool[stat_name].push_to_vmix()
+// Add entries to the club loader dropdown
+$this.index_existing_clubs = function(){
+	const dropdown = $('#load_existing_club_dropdown select');
+	dropdown.find('option:not([value=""])').remove();
+	for (const clubname of ksys.db.module.path().join('clubs').globSync('*.clubdef')){
+		dropdown.append(`
+			<option value="${clubname.stem}">${clubname.stem.upper()}</option>
+		`)
 	}
-
-	const score_amt_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
-	const score_amt_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
-	await $this.titles.stats.set_text('scores', `${score_amt_l} : ${score_amt_r}`)
-
-	await $this.titles.stats.set_img_src('team_logo_l', $('#team1_def').attr('logo_path'))
-	await $this.titles.stats.set_img_src('team_logo_r', $('#team2_def').attr('logo_path'))
-
-	await $this.titles.stats.set_text('bottom_text', $('#vs_text_bottom_lower').val())
-
-	await $this.titles.stats.set_text(
-		'team_name_l',
-		ksys.strf.params.club_name.format($('#team1_def [prmname="team_name"] input').val())
-	)
-	await $this.titles.stats.set_text(
-		'team_name_r',
-		ksys.strf.params.club_name.format($('#team2_def [prmname="team_name"] input').val())
-	)
-
-	await $this.titles.stats.overlay_in(1)
-
-	ksys.btns.pool.show_team_stats.toggle(true)
 }
 
-$this.hide_team_stats = async function(){
 
-	ksys.btns.pool.hide_team_stats.toggle(false)
+$this.load_club_by_name = function(clubname=null){
+	if (!clubname){return};
 
-	await $this.titles.stats.overlay_out(1)
+	const club_name = clubname.lower();
+	const club_info = ksys.db.module.read(`clubs/${club_name}.clubdef`, 'json');
+	if (!club_info){return};
 
-	ksys.btns.pool.hide_team_stats.toggle(true)
-	ksys.btns.pool.show_team_stats.toggle(true)
+	$this.create_new_club(club_info)
 }
+
+
+

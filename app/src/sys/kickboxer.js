@@ -49,6 +49,9 @@ const ksys = {
 	strf:    require('./sys/str_format_gui.js'),
 	pgview:  require('./sys/pgview.js'),
 	tabsys:  require('./sys/tabsys.js'),
+	hintsys: require('./sys/hintsys.js'),
+	// Global events listeners
+	binds:   {},
 };
 
 
@@ -116,6 +119,20 @@ function close_warnings()
 }
 
 
+// ---------------
+//  global listener binds
+// ---------------
+document.addEventListener('mousemove', evt => {
+	ksys.binds?.mousemove?.()
+});
+document.addEventListener('mousedown', evt => {
+	ksys.binds?.mousedown?.()
+});
+document.addEventListener('mouseup', evt => {
+	ksys.binds?.mouseup?.()
+});
+
+
 
 
 
@@ -174,15 +191,16 @@ ksys.util.sleep = function jsleep(amt=500, ref='a') {
 // ------------------------------
 
 // returns a promise which resolves into a path
-ksys.util.ask_file = function()
+// - whether to return an array of files or first file only
+ksys.util.ask_file = function(multiple=false)
 {
 	return new Promise(function(resolve, reject){
-		const input = document.createElement('input');
+		let input = document.createElement('input');
 		input.type = 'file';
 		input.addEventListener('change', ch => {
-			resolve([...input.files])
-			input.remove()
-			input = null
+			resolve(multiple ? [...input.files] : input.files[0]);
+			input.remove();
+			input = null;
 		});
 		input.click();
 	});
@@ -357,6 +375,9 @@ const sys_load = function(nm, save_state=true)
 	// resync tabs
 	ksys.tabsys.resync()
 
+	// wipe binds
+	ksys.binds = {};
+
 	// images are not draggable by default
 	$('img:not(img[candrag])').attr('draggable', false);
 
@@ -421,6 +442,10 @@ async function app_init()
 
 	// ping vmix
 	const reach = await vmix.talker.ping()
+
+	// modkey hints
+	ksys.hintsys.reg_modkey_hint('Control', 'CTRL + R - Reload controller', false)
+	ksys.hintsys.reg_modkey_hint('Alt', 'ALT + W - Back to homepage', false)
 
 
 	// if vmix is not reachable - do not save the IP/port and simply prompt input again

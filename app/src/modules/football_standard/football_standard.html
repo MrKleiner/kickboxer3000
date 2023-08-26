@@ -1,7 +1,8 @@
 <div id="football_standard">
 
 	<tabsys>
-		<sys-tab match_id="team_defs" default>Config/Lists</sys-tab>
+		<sys-tab match_id="club_def" default>Clubs</sys-tab>
+		<sys-tab match_id="team_lineup">Config/Lists</sys-tab>
 		<sys-tab match_id="teams_layouts">Layout</sys-tab>
 		<sys-tab match_id="layout_buttons">Layout Ctrl</sys-tab>
 		<sys-tab match_id="punisher">Cards/Goals</sys-tab>
@@ -11,7 +12,42 @@
 		<sys-tab quick_access match_id="stats_buttons">Stats Counter</sys-tab>
 	</tabsys>
 
-	<tab tabid="team_defs">
+	<tab class="tab_hidden" tabid="club_def">
+		<div id="club_definition">
+			<club-control-global subtle_box>
+				<div id="load_existing_club_dropdown">
+					<label>
+						Load Club
+						<select onchange="$this.load_club_by_name(this.value)">
+	  						<option value="">--</option>
+						</select>
+					</label>
+				</div>
+
+
+				<sysbtn
+					btname="create_new_club"
+					onclick="$this.create_new_club()"
+					kbhint="This action automatically saves active club"
+				>New Club</sysbtn>
+				
+				<sysbtn btname="load_club_from_file">Load From File</sysbtn>
+				
+				<sysbtn btname="save_club_to_file" onclick="$this.save_club_to_file()">Save to File</sysbtn>
+				
+				<div id="club_ctrl_save_to_file_target">
+					<input class="tgtdir" type="text" placeholder="Target Directory">
+					<input class="tgtfname" type="text" placeholder="Filename + .clubdef">
+				</div>
+				
+				<sysbtn btname="delete_current_club" kbhint="Hold CTRL">Delete Current Club</sysbtn>
+
+			</club-control-global>
+		</div>
+	</tab>
+
+
+	<tab tabid="team_lineup">
 
 		<string-formatting>
 			<f-param display_name="Coach" fpid="coach" translit_default="0" format_default="all_upper"></f-param>
@@ -19,133 +55,12 @@
 			<f-param display_name="Full club name" fpid="club_name" translit_default="0" format_default="all_upper"></f-param>
 		</string-formatting>
 
-		<div id="team_defs">
+		<lineup-global-control subtle_box>
+			<sysbtn btname="init_new_match" kbhint="Wipe previous match stats, like goals. Hold CTRL">New Match</sysbtn>
+		</lineup-global-control>
 
-			<div id="team1_def" class="teamdef">
-				<div class="team_base_params_ctrl">
-					<sysbtn btname="save_team_preset" onclick="$this.save_team_preset(1)">Save Team Preset</sysbtn>
-					<select onchange="$this.load_team_preset(event)" class="team_preset_selector">
-					</select>
-					<!-- <option value="volvo">Volvo</option> -->
-				</div>
-
-				<div class="team_base_params">
-					<div class="team_param" prmname="team_logo">
-						<div class="team_param_label">Logo image</div>
-						<input onchange="$this.upd_vis_feedback()" type="file" class="team_param_input">
-					</div>
-
-					<div class="team_param" prmname="team_name">
-						<div class="team_param_label">Club name</div>
-						<input onchange="$this.upd_vis_feedback()" type="text" class="team_param_input">
-					</div>
-
-					<div class="team_param" prmname="club_shorthand">
-						<div class="team_param_label">Club shorthand</div>
-						<input onchange="$this.upd_vis_feedback()" type="text" class="team_param_input">
-					</div>
-
-					<div class="team_param" prmname="team_coach">
-						<div class="team_param_label">Coach's name</div>
-						<input type="text" class="team_param_input">
-					</div>
-
-
-					<div class="team_param palette_hover_vis" prmname="team_player_color">
-						<div class="team_param_label">T-shirt colour</div>
-						<div class="colour_picker"></div>
-					</div>
-
-					<div class="team_param palette_hover_vis" prmname="team_shorts_color">
-						<div class="team_param_label">Shorts colour</div>
-						<div class="colour_picker"></div>
-					</div>
-
-					<div class="team_param palette_hover_vis" prmname="team_gk_color">
-						<div class="team_param_label">Goalkeeper colour</div>
-						<div class="colour_picker"></div>
-					</div>
-
-					<img contain src="./assets/red_cross.png" vis_feedback="team1_logo" class="team_logo_vis">
-				</div>
-
-				<div class="player_lists">
-					<div class="player_list starters">
-						<sysbtn class="create_player" btname="define_player" onclick="$this.spawn_player(event, 1)">Add</sysbtn>
-						<!-- <div onclick="$this.spawn_player(event)" class="create_player">Add</div> -->
-						<div class="list_pool"></div>
-					</div>
-					<div class="player_list reserve">
-						<sysbtn class="create_player" btname="define_player" onclick="$this.spawn_player(event, 1)">Add</sysbtn>
-						<!-- <div onclick="$this.spawn_player(event)" class="create_player">Add</div> -->
-						<div class="list_pool"></div>
-					</div>
-				</div>
-			</div>
-
-			<div id="team2_def" class="teamdef">
-				<div class="team_base_params_ctrl">
-					<sysbtn btname="save_team_preset" onclick="$this.save_team_preset(2)">Save Team Preset</sysbtn>
-					<select onchange="$this.load_team_preset(event)" class="team_preset_selector">
-					</select>
-				</div>
-
-				<div class="team_base_params">
-					<div class="team_param" prmname="team_logo">
-						<div class="team_param_label">Logo image</div>
-						<input type="file" onchange="$this.upd_vis_feedback()" class="team_param_input">
-					</div>
-
-					<div class="team_param" prmname="team_name">
-						<div class="team_param_label">Club name</div>
-						<input onchange="$this.upd_vis_feedback()" type="text" class="team_param_input">
-					</div>
-
-					<div class="team_param" prmname="club_shorthand">
-						<div class="team_param_label">Club shorthand</div>
-						<input onchange="$this.upd_vis_feedback()" type="text" class="team_param_input">
-					</div>
-
-					<div class="team_param" prmname="team_coach">
-						<div class="team_param_label">Coach's name</div>
-						<input type="text" class="team_param_input">
-					</div>
-
-					<div class="team_param palette_hover_vis" prmname="team_player_color">
-						<div class="team_param_label">T-shirt colour</div>
-						<div class="colour_picker"></div>
-					</div>
-
-					<div class="team_param palette_hover_vis" prmname="team_shorts_color">
-						<div class="team_param_label">Shorts colour</div>
-						<div class="colour_picker"></div>
-					</div>
-
-					<div class="team_param palette_hover_vis" prmname="team_gk_color">
-						<div class="team_param_label">Goalkeeper colour</div>
-						<div class="colour_picker"></div>
-					</div>
-
-					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png" class="team_logo_vis">
-				</div>
-
-				<div class="player_lists">
-					<div class="player_list starters">
-						<sysbtn class="create_player" btname="define_player" onclick="$this.spawn_player(event, 2)">Add</sysbtn>
-						<!-- <div onclick="$this.spawn_player(event)" class="create_player">Add</div> -->
-						<div class="list_pool"></div>
-					</div>
-					<div class="player_list reserve">
-						<sysbtn class="create_player" btname="define_player" onclick="$this.spawn_player(event, 2)">Add</sysbtn>
-						<!-- <div onclick="$this.spawn_player(event)" class="create_player">Add</div> -->
-						<div class="list_pool"></div>
-					</div>
-				</div>
-			</div>
-
-		</div>
+		<div id="team_lineup"></div>
 	</tab>
-
 
 
 	<tab class="tab_hidden" tabid="teams_layouts">
@@ -261,7 +176,7 @@
 						<img vis_feedback="team1_logo" contain class="layout_buttons_field_ctrl_command_logo" src="./assets/red_cross.png">
 						<div vis_feedback="team1_name" class="layout_buttons_field_ctrl_command_name"></div>
 					</div>
-					<vmixbtn onclick="$this.upd_player_layout(1)" seq_info="update" class="prepare_team_layout" btname="pepare_seq_layout">Prepare Layout</vmixbtn>
+					<vmixbtn onclick="$this.upd_player_layout(1)" seq_info="update" class="prepare_team_layout" btname="prepare_team_layout1">Prepare Layout</vmixbtn>
 					<div class="layout_ctrl_body">
 						<vmixbtn seq_info="update+vis_show" btname="show_field_layout_command1" onclick="$this.show_field_layout(1)">Field Layout ONN</vmixbtn>
 						<vmixbtn seq_info="vis_hide" btname="hide_field_layout_command1" onclick="$this.hide_field_layout(1)">Field Layout OFF</vmixbtn>
@@ -278,7 +193,7 @@
 						<img vis_feedback="team2_logo" contain class="layout_buttons_field_ctrl_command_logo" src="./assets/red_cross.png">
 						<div vis_feedback="team2_name" class="layout_buttons_field_ctrl_command_name"></div>
 					</div>
-					<vmixbtn onclick="$this.upd_player_layout(2)" seq_info="update" class="prepare_team_layout" btname="pepare_seq_layout">Prepare Layout</vmixbtn>
+					<vmixbtn onclick="$this.upd_player_layout(2)" seq_info="update" class="prepare_team_layout" btname="prepare_team_layout2">Prepare Layout</vmixbtn>
 					<div class="layout_ctrl_body">
 						<vmixbtn seq_info="update+vis_show" btname="show_field_layout_command2" onclick="$this.show_field_layout(2)">Field Layout ONN</vmixbtn>
 						<vmixbtn seq_info="vis_hide" btname="hide_field_layout_command2" onclick="$this.hide_field_layout(2)">Field Layout OFF</vmixbtn>
@@ -303,7 +218,7 @@
 				<div id="card_player_filter_pool"></div>
 			</div>
 
-			<div nosel id="red_card_counter">
+			<div nosel id="red_card_counter" kbhint="To manually add/subtract - hover the cards, hold ALT and press LMB/RMB">
 				<vmixbtn seq_info="auto_tweaks" titled btname="pardon_yellow_card" onclick="$this.pardon_player()">PARDON</vmixbtn>
 				<div id="red_card_counter_team1" class="red_card_counter_team">
 					<div class="red_card_counter_head">
@@ -533,5 +448,166 @@
 
 		</div>
 	</tab>
+
+
+
+
+
+	<!-- TEMPLATES -->
+
+
+	<!-- Club control, like coach, playerbase ... -->
+	<template id="club_def_template">
+		<club-def>
+
+			<!-- Base params, like name, coach... -->
+			<club-base-params subtle_box>
+
+				<!-- Club logo feedback -->
+				<img contain class="club_def_logo_visfeedback" src="">
+
+				<!-- Basically, buttons -->
+				<club-def-actions>
+					<sysbtn
+						btname="save_club_definition"
+						kbhint="Save the club under current club title to the local database"
+						onclick="$this.save_club_to_local_db()"
+					>Save Definition</sysbtn>
+				</club-def-actions>
+
+
+				<club-param prmname="logo">
+					<div class="club_base_param_label">Club Logo</div>
+					<input type="file">
+				</club-param>
+
+				<club-param prmname="title">
+					<div class="club_base_param_label">Club Title</div>
+					<input type="text">
+				</club-param>
+
+				<club-param prmname="title_shorthand">
+					<div class="club_base_param_label">Title Shorthand</div>
+					<input type="text">
+				</club-param>
+
+				<club-param prmname="main_coach">
+					<div class="club_base_param_label">Main Coach</div>
+					<input type="text">
+				</club-param>
+
+			</club-base-params>
+
+			<!-- Playerbase definition -->
+			<club-playerbase kbhint="Delete player: ALT + RMB">
+				<sysbtn btname="register_player_in_club">Add</sysbtn>
+				<playerbase-pool></playerbase-pool>
+			</club-playerbase>
+
+		</club-def>
+	</template>
+
+
+	<!-- Club's visual header: A combo of logo + title -->
+	<template id="club_header_template">
+		<club-header>
+			<img contain src="">
+			<club-header-title></club-header-title>
+		</club-header>
+	</template>
+
+
+	<!-- GENERIC PLAYER LIST ITEM -->
+	<template id="generic_player_list_item_template">
+		<player class="generic_player_list_item">
+			<img contain class="player_club_logo" src="">
+			<div class="player_number"></div>
+			<div class="player_surname"></div>
+		</player>
+	</template>
+
+
+	<!-- Player config box -->
+	<template id="generic_player_config_template">
+		<player-config class="generic_player_cfg_box">
+
+			<!-- name -->
+			<player-param prmname="player_name">
+				<div class="player_param_label">Name</div>
+				<input type="text" class="player_param_input">
+			</player-param>
+
+			<!-- surname -->
+			<player-param prmname="player_surname">
+				<div class="player_param_label">Surname</div>
+				<input type="text" class="player_param_input">
+			</player-param>
+
+			<!-- number -->
+			<player-param prmname="player_num">
+				<div class="player_param_label">Number</div>
+				<input type="text" class="player_param_input">
+			</player-param>
+
+
+		</player-config>
+	</template>
+
+
+	<!-- Lineup main control panel -->
+	<template id="club_match_lineup_template">
+		<club-lineup>
+			<lineup-config>
+
+				<sysbtn
+				 kbhint="Open this club for editing in the club panel"
+				 btname="edit_club_from_lineup"
+				>Edit this club</sysbtn>
+
+				<lineup-param class="lineup_param_add_hover" prmname="shorts_color">
+					<div class="param_label">Shorts Colour</div>
+					<div class="param_content"></div>
+				</lineup-param>
+				<lineup-param class="lineup_param_add_hover" prmname="tshirt_color">
+					<div class="param_label">T-Shirt Colour</div>
+					<div class="param_content"></div>
+				</lineup-param>
+				<lineup-param class="lineup_param_add_hover" prmname="gk_color">
+					<div class="param_label">Goalkeeper Colour</div>
+					<div class="param_content"></div>
+				</lineup-param>
+			</lineup-config>
+
+			<lineup-lists>
+
+				<lineup-player-picker></lineup-player-picker>
+
+				<lineup-main lineup_list>
+					<sysbtn btname="append_player_to_main_lineup">Add Here</sysbtn>
+					<lineup-pool></lineup-pool>
+				</lineup-main>
+
+				<lineup-reserve lineup_list>
+					<sysbtn btname="append_player_to_reserve_lineup">Add Here</sysbtn>
+					<lineup-pool></lineup-pool>
+				</lineup-reserve>
+
+			</lineup-lists>
+
+		</club-lineup>
+	</template>
+
+	<template id="team_lineup_color_picker_template">
+		<lineup-color-picker></lineup-color-picker>
+	</template>
+
+
+	<!-- Player filter box -->
+	<template id="player_picker_template">
+		<player-picker>
+			<input type="text" class="player_picker_input">
+			<player-picker-result></player-picker-result>
+		</player-picker>
+	</template>
 
 </div>

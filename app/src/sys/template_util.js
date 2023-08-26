@@ -13,26 +13,30 @@ The idea is to pass a dictionary,
 where KEY is a shorthand for the selected element
 and VALUE is a querySelector string.
 
-Dictionary with the same KEYs would be returned,
-where VALUES were transformed into DOM elements.
+A dictionary with the same KEYs will be returned,
+where VALUES were transformed into DOM elements of the
+newly instantiated template.
 
 	- tplate:HTMLstr|DOMElem|JQuery
-		This parameter should either represent a raw HTML string
-		to be evaulated into a real DOMElement
-		OR pre-evaluated DOMElement
+	    This parameter should either represent a raw HTML string
+	    to be evaulated into a real DOMElement
+	    OR pre-evaluated DOMElement
 
 	- idict:dict
-		Dictionary used to map querySelectors to simple names.
-			- KEY is the name of the indexed element.
-			- VALUE is querySelector string.
-				Add $ in the beginning of the VALUE for this value
-				to be a JQuery object and not vanilla JS DOM Element
-		Example:
-		{'prop_name':'selector'}
-		Or as JQuery
-		{'prop_name':'$selector'}
+	    Dictionary used to map querySelectors to simple names.
+	        - KEY is the name of the indexed element.
+	        - VALUE is querySelector string.
+	            Add $ in the beginning of the VALUE for this value
+	            to be a JQuery object and not vanilla JS DOM Element
+	    Example:
+	    {'prop_name':'selector'}
+	    Or as JQuery
+	    {'prop_name':'$selector'}
+
+	- multipart:bool=false
+	  Template consists of multiple elements.
 */
-_tmpl_util.index_elem = function(tplate, idict){
+_tmpl_util.index_elem = function(tplate, idict, multipart=false){
 	const jq_tplate = $(tplate);
 
 	const indexed = {};
@@ -48,8 +52,9 @@ _tmpl_util.index_elem = function(tplate, idict){
 	}
 
 	return {
-		// 'tplate': tplate,
-		'elem': jq_tplate[0],
+		// The DOM element
+		elem:  multipart ? jq_tplate[0] : jq_tplate[0].firstElementChild,
+		// Element index
 		index: indexed,
 	}
 
@@ -71,17 +76,18 @@ _tmpl_util.index_tplate = function(tsel, idict){
 	}
 
 	return _tmpl_util.index_elem(tplate, idict)
-
 }
 
-
+/*
+Index element attributes into a dict
+*/
 _tmpl_util.index_attributes = function(_elem, attrs){
 	if (!_elem || !attrs){
 		// console.error('Unable to index a template: Invalid input params', elem, attrs);
 		throw new Error('Unable to index a template: Invalid input params', elem, attrs);
 	}
 
-	const elem = $(_elem)[0]
+	const elem = $(_elem)[0];
 
 	const outp_dict = {};
 
@@ -100,3 +106,9 @@ _tmpl_util.index_attributes = function(_elem, attrs){
 
 
 module.exports = _tmpl_util;
+
+
+
+
+
+
