@@ -859,13 +859,13 @@ A regular filter box for quick player lookup.
 	- post_filter_action: function to call after the player was added
 	                      to the list.
 	                      The function receives exactly 1 argument:
-	                      indexed generic player list item.
+	                      player class
 */
 $this.PlayerPicker = class{
-	constructor(data_source, filter, post_filter_action=null){
+	constructor(data_sources, filter, post_filter_action=null){
 		const self = this;
 
-		this.data_source = data_source;
+		this.data_source = data_sources;
 		this.filter = filter;
 		this.post_filter_action = post_filter_action;
 
@@ -902,32 +902,35 @@ $this.PlayerPicker = class{
 		this.tplate.index.result.innerHTML = '';
 
 		// look for matches
-		for (const player of this.data_source){
-			const name_id = `${player.player_name} ${player.player_surname} ${player.player_num}`;
-			// todo: str() is very slow
-			if (!name_id.includes(str(query).lower())){continue};
-			if (!this.filter(player)){continue};
+		for (const dsource of this.data_source){
+			for (const player of dsource){
+				const name_id = `${player.player_name} ${player.player_surname} ${player.player_num}`;
+				// todo: str() is very slow
+				if (!name_id.includes(str(query).lower())){continue};
+				if (!this.filter(player)){continue};
 
-			// checks passed - append to the list
-			const list_item = player.generic_list_elem()
-			list_item.elem.onclick = function(){
-				// Remove previous selection highlighting
-				if (self.selected_entry){
-					self.selected_entry.list_elem.classList.remove('selected_entry')
+				// checks passed - append to the list
+				const list_item = player.generic_list_elem()
+				list_item.elem.onclick = function(){
+					// Remove previous selection highlighting
+					if (self.selected_entry){
+						self.selected_entry.list_elem.classList.remove('selected_entry')
+					}
+					// Write down new selection
+					self.selected_entry = {
+						'player': player,
+						'list_elem': list_item.elem,
+					}
+					// Highlight currently selected element
+					list_item.elem.classList.add('selected_entry')
 				}
-				// Write down new selection
-				self.selected_entry = {
-					'player': player,
-					'list_elem': list_item.elem,
-				}
-				// Highlight currently selected element
-				list_item.elem.classList.add('selected_entry')
+				this.tplate.index.result.append(list_item.elem)
+
+				// apply post-filter actions
+				this?.post_filter_action?.(list_item)
 			}
-			this.tplate.index.result.append(list_item.elem)
-
-			// apply post-filter actions
-			this?.post_filter_action?.(list_item)
 		}
+
 	}
 
 	// remove selection from the filtered list
