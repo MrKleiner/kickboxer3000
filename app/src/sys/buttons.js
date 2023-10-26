@@ -138,6 +138,7 @@ _vb.resync = function(){
 		_vb.pool[btname] = new _vb.vmixbtn(`vmixbtn[btname="${btname}"]`)
 	}
 
+	// create hints
 	for (let btn of document.querySelectorAll('vmixbtn[seq_info]')){
 		const actions = btn.getAttribute('seq_info').split('+')
 		const seq = actions.map(function(act){
@@ -152,6 +153,11 @@ _vb.resync = function(){
 		$(btn).append(`<div class="vmixbtn_info_icon_pool">${seq.join('')}</div>`)
 		btn.removeAttribute('seq_info')
 		btn.setAttribute('rel_pos', null)
+	}
+
+	// turn off buttons that should be off by default
+	for (const btn of document.querySelectorAll('vmixbtn[off]')){
+		btn.vmixbtn(false)
 	}
 }
 

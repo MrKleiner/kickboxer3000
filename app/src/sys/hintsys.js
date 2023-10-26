@@ -1,5 +1,5 @@
 const hintsys_pool = {
-	hint_bar: document.querySelector('hintsys-bar'),
+	hint_bar: document.querySelector('hintsys-bar #hintsys_bar_hints'),
 
 	modkeys: [
 		'Control',

@@ -1,0 +1,693 @@
+<div id="football_standard">
+
+	<tabsys>
+		<sys-tab match_id="club_def" default>Clubs</sys-tab>
+		<sys-tab match_id="team_defs">Config/Lists</sys-tab>
+		<sys-tab match_id="teams_layouts">Layout</sys-tab>
+		<sys-tab match_id="layout_buttons">Layout Ctrl</sys-tab>
+		<sys-tab match_id="punisher">Cards/Goals</sys-tab>
+		<sys-tab match_id="replacement">Substitute</sys-tab>
+		<sys-tab match_id="timer_and_scores">Timer</sys-tab>
+		<sys-tab match_id="stats">Stats</sys-tab>
+		<sys-tab quick_access match_id="stats_buttons">Stats Counter</sys-tab>
+	</tabsys>
+
+	<tab class="tab_hidden" tabid="club_def">
+		<div id="club_definition"></div>
+	</tab>
+
+
+	<tab tabid="team_defs">
+
+		<string-formatting>
+			<f-param display_name="Coach" fpid="coach" translit_default="0" format_default="all_upper"></f-param>
+			<f-param display_name="Players" fpid="players" translit_default="0" format_default="all_upper"></f-param>
+			<f-param display_name="Full club name" fpid="club_name" translit_default="0" format_default="all_upper"></f-param>
+		</string-formatting>
+
+		<div id="team_defs">
+
+			<div id="team1_def" class="teamdef">
+				<div class="team_base_params_ctrl">
+					<sysbtn btname="save_team_preset" onclick="kbmodules.football_standard.save_team_preset(1)">Save Team Preset</sysbtn>
+					<select onchange="kbmodules.football_standard.load_team_preset(event)" class="team_preset_selector">
+					</select>
+					<!-- <option value="volvo">Volvo</option> -->
+				</div>
+
+				<div class="team_base_params">
+					<div class="team_param" prmname="team_logo">
+						<div class="team_param_label">Logo image</div>
+						<input onchange="kbmodules.football_standard.upd_vis_feedback()" type="file" class="team_param_input">
+					</div>
+
+					<div class="team_param" prmname="team_name">
+						<div class="team_param_label">Club name</div>
+						<input onchange="kbmodules.football_standard.upd_vis_feedback()" type="text" class="team_param_input">
+					</div>
+
+					<div class="team_param" prmname="club_shorthand">
+						<div class="team_param_label">Club shorthand</div>
+						<input onchange="kbmodules.football_standard.upd_vis_feedback()" type="text" class="team_param_input">
+					</div>
+
+					<div class="team_param" prmname="team_coach">
+						<div class="team_param_label">Coach's name</div>
+						<input type="text" class="team_param_input">
+					</div>
+
+
+					<div class="team_param palette_hover_vis" prmname="team_player_color">
+						<div class="team_param_label">T-shirt colour</div>
+						<div class="colour_picker"></div>
+					</div>
+
+					<div class="team_param palette_hover_vis" prmname="team_shorts_color">
+						<div class="team_param_label">Shorts colour</div>
+						<div class="colour_picker"></div>
+					</div>
+
+					<div class="team_param palette_hover_vis" prmname="team_gk_color">
+						<div class="team_param_label">Goalkeeper colour</div>
+						<div class="colour_picker"></div>
+					</div>
+
+					<img contain src="./assets/red_cross.png" vis_feedback="team1_logo" class="team_logo_vis">
+				</div>
+
+				<div class="player_lists">
+					<div class="player_list starters">
+						<sysbtn class="create_player" btname="define_player" onclick="kbmodules.football_standard.spawn_player(event, 1)">Add</sysbtn>
+						<!-- <div onclick="kbmodules.football_standard.spawn_player(event)" class="create_player">Add</div> -->
+						<div class="list_pool"></div>
+					</div>
+					<div class="player_list reserve">
+						<sysbtn class="create_player" btname="define_player" onclick="kbmodules.football_standard.spawn_player(event, 1)">Add</sysbtn>
+						<!-- <div onclick="kbmodules.football_standard.spawn_player(event)" class="create_player">Add</div> -->
+						<div class="list_pool"></div>
+					</div>
+				</div>
+			</div>
+
+			<div id="team2_def" class="teamdef">
+				<div class="team_base_params_ctrl">
+					<sysbtn btname="save_team_preset" onclick="kbmodules.football_standard.save_team_preset(2)">Save Team Preset</sysbtn>
+					<select onchange="kbmodules.football_standard.load_team_preset(event)" class="team_preset_selector">
+					</select>
+				</div>
+
+				<div class="team_base_params">
+					<div class="team_param" prmname="team_logo">
+						<div class="team_param_label">Logo image</div>
+						<input type="file" onchange="kbmodules.football_standard.upd_vis_feedback()" class="team_param_input">
+					</div>
+
+					<div class="team_param" prmname="team_name">
+						<div class="team_param_label">Club name</div>
+						<input onchange="kbmodules.football_standard.upd_vis_feedback()" type="text" class="team_param_input">
+					</div>
+
+					<div class="team_param" prmname="club_shorthand">
+						<div class="team_param_label">Club shorthand</div>
+						<input onchange="kbmodules.football_standard.upd_vis_feedback()" type="text" class="team_param_input">
+					</div>
+
+					<div class="team_param" prmname="team_coach">
+						<div class="team_param_label">Coach's name</div>
+						<input type="text" class="team_param_input">
+					</div>
+
+					<div class="team_param palette_hover_vis" prmname="team_player_color">
+						<div class="team_param_label">T-shirt colour</div>
+						<div class="colour_picker"></div>
+					</div>
+
+					<div class="team_param palette_hover_vis" prmname="team_shorts_color">
+						<div class="team_param_label">Shorts colour</div>
+						<div class="colour_picker"></div>
+					</div>
+
+					<div class="team_param palette_hover_vis" prmname="team_gk_color">
+						<div class="team_param_label">Goalkeeper colour</div>
+						<div class="colour_picker"></div>
+					</div>
+
+					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png" class="team_logo_vis">
+				</div>
+
+				<div class="player_lists">
+					<div class="player_list starters">
+						<sysbtn class="create_player" btname="define_player" onclick="kbmodules.football_standard.spawn_player(event, 2)">Add</sysbtn>
+						<!-- <div onclick="kbmodules.football_standard.spawn_player(event)" class="create_player">Add</div> -->
+						<div class="list_pool"></div>
+					</div>
+					<div class="player_list reserve">
+						<sysbtn class="create_player" btname="define_player" onclick="kbmodules.football_standard.spawn_player(event, 2)">Add</sysbtn>
+						<!-- <div onclick="kbmodules.football_standard.spawn_player(event)" class="create_player">Add</div> -->
+						<div class="list_pool"></div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</tab>
+
+
+	<tab class="tab_hidden" tabid="teams_layouts">
+		<div id="teams_layouts">
+			<div id="team1_layout" class="team_layout">
+				<div class="team_layout_header">
+					<img vis_feedback="team1_logo" contain class="layout_club_logo" src="./assets/red_cross.png">
+					<div vis_feedback="team1_name" class="layout_club_name"></div>
+				</div>
+				<div class="team_layout_body">
+					<div class="player_picker">
+						<input oninput="kbmodules.football_standard.filter_players(event, 'one')" type="text" class="player_picker_filter">
+						<div class="player_picker_pool"></div>
+					</div>
+					<div nosel class="ftfield">
+						<div class="cell_unused" t_num="0_0"></div> <div t_num="0_1"></div> <div t_num="0_2"></div> <div t_num="0_3"></div> <div t_num="0_4"></div> <div t_num="0_5"></div> <div t_num="0_6"></div> <div t_num="0_7"></div> <div t_num="0_8"></div> <div t_num="0_9"></div>
+						<div class="cell_unused" t_num="1_0"></div> <div t_num="1_1"></div> <div t_num="1_2"></div> <div t_num="1_3"></div> <div t_num="1_4"></div> <div t_num="1_5"></div> <div t_num="1_6"></div> <div t_num="1_7"></div> <div t_num="1_8"></div> <div t_num="1_9"></div>
+						<div class="cell_unused" t_num="2_0"></div> <div t_num="2_1"></div> <div t_num="2_2"></div> <div t_num="2_3"></div> <div t_num="2_4"></div> <div t_num="2_5"></div> <div t_num="2_6"></div> <div t_num="2_7"></div> <div t_num="2_8"></div> <div t_num="2_9"></div>
+						<div class="cell_unused" t_num="3_0"></div> <div t_num="3_1"></div> <div t_num="3_2"></div> <div t_num="3_3"></div> <div t_num="3_4"></div> <div t_num="3_5"></div> <div t_num="3_6"></div> <div t_num="3_7"></div> <div t_num="3_8"></div> <div t_num="3_9"></div>
+						<div class="cell_unused" t_num="4_0"></div> <div t_num="4_1"></div> <div t_num="4_2"></div> <div t_num="4_3"></div> <div t_num="4_4"></div> <div t_num="4_5"></div> <div t_num="4_6"></div> <div t_num="4_7"></div> <div t_num="4_8"></div> <div t_num="4_9"></div>
+						<div class="cell_unused" t_num="5_0"></div> <div t_num="5_1"></div> <div t_num="5_2"></div> <div t_num="5_3"></div> <div t_num="5_4"></div> <div t_num="5_5"></div> <div t_num="5_6"></div> <div t_num="5_7"></div> <div t_num="5_8"></div> <div t_num="5_9"></div>
+						<div class="cell_unused" t_num="6_0"></div> <div t_num="6_1"></div> <div t_num="6_2"></div> <div t_num="6_3"></div> <div t_num="6_4"></div> <div t_num="6_5"></div> <div t_num="6_6"></div> <div t_num="6_7"></div> <div t_num="6_8"></div> <div t_num="6_9"></div>
+						<div class="cell_unused" t_num="7_0"></div> <div t_num="7_1"></div> <div t_num="7_2"></div> <div t_num="7_3"></div> <div t_num="7_4"></div> <div t_num="7_5"></div> <div t_num="7_6"></div> <div t_num="7_7"></div> <div t_num="7_8"></div> <div t_num="7_9"></div>
+						<div t_num="8_0" class="shadowcell"></div>
+						<div t_num="8_1" class="shadowcell"></div>
+						<div t_num="8_2" class="shadowcell"></div>
+						<div t_num="8_3" class="shadowcell"></div>
+						<div t_num="8_4" class="shadowcell"></div>
+							<div t_num="8_5" class="goalkeeper"></div>
+						<div t_num="8_6" class="shadowcell"></div>
+						<div t_num="8_7" class="shadowcell"></div>
+						<div t_num="8_8" class="shadowcell"></div>
+						<div t_num="8_9" class="shadowcell"></div>
+					</div>
+				</div>
+			</div>
+
+			<div id="team2_layout" class="team_layout">
+				<div class="team_layout_header">
+					<img vis_feedback="team2_logo" contain class="layout_club_logo" src="./assets/red_cross.png">
+					<div vis_feedback="team2_name" class="layout_club_name"></div>
+				</div>
+				<div class="team_layout_body">
+					<div class="player_picker">
+						<input oninput="kbmodules.football_standard.filter_players(event, 'two')" type="text" class="player_picker_filter">
+						<div class="player_picker_pool"></div>
+					</div>
+					<div nosel class="ftfield">
+						<div class="cell_unused" t_num="0_0"></div> <div t_num="0_1"></div> <div t_num="0_2"></div> <div t_num="0_3"></div> <div t_num="0_4"></div> <div t_num="0_5"></div> <div t_num="0_6"></div> <div t_num="0_7"></div> <div t_num="0_8"></div> <div t_num="0_9"></div>
+						<div class="cell_unused" t_num="1_0"></div> <div t_num="1_1"></div> <div t_num="1_2"></div> <div t_num="1_3"></div> <div t_num="1_4"></div> <div t_num="1_5"></div> <div t_num="1_6"></div> <div t_num="1_7"></div> <div t_num="1_8"></div> <div t_num="1_9"></div>
+						<div class="cell_unused" t_num="2_0"></div> <div t_num="2_1"></div> <div t_num="2_2"></div> <div t_num="2_3"></div> <div t_num="2_4"></div> <div t_num="2_5"></div> <div t_num="2_6"></div> <div t_num="2_7"></div> <div t_num="2_8"></div> <div t_num="2_9"></div>
+						<div class="cell_unused" t_num="3_0"></div> <div t_num="3_1"></div> <div t_num="3_2"></div> <div t_num="3_3"></div> <div t_num="3_4"></div> <div t_num="3_5"></div> <div t_num="3_6"></div> <div t_num="3_7"></div> <div t_num="3_8"></div> <div t_num="3_9"></div>
+						<div class="cell_unused" t_num="4_0"></div> <div t_num="4_1"></div> <div t_num="4_2"></div> <div t_num="4_3"></div> <div t_num="4_4"></div> <div t_num="4_5"></div> <div t_num="4_6"></div> <div t_num="4_7"></div> <div t_num="4_8"></div> <div t_num="4_9"></div>
+						<div class="cell_unused" t_num="5_0"></div> <div t_num="5_1"></div> <div t_num="5_2"></div> <div t_num="5_3"></div> <div t_num="5_4"></div> <div t_num="5_5"></div> <div t_num="5_6"></div> <div t_num="5_7"></div> <div t_num="5_8"></div> <div t_num="5_9"></div>
+						<div class="cell_unused" t_num="6_0"></div> <div t_num="6_1"></div> <div t_num="6_2"></div> <div t_num="6_3"></div> <div t_num="6_4"></div> <div t_num="6_5"></div> <div t_num="6_6"></div> <div t_num="6_7"></div> <div t_num="6_8"></div> <div t_num="6_9"></div>
+						<div class="cell_unused" t_num="7_0"></div> <div t_num="7_1"></div> <div t_num="7_2"></div> <div t_num="7_3"></div> <div t_num="7_4"></div> <div t_num="7_5"></div> <div t_num="7_6"></div> <div t_num="7_7"></div> <div t_num="7_8"></div> <div t_num="7_9"></div>
+						<div t_num="8_0" class="shadowcell"></div>
+						<div t_num="8_1" class="shadowcell"></div>
+						<div t_num="8_2" class="shadowcell"></div>
+						<div t_num="8_3" class="shadowcell"></div>
+						<div t_num="8_4" class="shadowcell"></div>
+							<div t_num="8_5" class="goalkeeper"></div>
+						<div t_num="8_6" class="shadowcell"></div>
+						<div t_num="8_7" class="shadowcell"></div>
+						<div t_num="8_8" class="shadowcell"></div>
+						<div t_num="8_9" class="shadowcell"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</tab>
+
+	<tab class="tab_hidden" tabid="layout_buttons">
+		<div id="layout_buttons">
+
+			<h1>Commenter</h1>
+			<!-- Сукманский is the best commenter ever -->
+			<div id="commenter_ctrl">
+				<div id="commenter_ctrl_head">
+					<div class="layout_buttons_vs_ctrl_head_minititle">Commenter's Name. No post-formatting applied</div>
+					<input onchange="kbmodules.football_standard.save_commenter()" type="text" id="commenter_name_input">
+				</div>
+
+				<div id="commenter_ctrl_body">
+					<vmixbtn seq_info="update+vis_show" btname="show_commenter" onclick="kbmodules.football_standard.show_commenter()">Show Commenter</vmixbtn>
+					<vmixbtn seq_info="vis_hide" btname="hide_commenter" onclick="kbmodules.football_standard.hide_commenter()">Hide Commenter</vmixbtn>
+				</div>
+			</div>
+
+
+
+			<h1>Splash (VS) Control</h1>
+			<div id="layout_buttons_vs_ctrl">
+				<div id="layout_buttons_vs_ctrl_head">
+					<div class="layout_buttons_vs_ctrl_head_minititle">Upper Line</div>
+					<input onchange="kbmodules.football_standard.save_vs_sublines()" type="text" id="vs_text_bottom_upper">
+					<div class="layout_buttons_vs_ctrl_head_minititle">Lower Line</div>
+					<input onchange="kbmodules.football_standard.save_vs_sublines()" type="text" id="vs_text_bottom_lower">
+				</div>
+
+				<div id="layout_buttons_vs_ctrl_body">
+					<vmixbtn seq_info="update+vis_show" btname="show_splash" onclick="kbmodules.football_standard.show_vs_title()">Show VS</vmixbtn>
+					<vmixbtn seq_info="vis_hide" btname="hide_splash" onclick="kbmodules.football_standard.hide_vs_title()">Hide VS</vmixbtn>
+				</div>
+			</div>
+
+
+			<h1>Field Layout Control + Coach</h1>
+			<div id="layout_buttons_field_ctrl">
+
+				<div id="layout_buttons_field_ctrl_command1" class="layout_buttons_field_ctrl_command">
+					<div class="layout_ctrl_head">
+						<img vis_feedback="team1_logo" contain class="layout_buttons_field_ctrl_command_logo" src="./assets/red_cross.png">
+						<div vis_feedback="team1_name" class="layout_buttons_field_ctrl_command_name"></div>
+					</div>
+					<vmixbtn onclick="kbmodules.football_standard.upd_player_layout(1)" seq_info="update" class="prepare_team_layout" btname="prepare_team_layout1">Prepare Layout</vmixbtn>
+					<div class="layout_ctrl_body">
+						<vmixbtn seq_info="update+vis_show" btname="show_field_layout_command1" onclick="kbmodules.football_standard.show_field_layout(1)">Field Layout ONN</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="hide_field_layout_command1" onclick="kbmodules.football_standard.hide_field_layout(1)">Field Layout OFF</vmixbtn>
+					</div>
+					<div class="team_layout_coach_ctrl">
+						<vmixbtn seq_info="update+vis_show" btname="show_coach_team1" onclick="kbmodules.football_standard.show_coach(1)">Coach ONN</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="hide_coach_team1" onclick="kbmodules.football_standard.hide_coach(1)">Coach OFF</vmixbtn>
+					</div>
+
+				</div>
+
+				<div id="layout_buttons_field_ctrl_command2" class="layout_buttons_field_ctrl_command">
+					<div class="layout_ctrl_head">
+						<img vis_feedback="team2_logo" contain class="layout_buttons_field_ctrl_command_logo" src="./assets/red_cross.png">
+						<div vis_feedback="team2_name" class="layout_buttons_field_ctrl_command_name"></div>
+					</div>
+					<vmixbtn onclick="kbmodules.football_standard.upd_player_layout(2)" seq_info="update" class="prepare_team_layout" btname="prepare_team_layout2">Prepare Layout</vmixbtn>
+					<div class="layout_ctrl_body">
+						<vmixbtn seq_info="update+vis_show" btname="show_field_layout_command2" onclick="kbmodules.football_standard.show_field_layout(2)">Field Layout ONN</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="hide_field_layout_command2" onclick="kbmodules.football_standard.hide_field_layout(2)">Field Layout OFF</vmixbtn>
+					</div>
+					<div class="team_layout_coach_ctrl">
+						<vmixbtn seq_info="update+vis_show" btname="show_coach_team2" onclick="kbmodules.football_standard.show_coach(2)">Coach ONN</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="hide_coach_team2" onclick="kbmodules.football_standard.hide_coach(2)">Coach OFF</vmixbtn>
+					</div>
+				</div>
+
+			</div>
+
+
+		</div>
+	</tab>
+
+	<tab class="tab_hidden" tabid="punisher">
+		<!-- score now counts as punishment. Amazing -->
+		<div id="punisher">
+			<div id="card_player_filter">
+				<input oninput="kbmodules.football_standard.filter_players_to_punish(event)" type="text" id="card_player_filter_input">
+				<div id="card_player_filter_pool"></div>
+			</div>
+
+			<div nosel id="red_card_counter">
+				<vmixbtn seq_info="auto_tweaks" titled btname="pardon_yellow_card" onclick="kbmodules.football_standard.pardon_player()">PARDON</vmixbtn>
+				<div id="red_card_counter_team1" class="red_card_counter_team">
+					<div class="red_card_counter_head">
+						<img vis_feedback="team1_logo" contain src="./assets/red_cross.png">
+						<div vis_feedback="team1_name"></div>
+					</div>
+					<div onclick="kbmodules.football_standard.mod_penalty_red_card(event, 1)" oncontextmenu="kbmodules.football_standard.mod_penalty_red_card(event, 1, true)" class="red_card_counter_pool">
+						<img contain class="rcard1" src="./assets/red_card.png">
+						<img contain class="rcard2" src="./assets/red_card.png">
+						<img contain class="rcard3" src="./assets/red_card.png">
+					</div>
+				</div>
+
+				<div id="red_card_counter_team2" class="red_card_counter_team">
+					<div class="red_card_counter_head">
+						<img vis_feedback="team2_logo" contain src="./assets/red_cross.png">
+						<div vis_feedback="team2_name"></div>
+					</div>
+					<div onclick="kbmodules.football_standard.mod_penalty_red_card(event, 2)" oncontextmenu="kbmodules.football_standard.mod_penalty_red_card(event, 2, true)" class="red_card_counter_pool">
+						<img contain class="rcard1" src="./assets/red_card.png">
+						<img contain class="rcard2" src="./assets/red_card.png">
+						<img contain class="rcard3" src="./assets/red_card.png">
+					</div>
+				</div>
+			</div>
+
+
+			<div id="card_player_buttons">
+				<div id="card_player_buttons_cards">
+					<div id="card_player_buttons_turn_onn">
+						<vmixbtn seq_info="auto_seq" titled btname="yellow_card" onclick="kbmodules.football_standard.show_card('yellow')">
+							<img draggable="false" contain class="punish_card_vis" src="./assets/yellow_card.png">
+							<div class="punish_card_title">YELLOW</div>
+						</vmixbtn>
+						<vmixbtn seq_info="auto_tweaks+auto_seq" titled btname="red_card" onclick="kbmodules.football_standard.show_card('red')">
+							<img draggable="false" contain class="punish_card_vis" src="./assets/red_card.png">
+							<div class="punish_card_title">RED</div>
+						</vmixbtn>
+					</div>
+
+					<div id="card_player_buttons_turn_off">
+						<vmixbtn seq_info="vis_hide" btname="kill_card" onclick="kbmodules.football_standard.hide_card()">OFF</vmixbtn>
+					</div>
+				</div>
+
+				<div id="card_player_buttons_score">
+					<vmixbtn seq_info="auto_tweaks+auto_seq" titled btname="scored" onclick="kbmodules.football_standard.goal_score_on()">
+						<img draggable="false" contain class="punish_card_vis" src="./assets/ball.png">
+						<div class="punish_card_title">SCORE!</div>
+					</vmixbtn>
+					<vmixbtn seq_info="vis_hide" btname="scored_off" onclick="kbmodules.football_standard.goal_score_off()">OFF</vmixbtn>
+				</div>
+
+			</div>
+		</div>
+	</tab>
+
+	<tab class="tab_hidden" tabid="replacement">
+		<div id="replacement">
+			<div id="replacement_buttons">
+				<vmixbtn seq_info="auto_tweaks+auto_seq" btname="exec_replacement_sequence" onclick="kbmodules.football_standard.replacement_player_title(event)">Execute Sequence</vmixbtn>
+				<vmixbtn halfsize seq_info="auto_tweaks" btname="shadow_player_swap" onclick="kbmodules.football_standard.shadow_swap(event)">Shadow swap</vmixbtn>
+				<!-- <vmixbtn btname="exec_replacement_sequences" onclick="kbmodules.football_standard.start_base_timer()">AAA</vmixbtn> -->
+			</div>
+			<div id="replacement_teams">
+				<div class="replacement_team" id="replacement_team1">
+					<div class="replacement_team_head">
+						<img vis_feedback="team1_logo" contain class="replacement_team_logo" src="./assets/red_cross.png">
+						<div vis_feedback="team1_name" class="replacement_team_name"></div>
+					</div>
+					<div class="replacement_team_body">
+						<div class="replacement_leaving replacement_list">
+							<input oninput="kbmodules.football_standard.filter_players_replacement(event, 'one')" type="text">
+							<div class="replacement_filtered_list"></div>
+						</div>
+						<div class="replacement_vis_que">&lt;</div>
+						<div class="replacement_incoming replacement_list">
+							<input oninput="kbmodules.football_standard.filter_players_replacement(event, 'one')" type="text">
+							<div class="replacement_filtered_list"></div>
+						</div>
+					</div>
+				</div>
+				<div class="replacement_team" id="replacement_team2">
+					<div class="replacement_team_head">
+						<img vis_feedback="team2_logo" contain class="replacement_team_logo" src="./assets/red_cross.png">
+						<div vis_feedback="team2_name" class="replacement_team_name"></div>
+					</div>
+					<div class="replacement_team_body">
+						<div class="replacement_leaving replacement_list">
+							<input oninput="kbmodules.football_standard.filter_players_replacement(event, 'two')" type="text">
+							<div class="replacement_filtered_list"></div>
+						</div>
+						<div class="replacement_vis_que">&lt;</div>
+						<div class="replacement_incoming replacement_list">
+							<input oninput="kbmodules.football_standard.filter_players_replacement(event, 'two')" type="text">
+							<div class="replacement_filtered_list"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</tab>
+
+
+
+
+	<tab class="tab_hidden" tabid="timer_and_scores">
+		<div id="timer_and_scores">
+			<div id="timer_ctrl">
+				<div regular_box id="timer_ctrl_base">
+					<div id="timer_ctrl_base_launchers">
+						<vmixbtn seq_info="update+play" btname="launch_main_timer_r1" onclick="kbmodules.football_standard.start_base_timer(1)">Start Time 1</vmixbtn>
+						<!-- <vmixbtn btname="launch_main_timer_r2" onclick="kbmodules.football_standard.start_base_timer(2)">Arm Round 2</vmixbtn> -->
+						<vmixbtn seq_info="update+play" btname="launch_main_timer_r2" onclick="kbmodules.football_standard.start_base_timer(2)">Start Time 2</vmixbtn>
+					</div>
+
+					<div id="timer_ctrl_base_visibility">
+						<vmixbtn seq_info="vis_show" btname="show_main_timer" onclick="kbmodules.football_standard.main_timer_vis(true)">Show Main Timer</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="hide_main_timer" onclick="kbmodules.football_standard.main_timer_vis(false)">Hide Main Timer</vmixbtn>
+					</div>
+
+					<div id="timer_ctrl_base_resume">
+						<input placeholder="SECONDS (EXPR)" type="text">
+						<vmixbtn seq_info="update+play" btname="continue_from_time" onclick="kbmodules.football_standard.resume_main_timer_from_offset()">Start From</vmixbtn>
+					</div>
+				</div>
+
+				<box regular_box style="flex-direction: row; display: flex; margin-left: 10px; align-items: center;">
+					<div id="timer_ctrl_additional">
+						<input onchange="kbmodules.football_standard.update_extra_time_amount()" type="text" placeholder="MINUTES">
+						<!-- <vmixbtn seq_info="update+play+vis_show" btname="launch_extra_timer" onclick="kbmodules.football_standard.launch_extra_time()">Launch Extra Time</vmixbtn> -->
+						<vmixbtn halfsize seq_info="stop" btname="stop_extra_timer" onclick="kbmodules.football_standard.stop_extra_time()">Stop Extra Time</vmixbtn>
+					</div>
+
+					<vmixbtn seq_info="vis_show" btname="show_extra_time" onclick="kbmodules.football_standard.extra_time_vis(true)">Show Extra Time</vmixbtn>
+					<vmixbtn seq_info="vis_hide" btname="hide_extra_timer" onclick="kbmodules.football_standard.extra_time_vis(false)">Hide Extra Time</vmixbtn>
+				</box>
+
+			</div>
+
+		</div>
+	</tab>
+
+
+
+	<tab class="tab_hidden" tabid="stats">
+		<div id="score_ctrl" regular_box>
+
+			<div id="score_ctrl_player_search">
+				<input oninput="kbmodules.football_standard.filter_players_for_score(event)" type="text">
+				<div id="score_ctrl_player_search_pool"></div>
+			</div>
+
+			<div class="score_ctrl_team" id="score_ctrl_team1">
+				<div class="score_ctrl_head">
+					<img contain vis_feedback="team1_logo" src="./assets/red_cross.png" class="score_ctrl_head_img">
+					<div vis_feedback="team1_name" class="score_ctrl_head_tname">Pootis</div>
+				</div>
+				<div class="score_ctrl_table"></div>
+				<sysbtn btname="add_team_score" onclick="kbmodules.football_standard.add_score(1)">Add</sysbtn>
+			</div>
+
+			<div class="score_ctrl_team" id="score_ctrl_team2">
+				<div class="score_ctrl_head">
+					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png" class="score_ctrl_head_img">
+					<div vis_feedback="team2_name" class="score_ctrl_head_tname">Pootis</div>
+				</div>
+				<div class="score_ctrl_table"></div>
+				<sysbtn btname="add_team_score" onclick="kbmodules.football_standard.add_score(2)">Add</sysbtn>
+			</div>
+		</div>
+
+		<div id="score_ctrl_buttons">
+			<vmixbtn seq_info="update+vis_show" btname="show_score_results" onclick="kbmodules.football_standard.score_sum_vis(true)">Show scores</vmixbtn>
+			<vmixbtn seq_info="vis_hide" btname="show_score_results" onclick="kbmodules.football_standard.score_sum_vis(false)">Hide scores</vmixbtn>
+		</div>
+
+		<div id="team_stats_tables">
+
+			<!-- Team L -->
+			<div class="team_stats_table_container">
+				<div class="team_stats_table_header">
+					<img contain vis_feedback="team1_logo" src="./assets/red_cross.png">
+					<h1 vis_feedback="team1_name">_t1</h1>
+				</div>
+				<div class="team_stats_table tstats_table_1"></div>
+			</div>
+			<!-- Team R -->
+			<div class="team_stats_table_container">
+				<div class="team_stats_table_header">
+					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png">
+					<h1 vis_feedback="team2_name">_t1</h1>
+				</div>
+				<div class="team_stats_table tstats_table_2"></div>
+			</div>
+
+		</div>
+
+		<div id="stats_ctrl_btns">
+			<vmixbtn seq_info="update+vis_show" btname="show_team_stats" onclick="kbmodules.football_standard.show_team_stats()">Show stats</vmixbtn>
+			<vmixbtn seq_info="vis_hide" btname="hide_team_stats" onclick="kbmodules.football_standard.hide_team_stats()">Hide stats</vmixbtn>
+		</div>
+	</tab>
+
+
+
+	<!-- buttons for quick addition/subtraction -->
+	<tab class="tab_hidden" tabid="stats_buttons">
+		<div id="stats_buttons">
+
+			<!-- Team L -->
+			<div class="team_stats" regular_box>
+				<div class="team_stats_head">
+					<img contain vis_feedback="team1_logo" src="./assets/red_cross.png">
+					<h1 vis_feedback="team1_name">_t1</h1>
+				</div>
+				<div class="team_stats_buttons tstats_buttons_team_1"></div>
+			</div>
+			<!-- Team R -->
+			<div class="team_stats" regular_box>
+				<div class="team_stats_head">
+					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png">
+					<h1 vis_feedback="team2_name">_t1</h1>
+				</div>
+				<div class="team_stats_buttons tstats_buttons_team_2"></div>
+			</div>
+
+		</div>
+	</tab>
+
+
+
+
+
+	<!-- TEMPLATES -->
+
+
+	<!-- Club control, like coach, playerbase ... -->
+	<template id="club_def_template">
+		<club-def>
+
+			<!-- Base params, like name, coach... -->
+			<club-base-params>
+
+				<!-- Club logo feedback -->
+				<img contain class="club_def_logo_visfeedback" src="">
+
+				<!-- Basically, buttons -->
+				<club-def-actions>
+					<sysbtn btname="save_club_definition">Save Definition</sysbtn>
+				</club-def-actions>
+
+
+				<club-param prmname="logo">
+					<div class="club_base_param_label">Club Logo</div>
+					<input type="file">
+				</club-param>
+
+				<club-param prmname="title">
+					<div class="club_base_param_label">Club Title</div>
+					<input type="text">
+				</club-param>
+
+				<club-param prmname="title_shorthand">
+					<div class="club_base_param_label">Title Shorthand</div>
+					<input type="text">
+				</club-param>
+
+				<club-param prmname="main_coach">
+					<div class="club_base_param_label">Main Coach</div>
+					<input type="text">
+				</club-param>
+
+			</club-base-params>
+
+			<!-- Playerbase definition -->
+			<club-playerbase>
+				<sysbtn btname="register_player_in_club">Add</sysbtn>
+				<playerbase-pool></playerbase-pool>
+			</club-playerbase>
+
+		</club-def>
+	</template>
+
+
+	<!-- Club's visual header: A combo of logo + title -->
+	<template id="club_header_template">
+		<club-header>
+			<img src="">
+			<club-header-title></club-header-title>
+		</club-header>
+	</template>
+
+
+	<!-- GENERIC PLAYER LIST ITEM -->
+	<template id="generic_player_list_item_template">
+		<player class="generic_player_list_item">
+			<img class="player_club_logo" src="">
+			<div class="player_number"></div>
+			<div class="player_surname"></div>
+		</player>
+	</template>
+
+
+	<!-- Player config box -->
+	<template id="generic_player_config_template">
+		<player-config class="generic_player_cfg_box">
+
+			<!-- name -->
+			<player-param prmname="player_name">
+				<div class="player_param_label">Name</div>
+				<input type="text" class="player_param_input">
+			</player-param>
+
+			<!-- surname -->
+			<player-param prmname="player_surname">
+				<div class="player_param_label">Surname</div>
+				<input type="text" class="player_param_input">
+			</player-param>
+
+			<!-- number -->
+			<player-param prmname="player_num">
+				<div class="player_param_label">Number</div>
+				<input type="text" class="player_param_input">
+			</player-param>
+
+
+		</player-config>
+	</template>
+
+
+	<!-- Lineup main control panel -->
+	<template id="club_match_lineup_template">
+		<club-lineup>
+			<lineup-config>
+				<lineup-param prmname="shorts_color">
+					<div class="param_label">Shorts Colour</div>
+					<div class="param_content"></div>
+				</lineup-param>
+				<lineup-param prmname="tshirt_color">
+					<div class="param_label">T-Shirt Colour</div>
+					<div class="param_content"></div>
+				</lineup-param>
+				<lineup-param prmname="gk_color">
+					<div class="param_label">Goalkeeper Colour</div>
+					<div class="param_content"></div>
+				</lineup-param>
+			</lineup-config>
+
+			<lineup-lists>
+
+				<lineup-player-picker></lineup-player-picker>
+
+				<lineup-main>
+					<sysbtn btname="append_player_to_main_lineup">Add Here</sysbtn>
+					<lineup-pool></lineup-pool>
+				</lineup-main>
+
+				<lineup-reserve>
+					<sysbtn btname="append_player_to_reserve_lineup">Add Here</sysbtn>
+					<lineup-pool></lineup-pool>
+				</lineup-reserve>
+
+			</lineup-lists>
+
+		</club-lineup>
+	</template>
+
+	<template id="team_lineup_color_picker_template">
+		<lineup-color-picker></lineup-color-picker>
+	</template>
+
+
+	<!-- Player filter box -->
+	<template id="player_picker_template">
+		<player-picker>
+			<input type="text" class="player_picker_input">
+			<player-picker-result></player-picker-result>
+		</player-picker>
+	</template>
+
+</div>

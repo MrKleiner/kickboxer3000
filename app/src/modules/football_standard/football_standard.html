@@ -12,23 +12,22 @@
 		<sys-tab quick_access match_id="stats_buttons">Stats Counter</sys-tab>
 	</tabsys>
 
+	<div regular_box id="timer_feedback">
+		<div id="timer_feedback_main">--:--</div>
+		<div id="timer_feedback_extra">--:--</div>
+	</div>
+
 	<tab class="tab_hidden" tabid="club_def">
 		<div id="club_definition">
 			<club-control-global subtle_box>
 				<div id="load_existing_club_dropdown">
-					<label>
-						Load Club
-						<select onchange="$this.load_club_by_name(this.value)">
-	  						<option value="">--</option>
-						</select>
-					</label>
+					<label>Load Club</label>
 				</div>
 
-
 				<sysbtn
-					btname="create_new_club"
-					onclick="$this.create_new_club()"
-					kbhint="This action automatically saves active club"
+				 btname="create_new_club"
+				 onclick="$this.create_new_club()"
+				 kbhint="This action automatically saves active club"
 				>New Club</sysbtn>
 				
 				<sysbtn btname="load_club_from_file">Load From File</sysbtn>
@@ -39,8 +38,12 @@
 					<input class="tgtdir" type="text" placeholder="Target Directory">
 					<input class="tgtfname" type="text" placeholder="Filename + .clubdef">
 				</div>
-				
-				<sysbtn btname="delete_current_club" kbhint="Hold CTRL">Delete Current Club</sysbtn>
+
+				<sysbtn
+				 btname="delete_current_club"
+				 kbhint="Hold CTRL"
+				 onclick="$this.delete_current_club(event)"
+				>Delete Current Club</sysbtn>
 
 			</club-control-global>
 		</div>
@@ -57,79 +60,25 @@
 
 		<lineup-global-control subtle_box>
 			<sysbtn btname="init_new_match" kbhint="Wipe previous match stats, like goals. Hold CTRL">New Match</sysbtn>
+			<home-club-selector class="lineup_global_ctrl_param">
+				<label>Home club</label>
+			</home-club-selector>
+			<guest-club-selector class="lineup_global_ctrl_param">
+				<label>Guest club</label>
+			</guest-club-selector>
 		</lineup-global-control>
 
-		<div id="team_lineup"></div>
+		<div id="team_lineup">
+			<home-club-lineup></home-club-lineup>
+			<guest-club-lineup></guest-club-lineup>
+		</div>
 	</tab>
 
 
 	<tab class="tab_hidden" tabid="teams_layouts">
 		<div id="teams_layouts">
-			<div id="team1_layout" class="team_layout">
-				<div class="team_layout_header">
-					<img vis_feedback="team1_logo" contain class="layout_club_logo" src="./assets/red_cross.png">
-					<div vis_feedback="team1_name" class="layout_club_name"></div>
-				</div>
-				<div class="team_layout_body">
-					<div class="player_picker">
-						<input oninput="$this.filter_players(event, 'one')" type="text" class="player_picker_filter">
-						<div class="player_picker_pool"></div>
-					</div>
-					<div nosel class="ftfield">
-						<div class="cell_unused" t_num="0_0"></div> <div t_num="0_1"></div> <div t_num="0_2"></div> <div t_num="0_3"></div> <div t_num="0_4"></div> <div t_num="0_5"></div> <div t_num="0_6"></div> <div t_num="0_7"></div> <div t_num="0_8"></div> <div t_num="0_9"></div>
-						<div class="cell_unused" t_num="1_0"></div> <div t_num="1_1"></div> <div t_num="1_2"></div> <div t_num="1_3"></div> <div t_num="1_4"></div> <div t_num="1_5"></div> <div t_num="1_6"></div> <div t_num="1_7"></div> <div t_num="1_8"></div> <div t_num="1_9"></div>
-						<div class="cell_unused" t_num="2_0"></div> <div t_num="2_1"></div> <div t_num="2_2"></div> <div t_num="2_3"></div> <div t_num="2_4"></div> <div t_num="2_5"></div> <div t_num="2_6"></div> <div t_num="2_7"></div> <div t_num="2_8"></div> <div t_num="2_9"></div>
-						<div class="cell_unused" t_num="3_0"></div> <div t_num="3_1"></div> <div t_num="3_2"></div> <div t_num="3_3"></div> <div t_num="3_4"></div> <div t_num="3_5"></div> <div t_num="3_6"></div> <div t_num="3_7"></div> <div t_num="3_8"></div> <div t_num="3_9"></div>
-						<div class="cell_unused" t_num="4_0"></div> <div t_num="4_1"></div> <div t_num="4_2"></div> <div t_num="4_3"></div> <div t_num="4_4"></div> <div t_num="4_5"></div> <div t_num="4_6"></div> <div t_num="4_7"></div> <div t_num="4_8"></div> <div t_num="4_9"></div>
-						<div class="cell_unused" t_num="5_0"></div> <div t_num="5_1"></div> <div t_num="5_2"></div> <div t_num="5_3"></div> <div t_num="5_4"></div> <div t_num="5_5"></div> <div t_num="5_6"></div> <div t_num="5_7"></div> <div t_num="5_8"></div> <div t_num="5_9"></div>
-						<div class="cell_unused" t_num="6_0"></div> <div t_num="6_1"></div> <div t_num="6_2"></div> <div t_num="6_3"></div> <div t_num="6_4"></div> <div t_num="6_5"></div> <div t_num="6_6"></div> <div t_num="6_7"></div> <div t_num="6_8"></div> <div t_num="6_9"></div>
-						<div class="cell_unused" t_num="7_0"></div> <div t_num="7_1"></div> <div t_num="7_2"></div> <div t_num="7_3"></div> <div t_num="7_4"></div> <div t_num="7_5"></div> <div t_num="7_6"></div> <div t_num="7_7"></div> <div t_num="7_8"></div> <div t_num="7_9"></div>
-						<div t_num="8_0" class="shadowcell"></div>
-						<div t_num="8_1" class="shadowcell"></div>
-						<div t_num="8_2" class="shadowcell"></div>
-						<div t_num="8_3" class="shadowcell"></div>
-						<div t_num="8_4" class="shadowcell"></div>
-							<div t_num="8_5" class="goalkeeper"></div>
-						<div t_num="8_6" class="shadowcell"></div>
-						<div t_num="8_7" class="shadowcell"></div>
-						<div t_num="8_8" class="shadowcell"></div>
-						<div t_num="8_9" class="shadowcell"></div>
-					</div>
-				</div>
-			</div>
-
-			<div id="team2_layout" class="team_layout">
-				<div class="team_layout_header">
-					<img vis_feedback="team2_logo" contain class="layout_club_logo" src="./assets/red_cross.png">
-					<div vis_feedback="team2_name" class="layout_club_name"></div>
-				</div>
-				<div class="team_layout_body">
-					<div class="player_picker">
-						<input oninput="$this.filter_players(event, 'two')" type="text" class="player_picker_filter">
-						<div class="player_picker_pool"></div>
-					</div>
-					<div nosel class="ftfield">
-						<div class="cell_unused" t_num="0_0"></div> <div t_num="0_1"></div> <div t_num="0_2"></div> <div t_num="0_3"></div> <div t_num="0_4"></div> <div t_num="0_5"></div> <div t_num="0_6"></div> <div t_num="0_7"></div> <div t_num="0_8"></div> <div t_num="0_9"></div>
-						<div class="cell_unused" t_num="1_0"></div> <div t_num="1_1"></div> <div t_num="1_2"></div> <div t_num="1_3"></div> <div t_num="1_4"></div> <div t_num="1_5"></div> <div t_num="1_6"></div> <div t_num="1_7"></div> <div t_num="1_8"></div> <div t_num="1_9"></div>
-						<div class="cell_unused" t_num="2_0"></div> <div t_num="2_1"></div> <div t_num="2_2"></div> <div t_num="2_3"></div> <div t_num="2_4"></div> <div t_num="2_5"></div> <div t_num="2_6"></div> <div t_num="2_7"></div> <div t_num="2_8"></div> <div t_num="2_9"></div>
-						<div class="cell_unused" t_num="3_0"></div> <div t_num="3_1"></div> <div t_num="3_2"></div> <div t_num="3_3"></div> <div t_num="3_4"></div> <div t_num="3_5"></div> <div t_num="3_6"></div> <div t_num="3_7"></div> <div t_num="3_8"></div> <div t_num="3_9"></div>
-						<div class="cell_unused" t_num="4_0"></div> <div t_num="4_1"></div> <div t_num="4_2"></div> <div t_num="4_3"></div> <div t_num="4_4"></div> <div t_num="4_5"></div> <div t_num="4_6"></div> <div t_num="4_7"></div> <div t_num="4_8"></div> <div t_num="4_9"></div>
-						<div class="cell_unused" t_num="5_0"></div> <div t_num="5_1"></div> <div t_num="5_2"></div> <div t_num="5_3"></div> <div t_num="5_4"></div> <div t_num="5_5"></div> <div t_num="5_6"></div> <div t_num="5_7"></div> <div t_num="5_8"></div> <div t_num="5_9"></div>
-						<div class="cell_unused" t_num="6_0"></div> <div t_num="6_1"></div> <div t_num="6_2"></div> <div t_num="6_3"></div> <div t_num="6_4"></div> <div t_num="6_5"></div> <div t_num="6_6"></div> <div t_num="6_7"></div> <div t_num="6_8"></div> <div t_num="6_9"></div>
-						<div class="cell_unused" t_num="7_0"></div> <div t_num="7_1"></div> <div t_num="7_2"></div> <div t_num="7_3"></div> <div t_num="7_4"></div> <div t_num="7_5"></div> <div t_num="7_6"></div> <div t_num="7_7"></div> <div t_num="7_8"></div> <div t_num="7_9"></div>
-						<div t_num="8_0" class="shadowcell"></div>
-						<div t_num="8_1" class="shadowcell"></div>
-						<div t_num="8_2" class="shadowcell"></div>
-						<div t_num="8_3" class="shadowcell"></div>
-						<div t_num="8_4" class="shadowcell"></div>
-							<div t_num="8_5" class="goalkeeper"></div>
-						<div t_num="8_6" class="shadowcell"></div>
-						<div t_num="8_7" class="shadowcell"></div>
-						<div t_num="8_8" class="shadowcell"></div>
-						<div t_num="8_9" class="shadowcell"></div>
-					</div>
-				</div>
-			</div>
+			<home-field-layout subtle_box class="lineup_field_layout"></home-field-layout>
+			<guest-field-layout subtle_box class="lineup_field_layout"></guest-field-layout>
 		</div>
 	</tab>
 
@@ -139,14 +88,26 @@
 			<h1>Commenter</h1>
 			<!-- Сукманский is the best commenter ever -->
 			<div id="commenter_ctrl">
+
 				<div id="commenter_ctrl_head">
 					<div class="layout_buttons_vs_ctrl_head_minititle">Commenter's Name. No post-formatting applied</div>
 					<input onchange="$this.save_commenter()" type="text" id="commenter_name_input">
 				</div>
 
 				<div id="commenter_ctrl_body">
-					<vmixbtn seq_info="update+vis_show" btname="show_commenter" onclick="$this.show_commenter()">Show Commenter</vmixbtn>
-					<vmixbtn seq_info="vis_hide" btname="hide_commenter" onclick="$this.hide_commenter()">Hide Commenter</vmixbtn>
+
+					<vmixbtn
+						seq_info="update+vis_show"
+						btname="show_commenter"
+						onclick="$this.show_commenter()"
+					>Show Commenter</vmixbtn>
+					
+					<vmixbtn
+						seq_info="vis_hide"
+						btname="hide_commenter"
+						onclick="$this.hide_commenter()"
+					>Hide Commenter</vmixbtn>
+
 				</div>
 			</div>
 
@@ -162,8 +123,18 @@
 				</div>
 
 				<div id="layout_buttons_vs_ctrl_body">
-					<vmixbtn seq_info="update+vis_show" btname="show_splash" onclick="$this.show_vs_title()">Show VS</vmixbtn>
-					<vmixbtn seq_info="vis_hide" btname="hide_splash" onclick="$this.hide_vs_title()">Hide VS</vmixbtn>
+					<vmixbtn
+						seq_info="update+vis_show"
+						btname="show_splash"
+						onclick="$this.show_vs_title()"
+					>Show VS</vmixbtn>
+					
+					<vmixbtn
+						seq_info="vis_hide"
+						btname="hide_splash"
+						onclick="$this.hide_vs_title()"
+					>Hide VS</vmixbtn>
+
 				</div>
 			</div>
 
@@ -171,36 +142,88 @@
 			<h1>Field Layout Control + Coach</h1>
 			<div id="layout_buttons_field_ctrl">
 
-				<div id="layout_buttons_field_ctrl_command1" class="layout_buttons_field_ctrl_command">
-					<div class="layout_ctrl_head">
-						<img vis_feedback="team1_logo" contain class="layout_buttons_field_ctrl_command_logo" src="./assets/red_cross.png">
-						<div vis_feedback="team1_name" class="layout_buttons_field_ctrl_command_name"></div>
-					</div>
-					<vmixbtn onclick="$this.upd_player_layout(1)" seq_info="update" class="prepare_team_layout" btname="prepare_team_layout1">Prepare Layout</vmixbtn>
+				<div id="home_layout_ctrl" class="layout_buttons_field_ctrl_command">
+					<!-- Header with team logo and name -->
+					<div class="layout_ctrl_head"></div>
+					
+					<vmixbtn
+						onclick="$this.forward_field_layout_to_vmix('home')"
+						seq_info="update"
+						class="prepare_team_layout"
+						btname="prepare_home_team_layout"
+					>Prepare Layout</vmixbtn>
+					
 					<div class="layout_ctrl_body">
-						<vmixbtn seq_info="update+vis_show" btname="show_field_layout_command1" onclick="$this.show_field_layout(1)">Field Layout ONN</vmixbtn>
-						<vmixbtn seq_info="vis_hide" btname="hide_field_layout_command1" onclick="$this.hide_field_layout(1)">Field Layout OFF</vmixbtn>
+						<vmixbtn
+							off
+							seq_info="update+vis_show"
+							btname="show_home_field_layout"
+							onclick="$this.show_field_layout('home')"
+						>Field Layout ONN</vmixbtn>
+						
+						<vmixbtn
+							off
+							seq_info="vis_hide"
+							btname="hide_home_field_layout"
+							onclick="$this.hide_field_layout()"
+						>Field Layout OFF</vmixbtn>
 					</div>
+
 					<div class="team_layout_coach_ctrl">
-						<vmixbtn seq_info="update+vis_show" btname="show_coach_team1" onclick="$this.show_coach(1)">Coach ONN</vmixbtn>
-						<vmixbtn seq_info="vis_hide" btname="hide_coach_team1" onclick="$this.hide_coach(1)">Coach OFF</vmixbtn>
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_coach_home_team"
+							onclick="$this.show_coach('home')"
+						>Coach ONN</vmixbtn>
+						
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_coach_home_team"
+							onclick="$this.hide_coach('home')"
+						>Coach OFF</vmixbtn>
 					</div>
 
 				</div>
 
-				<div id="layout_buttons_field_ctrl_command2" class="layout_buttons_field_ctrl_command">
-					<div class="layout_ctrl_head">
-						<img vis_feedback="team2_logo" contain class="layout_buttons_field_ctrl_command_logo" src="./assets/red_cross.png">
-						<div vis_feedback="team2_name" class="layout_buttons_field_ctrl_command_name"></div>
-					</div>
-					<vmixbtn onclick="$this.upd_player_layout(2)" seq_info="update" class="prepare_team_layout" btname="prepare_team_layout2">Prepare Layout</vmixbtn>
+				<div id="guest_layout_ctrl" class="layout_buttons_field_ctrl_command">
+					<!-- Header with team logo and name -->
+					<div class="layout_ctrl_head"></div>
+
+					<vmixbtn
+						onclick="$this.forward_field_layout_to_vmix('guest')"
+						seq_info="update"
+						class="prepare_team_layout"
+						btname="prepare_guest_team_layout"
+					>Prepare Layout</vmixbtn>
+
 					<div class="layout_ctrl_body">
-						<vmixbtn seq_info="update+vis_show" btname="show_field_layout_command2" onclick="$this.show_field_layout(2)">Field Layout ONN</vmixbtn>
-						<vmixbtn seq_info="vis_hide" btname="hide_field_layout_command2" onclick="$this.hide_field_layout(2)">Field Layout OFF</vmixbtn>
+						<vmixbtn
+							off
+							seq_info="update+vis_show"
+							btname="show_guest_field_layout"
+							onclick="$this.show_field_layout('guest')"
+						>Field Layout ONN</vmixbtn>
+						
+						<vmixbtn
+							off
+							seq_info="vis_hide"
+							btname="hide_guest_field_layout"
+							onclick="$this.hide_field_layout()"
+						>Field Layout OFF</vmixbtn>
 					</div>
+
 					<div class="team_layout_coach_ctrl">
-						<vmixbtn seq_info="update+vis_show" btname="show_coach_team2" onclick="$this.show_coach(2)">Coach ONN</vmixbtn>
-						<vmixbtn seq_info="vis_hide" btname="hide_coach_team2" onclick="$this.hide_coach(2)">Coach OFF</vmixbtn>
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_coach_guest_team"
+							onclick="$this.show_coach('guest')"
+						>Coach ONN</vmixbtn>
+						
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_coach_guest_team"
+							onclick="$this.hide_coach('guest')"
+						>Coach OFF</vmixbtn>
 					</div>
 				</div>
 
@@ -211,60 +234,39 @@
 	</tab>
 
 	<tab class="tab_hidden" tabid="punisher">
-		<!-- score now counts as punishment. Amazing -->
-		<div id="punisher">
-			<div id="card_player_filter">
-				<input oninput="$this.filter_players_to_punish(event)" type="text" id="card_player_filter_input">
-				<div id="card_player_filter_pool"></div>
-			</div>
+		<div id="cards_and_goals">
+			<div id="cg_player_picker"></div>
 
-			<div nosel id="red_card_counter" kbhint="To manually add/subtract - hover the cards, hold ALT and press LMB/RMB">
-				<vmixbtn seq_info="auto_tweaks" titled btname="pardon_yellow_card" onclick="$this.pardon_player()">PARDON</vmixbtn>
-				<div id="red_card_counter_team1" class="red_card_counter_team">
-					<div class="red_card_counter_head">
-						<img vis_feedback="team1_logo" contain src="./assets/red_cross.png">
-						<div vis_feedback="team1_name"></div>
-					</div>
-					<div onclick="$this.mod_penalty_red_card(event, 1)" oncontextmenu="$this.mod_penalty_red_card(event, 1, true)" class="red_card_counter_pool">
-						<img contain class="rcard1" src="./assets/red_card.png">
-						<img contain class="rcard2" src="./assets/red_card.png">
-						<img contain class="rcard3" src="./assets/red_card.png">
-					</div>
-				</div>
-
-				<div id="red_card_counter_team2" class="red_card_counter_team">
-					<div class="red_card_counter_head">
-						<img vis_feedback="team2_logo" contain src="./assets/red_cross.png">
-						<div vis_feedback="team2_name"></div>
-					</div>
-					<div onclick="$this.mod_penalty_red_card(event, 2)" oncontextmenu="$this.mod_penalty_red_card(event, 2, true)" class="red_card_counter_pool">
-						<img contain class="rcard1" src="./assets/red_card.png">
-						<img contain class="rcard2" src="./assets/red_card.png">
-						<img contain class="rcard3" src="./assets/red_card.png">
-					</div>
-				</div>
+			<div regular_box nosel id="red_card_counter" kbhint="To manually add/subtract - hover the cards, hold ALT and press LMB/RMB">
+				<vmixbtn
+					titled
+					abs_pos
+					seq_info="auto_tweaks"
+					btname="pardon_yellow_card"
+					onclick="$this.pardon_player()"
+				>PARDON</vmixbtn>
 			</div>
 
 
-			<div id="card_player_buttons">
-				<div id="card_player_buttons_cards">
-					<div id="card_player_buttons_turn_onn">
-						<vmixbtn seq_info="auto_seq" titled btname="yellow_card" onclick="$this.show_card('yellow')">
+			<div regular_box id="cg_buttons">
+				<div id="cg_buttons_cards">
+					<div id="cg_buttons_turn_onn">
+						<vmixbtn seq_info="auto_seq" titled btname="yellow_card" onclick="$this.hand_card('yellow')">
 							<img draggable="false" contain class="punish_card_vis" src="./assets/yellow_card.png">
 							<div class="punish_card_title">YELLOW</div>
 						</vmixbtn>
-						<vmixbtn seq_info="auto_tweaks+auto_seq" titled btname="red_card" onclick="$this.show_card('red')">
+						<vmixbtn seq_info="auto_tweaks+auto_seq" titled btname="red_card" onclick="$this.hand_card('red')">
 							<img draggable="false" contain class="punish_card_vis" src="./assets/red_card.png">
 							<div class="punish_card_title">RED</div>
 						</vmixbtn>
 					</div>
 
-					<div id="card_player_buttons_turn_off">
+					<div id="cg_buttons_turn_off">
 						<vmixbtn seq_info="vis_hide" btname="kill_card" onclick="$this.hide_card()">OFF</vmixbtn>
 					</div>
 				</div>
 
-				<div id="card_player_buttons_score">
+				<div id="cg_buttons_score">
 					<vmixbtn seq_info="auto_tweaks+auto_seq" titled btname="scored" onclick="$this.goal_score_on()">
 						<img draggable="false" contain class="punish_card_vis" src="./assets/ball.png">
 						<div class="punish_card_title">SCORE!</div>
@@ -279,43 +281,35 @@
 	<tab class="tab_hidden" tabid="replacement">
 		<div id="replacement">
 			<div id="replacement_buttons">
-				<vmixbtn seq_info="auto_tweaks+auto_seq" btname="exec_replacement_sequence" onclick="$this.replacement_player_title(event)">Execute Sequence</vmixbtn>
-				<vmixbtn halfsize seq_info="auto_tweaks" btname="shadow_player_swap" onclick="$this.shadow_swap(event)">Shadow swap</vmixbtn>
+				<vmixbtn
+					seq_info="auto_seq"
+					btname="exec_replacement_sequence"
+					onclick="$this.exec_substitute()"
+				>Execute Sequence</vmixbtn>
+				
+				<vmixbtn
+					halfsize
+					off
+					seq_info="auto_tweaks"
+					btname="shadow_player_swap"
+				>Shadow swap</vmixbtn>
 				<!-- <vmixbtn btname="exec_replacement_sequences" onclick="$this.start_base_timer()">AAA</vmixbtn> -->
 			</div>
 			<div id="replacement_teams">
-				<div class="replacement_team" id="replacement_team1">
-					<div class="replacement_team_head">
-						<img vis_feedback="team1_logo" contain class="replacement_team_logo" src="./assets/red_cross.png">
-						<div vis_feedback="team1_name" class="replacement_team_name"></div>
-					</div>
+				<div home class="replacement_team" id="replacement_team1">
+					<div class="replacement_team_head"></div>
 					<div class="replacement_team_body">
-						<div class="replacement_leaving replacement_list">
-							<input oninput="$this.filter_players_replacement(event, 'one')" type="text">
-							<div class="replacement_filtered_list"></div>
-						</div>
+						<div leaving class="replacement_leaving replacement_list"></div>
 						<div class="replacement_vis_que">&lt;</div>
-						<div class="replacement_incoming replacement_list">
-							<input oninput="$this.filter_players_replacement(event, 'one')" type="text">
-							<div class="replacement_filtered_list"></div>
-						</div>
+						<div inbound class="replacement_incoming replacement_list"></div>
 					</div>
 				</div>
-				<div class="replacement_team" id="replacement_team2">
-					<div class="replacement_team_head">
-						<img vis_feedback="team2_logo" contain class="replacement_team_logo" src="./assets/red_cross.png">
-						<div vis_feedback="team2_name" class="replacement_team_name"></div>
-					</div>
+				<div guest class="replacement_team" id="replacement_team2">
+					<div class="replacement_team_head"></div>
 					<div class="replacement_team_body">
-						<div class="replacement_leaving replacement_list">
-							<input oninput="$this.filter_players_replacement(event, 'two')" type="text">
-							<div class="replacement_filtered_list"></div>
-						</div>
+						<div leaving class="replacement_leaving replacement_list"></div>
 						<div class="replacement_vis_que">&lt;</div>
-						<div class="replacement_incoming replacement_list">
-							<input oninput="$this.filter_players_replacement(event, 'two')" type="text">
-							<div class="replacement_filtered_list"></div>
-						</div>
+						<div inbound class="replacement_incoming replacement_list"></div>
 					</div>
 				</div>
 			</div>
@@ -367,28 +361,11 @@
 	<tab class="tab_hidden" tabid="stats">
 		<div id="score_ctrl" regular_box>
 
-			<div id="score_ctrl_player_search">
-				<input oninput="$this.filter_players_for_score(event)" type="text">
-				<div id="score_ctrl_player_search_pool"></div>
-			</div>
+			<div id="score_ctrl_player_search"></div>
 
-			<div class="score_ctrl_team" id="score_ctrl_team1">
-				<div class="score_ctrl_head">
-					<img contain vis_feedback="team1_logo" src="./assets/red_cross.png" class="score_ctrl_head_img">
-					<div vis_feedback="team1_name" class="score_ctrl_head_tname">Pootis</div>
-				</div>
-				<div class="score_ctrl_table"></div>
-				<sysbtn btname="add_team_score" onclick="$this.add_score(1)">Add</sysbtn>
-			</div>
+			<div class="score_ctrl_team" id="score_ctrl_home"></div>
 
-			<div class="score_ctrl_team" id="score_ctrl_team2">
-				<div class="score_ctrl_head">
-					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png" class="score_ctrl_head_img">
-					<div vis_feedback="team2_name" class="score_ctrl_head_tname">Pootis</div>
-				</div>
-				<div class="score_ctrl_table"></div>
-				<sysbtn btname="add_team_score" onclick="$this.add_score(2)">Add</sysbtn>
-			</div>
+			<div class="score_ctrl_team" id="score_ctrl_guest"></div>
 		</div>
 
 		<div id="score_ctrl_buttons">
@@ -453,7 +430,17 @@
 
 
 
+
+
+
+
+
+
+
+
+
 	<!-- TEMPLATES -->
+
 
 
 	<!-- Club control, like coach, playerbase ... -->
@@ -470,8 +457,8 @@
 				<club-def-actions>
 					<sysbtn
 						btname="save_club_definition"
-						kbhint="Save the club under current club title to the local database"
-						onclick="$this.save_club_to_local_db()"
+						kbhint="Save the club under current club title to the local database. Duplicate name WILL overwrite previous file"
+						onclick="$this.save_club_to_local_db(false)"
 					>Save Definition</sysbtn>
 				</club-def-actions>
 
@@ -557,6 +544,9 @@
 	<!-- Lineup main control panel -->
 	<template id="club_match_lineup_template">
 		<club-lineup>
+
+			<side-indicator></side-indicator>
+
 			<lineup-config>
 
 				<sysbtn
@@ -564,12 +554,12 @@
 				 btname="edit_club_from_lineup"
 				>Edit this club</sysbtn>
 
-				<lineup-param class="lineup_param_add_hover" prmname="shorts_color">
-					<div class="param_label">Shorts Colour</div>
-					<div class="param_content"></div>
-				</lineup-param>
 				<lineup-param class="lineup_param_add_hover" prmname="tshirt_color">
 					<div class="param_label">T-Shirt Colour</div>
+					<div class="param_content"></div>
+				</lineup-param>
+				<lineup-param class="lineup_param_add_hover" prmname="shorts_color">
+					<div class="param_label">Shorts Colour</div>
 					<div class="param_content"></div>
 				</lineup-param>
 				<lineup-param class="lineup_param_add_hover" prmname="gk_color">
@@ -582,14 +572,16 @@
 
 				<lineup-player-picker></lineup-player-picker>
 
-				<lineup-main lineup_list>
+				<lineup-main kbhint="Main players" lineup_list>
 					<sysbtn btname="append_player_to_main_lineup">Add Here</sysbtn>
 					<lineup-pool></lineup-pool>
+					<img contain class="club_side_indicator" src="./assets/flying_rocket.svg">
 				</lineup-main>
 
-				<lineup-reserve lineup_list>
+				<lineup-reserve kbhint="Reserve players" lineup_list>
 					<sysbtn btname="append_player_to_reserve_lineup">Add Here</sysbtn>
 					<lineup-pool></lineup-pool>
+					<img invert_rgb contain class="club_side_indicator" src="./assets/bench.png">
 				</lineup-reserve>
 
 			</lineup-lists>
@@ -597,6 +589,7 @@
 		</club-lineup>
 	</template>
 
+	<!-- colour picker template -->
 	<template id="team_lineup_color_picker_template">
 		<lineup-color-picker></lineup-color-picker>
 	</template>
@@ -608,6 +601,77 @@
 			<input type="text" class="player_picker_input">
 			<player-picker-result></player-picker-result>
 		</player-picker>
+	</template>
+
+	<!-- Dropdown selector for existing clubs -->
+	<template id="club_selector_dropdown_template">
+		<select></select>
+	</template>
+
+	<!-- Field layout -->
+	<template id="field_layout_template">
+		<field-layout>
+			<field-layout-header></field-layout-header>
+			<field-layout-body>
+				<field-layout-picker></field-layout-picker>
+				<field-layout-grid></field-layout-grid>
+			</field-layout-body>
+		</field-layout>
+	</template>
+
+	<!-- Stat log row element (unused) -->
+	<template id="stat_table_row_element">
+		<stat-table-row>
+			<stat-row-col colname="stat_name">--</stat-row-col>
+			<stat-row-col colname="stat_time">--</stat-row-col>
+			<stat-row-col colname="stat_player">--</stat-row-col>
+		</stat-table-row>
+	</template>
+
+	<!-- Red card counters -->
+	<template id="red_card_control_template">
+		<div class="red_card_counter">
+			<div class="red_card_counter_head"></div>
+			<div subtle_box class="red_card_counter_pool">
+				<img contain class="rcard1" src="./assets/red_card.png">
+				<img contain class="rcard2" src="./assets/red_card.png">
+				<img contain class="rcard3" src="./assets/red_card.png">
+			</div>
+		</div>
+	</template>
+
+	<!-- Today's score list for a club -->
+	<template id="club_score_list_template">
+		<club-score kbhint="Hold alt and click RMB to delete a record">
+			<club-score-header></club-score-header>
+			<club-score-list></club-score-list>
+			<club-score-buttons>
+				<sysbtn class="club_score_add_record">Add</sysbtn>
+			</club-score-buttons>
+		</club-score>
+	</template>
+
+	<!-- A goal record template -->
+	<template id="club_score_record_template">
+		<club-score-record subtle_box>
+			<input onclick="this.select()" class="score_timestamp" type="text">
+			<div class="score_author"></div>
+
+			<score-record-flags>
+
+				<record-flag flag_name="auto_goal">
+					<record-flag-label>АГ:</record-flag-label>
+					<input type="checkbox">
+				</record-flag>
+
+				<record-flag flag_name="penalty">
+					<record-flag-label>П:</record-flag-label>
+					<input type="checkbox">
+				</record-flag>
+
+			</score-record-flags>
+
+		</club-score-record>
 	</template>
 
 </div>

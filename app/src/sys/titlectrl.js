@@ -37,6 +37,7 @@ class vmix_title
 		}
 	}
 
+
 	async set_text(field_name, newval){
 		await vmix.talker.talk({
 			'Function': 'SetText',
@@ -55,6 +56,7 @@ class vmix_title
 		})
 	}
 
+
 	async set_img_src(img_name, newsrc){
 		await vmix.talker.talk({
 			'Function': 'SetImage',
@@ -72,6 +74,8 @@ class vmix_title
 			'SelectedName': field_name + (this.gtformat ? '.Source' : ''),
 		})
 	}
+
+
 	// todo: add check to prevent exceeding 4 overlays
 	async overlay_in(overlay_num=1, wait=true){
 		this.last_overlay = overlay_num;
@@ -95,6 +99,22 @@ class vmix_title
 			const frames_out = this.timings.frames_out || this.timings.frames_in
 			await ksys.util.sleep(((frames_out / this.timings.fps)*1000) + margin)
 		}
+	}
+
+
+	// Pause title rendering while making multiple updates
+	async pause_render(){
+		await vmix.talker.talk({
+			'Function': `PauseRender`,
+			'Input': this.title_name,
+		})
+	}
+	// Resume render
+	async resume_render(){
+		await vmix.talker.talk({
+			'Function': `ResumeRender`,
+			'Input': this.title_name,
+		})
 	}
 }
 

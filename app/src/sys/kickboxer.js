@@ -40,16 +40,17 @@ const ksys = {
 		// translit: require('./sys/transliteration.js'),
 		str_ops: require('./sys/string_ops.js'),
 	},
-	ticker:  require('./sys/ticker.js'),
-	fbi:     require('./sys/fbi_logger.js'),
-	context: require('./sys/context_manager.js'),
-	db:      require('./sys/db_manager.js'),
-	btns:    require('./sys/buttons.js'),
-	tplates: require('./sys/template_util.js'),
-	strf:    require('./sys/str_format_gui.js'),
-	pgview:  require('./sys/pgview.js'),
-	tabsys:  require('./sys/tabsys.js'),
-	hintsys: require('./sys/hintsys.js'),
+	ticker:   require('./sys/ticker.js'),
+	fbi:      require('./sys/fbi_logger.js'),
+	context:  require('./sys/context_manager.js'),
+	db:       require('./sys/db_manager.js'),
+	btns:     require('./sys/buttons.js'),
+	tplates:  require('./sys/template_util.js'),
+	strf:     require('./sys/str_format_gui.js'),
+	pgview:   require('./sys/pgview.js'),
+	tabsys:   require('./sys/tabsys.js'),
+	hintsys:  require('./sys/hintsys.js'),
+	info_msg: require('./sys/info_msg_sys.js'),
 	// Global events listeners
 	binds:   {},
 };
@@ -123,13 +124,13 @@ function close_warnings()
 //  global listener binds
 // ---------------
 document.addEventListener('mousemove', evt => {
-	ksys.binds?.mousemove?.()
+	ksys.binds?.mousemove?.(evt)
 });
 document.addEventListener('mousedown', evt => {
-	ksys.binds?.mousedown?.()
+	ksys.binds?.mousedown?.(evt)
 });
 document.addEventListener('mouseup', evt => {
-	ksys.binds?.mouseup?.()
+	ksys.binds?.mouseup?.(evt)
 });
 
 
@@ -197,6 +198,22 @@ ksys.util.ask_file = function(multiple=false)
 	return new Promise(function(resolve, reject){
 		let input = document.createElement('input');
 		input.type = 'file';
+		input.addEventListener('change', ch => {
+			resolve(multiple ? [...input.files] : input.files[0]);
+			input.remove();
+			input = null;
+		});
+		input.click();
+	});
+}
+
+
+ksys.util.ask_folder = function(multiple=false)
+{
+	return new Promise(function(resolve, reject){
+		let input = document.createElement('input');
+		input.type = 'file';
+		input.setAttribute('webkitdirectory', true)
 		input.addEventListener('change', ch => {
 			resolve(multiple ? [...input.files] : input.files[0]);
 			input.remove();
@@ -331,9 +348,66 @@ ksys.util.get_key = function(){
 }
 
 
+// swap nodes
+Element.prototype.swapWith = function(tgt_node) {
+	const temp = document.createComment('');
+	this.replaceWith(temp)
+	tgt_node.replaceWith(this)
+	temp.replaceWith(tgt_node)
+}
 
 
+// set position of an element from an event
+Element.prototype.ClientPosFromEvent = function(evt, lock_x=false, lock_y=false) {
+	if (evt == null){
+		this.style.left = null;
+		this.style.top = null;
+		return
+	}
+	if (!lock_x){
+		this.style.left = `${evt.clientX}px`;
+	}
+	if (!lock_y){
+		this.style.top = `${evt.clientY}px`;
+	}
+}
 
+
+// set position of an element from an event
+Element.prototype.PagePosFromEvent = function(evt, lock_x=false, lock_y=false) {
+	if (evt == null){
+		this.style.left = null;
+		this.style.top = null;
+		return
+	}
+	if (!lock_x){
+		this.style.left = `${evt.pageX}px`;
+	}
+	if (!lock_y){
+		this.style.top = `${evt.pageY}px`;
+	}
+}
+
+// FUCK JAVASCRIPT
+/*
+Set.prototype.at = function(index) {
+	if (Math.abs(index) > this.size){
+		return null;
+	}
+
+	let idx = index;
+	if (idx < 0){
+		idx = this.size + index;
+	}
+	let counter = 0;
+	for (const elem of this){
+		if (counter == idx){
+			return elem
+		}
+		counter += 1;
+	}
+}
+*/
 
 
 

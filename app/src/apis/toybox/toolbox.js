@@ -1,7 +1,7 @@
 (function() {
 
 const _lizard = {
-	info: `Lizard's toybox. Version 1.18`,
+	info: `Lizard's toybox. Version 1.19`,
 	obsolete: {},
 };
 
@@ -25,9 +25,9 @@ const _lizard = {
 
 
 	// Strings
-	String.prototype.capitalize = function() {
+	String.prototype.capitalize = function(reformat=false) {
 		if (!this[0]){return this};
-		return this[0].toUpperCase() + this.slice(1);
+		return this[0].toUpperCase() + (reformat ? this.slice(1).toLowerCase() : this.slice(1));
 	}
 	String.prototype.lower = function() {
 		return this.toLowerCase()
@@ -118,7 +118,7 @@ const _lizard = {
 }
 
 // -----------------------
-//         Arrays
+//      Arrays/Sets
 // -----------------------
 {
 	// IMPORTANT TODO: WHY IS THIS ALWAYS CAUSING PROBLEMS ????
@@ -126,6 +126,35 @@ const _lizard = {
 	// 	const _to_set = new Set(this);
 	// 	return Array.from(_to_set);
 	// }
+
+	// Implement Array.at for sets
+	Set.prototype.at = function(index) {
+		if (Math.abs(index) > this.size){
+			return null;
+		}
+
+		let idx = index;
+		if (idx < 0){
+			idx = this.size + index;
+		}
+		let counter = 0;
+		for (const elem of this){
+			if (counter == idx){
+				return elem
+			}
+			counter += 1;
+		}
+	}
+
+	// Delete element of a set by index
+	Set.prototype.del_idx = function(index) {
+		const array_elem = this.at(index);
+		if (!array_elem){
+			return false
+		}
+
+		return this.delete(array_elem)
+	}
 }
 
 
@@ -237,17 +266,17 @@ const _lizard = {
 // ============================================================
 
 const _buffer_types = [
-	ArrayBuffer,
-	Uint8Array,
-	Uint16Array,
-	Uint32Array,
-	Uint8ClampedArray,
-	BigUint64Array,
-	Int8Array,
-	Int16Array,
-	Float32Array,
-	Float64Array,
-	BigInt64Array,
+	window.ArrayBuffer,
+	window.Uint8Array,
+	window.Uint16Array,
+	window.Uint32Array,
+	window.Uint8ClampedArray,
+	window.BigUint64Array,
+	window.Int8Array,
+	window.Int16Array,
+	window.Float32Array,
+	window.Float64Array,
+	window.BigInt64Array,
 ]
 
 
@@ -259,37 +288,37 @@ const _buffer_types = [
 {
 	const _prohibited_is_dict = [
 		..._buffer_types,
-		Date,
-		Array,
-		Set,
-		WeakMap,
-		WeakSet,
-		DataView,
-		JSON,
-		Promise,
-		String,
-		RegExp,
-		Number,
-		BigInt,
-		Math,
-		Error,
-		Boolean,
-		Symbol,
+		window.Date,
+		window.Array,
+		window.Set,
+		window.WeakMap,
+		window.WeakSet,
+		window.DataView,
+		window.JSON,
+		window.Promise,
+		window.String,
+		window.RegExp,
+		window.Number,
+		window.BigInt,
+		window.Math,
+		window.Error,
+		window.Boolean,
+		window.Symbol,
 
 		// TODO: BROWSER COMPAT
-		Atomics,
-		WeakRef,
-		FinalizationRegistry,
-		Reflect,
-		Proxy,
-		Intl,
-		EvalError,
-		AggregateError,
-		RangeError,
-		ReferenceError,
-		SyntaxError,
-		TypeError,
-		URIError,
+		window.Atomics,
+		window.WeakRef,
+		window.FinalizationRegistry,
+		window.Reflect,
+		window.Proxy,
+		window.Intl,
+		window.EvalError,
+		window.AggregateError,
+		window.RangeError,
+		window.ReferenceError,
+		window.SyntaxError,
+		window.TypeError,
+		window.URIError,
 	]
 	const _prohibited_explicit = [
 		Infinity,
@@ -317,6 +346,32 @@ const _buffer_types = [
 		return true
 	}
 }
+
+
+
+
+// --------------------------------
+//  Check object type against multiple types
+// --------------------------------
+{
+	_lizard.includesType = function(tgt, compared_types){
+		if (!compared_types){
+			console.error(
+				'includesType: compared_types (types to check against) is invalid. Returning false'
+			)
+			return false
+		}
+
+		for (const tgt_type of compared_types){
+			if (tgt instanceof tgt_type){
+				return true
+			}
+		}
+
+		return false
+	}
+}
+
 
 
 

@@ -17,9 +17,32 @@ body.emergency_break
 	filter: grayscale(1) !important;
 }
 
+img[vis_feedback]
+{
+	pointer-events: none;
+	user-select: none;
+}
 
 
+#timer_feedback
+{
+	display: flex;
+	position: fixed;
+	top: 0px;
+	right: 0px;
+	margin-top: 60px;
+	margin-right: 20px;
+	font-size: 20px;
+	font-family: monospace;
+}
 
+#timer_feedback_extra
+{
+	color: rgb(200, 200, 200);
+	margin-left: 5px;
+	border-left: 2px solid gray;
+	padding-left: 5px;
+}
 
 
 /*
@@ -69,7 +92,67 @@ body.emergency_break
 	align-items: center;
 	justify-content: center;
 	padding-left: 5px;
+	padding-right: 10px;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+===============================================
+              Generic header
+===============================================
+!~~ club-header
+*/
+
+~~ {
+	display: flex;
+	flex-direction: row;
+	height: 150px;
+	width: fit-content;
+	align-items: center;
+}
+
+~~ img {
+	width: 120px;
+	height: 100%;
+}
+
+~~ club-header-title{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 40px;
+	color: white;
+	height: 100%;
+	margin-left: 15px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -96,7 +179,8 @@ body.emergency_break
 	box-shadow: inset 0px 0px 5px 0px rgb(0 0 0);
 	outline: 1px solid rgb(90, 90, 90);
 	padding: 15px;
-	margin-left: 20px;
+	/*margin-left: 20px;*/
+	min-height: 300px;
 }
 
 ~~ input.player_picker_input{
@@ -333,21 +417,6 @@ body.emergency_break
 	outline: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-~~ select{
-	padding: 2px;
-	background: #1D1D22;
-	font-size: 15px;
-}
-
-~~ select:hover{
-	background: #202026;
-}
-
-~~ select:focus-visible{
-	outline: 0px;
-}
-
-
 
 
 
@@ -361,7 +430,28 @@ body.emergency_break
 ~~{
 	display: flex;
 	flex-direction: column;
+	margin-bottom: 200px;
 }
+
+lineup-global-control{
+	display: flex;
+	flex-direction: column;
+	width: 600px;
+	margin-left: 20px;
+	padding: 10px;
+}
+
+lineup-global-control .lineup_global_ctrl_param{
+	margin-top: 10px;
+	display: flex;
+	flex-direction: row;
+}
+
+lineup-global-control .lineup_global_ctrl_param label{
+	width: 100px;
+}
+
+
 
 ~~ club-lineup{
 	position: relative;
@@ -372,7 +462,40 @@ body.emergency_break
 	margin-left: 20px;
 	background: rgba(0, 0, 0, 0.2);
 	outline: 1px solid rgba(100, 100, 100);
+	margin-top: 220px;
 }
+
+/*
+-------------------
+ Side indicator
+-------------------
+!~~ #team_lineup club-lineup side-indicator
+*/
+
+~~{
+	position: absolute;
+	left: 0px;
+
+	top:   -90px;
+	width:  90px;
+
+	aspect-ratio: 1/1;
+	margin-top: -20px;
+
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+}
+
+~~[enemy]{
+	background-image: url('../../assets/swords_icon.svg');
+}
+
+~~[home]{
+	background-image: url('../../assets/home_icon.svg');
+}
+
+
 
 /*
 Header
@@ -483,6 +606,7 @@ Header
 }
 
 ~~ [lineup_list]{
+	position: relative;
 	display: flex;
 	flex-direction: column;
 	/*width: 400px;*/
@@ -501,10 +625,185 @@ Header
 	text-align: center;
 	padding: 2px;
 	user-select: none;
+	z-index: 5;
+}
+
+~~ [lineup_list] .club_side_indicator{
+	position: absolute;
+	width: -webkit-fill-available;
+	height: 150px;
+	opacity: 0.1;
+	top: 40px;
+	z-index: 1;
 }
 
 ~~ lineup-pool{
 	margin-top: 15px;
+	z-index: 5;
+}
+
+
+
+
+/*
+===============================================
+                Field layout
+===============================================
+!~~ #teams_layouts
+*/
+
+~~ {
+	display: flex;
+	flex-direction: column;
+}
+
+~~ field-layout {
+	display: flex;
+	flex-direction: column;
+}
+
+~~ field-layout player.is_dragging{
+	position: fixed;
+	z-index: 500 !important;
+}
+
+~~ field-layout-body{
+	display: flex;
+	flex-direction: row;
+	margin-top: 40px;
+}
+
+~~ field-layout field-layout-picker player-picker{
+	width: 400px;
+}
+
+~~ .lineup_field_layout{
+	padding: 50px;
+	margin: 50px;
+}
+
+~~ guest-field-layout.lineup_field_layout{
+	margin-top: 200px;
+	margin-bottom: 300px;
+}
+
+
+
+
+/*
+-------------------
+        Grid
+-------------------
+!~~ #teams_layouts field-layout field-layout-grid
+*/
+
+~~ {
+	display: grid;
+	/*grid-template-columns: repeat(10, 150px);*/
+	/*grid-template-rows:    repeat(9, 120px);*/
+	grid-template-columns: repeat(10, 90px);
+	grid-template-rows:    repeat(9, 80px);
+	grid-row-gap: 7px;
+	grid-column-gap: 7px;
+
+	/*justify-content: center;*/
+
+	user-select: none;
+	/*width: 800px;*/
+	/*height: 550px;*/
+	background: rgba(0, 0, 0, 0.1);
+	padding: 20px;
+	margin-left:  65px;
+	margin-right: 20px;
+}
+
+~~ cell{
+	display: flex;
+	width: 100%;
+	height: 100%;
+	background: #25282D;
+	outline: 1px solid rgb(128, 128, 128);
+	position: relative;
+}
+
+~~ cell.ghost_cell{
+	visibility: hidden;
+}
+
+~~ cell::before
+{
+	content: '';
+	z-index: 1;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background: url('../../assets/fake_shadow.png');
+	background-size: cover;
+	background-position: center;
+}
+
+~~.hover cell:hover{
+	background: #6CDD89 !important;
+}
+
+~~ player{
+	z-index: 300;
+	width: fit-content;
+	height: fit-content;
+	flex-direction: column;
+	overflow: visible;
+	background: none !important;
+}
+
+~~ cell player{
+	outline: none;
+	width: -webkit-fill-available;
+	height: -webkit-fill-available;
+	margin: 0px;
+	transform: scale(2);
+	padding: 5px;
+
+}
+
+~~ cell player .player_club_logo{
+	display: none;
+}
+
+
+~~ cell player .player_number{
+	background: url('../../assets/t-shirt.png');
+	background-size: contain;
+	background-position: center;
+	background-repeat: no-repeat;
+
+	font-family: 'tahoma_bold';
+	font-size: 15px;
+
+	color: black;
+	border: none;
+	height: auto;
+	flex-grow: 1;
+	width: 100%;
+}
+
+
+
+~~ cell player .player_surname{
+	padding: 0px;
+	font-size: 12px;
+}
+
+~~ player.is_dragging{
+	margin: 30px !important;
+	width: 110px;
+	height: 110px;
+	background: #1B1B1B !important;
+	transform: scale(1) !important;
+	font-size: 17px !important;
+}
+
+~~ player.is_dragging *{
+	font-size: 20px !important;
 }
 
 
@@ -518,6 +817,238 @@ Header
 
 
 
+/*
+===============================================
+                Cards and goals
+===============================================
+!~~ #cards_and_goals
+*/
+
+
+/*
+-------------------
+      Buttons
+-------------------
+*/
+
+~~
+{
+	padding: 30px;
+	display: flex;
+	flex-direction: row;
+	/*background: rgba(0, 0, 0, 0.5);*/
+	padding-left: 20px;
+	/*margin-top: 100px;*/
+	justify-content: space-around;
+}
+
+~~ #cg_player_picker
+{
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	width: 400px;
+	height: 700px;
+}
+
+
+~~ #cg_buttons
+{
+	display: flex;
+	flex-direction: column;
+	/*background: brown;*/
+	/*margin-left: 75px;*/
+	margin-right: 75px;
+}
+
+~~ #cg_buttons_cards
+{
+	display: flex;
+	flex-direction: row;
+}
+
+~~ #cg_buttons_score
+{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: row;
+}
+
+~~ #cg_buttons_score vmixbtn
+{
+	font-size: 30px;
+}
+
+~~ #cg_buttons_turn_onn
+{
+	display: flex;
+	flex-direction: column;
+}
+
+~~ #cg_buttons_turn_off
+{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	margin-left: 90px;
+	font-size: 40px;
+}
+
+~~ #cg_buttons vmixbtn
+{
+	padding: 10px;
+	width: 200px;
+	height: 200px;
+	display: flex;
+	flex-direction: column;
+}
+
+~~ #cg_buttons vmixbtn[titled]{
+	justify-content: flex-end;
+}
+
+
+~~ #cg_buttons .punish_card_vis
+{
+	width: 100%;
+	/*important todo: WHAT THE FUCK ?!*/
+	max-height: 60%;
+	display: flex;
+	flex-grow: 1;
+}
+
+~~ #cg_buttons .punish_card_title
+{
+	font-size: 30px;
+	text-align: center;
+}
+
+
+
+/*
+-------------------
+ Red card counter
+-------------------
+
+!~~ #red_card_counter .red_card_counter
+*/
+
+#red_card_counter
+{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	width: 300px;
+	position: relative;
+}
+
+#red_card_counter vmixbtn[btname='pardon_yellow_card']
+{
+	position: absolute;
+	bottom: 50px;
+}
+
+~~
+{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 85%;
+}
+
+~~:last-child{
+	margin-top: 30px;
+	margin-bottom: 150px;
+}
+
+~~ .red_card_counter_head
+{
+	display: flex;
+	flex-direction: row;
+	width: 100%;
+	justify-content: space-evenly;
+	align-items: center;
+}
+
+~~ .red_card_counter_head club-header
+{
+	height: fit-content;
+}
+
+~~ .red_card_counter_head club-header-title
+{
+	font-size: 23px;
+}
+
+~~ .red_card_counter_head img
+{
+	width: 55px;
+	height: 55px;
+}
+
+
+~~ .red_card_counter_pool
+{
+	display: flex;
+	flex-direction: row;
+	margin-top: 10px;
+	padding: 10px
+}
+
+~~ .red_card_counter_pool:hover
+{
+	outline-color: rgb(250, 250, 250);
+}
+
+~~ .red_card_counter_pool:active
+{
+	outline-color: lime;
+}
+
+~~ .red_card_counter_pool img
+{
+	width: 61px;
+	height: 61px;
+}
+
+~~ .red_card_counter_pool img:not(.rcard_shown)
+{
+	filter: grayscale(1);
+	opacity: 0.2;
+}
+
+
+/*
+-------------------
+card vis feedback on list items
+-------------------
+!~~ #cg_player_picker player-picker player-picker-result player
+*/
+
+~~
+{
+	position: relative;
+}
+
+~~ .list_item_card_vis_feedback
+{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: 100%;
+	width: fit-content;
+	position: absolute;
+	right: 0px;
+}
+
+~~ .list_item_card_vis_feedback img
+{
+	height: 25px;
+	width: 20px;
+	margin-right: 5px;
+}
 
 
 
@@ -526,19 +1057,239 @@ Header
 
 
 
+/*
+===============================================
+             Player substitute
+===============================================
+!~~ #replacement
+*/
+
+
+~~ .replacement_team .replacement_list
+{
+	display: flex;
+	flex-direction: column;
+	padding: 15px;
+
+	height: 420px;
+	width: 390px;
+	position: relative;
+}
+
+
+
+/*
+===============================================
+             Score control
+===============================================
+!~~ #score_ctrl
+*/
+
+~~
+{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: row;
+	width: 95%;
+	align-self: center;
+	justify-content: space-around;
+	align-items: flex-start;
+	padding-top: 20px;
+	padding-bottom: 20px;
+}
+
+~~ .score_ctrl_team
+{
+	display: flex;
+	flex-direction: column;
+	width: 500px;
+	justify-content: center;
+}
+
+~~ club-score-list
+{
+	display: flex;
+	flex-direction: column;
+
+	margin-top: 10px;
+	background: #25282D;
+	box-shadow: inset 0px 0px 5px 0px rgb(0 0 0);
+	outline: 1px solid rgb(90, 90, 90);
+	padding: 15px;
+}
+
+
+
+/*
+!~~ #score_ctrl .score_ctrl_team
+*/
+~~ club-score-header
+{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	pointer-events: none;
+	user-select: none;
+}
+
+
+~~ club-header img
+{
+	width: 100px;
+	height: 100px;
+}
+
+~~ club-header club-header-title
+{
+	font-size: 35px;
+	/*margin-left: 20px;*/
+}
+
+
+
+/*
+-------------------
+Records themselves
+-------------------
+!~~ #score_ctrl .score_ctrl_team club-score-record
+*/
+~~
+{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	font-size: 23px;
+	margin-top: 11px;
+
+	/*todo: fuck css*/
+	height: 36px;
+
+	/*padding: 5px;*/
+}
+
+~~:hover
+{
+	outline-color: rgb(160, 160, 160);
+}
+
+~~.selected_score_record
+{
+	outline-color: lime !important;
+}
+
+~~ input.score_timestamp
+{
+	width: 50px;
+	font-size: 25px;
+	text-align: center;
+	user-select: all;
+}
+
+~~ .score_author
+{
+	padding-left: 10px;
+	padding-right: 10px;
+	width: -webkit-fill-available;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	position: relative;
+}
+
+~~ .score_author:hover,
+~~ score-record-flags record-flag:hover
+{
+	background: rgba(255, 255, 255, 0.05);
+}
+
+~~ score-record-flags record-flag:active *
+{
+	color: lime;
+}
+
+~~ .score_author player
+{
+	margin: 0px;
+	background: none;
+	outline: none;
+}
+
+~~ .score_author img.self_score_indicator
+{
+	position: absolute;
+	right: 5px;
+	height: 27px;
+	width: 27px;
+	opacity: 0.3;
+}
+
+~~ .score_author player:hover
+{
+	background: none;
+}
+
+~~ .score_author player .player_club_logo,
+~~ .score_author player .player_number
+{
+	display: none;
+}
+
+
+~~ score-record-flags
+{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
+	flex-shrink: 0;
+	justify-content: flex-end;
+
+	height: 100%;
+}
+
+~~ score-record-flags record-flag
+{
+	display: flex;
+	align-items: center;
+	padding: 0px 5px 0px 5px;
+	border-left: 1px solid gray;
+	background: rgba(0, 0, 0, 0.1);
+	height: 100%;
+}
+
+~~ score-record-flags record-flag input
+{
+	height: 21px;
+	width: 21px;
+	margin-left: 2px;
+	pointer-events: none;
+}
 
 
 
 
 
+#score_ctrl_buttons, #stats_ctrl_btns
+{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
 
+#stats_ctrl_btns{
+	margin-bottom: 200px;
+}
 
-
-
-
-
-
-
+#score_ctrl_buttons vmixbtn, #stats_ctrl_btns vmixbtn
+{
+	width: 150px;
+	height: 150px;
+	font-size: 20px;
+}
 
 
 
@@ -1269,278 +2020,6 @@ tab.tab_hidden
 
 
 
-/* When the player item is located in the punish list */
-/* Then, the layut should be horizontal AND upscaled */
-#card_player_filter .generic_player_item,
-#replacement .replacement_team_body .replacement_filtered_list .generic_player_item,
-#score_ctrl_player_search_pool .generic_player_item
-{
-	display: flex;
-	flex-direction: row;
-	/*padding: 7px;*/
-	margin: 3px;
-	margin-top: 7px;
-	outline: 1px solid rgb(100, 100, 100);
-	background: #1B1B1B;
-	font-size: 25px;
-}
-
-#card_player_filter .generic_player_item:hover,
-#replacement .replacement_team_body .replacement_filtered_list .generic_player_item:hover,
-#score_ctrl_player_search_pool .generic_player_item:hover
-{
-	background: #2B2B2B;
-	outline-color: rgb(128, 129, 128);
-}
-
-#card_player_filter .generic_player_item .player_number,
-#replacement .replacement_team_body .replacement_filtered_list .generic_player_item .player_number,
-#score_ctrl_player_search_pool .generic_player_item .player_number
-{
-	width: 35px;
-	text-align: center;
-	background: rgba(255, 255, 255, 0.05);
-	border-right: 2px solid black;
-}
-
-#card_player_filter .generic_player_item .player_surname,
-#replacement .replacement_team_body .replacement_filtered_list .generic_player_item .player_surname,
-#score_ctrl_player_search_pool .generic_player_item .player_surname
-{
-	padding: 5px;
-}
-
-
-
-
-/* When the player item is located on the field */
-/* Then, the layut should be vertical with a cool t-shirt displayed behind the name */
-.team_layout .ftfield .generic_player_item
-{
-	/*background: cyan;*/
-	/*min-height: 120px;*/
-	/*min-width: 120px;*/
-	display: flex;
-	justify-content: space-around;
-	flex-grow: 1;
-	flex-direction: column;
-	padding: 5px;
-	z-index: 33;
-	width: -webkit-fill-available;
-}
-.team_layout .ftfield .generic_player_item .player_number
-{
-	/*background: coral;*/
-	font-family: 'tahoma_bold';
-	display: flex;
-	flex-direction: row;
-	flex-grow: 1;
-	align-items: center;
-	justify-content: center;
-	font-size: 15px;
-	/*width: 100%;*/
-	height: 50% !important;
-	color: black;
-	background-image: url('../../assets/t-shirt.png');
-	background-size: contain;
-	background-repeat: no-repeat;
-	background-position: center;
-}
-.team_layout .ftfield .generic_player_item .player_surname
-{
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 100%;
-	/*padding: 2px;*/
-	font-size: 12px;
-	padding-bottom: 3px;
-}
-.team_layout .ftfield .generic_player_item img
-{
-	display: none;
-}
-
-.team_layout .ftfield .generic_player_item.dragging .player_number
-{
-	font-size: 30px;
-}
-
-.team_layout .ftfield .generic_player_item.dragging .player_surname
-{
-	font-size: 20px;
-}
-
-
-.team_layout .ftfield .generic_player_item:not(.generic_player_item.dragging)
-{
-	transform: scale(2);
-}
-
-
-
-
-
-.generic_player_item.dragging
-{
-	position: fixed !important;
-	pointer-events: none;
-	margin: 30px;
-	z-index: 999 !important;
-}
-
-.team_layout .ftfield .generic_player_item.dragging
-{
-	min-width: 120px;
-	min-height: 120px;
-	width: fit-content;
-	background: #1B1B1B;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#punisher
-{
-	padding: 30px;
-	display: flex;
-	flex-direction: row;
-	background: rgba(0, 0, 0, 0.5);
-	padding-left: 20px;
-	/*margin-top: 100px;*/
-	justify-content: space-around;
-}
-
-#card_player_filter
-{
-	padding: 7px;
-	display: flex;
-	flex-direction: column;
-	width: 350px;
-	/* purple burglar alarm */
-	/*background: purple;*/
-	background: #25282D;
-	box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 1);
-	outline: 1px solid rgb(90, 90, 90);
-	height: 700px;
-}
-
-#card_player_filter_pool
-{
-	height: 100%;
-	padding-top: 20px;
-	overflow-x: hidden;
-	overflow-y: scroll;
-	display: flex;
-	flex-direction: column;
-}
-
-#card_player_filter_pool .selected_to_punish,
-#score_ctrl_player_search_pool .selected_to_punish
-{
-	outline: 2px solid lime !important;
-}
-
-#card_player_filter_input
-{
-	font-size: 30px;
-}
-
-
-#card_player_buttons
-{
-	display: flex;
-	flex-direction: column;
-	/*background: brown;*/
-	/*margin-left: 75px;*/
-	margin-right: 75px;
-}
-
-#card_player_buttons_cards
-{
-	display: flex;
-	flex-direction: row;
-}
-
-#card_player_buttons_score
-{
-	margin-top: 50px;
-	display: flex;
-	flex-direction: row;
-}
-
-#card_player_buttons_score vmixbtn
-{
-	font-size: 30px;
-}
-
-#card_player_buttons_turn_onn
-{
-	display: flex;
-	flex-direction: column;
-}
-
-#card_player_buttons_turn_off
-{
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	margin-left: 90px;
-	font-size: 40px;
-}
-
-#card_player_buttons vmixbtn
-{
-	padding: 10px;
-	width: 200px;
-	height: 200px;
-	display: flex;
-	flex-direction: column;
-}
-
-#card_player_buttons vmixbtn[titled]{
-	justify-content: flex-end;
-}
-
-
-#card_player_buttons .punish_card_vis
-{
-	width: 100%;
-	/*important todo: WHAT THE FUCK ?!*/
-	max-height: 60%;
-	display: flex;
-	flex-grow: 1;
-}
-
-#card_player_buttons .punish_card_title
-{
-	font-size: 30px;
-	text-align: center;
-}
-
-
-
-img[vis_feedback]
-{
-	pointer-events: none;
-	user-select: none;
-}
-
-
-
-
-
 
 
 [tabid="replacement"]{
@@ -1665,34 +2144,10 @@ img[vis_feedback]
 	align-self: center;
 }
 
-#replacement .replacement_team .replacement_list
-{
-	padding: 10px;
-	display: flex;
-	flex-direction: column;
-
-	background: #25282D;
-	box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 1);
-	outline: 1px solid rgb(90, 90, 90);
-	padding: 15px;
-
-	/*height: 500px;*/
-	height: 420px;
-	width: 350px;
-	position: relative;
-}
-
-#replacement .replacement_team .replacement_list input
-{
-	font-size: 30px;
-}
 
 
 
-#replacement .replacement_team .replacement_list .selected_replacement
-{
-	outline: 2px solid lime !important;
-}
+
 
 #replacement #replacement_buttons
 {
@@ -1960,185 +2415,8 @@ img[vis_feedback]
 
 
 
-#score_ctrl
-{
-	margin-top: 50px;
-	display: flex;
-	flex-direction: row;
-	width: 95%;
-	/*width: fit-content;*/
-	align-self: center;
-	justify-content: space-around;
-	align-items: flex-start;
-	padding-top: 20px;
-	padding-bottom: 20px;
-}
-
-#score_ctrl .score_ctrl_team
-{
-	display: flex;
-	flex-direction: column;
-	width: 500px;
-	justify-content: center;
-}
-
-#score_ctrl .score_ctrl_team .score_ctrl_head
-{
-	display: flex;
-	flex-direction: row;
-	justify-content: center;
-	align-items: center;
-	pointer-events: none;
-	user-select: none;
-}
 
 
-#score_ctrl .score_ctrl_team .score_ctrl_head_img
-{
-	width: 100px;
-	height: 100px;
-}
-
-#score_ctrl .score_ctrl_team .score_ctrl_head .score_ctrl_head_tname
-{
-	font-size: 35px;
-	margin-left: 20px;
-}
-
-#score_ctrl .score_ctrl_table
-{
-	margin-top: 10px;
-	background: #25282D;
-	box-shadow: inset 0px 0px 5px 0px rgb(0 0 0);
-	outline: 1px solid rgb(90, 90, 90);
-	padding: 15px;
-}
-
-#score_ctrl .score_ctrl_table .team_score_record
-{
-	margin-top: 7px;
-	display: flex;
-}
-
-#score_ctrl .score_ctrl_table .team_score_record .score_record_cbox{
-	/*height: 15px;*/
-	width: 40px;
-}
-
-#score_ctrl .score_ctrl_table .team_score_record .score_record_player{
-	margin-right: 10px;
-}
-
-#score_ctrl_buttons, #stats_ctrl_btns
-{
-	margin-top: 50px;
-	display: flex;
-	flex-direction: row;
-	justify-content: center;
-	align-items: center;
-}
-
-#stats_ctrl_btns{
-	margin-bottom: 200px;
-}
-
-#score_ctrl_buttons vmixbtn, #stats_ctrl_btns vmixbtn
-{
-	width: 150px;
-	height: 150px;
-	font-size: 20px;
-}
-
-#score_ctrl_player_search input
-{
-	font-size: 23px;
-}
-
-#score_ctrl_player_search
-{
-	display: flex;
-	flex-direction: column;
-	width: 370px;
-	background: #25282D;
-	box-shadow: inset 0px 0px 5px 0px rgba(0, 0, 0, 1);
-	outline: 1px solid rgb(90, 90, 90);
-	padding: 15px;
-	margin-left: 20px;
-}
-
-#score_ctrl_player_search_pool
-{
-	margin-top: 10px;
-	height: 400px;
-	overflow-y: scroll;
-	overflow-x: hidden;
-}
-
-
-
-
-/*
-===============================================
-             Red card counter
-===============================================
-
-!~~ #red_card_counter .red_card_counter_team
-*/
-
-#red_card_counter
-{
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	width: 300px;
-	/*background: red;*/
-}
-
-~~
-{
-	display: flex;
-	flex-direction: column;
-}
-
-~~:last-child{
-	margin-top: 20px;
-}
-
-~~ .red_card_counter_head
-{
-	display: flex;
-	flex-direction: row;
-	width: 100%;
-	justify-content: space-evenly;
-	align-items: center;
-}
-
-~~ .red_card_counter_head img
-{
-	width: 50px;
-	height: 50px;
-}
-
-
-~~ .red_card_counter_pool
-{
-	display: flex;
-	flex-direction: row;
-	margin-top: 10px;
-}
-
-~~ .red_card_counter_pool img
-{
-	width: 50px;
-	height: 50px;
-}
-
-~~ .red_card_counter_pool img:not(.rcard_shown)
-{
-	filter: grayscale(1);
-	opacity: 0.2;
-}
 
 
 
