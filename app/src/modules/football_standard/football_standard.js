@@ -3871,13 +3871,14 @@ $this.exec_substitute = async function(){
 
 
 $this.start_base_timer = async function(rnum){
-	if ($this.base_counter){
-		$this.base_counter.force_kill()
-		$this.base_counter = null;
-	}
+
+	$this?.base_counter?.force_kill?.()
+	$this.base_counter = null;
 
 	$this?.extra_counter?.force_kill()
 	$this.extra_counter = null;
+
+	$this.titles.timer.set_text('time_added', '')
 
 	await $this.titles.timer.set_text('extra_ticker', '00:00');
 	await $this.extra_time_vis(false)
@@ -3933,10 +3934,14 @@ $this.timer_callback = function(tick){
 
 $this.resume_main_timer_from_offset = function(event){
 
-	if ($this.base_counter){
-		$this.base_counter.force_kill()
-		$this.base_counter = null;
-	}
+	$this?.extra_counter?.force_kill?.()
+	$this.extra_counter = null;
+
+	$this?.base_counter?.force_kill?.()
+	$this.base_counter = null;
+
+	$this.titles.timer.set_text('time_added', '')
+
 
 	const rnum = int(ksys.context.module.prm('round_num')) || 1;
 
@@ -3959,12 +3964,15 @@ $this.resume_main_timer_from_offset = function(event){
 	$this.base_counter.fire()
 	.then(function(_ticker) {
 		// turn off automatically
+		const pre_killed = _ticker.killed;
 		if (_ticker){
 			_ticker.force_kill()
 			// if (document.querySelector('#timer_ctrl_additional input').value.trim()){
 			// 	$this.launch_extra_time()
 			// }
-			$this.launch_extra_time()
+			if (!pre_killed){
+				$this.launch_extra_time()
+			}
 		}
 	})
 
@@ -4008,10 +4016,8 @@ $this.main_timer_vis = async function(state){
 
 
 $this.launch_extra_time = async function(){
-	if ($this.extra_counter){
-		$this.extra_counter.force_kill()
-		$this.extra_counter = null;
-	}
+	$this?.extra_counter?.force_kill?.()
+	$this.extra_counter = null;
 
 	await $this.update_extra_time_amount()
 
@@ -4119,6 +4125,7 @@ $this.get_current_time = function(minutes=false, tsum=false){
 		}
 
 	}else{
+		// important todo: this is fucked
 		let extra_t = $this?.extra_counter?.tick?.global;
 		if ($this?.extra_counter?.tick?.global === 0) {
 			extra_t = 1;
@@ -4127,8 +4134,11 @@ $this.get_current_time = function(minutes=false, tsum=false){
 		let base_t = Math.ceil(
 			($this?.base_counter?.tick?.global || 1) / divider
 		);
-		if (minutes && base_t == 46){
+		if (minutes && base_t == 46 && extra_t > 1){
 			base_t = 45;
+		}
+		if (minutes && base_t == 91 && extra_t > 1){
+			base_t = 90;
 		}
 
 		return {
@@ -4179,7 +4189,7 @@ $this.add_score_from_cards_panel = async function(){
 	)
 
 	// Set player's surname
-	await $this.titles.gscore.set_img_src(
+	await $this.titles.gscore.set_text(
 		'player_name',
 		`${player.player_num} ${ksys.strf.params.players.format(player.player_surname)}`
 	)
@@ -4241,6 +4251,11 @@ $this.show_score_summary = async function(){
 		const collected_players = [];
 		for (const player of score_stack){
 
+			// Deal with nonames later
+			if (!player.author){
+				continue
+			}
+
 			// Don't re-collect same players 
 			if (collected_players.includes(player.author)){
 				continue
@@ -4289,14 +4304,43 @@ $this.show_score_summary = async function(){
 			let score_string = '';
 			if (side == 'guest'){
 				score_string = 
-				`${ksys.strf.params.players.format(player.author.player_surname)} ${score_times.join(', ')}`;
+				`${ksys.strf.params.players.format(player.author?.player_surname || '')} ${score_times.join(', ')}`;
 			}else{
 				score_string = 
-				`${score_times.join(', ')} ${ksys.strf.params.players.format(player.author.player_surname)}`;
+				`${score_times.join(', ')} ${ksys.strf.params.players.format(player.author?.player_surname || '')}`;
 			}
 
 			score_summary[side].push(score_string)
 
+		}
+
+
+		// Collect uncredited poor souls
+		// imporatnt todo: duplicated code.
+		for (const player of score_stack){
+			if (player.author){continue};
+
+			const score_t = [];
+
+			const score = player;
+
+			if (score.time.extra){
+				score_t.push(`${score.time.base}"+${score.time.extra}"`)
+			}else{
+				score_t.push(`${score.time.base}"`)
+			}
+
+			// todo: use else. There could be only one flag
+			if (score.flags.autogoal){
+				score_t.push('(аг.)')
+			}
+
+			if (score.flags.penalty){
+				score_t.push('(пен.)')
+			}
+
+
+			score_summary[side].push(score_t.join(', '))
 		}
 	}
 
