@@ -82,6 +82,7 @@ const db_path_to_module_dir = function(){
 	return app_root.join('db', 'module', ksys.context.module_name)
 }
 
+// todo: add json writers and readers
 
 module.exports = {
 	module: {

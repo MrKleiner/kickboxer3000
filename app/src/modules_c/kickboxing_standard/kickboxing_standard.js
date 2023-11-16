@@ -46,9 +46,43 @@ kbmodules.kickboxing_standard.load = function()
 
 	kbmodules.kickboxing_standard.titles = {
 		'personal': new vmix.title({
-			'title_name': 'personal_anim_single.gtzip',
+			'title_name': 'personal.gtzip',
+		}),
+
+		'vs': new vmix.title({
+			'title_name': 'vs_main.gtzip',
 		}),
 	}
+
+	kbmodules.kickboxing_standard.label_index = [
+		{
+			'label':    'AGE',
+			'param_sel': 'p_param[p_age] input',
+		},
+		{
+			'label':    'HEIGHT',
+			'param_sel': 'p_param[p_height] input',
+			// 'suffix': 'cm',
+		},
+		{
+			'label':    'WEIGHT',
+			'param_sel': 'p_param[p_weight] input',
+			// 'suffix': 'kg',
+		},
+	]
+
+	kbmodules.kickboxing_standard.personal_label_index = [
+		{
+			'label':    'HEIGHT',
+			'param_sel': 'p_param[p_height] input',
+			'suffix': 'cm',
+		},
+		{
+			'label':    'WEIGHT',
+			'param_sel': 'p_param[p_weight] input',
+			'suffix': 'kg',
+		},
+	]
 
 }
 
@@ -219,21 +253,21 @@ kbmodules.kickboxing_standard.load_paris = function(overwrite=null)
 							<descr>Age</descr>
 							<input type="text" placeholder="Player Age" value="${pair.left.age}">
 						</p_param>
-						<p_param p_height>
-							<descr>Height</descr>
-							<input type="text" placeholder="Player Height" value="${pair.left.height}">
-						</p_param>
 						<p_param p_weight>
 							<descr>Weight</descr>
 							<input type="text" placeholder="Player Weight" value="${pair.left.weight}">
 						</p_param>
-						<p_param p_country>
-							<descr>Country</descr>
-							<input type="text" placeholder="Player's Country of Origin" value="${pair.left.country}">
+						<p_param p_height>
+							<descr>Height</descr>
+							<input type="text" placeholder="Player Height" value="${pair.left.height}">
 						</p_param>
 						<p_param p_record>
 							<descr>Record</descr>
 							<input type="text" placeholder="Player Record" value="${pair.left.record}">
+						</p_param>
+						<p_param p_country>
+							<descr>Country</descr>
+							<input type="text" placeholder="Player's Country of Origin" value="${pair.left.country}">
 						</p_param>
 					</player>
 
@@ -248,21 +282,21 @@ kbmodules.kickboxing_standard.load_paris = function(overwrite=null)
 							<descr>Age</descr>
 							<input type="text" placeholder="Player Age" value="${pair.right.age}">
 						</p_param>
-						<p_param p_height>
-							<descr>Height</descr>
-							<input type="text" placeholder="Player Height" value="${pair.right.height}">
-						</p_param>
 						<p_param p_weight>
 							<descr>Weight</descr>
 							<input type="text" placeholder="Player Weight" value="${pair.right.weight}">
 						</p_param>
-						<p_param p_country>
-							<descr>Country</descr>
-							<input type="text" placeholder="Player's Country of Origin" value="${pair.right.country}">
+						<p_param p_height>
+							<descr>Height</descr>
+							<input type="text" placeholder="Player Height" value="${pair.right.height}">
 						</p_param>
 						<p_param p_record>
 							<descr>Record</descr>
 							<input type="text" placeholder="Player Record" value="${pair.right.record}">
+						</p_param>
+						<p_param p_country>
+							<descr>Country</descr>
+							<input type="text" placeholder="Player's Country of Origin" value="${pair.right.country}">
 						</p_param>
 					</player>
 				</players>
@@ -324,7 +358,7 @@ kbmodules.kickboxing_standard.upd_vs_title = async function(p_index=null)
 	// save selected pair index
 	ksys.context.module.prm('active_pair_index', p_index)
 
-	return
+	// return
 
 	// select the corresponding pair in the gui
 	var pair_elem = $(`#pairs_pool pairnum[pair_index="${p_index}"]`).closest('pair');
@@ -354,7 +388,7 @@ kbmodules.kickboxing_standard.upd_vs_title = async function(p_index=null)
 		},
 		'record_l': {
 			'gui': 'player[left] p_param[p_record] input',
-			'vmix': 'record_L.Text'
+			'vmix': 'height_L.Text'
 		},
 
 
@@ -381,19 +415,47 @@ kbmodules.kickboxing_standard.upd_vs_title = async function(p_index=null)
 		},
 		'record_r': {
 			'gui': 'player[right] p_param[p_record] input',
-			'vmix': 'record_R.Text'
+			'vmix': 'height_R.Text'
 		}
 
 	}
+	const frmt = ksys.strf.params.players
 
-	for (let apply in c_dict){
-		await vmix.talker.talk({
-			'Function': 'SetText',
-			'Value': $(pair_elem).find(c_dict[apply]['gui']).val().trim(),
-			'Input': 'vs_main.gtzip',
-			'SelectedName': c_dict[apply]['vmix']
-		})
+	// set boxes
+	for (const _box_idx in kbmodules.kickboxing_standard.label_index){
+		const prm_info = kbmodules.kickboxing_standard.label_index[_box_idx];
+		
+		const box_idx = int(_box_idx) + 1
+
+		// Set label
+		await kbmodules.kickboxing_standard.titles.vs.set_text(
+			`ifb_title_lb_${box_idx}`,
+			prm_info.label,
+		)
+
+		for (const side of [['l', 'left'], ['r', 'right']]){
+			await kbmodules.kickboxing_standard.titles.vs.set_text(
+				`ifb_text_${side[0]}_${box_idx}`,
+				frmt.format(
+					$(pair_elem).find(`player[${side[1]}] ${prm_info.param_sel}`).val().trim()
+				)  + ' ' + (prm_info.suffix || ' '),
+			)
+		}
 	}
+
+	// set names
+	await kbmodules.kickboxing_standard.titles.vs.set_text(
+		`pname_text_l`,
+		frmt.format(
+			$(pair_elem).find(`player[left] p_param[p_name] input`).val().trim()
+		),
+	)
+	await kbmodules.kickboxing_standard.titles.vs.set_text(
+		`pname_text_r`,
+		frmt.format(
+			$(pair_elem).find(`player[right] p_param[p_name] input`).val().trim()
+		),
+	)
 
 	// set countries
 	var ctx = ksys.context.module.pull()
@@ -401,23 +463,23 @@ kbmodules.kickboxing_standard.upd_vs_title = async function(p_index=null)
 		// LEFT
 		await vmix.talker.talk({
 			'Function': 'SetImage',
-			'Value': str((new pathlib(ctx.resource_path)).join('flags', $(pair_elem).find(c_dict['country_l']['gui']).val().trim())).replaceAll('/', '\\'),
+			'Value': str((Path(ctx.resource_path)).join('flags', $(pair_elem).find(c_dict['country_l']['gui']).val().trim())).replaceAll('/', '\\'),
 			'Input': 'vs_main.gtzip',
 			'SelectedName': c_dict['country_l']['vmix']
 		})
 		// Right
 		await vmix.talker.talk({
 			'Function': 'SetImage',
-			'Value': str((new pathlib(ctx.resource_path)).join('flags', $(pair_elem).find(c_dict['country_r']['gui']).val().trim())).replaceAll('/', '\\'),
+			'Value': str((Path(ctx.resource_path)).join('flags', $(pair_elem).find(c_dict['country_r']['gui']).val().trim())).replaceAll('/', '\\'),
 			'Input': 'vs_main.gtzip',
 			'SelectedName': c_dict['country_r']['vmix']
 		})
 		// Background
 		await vmix.talker.talk({
 			'Function': 'SetImage',
-			'Value': str((new pathlib(ctx.resource_path)).join('pair_pool', `${p_index}.png`)).replaceAll('/', '\\'),
+			'Value': str((Path(ctx.resource_path)).join('pair_pool', `${p_index}.png`)).replaceAll('/', '\\'),
 			'Input': 'vs_main.gtzip',
-			'SelectedName': 'player_pair.Source'
+			'SelectedName': 'Image1.Source'
 		})
 	}
 
@@ -456,19 +518,33 @@ kbmodules.kickboxing_standard.upd_personal_title = async function(player)
 
 	const title = kbmodules.kickboxing_standard.titles.personal
 
-	const p_name = player_info.name.value.split(' ')
-	const frmt = ksys.strf.params.players
+	const p_name = player_info.name.value.trim().split(' ')
+	const frmt = ksys.strf.params.players;
 
 	await title.set_text('name',    frmt.format(p_name[0]))
 	await title.set_text('surname', frmt.format(p_name.at(-1)))
 
-	await title.set_text('weight_text', frmt.format(player_info.weight.value))
-	await title.set_text('height_text', frmt.format(player_info.height.value))
+	for (const i in kbmodules.kickboxing_standard.personal_label_index){
+		const box = kbmodules.kickboxing_standard.personal_label_index[i]
+		const idx = int(i) + 1
+		print('Set shit', `box_${idx}_label`, box.label)
+		print('Set shit', `box_${idx}_text`, player_elem.find(box.param_sel).val().trim())
 
-	await title.set_text('weight_text', frmt.format(player_info.weight.value + ' KG'))
-	await title.set_text('height_text', frmt.format(player_info.height))
+		await title.set_text(`box_${idx}_label`, box.label)
+		await title.set_text(
+			`box_${idx}_text`,
+			player_elem.find(box.param_sel).val().trim() + ' ' + (box.suffix || '')
+		)
+	}
 
-	await title.set_text('record_text', frmt.format(player_info.record.value))
+
+	// await title.set_text('weight_text', frmt.format(player_info.weight.value))
+	// await title.set_text('height_text', frmt.format(player_info.height.value))
+
+	// await title.set_text('weight_text', frmt.format(player_info.weight.value + ' KG'))
+	// await title.set_text('height_text', frmt.format(player_info.height))
+
+	// await title.set_text('record_text', frmt.format(player_info.record.value))
 
 	// await title.set_text('height_text', player_info.record.value)
 
@@ -538,7 +614,7 @@ kbmodules.kickboxing_standard.respawn_manager = function(act)
 {
 
 	// onn = the big button onn
-	// if there's no timer OR the prv one is dead - create one and start and then show
+	// if there's no timer OR the prev one is dead - create one and start and then show
 	// if there's timer and it's alive - unpase and show
 	if (!kbmodules.kickboxing_standard.counter.alive){
 		kbmodules.kickboxing_standard.respawn_timer(true, true)
@@ -590,6 +666,7 @@ kbmodules.kickboxing_standard.respawn_timer = async function(show=false, st=fals
 	}
 
 	if (show == true){
+		// await ksys.util.sleep(2000)
 		await kbmodules.kickboxing_standard.timer_show()
 	}
 }
@@ -699,17 +776,23 @@ kbmodules.kickboxing_standard.player_off = function()
 
 
 
-kbmodules.kickboxing_standard.load_pairs_from_file = function()
+kbmodules.kickboxing_standard.load_pairs_from_file = async function()
 {
-	ksys.ask_for_file()
-	.then(function(response) {
-		try{
-			kbmodules.kickboxing_standard.load_paris(JSON.parse(fs.readFileSync(response[0].path, {encoding:'utf8', flag:'r'})))
-		}catch (error){
-			console.error(error)
-			print('Failed to load pairs from file. Most probable problem: invalid file.')
-		}
-	})
+	const file = await ksys.util.ask_file();
+
+	try{
+		kbmodules.kickboxing_standard.load_paris(
+			JSON.parse(
+				fs.readFileSync(
+					file.path,
+					{encoding:'utf8', flag:'r'}
+				)
+			)
+		)
+	}catch (error){
+		console.error(error)
+		print('Failed to load pairs from file. Most probable problem: invalid file.')
+	}
 }
 
 

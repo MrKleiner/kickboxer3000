@@ -87,6 +87,25 @@ input[type="number"][noctrl]::-webkit-inner-spin-button
 	margin: 0 !important;
 }
 
+select{
+	padding: 2px;
+	background: #1D1D22;
+	font-size: 15px;
+}
+
+select:hover{
+	background: #202026;
+}
+
+select:focus-visible{
+	outline: 0px;
+}
+
+img:not([candrag]){
+	-webkit-user-drag: none;
+}
+
+
 
 #app_sys
 {
@@ -210,6 +229,11 @@ img[contain], video[contain]
 	outline: 3px solid cyan;
 	color: lime;
 }
+
+[invert_rgb]{
+	filter: invert(1);
+}
+
 
 
 
@@ -456,9 +480,14 @@ vmix buttons
 	filter: grayscale(1);
 }
 
-~~[rel_pos]
+~~[rel_pos]:not([abs_pos])
 {
 	position: relative !important;
+}
+
+~~[rel_pos][abs_pos]
+{
+	position: absolute !important;
 }
 
 ~~[bottom]
@@ -883,7 +912,7 @@ tab
 
 /*
 ===============================================
-                  Tab system
+                  Hint System
 ===============================================
 !~~ hintsys-bar
 */
@@ -891,6 +920,7 @@ tab
 ~~ {
 	display: flex;
 	align-items: center;
+	justify-content: space-between;
 	position: fixed;
 	bottom: 0px;
 	width: 100%;
@@ -898,9 +928,90 @@ tab
 	background: #151417;
 	border-top: 1px solid rgb(80, 80, 80);
 	overflow: hidden;
-	padding-left: 25px;
+	z-index: 99999;
 }
 
-~~ {
-	color: rgb(150, 150, 150);
+~~ > div{
+	height: 100%;
 }
+
+~~ #hintsys_bar_hints{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	color: rgb(150, 150, 150);
+	margin-left: 25px;
+}
+
+~~ #hintsys_bar_msgs{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-right: 25px;
+}
+
+
+
+
+
+/*
+=========================================
+               Messages
+=========================================
+!~~ hintsys-bar #hintsys_bar_msgs .kbmsg
+*/
+
+~~{
+	display: flex;
+	align-items: center;
+	height: 90%;
+	width: fit-content;
+	border-radius: 5px;
+	padding: 0px 10px 0px 10px;
+	outline: 1px solid blue;
+	outline-offset: -1px;
+}
+
+~~:not(:last-child){
+	margin-right: 10px;
+}
+
+~~ svg{
+	height: 100%;
+	width: 10px;
+	overflow: visible;
+	margin-right: 10px;
+	opacity: 0.5;
+}
+
+~~[ok]{
+	background: #185C23;
+	outline-color: lime;
+}
+
+~~[warn]{
+	background: #6D5700;
+	outline-color: #FFE400;
+}
+
+~~[err]{
+	background: #792B2B;
+	outline-color: #FA4A32;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

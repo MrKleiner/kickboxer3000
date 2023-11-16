@@ -144,7 +144,9 @@
 
 				<div id="home_layout_ctrl" class="layout_buttons_field_ctrl_command">
 					<!-- Header with team logo and name -->
-					<div class="layout_ctrl_head"></div>
+					<div class="layout_ctrl_head">
+						<img style="height: 100px" src="./assets/red_cross.png">
+					</div>
 					
 					<vmixbtn
 						onclick="$this.forward_field_layout_to_vmix('home')"
@@ -187,7 +189,9 @@
 
 				<div id="guest_layout_ctrl" class="layout_buttons_field_ctrl_command">
 					<!-- Header with team logo and name -->
-					<div class="layout_ctrl_head"></div>
+					<div class="layout_ctrl_head">
+						<img style="height: 100px" src="./assets/red_cross.png">
+					</div>
 
 					<vmixbtn
 						onclick="$this.forward_field_layout_to_vmix('guest')"
@@ -267,11 +271,11 @@
 				</div>
 
 				<div id="cg_buttons_score">
-					<vmixbtn seq_info="auto_tweaks+auto_seq" titled btname="scored" onclick="$this.goal_score_on()">
+					<vmixbtn seq_info="auto_tweaks+auto_seq" titled btname="scored" onclick="$this.add_score_from_cards_panel()">
 						<img draggable="false" contain class="punish_card_vis" src="./assets/ball.png">
 						<div class="punish_card_title">SCORE!</div>
 					</vmixbtn>
-					<vmixbtn seq_info="vis_hide" btname="scored_off" onclick="$this.goal_score_off()">OFF</vmixbtn>
+					<vmixbtn seq_info="vis_hide" btname="scored_off" onclick="$this.hide_scored_title()">OFF</vmixbtn>
 				</div>
 
 			</div>

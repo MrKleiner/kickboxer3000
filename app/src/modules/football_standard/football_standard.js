@@ -457,7 +457,11 @@ $this.load = async function(){
 		$('home-club-selector').append(
 			$this.resource_index.club_selector_dropdown.dropdown_elem(
 				function(evt){
-					$this.create_club_lineup('home', evt.target.value)
+					$this.create_club_lineup('home', evt.target.value);
+
+					// todo: is this the right place for this?
+					// Trigger lineup save
+					$this.global_save({'lineup_lists': true})
 				}
 			)
 		);
@@ -466,7 +470,11 @@ $this.load = async function(){
 		$('guest-club-selector').append(
 			$this.resource_index.club_selector_dropdown.dropdown_elem(
 				function(evt){
-					$this.create_club_lineup('guest', evt.target.value)
+					$this.create_club_lineup('guest', evt.target.value);
+
+					// todo: is this the right place for this?
+					// Trigger lineup save
+					$this.global_save({'lineup_lists': true})
 				}
 			)
 		);
@@ -487,7 +495,58 @@ $this.load = async function(){
 		// Load VS sublines
 		$('#vs_text_bottom_upper')[0].value = mctx.cache.vs_title_bottom_upper_line;
 		$('#vs_text_bottom_lower')[0].value = mctx.cache.vs_title_bottom_lower_line;
+
+		$this.update_team_colors();
+		$this.resource_index.score_manager.resync_score_on_title()
 	}
+
+
+	//
+	// stats
+	//
+	{
+		const prev_stats = JSON.parse(ksys.db.module.read('stats.fball')) || {'1':{}, '2':{}};
+
+		$this.stats_unit_pool = {};
+
+		const stats = [
+			['1',            'l_text_r1', 'r_text_r1', 'УДАРИ'],
+			['2',            'l_text_r2', 'r_text_r2', 'УДАРИ У ПЛОЩИНУ'],
+			['3',            'l_text_r3', 'r_text_r3', 'КУТОВІ'],
+			['4',            'l_text_r4', 'r_text_r4', 'ОФСАЙДИ'],
+			['5',            'l_text_r5', 'r_text_r5', 'ФОЛИ'],
+			['yellow_cards', 'l_text_r6', 'r_text_r6', 'ЖОВТІ КАРТКИ'],
+			['red_cards',    'l_text_r7', 'r_text_r7', 'ЧЕРВОНІ КАРТКИ'],
+		]
+
+		for (const stat_info of stats){
+			const stat_name = str(stat_info[0]);
+
+			const stat_class = 
+				new $this.StatUnit(
+					$this.titles.stats,
+					stat_info[1],
+					stat_info[2],
+					stat_info[3],
+
+					// init val team 1
+					prev_stats?.[stat_name]?.['1'],
+					// init val team 2
+					prev_stats?.[stat_name]?.['2'],
+				)
+
+			$this.stats_unit_pool[stat_name] = stat_class;
+		}
+
+	}
+
+	// 
+	// Modern save data
+	// 
+	{
+		$this.load_lineup_lists()
+	}
+
 
 }
 
@@ -508,7 +567,7 @@ Each club has:
 */
 
 
-// club_struct is a dict where:
+// input_club_struct is a dict where:
 // 	- logo_path: String representing an absolute path
 // 	             pointing to the club's logo on the LOCAL disk.
 // 
@@ -535,6 +594,8 @@ $this.FootballClub = class{
 		this.club_name =           (club_struct.club_name || '').lower();
 		this.club_name_shorthand = club_struct.club_name_shorthand || '';
 		this.main_coach =          (club_struct.main_coach || '').lower();
+
+		// important todo: this is very unreliable
 		this.is_enemy =            is_enemy;
 
 		// An array of ClubPlayer classes
@@ -714,6 +775,19 @@ $this.FootballClub = class{
 
 		return dump
 	}
+
+	// Get player class by nameid
+	get_player_by_nameid(tgt_nameid=null){
+		if (!tgt_nameid){return null};
+
+		for (const player of this.playerbase){
+			if (player.name_id == tgt_nameid){
+				return player
+			}
+		}
+
+		return null
+	}
 }
 
 
@@ -750,6 +824,22 @@ $this.ClubPlayer = class{
 			generic_list_elem.index.num.textContent =     this.player_num.upper();
 			generic_list_elem.index.surname.textContent = this.player_surname.upper();
 		}
+
+		// todo: is this the right place for this?
+		// Trigger lineup save
+		// Reason: To keep data consistency.
+		// Example:
+		//     1 - Players are placed on the field
+		//     2 - Player's name changes
+		//     3 - Last lineup save still has the old name
+		//     4 - Controller reolads and tries loading last layout
+		//     5 - The mechanism encouters the old, unchanged name
+		//     6 - The mechanism creates resonance cascade
+		//     7 - Everybody dies.
+		//         (JK LOL, it simply skips the problematic player,
+		//         aka he will not be added to any lists or field.
+		//         I hope it's understandable, that this is bad enough, or at least stupid)
+		$this.global_save({'lineup_lists': true})
 	}
 
 	// Remove the player from EVERYWHERE
@@ -860,6 +950,14 @@ $this.ClubPlayer = class{
 		return `${this.player_name} ${this.player_surname} ${this.player_num}`.lower()
 	}
 
+	get side(){
+		if (this.club.is_enemy){
+			return 'guest'
+		}else{
+			return 'home'
+		}
+	}
+
 	// test whether the player is inside another player array
 	// by his name_id
 	is_in(target_array){
@@ -887,15 +985,17 @@ $this.ClubPlayer = class{
 Club lineup for the upcoming match.
 	- club is the parent FootballClub class the lineup is constructed from.
 
+	- colors: array of HEX colours available in the colour picker.
+
 	- input_lineup_info is a dictionary containing lineup info:
-	    - main_players: An array of player info dicts.
-	    - reserve_players: An array of player info dicts.
-	    - shorts_color: Shorts colour identifier for the match.
-	    - tshirt_color: T-shirt colour identifier for the match.
-	    - gk_color: Goalkeeper colour identifier for the match.
-	    - field_layout: A dictionary where key is field cell id
+	    - main_players:    An array of player name ids.
+	    - reserve_players: An array of player name ids.
+	    - shorts_col: Shorts colour identifier for the match.
+	    - tshirt_col: T-shirt colour identifier for the match.
+	    - gk_col: Goalkeeper colour identifier for the match.
+
+	    - field_layout: UNUSED A dictionary where key is field cell id
 	                    and value is player info dict.
-	    - colors: array of HEX colours available in the colour picker.
 */
 $this.TeamLineup = class{
 	constructor(club, colors=null, input_lineup_info=null){
@@ -903,15 +1003,18 @@ $this.TeamLineup = class{
 		const lineup_info = input_lineup_info || {};
 
 		// basic config
-		this.shorts_color = lineup_info.shorts_color || null;
-		this.tshirt_color = lineup_info.tshirt_color || null;
-		this.gk_color =     lineup_info.gk_color || null;
+		this.shorts_color = lineup_info.shorts_col || null;
+		this.tshirt_color = lineup_info.tshirt_col || null;
+		this.gk_color =     lineup_info.gk_col || null;
+
+		// todo: unused as of now
 		this.field_layout = lineup_info.field_layout || {};
 
-		// Team colours to pick from
+		// Team colours to pick from (hardcoded list of hex colours)
+		// todo: vmix DOES support shape colour shifting
 		this.available_colors = colors || [];
 
-		// Color picker classes
+		// Colour picker classes
 		this.shorts_colpick = null;
 		this.tshirt_colpick = null;
 		this.gk_colpick = null;
@@ -920,13 +1023,25 @@ $this.TeamLineup = class{
 		this.main_players = new Set();
 		this.reserve_players = new Set();
 
+		// todo: There can be only one control panel
+		// why??
 		this.tplate = null;
+
+
+		// 
+		// Store input data
+		// 
+
+		// todo: is this stupid ?
+		this.input_lineup_info = lineup_info;
+
 	}
 
 	// get control panel element for the lineup
 	control_panel_elem(){
 		const self = this;
 
+		// todo: There can be only one control panel
 		if (self.tplate){
 			return self.tplate.elem
 		}
@@ -956,10 +1071,10 @@ $this.TeamLineup = class{
 		);
 
 		// Side indicator
-		if (this.club.is_enemy){
-			this.tplate.index.side.setAttribute('enemy', true)
+		if (self.club.is_enemy){
+			self.tplate.index.side.setAttribute('enemy', true)
 		}else{
-			this.tplate.index.side.setAttribute('home', true)
+			self.tplate.index.side.setAttribute('home', true)
 		}
 
 		//
@@ -967,6 +1082,8 @@ $this.TeamLineup = class{
 		// 
 		const player_picker = new $this.PlayerPicker(
 			[this.club.playerbase],
+
+			// Filter function to filter out players already in the lists
 			function(target_player){
 				for (const existing_player of [...self.main_players, ...self.reserve_players]){
 					if (existing_player.name_id == target_player.name_id){
@@ -976,6 +1093,7 @@ $this.TeamLineup = class{
 				return true
 			}
 		);
+
 		// replace the placeholder in the template with a real picker
 		this.tplate.index.player_picker_placeholder.replaceWith(player_picker.box);
 
@@ -1013,6 +1131,10 @@ $this.TeamLineup = class{
 				'main'
 			)
 			player_picker.pull_out_selection()
+
+			// todo: is this the right place for this?
+			// Trigger lineup save
+			$this.global_save({'lineup_lists': true})
 		}
 		// Append chosen player to the reserve player list
 		this.tplate.index.append_to_reserve_list_btn.onclick = function(){
@@ -1025,12 +1147,45 @@ $this.TeamLineup = class{
 				'reserve'
 			)
 			player_picker.pull_out_selection()
+
+			// todo: is this the right place for this?
+			// Trigger lineup save
+			$this.global_save({'lineup_lists': true})
 		}
 		// Edit related club in the club panel
 		this.tplate.index.edit_club_btn.onclick = function(){
 			self.club.open_panel();
 			$('sys-tab[match_id="club_def"]').click();
 		}
+
+
+
+		// 
+		// Apply existing data
+		// 
+
+		// Todo: this FULLY relies on the fact, that there could be only one control panel
+
+		// Colours
+		self.shorts_colpick.selected_color = self.shorts_color;
+		self.tshirt_colpick.selected_color = self.tshirt_color;
+		self.gk_colpick.selected_color = self.gk_color;
+
+		// Players
+		for (const tgt_list of [['main_players', 'main'], ['reserve_players', 'reserve']]){
+			const input_list = tgt_list[0];
+			const add_list = tgt_list[1];
+
+			if (self.input_lineup_info[input_list]){
+				for (const player_nameid of self.input_lineup_info[input_list]){
+					const player = self.club.get_player_by_nameid(player_nameid);
+					if (!player){continue};
+
+					self.add_player_to_list(player, add_list)
+				}
+			}
+		}
+
 
 		return self.tplate.elem
 	}
@@ -1043,13 +1198,20 @@ $this.TeamLineup = class{
 
 		const tgt_list = which_list == 'main' ? this.main_players : this.reserve_players;
 		if (tgt_list.size >= 11){
-			ksys.info_msg.send_msg('There are more than 11 players in this list, proceed with caution', 'warn', 9000);
+			ksys.info_msg.send_msg(
+				'There are more than 11 players in this list, proceed with caution',
+				'warn',
+				9000
+			);
 		}
+
 		// print('Target list:', tgt_list, this.main_players, this.reserve_players)
 		// if the player is already in the list - return
 		if (this.main_players.has(player) || this.reserve_players.has(player)){return};
+
 		// Create generic list item
 		const list_elem = player.generic_list_elem();
+
 		// Bind actions to the generic list item
 		list_elem.elem.oncontextmenu = function(evt){
 			if (!evt.altKey){return};
@@ -1057,6 +1219,10 @@ $this.TeamLineup = class{
 			evt.target.closest('player').remove();
 			// delete self from the lineup registry
 			self.remove_player_from_list(player, which_list)
+
+			// todo: is this the right place for this?
+			// Trigger lineup save
+			$this.global_save({'lineup_lists': true})
 		}
 		// Add generic list item to the internal registry
 		tgt_list.add(player)
@@ -1108,7 +1274,7 @@ $this.TeamLineupColorPicker = class{
 		// currently active colour by colour code
 		this._selected_color = color_codes[0];
 
-		// colour objects
+		// colour objects (js DOM elements)
 		this.colors = {};
 
 		this.tplate = ksys.tplates.index_tplate(
@@ -1130,10 +1296,11 @@ $this.TeamLineupColorPicker = class{
 			this.tplate.elem.append(color_elem)
 			// Bind actions
 			color_elem.onclick = function(){
-				$(self.tplate.elem).find('picker-color').removeClass('active_color');
-				color_elem.classList.add('active_color');
-				self._selected_color = clear_hex;
-				self?.callback?.(clear_hex)
+				self.selected_color = clear_hex;
+
+				// todo: is this the right place for this?
+				// Trigger lineup save
+				$this.global_save({'lineup_lists': true})
 			}
 		}
 	}
@@ -1143,12 +1310,25 @@ $this.TeamLineupColorPicker = class{
 	}
 
 	set selected_color(newval){
-		const col = this.colors[str(newval).replaceAll('#', '').trim()];
-		if (!col){
+		const self = this;
+
+		const col_elem = self.colors[str(newval).replaceAll('#', '').trim()];
+		if (!col_elem){
 			console.warn('Cannot find target colour:', newval);
+			return
 		}
 
-		col.click()
+		// visual feedback: Remove outline class from all entries
+		// and then add it back to the one being selected
+		$(self.tplate.elem).find('picker-color').removeClass('active_color');
+		col_elem.classList.add('active_color');
+
+		// write down the selected hex
+		self._selected_color = newval;
+		// Execute callback function, if any and pass the selected hex value to it
+		self?.callback?.(newval)
+
+		// col_elem.click()
 	}
 }
 
@@ -1296,9 +1476,13 @@ $this.ClubSelectorDropdown = class{
 	}
 
 	resync(){
+		// Technically, there could be multiple dropdowns
+		// Practically - why ???
 		for (let dropdown of this.registry){
 			dropdown = $(dropdown);
+			// Delete all previous dropdown entries
 			dropdown.find('option:not([value=""])').remove();
+			// Iterate the 'clubs' subdir in the local db
 			for (const clubname of ksys.db.module.path().join('clubs').globSync('*.clubdef')){
 				dropdown.append(`
 					<option value="${clubname.stem.lower()}">${clubname.stem.upper()}</option>
@@ -1382,6 +1566,12 @@ $this.FieldLayout = class{
 						cell.player = self.drag_target.player;
 						print('cell with new player', cell)
 					}
+
+					self.drag_target = {
+						'player': null,
+						'list_elem': null,
+						'cell': null,
+					};
 				}
 
 				cell.dom.oncontextmenu = function(evt){
@@ -1414,7 +1604,7 @@ $this.FieldLayout = class{
 			}
 		}
 
-		// temp: hide some cells
+		// todo: temp: hide some cells
 		for (const row of this.grid){
 			row.at(0).dom.classList.add('ghost_cell')
 		}
@@ -1423,7 +1613,7 @@ $this.FieldLayout = class{
 		}
 		this.grid.at(-1).at(5).dom.classList.remove('ghost_cell')
 
-		// instanciate grid DOM
+		// instantiate grid DOM
 		this.tplate = ksys.tplates.index_tplate(
 			'#field_layout_template',
 			{
@@ -1906,6 +2096,10 @@ $this.CardManager = class {
 				card.classList.add('rcard_shown');
 			}
 		}
+
+		// also resync vmix title
+		// todo: is this the right place ?
+		self.resync_vmix(self)
 	}
 
 
@@ -2237,6 +2431,21 @@ $this.CardManager = class {
 		}
 
 	}
+
+	// resync title state in vmix
+	async resync_vmix(self){
+		// L
+		// todo: there's an automatic assumption that home is index 1 of the cards
+		const retarded = ['home', 'guest'];
+		for (const _side_idx in retarded){
+			const side_idx = int(_side_idx)
+			const side = self.sides[retarded[side_idx]];
+
+			for (const card_idx of range(3)){
+				await $this.titles.timer.toggle_img(`rcard_${side_idx+1}_${card_idx+1}`, !!side.red_stack.at(card_idx))
+			}
+		}
+	}
 }
 
 
@@ -2354,7 +2563,11 @@ $this.ClubGoals = class {
 		tplate.index.autogoal_flag.penalty = record.flags.penalty;
 
 		// set timestamp in minutes
-		tplate.index.timestamp.value = calculated_timestamp;
+		if (calculated_timestamp.extra){
+			tplate.index.timestamp.value = `${calculated_timestamp.base} + ${calculated_timestamp.extra}`;
+		}else{
+			tplate.index.timestamp.value = calculated_timestamp.base;
+		}
 
 		// set author, if any
 		if (player){
@@ -2382,6 +2595,11 @@ $this.ClubGoals = class {
 		// flags
 		{
 			// todo: this is retarded
+
+			// explanation: since the entire data struct relies on "change" event
+			// coming from checkboxes - it'd be much easier to simulate an onclick event
+			// rather than bothering with maintaining the struct
+			// (cbox.checked = true does not trigger onchange event)
 			const click_switch = function(evt){
 				const target_cbox = evt.target.closest('record-flag').querySelector('input');
 
@@ -2421,6 +2639,7 @@ $this.ClubGoals = class {
 				}
 				self.score_stack.delete(record);
 				tplate.elem.remove()
+				$this.resource_index.score_manager.resync_score_on_title()
 			}
 		}
 
@@ -2428,7 +2647,7 @@ $this.ClubGoals = class {
 		tplate.elem.onclick = function(evt){
 			if (!evt.target.closest('.score_author')){return};
 			// stupid hack to make it possible to toggle
-			const do_toggle = self.selected_record == record
+			const do_toggle = self.selected_record == record;
 
 			$this.resource_index.score_manager.reset_player_selection();
 
@@ -2441,6 +2660,8 @@ $this.ClubGoals = class {
 
 		// finally, append the template to the DOM
 		self.tplate.index.list.append(tplate.elem)
+
+		$this.resource_index.score_manager.resync_score_on_title()
 
 	}
 
@@ -2544,6 +2765,22 @@ $this.ScoreManager = class {
 		}
 		
 	}
+
+	async resync_score_on_title(){
+		const title = $this.titles.timer;
+
+		// important todo: keep doing these stupid checks or simply lock all tabs till both lineups are present ?
+		const home_score_list = $this.resource_index.score_manager.sides?.home?.score_list
+		if (home_score_list){
+			await title.set_text('score_l', home_score_list.score_stack.size)
+		}
+
+		const guest_score_list = $this.resource_index.score_manager.sides?.guest?.score_list
+		if (guest_score_list){
+			await title.set_text('score_r', guest_score_list.score_stack.size)
+		}
+		
+	}
 }
 
 
@@ -2584,12 +2821,16 @@ $this.create_new_club = function(club_resources=null, open_panel=true){
 // Save file to an abstract location on disk
 $this.save_club_to_file = function(){
 	const tgt_dir = $('#club_ctrl_save_to_file_target .tgtdir').val();
+
+	// this checks whether the save path input DOM element has at least something in it
+	// and wether the club exists at all
 	if (!tgt_dir || !$this.resource_index.club_ctrl){
 		ksys.info_msg.send_msg('Dir path or filename is invalid (not specified)', 'err', 5000);
 		return
 	};
 
 	// construct path
+	// todo: lowercase the club name ?
 	const tgt_file = Path(
 		tgt_dir,
 		($('#club_ctrl_save_to_file_target .tgtfname').val() || 'club_info') + '.clubdef',
@@ -2655,7 +2896,8 @@ $this.get_club_info_by_name = function(clubname=null){
 	return club_info
 }
 
-// Load existing club into the control panel
+// Load existing club into the control panel, this does NOT create a lineup
+// This is only needed for EDITING the club
 $this.load_club_by_name = function(clubname=null){
 	if (!clubname){return};
 
@@ -2675,17 +2917,30 @@ $this.load_club_by_name = function(clubname=null){
 
 
 
-// Create lineup from club name.
+// Create lineup from club name. This will forward club info the rest of the controller
+// (add visual header cues and so on)
 // This is triggered when:
 //     - A club is selected from the Home/Guest club dropdown in Config/Lists
 //     - Club being loaded from previous controller state
 $this.create_club_lineup = function(side, clubname, input_lineup_info=null){
-	if (!clubname){return};
+	if (!clubname){
+		// This should never happen, because this function can only be triggered
+		// internally
+		ksys.info_msg.send_msg(
+			`Why did this even happen? No clubname supplied to lineup loader: ${clubname}`,
+			'err',
+			9000
+		);
+		return
+	};
 
 	let club = null;
 
+	// todo: if the club that's being edited at the momment
+	// gets chosen as both home and guest club - everything breaks
+
 	// Check if the requested club is the one being edited in the Clubs panel
-	if ($this.resource_index.club_ctrl?.club_name.lower() == clubname.lower()){
+	if ($this.resource_index.club_ctrl?.club_name?.lower?.() == clubname.lower()){
 		// if so - get the Club class reference from the resource index
 		club = $this.resource_index.club_ctrl;
 		// and update the is_enemy flag
@@ -2695,7 +2950,10 @@ $this.create_club_lineup = function(side, clubname, input_lineup_info=null){
 		// if not - create new Club class,
 		// because a lineup cannot exist without a club
 		// Lineup class is always a parent of a Club class
-		club = new $this.FootballClub($this.get_club_info_by_name(clubname), side == 'guest');
+		club = new $this.FootballClub(
+			$this.get_club_info_by_name(clubname),
+			side == 'guest'
+		);
 	}
 
 	// create player lineup for the club
@@ -2779,7 +3037,6 @@ $this.create_club_lineup = function(side, clubname, input_lineup_info=null){
 
 	// resync card manager
 	$this.resource_index.card_manager.resync($this.resource_index.card_manager)
-
 }
 
 
@@ -2829,8 +3086,8 @@ $this.wipe_player_list_from_title = async function(){
 
 // Push current field layout/lineup to the field layout title in vmix
 $this.forward_field_layout_to_vmix = async function(team){
-	let tgt_field = null;
-	const tgt_side = $this.resource_index.side?.[str(team).lower()]?.field;
+	const tgt_side = str(team).lower();
+	const tgt_field = $this.resource_index.side?.[tgt_side]?.field;
 
 	if (!tgt_field){
 		ksys.info_msg.send_msg('Lineup does not exist for this side', 'warn', 9000);
@@ -2839,13 +3096,13 @@ $this.forward_field_layout_to_vmix = async function(team){
 
 	// Switch off all buttons responsible for showing the title on screen
 	ksys.btns.toggle({
-		'show_home_field_layout':    true,
-		'hide_home_field_layout':    true,
-		'show_guest_field_layout':   true,
-		'hide_guest_field_layout':   true,
+		'show_home_field_layout':    false,
+		'hide_home_field_layout':    false,
+		'show_guest_field_layout':   false,
+		'hide_guest_field_layout':   false,
 
-		'prepare_home_team_layout':  true,
-		'prepare_guest_team_layout': true,
+		'prepare_home_team_layout':  false,
+		'prepare_guest_team_layout': false,
 	})
 
 	// target vmix title
@@ -2891,6 +3148,8 @@ $this.forward_field_layout_to_vmix = async function(team){
 	// 
 	// Main players
 	// 
+
+	// todo: stupid counter ?
 	let counter = 1;
 	for (const player of tgt_field.lineup.main_players){
 		// player number
@@ -3242,7 +3501,8 @@ $this.exec_substitute = async function(){
 
 	// show the title
 	await title.overlay_in(1)
-	// let it hang for 7 seconds
+	// let it hang for 11 seconds
+	// (this wait time also accounts for the scripted animation sequence inside the title)
 	await ksys.util.sleep(11000)
 	// hide the title
 	await title.overlay_out(1)
@@ -3368,42 +3628,27 @@ $this.main_timer_vis = async function(state){
 	const title = $this.titles.timer;
 
 	if (state == true){
-		// player_color_picker
-		// gk_color_picker
 
+		if (!$this.resource_index?.side?.home?.club || !$this.resource_index?.side?.guest?.club){
+			ksys.info_msg.send_msg(
+				`This action requires both clubs present`,
+				'warn',
+				3000
+			);
+			return
+		}
 
+		await title.set_text(
+			'command_l',
+			str($this.resource_index.side.home.club.club_name_shorthand).upper()
+		)
+		await title.set_text(
+			'command_r',
+			str($this.resource_index.side.guest.club.club_name_shorthand).upper()
+		)
 
-		// TEAM COLOR L
-		// t-shirts
-		const team_col_l_top =
-		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`l_top_${$($this.teams[1].player_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-		await title.set_img_src(`team_col_l_top`, str(team_col_l_top))
-		// shorts
-		const team_col_l_bot =
-		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`l_bot_${$($this.teams[1].shorts_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-		await title.set_img_src(`team_col_l_bot`, str(team_col_l_bot))
-
-		// TEAM COLOR R
-		// t-shirts
-		const team_col_r_top =
-		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`r_top_${$($this.teams[2].player_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-		await title.set_img_src(`team_col_r_top`, str(team_col_r_top))
-		// shorts
-		const team_col_r_bot =
-		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`r_bot_${$($this.teams[2].shorts_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-		await title.set_img_src(`team_col_r_bot`, str(team_col_r_bot))
-
-
-
-		await title.set_text('command_l', $this.teams[1].shorthand.value)
-		await title.set_text('command_r', $this.teams[2].shorthand.value)
-
-		await title.set_text('score_l', $($this.teams[1].score_pool).find('.team_score_record').length)
-		await title.set_text('score_r', $($this.teams[2].score_pool).find('.team_score_record').length)
+		// push current score to the title
+		$this.resource_index.score_manager.resync_score_on_title()
 
 		title.overlay_in(2)
 	}
@@ -3499,16 +3744,533 @@ $this.stop_extra_time = function(){
 }
 
 
-// get combined current timer time
-// base ticker + extra time
-$this.get_current_time = function(minutes=false){
-	return Math.ceil(
-		(
-			($this?.base_counter?.tick?.global || 1)
-			+
-			($this?.extra_counter?.tick?.global || 1)
+// base = global or 1
+// extra = extra or 1
+
+// todo: unfortunately, a score on 45:00 + 2 would result into 46 + 2
+// There's a stupid hack for now, but later this issue should be addressed
+// systematically
+$this.get_current_time = function(minutes=false, tsum=false){
+	const divider = (minutes ? 60 : 1);
+
+	if (tsum){
+		const calc_sum = 
+		Math.ceil(
+			(
+				($this?.base_counter?.tick?.global || 1)
+				+
+				($this?.extra_counter?.tick?.global || 1)
+			)
+			/
+			divider
 		)
-		/
-		(minutes ? 60 : 1)
+
+		if (minutes && calc_sum == 46){
+			return 45
+		}else{
+			return calc_sum
+		}
+
+	}else{
+		let extra_t = $this?.extra_counter?.tick?.global;
+		if ($this?.extra_counter?.tick?.global === 0) {
+			extra_t = 1;
+		}
+
+		let base_t = Math.ceil(
+			($this?.base_counter?.tick?.global || 1) / divider
+		);
+		if (minutes && base_t == 46){
+			base_t = 45;
+		}
+
+		return {
+			'base': base_t,
+			'extra': Math.ceil(
+				extra_t / divider
+			),
+		}
+	}
+
+}
+
+
+
+
+
+// ================================
+//               Scores
+// ================================
+
+// todo: add sanity check for player's side
+$this.add_score_from_cards_panel = async function(){
+	const player = $this.resource_index.card_player_filter?.selected_entry?.player;
+	// selected_entry.player
+
+	if (!player){
+		ksys.info_msg.send_msg(
+			`No player selected. Go to the Stats panel for advanced manipulations`,
+			'warn',
+			9000
+		);
+		return
+	}
+
+	const side = player.club.is_enemy ? 'guest' : 'home';
+	const score_list = $this.resource_index.score_manager.sides[side].score_list
+	score_list.add_score(
+		score_list,
+		player
+	)
+
+	// Show the title
+
+	// Set logo
+	await $this.titles.gscore.set_img_src(
+		'club_logo',
+		player.club.logo_path
+	)
+
+	// Set player's surname
+	await $this.titles.gscore.set_img_src(
+		'player_name',
+		`${player.player_num} ${ksys.strf.params.players.format(player.player_surname)}`
+	)
+
+	$this.titles.gscore.overlay_in(1)
+}
+
+$this.hide_scored_title = function(){
+	$this.titles.gscore.overlay_out(1)
+}
+
+
+
+
+
+// ================================
+//               Stats
+// ================================
+
+$this.save_match_stats = function(){
+	const save = {};
+	console.time('Saving stats')
+	for (const stat_name in $this.stats_unit_pool){
+		const stat = $this.stats_unit_pool[stat_name];
+		save[stat_name] = {
+			1: int(stat.val_selector[1]),
+			2: int(stat.val_selector[2]),
+		}
+	}
+
+	ksys.db.module.write('stats.fball', JSON.stringify(save, null, 4))
+
+	console.timeEnd('Saving stats')
+}
+
+// stat unit
+$this.StatUnit = class {
+	constructor(related_title, team1_txt_block, team2_txt_block, visname, init_val_t1=0, init_val_t2=0){
+		this.related_title = related_title;
+		this.visname = visname;
+		this.elem_index = {};
+		const self = this;
+
+		this.text_field_selector = {
+			1: team1_txt_block,
+			2: team2_txt_block,
+		}
+
+		this.val_selector = {
+			1: int(init_val_t1) || 0,
+			2: int(init_val_t2) || 0,
+		}
+
+		this.vis_echo = {
+			1: [],
+			2: [],
+		};
+
+
+		//
+		// append table row to both tables
+		//
+
+		for (const tnum of [1, 2]){
+			$(`.tstats_table_${tnum}`).append(this.table_row_elem(tnum))
+		}
+
+		//
+		// Create quick buttons
+		//
+		for (const tnum of [1, 2]){
+			$(`.tstats_buttons_team_${tnum}`).append(this.quick_button(tnum))
+		}
+
+	}
+
+	// get html element of a quick button
+	quick_button(team){
+		const self = this;
+
+		const qbtn_html = `
+			<div class="team_stat_quick_btn_pair">
+				<div class="team_stat_quick_btn_vis_value">${this.val_selector[team]}</div>
+				<sysbtn stat_action="add" class="team_stat_quick_btn_add">+ ${this.visname}</sysbtn>
+				<sysbtn stat_action="subt" class="team_stat_quick_btn_subt">- ${this.visname}</sysbtn>
+			</div>
+		`;
+
+		const qbtn_index = ksys.tplates.index_elem(
+			qbtn_html,
+			{
+				'add': '.team_stat_quick_btn_add',
+				'subt': '.team_stat_quick_btn_subt',
+				'vis_val': '.team_stat_quick_btn_vis_value',
+			},
+			true
+		);
+
+		qbtn_index.index.add.onclick = function(){
+			self.upd_value(team, 1)
+		}
+		qbtn_index.index.subt.onclick = function(){
+			self.upd_value(team, -1)
+		}
+
+		// register for echo
+		this.vis_echo[team].push({
+			'echo_type': 'elem_text',
+			'tgt': qbtn_index.index.vis_val,
+		})
+
+		return qbtn_index.elem
+	}
+
+	table_row_elem(team){
+		const self = this;
+
+		const stat_unit_table_row_html = `
+			<div class="stat_unit_table_row">
+				${this.visname}
+				<input noctrl type="number">
+			</div>
+		`
+		// create and index row element
+		const row_elem = ksys.tplates.index_elem(
+			stat_unit_table_row_html,
+			{'inp': 'input'},
+			true
+		)
+		row_elem.index.inp.value = this.val_selector[team]
+		row_elem.index.inp.onchange = function(evt){
+			self.set_value(team, int(evt.target.value) || 0)
+		}
+		row_elem.index.inp.onclick = function(evt){
+			evt.target.select()
+		}
+
+		// register for echo
+		this.vis_echo[team].push({
+			'echo_type': 'input',
+			'tgt': row_elem.index.inp,
+		})
+
+		return row_elem.elem
+	}
+
+	// set value to a specific number
+	set_value(team, val){
+		// update vmix title
+		this.related_title.set_text(this.text_field_selector[team], val)
+		// update self info
+		this.val_selector[team] = val;
+		// update values in the table rows, etc
+		this.forward_vis_echo()
+		// save stats to file
+		$this.save_match_stats()
+	}
+
+	// addition subtraction
+	// addition/subtraction is determined by the input value
+	// which means to subtract from the value - pass a negative integer
+	upd_value(team, val){
+		// basically same as set_value, except it's addition/subtraction
+		const new_val = this.val_selector[team] + val;
+		this.val_selector[team] = Math.max(new_val, 0);
+		this.related_title.set_text(this.text_field_selector[team], this.val_selector[team]);
+		// update values in the table rows, etc
+		this.forward_vis_echo()
+		// save stats to file
+		$this.save_match_stats()
+	}
+
+	// update values in the table rows, etc
+	forward_vis_echo(){
+		// each element of the echo array should have a value property
+		for (const team of [1, 2]){
+			for (const echo of this.vis_echo[team]){
+				if (echo.echo_type == 'input'){
+					echo.tgt.value = this.val_selector[team];
+				}
+				if (echo.echo_type == 'elem_text'){
+					echo.tgt.innerText = this.val_selector[team];
+				}
+			}
+		}
+	}
+
+	async push_to_vmix(){
+		await this.related_title.set_text(this.text_field_selector[1], this.val_selector[1]);
+		await this.related_title.set_text(this.text_field_selector[2], this.val_selector[2]);
+	}
+
+}
+
+
+$this.show_team_stats = async function(){
+
+	ksys.btns.pool.show_team_stats.toggle(false)
+
+	for (const stat_name in $this.stats_unit_pool){
+		$this.stats_unit_pool[stat_name].push_to_vmix()
+	}
+
+	const score_amt_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
+	const score_amt_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
+	await $this.titles.stats.set_text('scores', `${score_amt_l} : ${score_amt_r}`)
+
+	await $this.titles.stats.set_img_src('team_logo_l', $('#team1_def').attr('logo_path'))
+	await $this.titles.stats.set_img_src('team_logo_r', $('#team2_def').attr('logo_path'))
+
+	await $this.titles.stats.set_text('bottom_text', $('#vs_text_bottom_lower').val())
+
+	await $this.titles.stats.set_text(
+		'team_name_l',
+		ksys.strf.params.club_name.format($('#team1_def [prmname="team_name"] input').val())
+	)
+	await $this.titles.stats.set_text(
+		'team_name_r',
+		ksys.strf.params.club_name.format($('#team2_def [prmname="team_name"] input').val())
+	)
+
+	await $this.titles.stats.overlay_in(1)
+
+	ksys.btns.pool.show_team_stats.toggle(true)
+}
+
+$this.hide_team_stats = async function(){
+
+	ksys.btns.pool.hide_team_stats.toggle(false)
+
+	await $this.titles.stats.overlay_out(1)
+
+	ksys.btns.pool.hide_team_stats.toggle(true)
+	ksys.btns.pool.show_team_stats.toggle(true)
+}
+
+
+
+
+
+
+// ================================
+//           Save/Load sys
+// ================================
+
+// А ЧЁ?! СЛАБО БАЙТЫ ПИСАТЬ, А?!
+// (Безполезная трата времени, это не питон. Буфер API тут мега всратый)
+
+// Every separate save target gets saved to a separate file:
+// save_lineup_lists: lineup_lists.kbsave
+
+
+
+
+// ---------------
+//  Lineup lists
+// ---------------
+
+// File: lineup_lists.kbsave
+// Save entries:
+//     - Club name
+//     - T-Shirt colour
+//     - Shorts colour
+//     - Golakeeper colour
+//     - Lineup lists: main/reserve
+
+// Triggered when:
+// 	- tshirt/shorts/gk colour changes
+// 	- Player is added/removed from main/reserve player list by the USER
+//  - A club is loaded by the USER
+//  - Player's name is changed in the club config panel
+
+// Save struct:
+/*
+{
+	'lineup_info': {
+		'home': {
+			'club_name': lowercase club name,
+
+			'tshirt_col': t-shirt colour,
+			'shorts_col': shorts colour,
+			'gk_col':     goalkeeper colour,
+
+			// main/reserve players
+			'player_lineup': {
+				'main_players': [
+					'player nameid',
+					'player nameid',
+					...
+				],
+				'reserve_players': [],
+			}
+		},
+
+		// same as home
+		'guest':{},
+	}
+}
+*/
+$this.save_lineup_lists = function(){
+	print('saving lineup lists');
+
+	const save_data = {};
+
+	const res_idx = $this.resource_index;
+
+	// important todo: fix inconsistencies in home/guest
+	for (const side of ['home', 'guest']){
+
+		// Only save if there's a lineup to save
+
+		// todo: data corruption?
+		// do not allow saving till both sides are loaded ????
+		const tgt_lineup = res_idx.side[side].lineup;
+		const tgt_club = res_idx.side[side].club;
+		if (!tgt_lineup){continue};
+
+
+		// 
+		// first, easy part - save club name & colours and define the save file struct
+		// 
+		save_data[side] = {
+
+			// club name
+			'club_name': str(tgt_club.club_name).lower(),
+
+
+			// shorts_colpick
+			// tshirt_colpick
+			// gk_colpick
+
+			// colours
+			// todo: lineup has a built-in colours getter (lineup.colors)
+			// returns a dict
+			'tshirt_col': tgt_lineup.tshirt_colpick.selected_color,
+			'shorts_col': tgt_lineup.shorts_colpick.selected_color,
+			'gk_col':     tgt_lineup.gk_colpick.selected_color,
+
+			// create player struct
+			'player_lineup': {
+				'main_players': [],
+				'reserve_players': [],
+			},
+		}
+
+
+
+		// 
+		// Now, save player lists
+		// 
+
+		// Each lineup stores 2 player arrays: main and reserve.
+		// Iterate over their names and grab them from the lineup class
+
+		// SO, for list type...
+		for (const tgt_list of ['main_players', 'reserve_players']){
+			// main_players
+			// reserve_players
+
+			// Iterate over the said list type to grab players in there...
+			for (const player of tgt_lineup[tgt_list]){
+				// The player class has a name_id getter.
+				// Append player's nameid to the target save list.
+				save_data[side].player_lineup[tgt_list].push(player.name_id)
+			}
+		}
+	}
+
+
+	// 
+	// Save data to file
+	// 
+	ksys.db.module.write(
+		'lineup_lists.kbsave',
+		JSON.stringify(save_data, null, '\t')
 	)
 }
+
+// Load lineup lists and colours
+$this.load_lineup_lists = function(){
+	// Check if there's anything in the save file
+	const last_save = ksys.db.module.read('lineup_lists.kbsave', 'json');
+	if (!last_save){return};
+
+	for (const side of ['home', 'guest']){
+		const side_info = last_save[side];
+		if (!side_info){continue};
+
+		$this.create_club_lineup(
+			side,
+			side_info.club_name,
+			{
+				'tshirt_col': side_info.tshirt_col,
+				'shorts_col': side_info.shorts_col,
+				'gk_col':     side_info.gk_col,
+
+				'main_players':    side_info.player_lineup.main_players,
+				'reserve_players': side_info.player_lineup.reserve_players,
+			}
+		)
+	}
+	
+
+}
+
+
+
+
+
+
+
+
+
+// pass null to save everything
+$this.global_save = function(save_targets=null){
+	const what_to_save = Object.assign(
+		{
+			'lineup_lists': false,
+			'field_layout': false,
+			'card_info': false,
+			'scores': false,
+		},
+		save_targets || {},
+	);
+
+	// print('What to save:', what_to_save)
+
+	// todo: use for loop?
+
+	// Save lineup lists
+	if (what_to_save.lineup_lists || save_targets == null){
+		// print('saving lineup_lists')
+		$this.save_lineup_lists()
+	}
+
+
+}
+
+
+
+

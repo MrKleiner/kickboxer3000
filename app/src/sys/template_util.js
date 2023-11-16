@@ -36,6 +36,7 @@ newly instantiated template.
 	- multipart:bool=false
 	  Template consists of multiple elements.
 */
+// todo: actually make multipart work
 _tmpl_util.index_elem = function(tplate, idict, multipart=false){
 	const jq_tplate = $(tplate);
 
@@ -54,6 +55,7 @@ _tmpl_util.index_elem = function(tplate, idict, multipart=false){
 	return {
 		// The DOM element
 		elem:  multipart ? jq_tplate[0] : jq_tplate[0].firstElementChild,
+		// elem: jq_tplate[0],
 		// Element index
 		index: indexed,
 	}

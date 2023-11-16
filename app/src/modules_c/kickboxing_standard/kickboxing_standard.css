@@ -313,3 +313,19 @@ tab[tabid="ctrl"]
 	width: 100%;
 	justify-content: space-around;
 }
+
+
+
+
+[tabid="config"]
+{
+	flex-direction: column;
+}
+
+
+
+[tabid="ctrl"]
+{
+	margin-bottom: 100px;
+}
+

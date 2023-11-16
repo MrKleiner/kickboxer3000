@@ -2,199 +2,191 @@
 if(!kbmodules){kbmodules={}};
 
 if(!kbmodules.football_standard){kbmodules.football_standard={}};
-// Team params:
-// logo image
-// Name
-// Coach
-
-// Player params:
-// Name
-// Surname
-// Number
-
-// kbmodules.football_standard = {};
-
-// kbmodules.football_standard.playerbase
-
-// field context is needed to ensure that a player item can only be dropped into the corresponding field
-kbmodules.football_standard.player_item_drag_field_context = null
-kbmodules.football_standard.next_card_out = null;
-kbmodules.football_standard.base_timer = null;
 
 
-kbmodules.football_standard.index_titles = function(){
+/*
+Previous system was a total embarrassment and offense for real programming.
 
-	kbmodules.football_standard.titles = {
-		// 'team_layout': new vmix_title('command_layout.gtzip'),
+Long story short, previous system indexed players by a string composed
+of the players' name + surname + number.
+This could totally lead to collisions when creating player lists from
+scratch. It's completely unreliable and utterly fucking retarded.
 
-		// field layout
-		'team_layout': new vmix.title({
-			'title_name': 'command_layout.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 41,
-				'margin': 100,
-			},
-		}),
+The new system doesn't has any of these problems.
+It may or may not be slower because of that, but who cares.
+
+The new system utilizes registers pointing to JS objects.
+This introduces a risk of redundant data, but garbage collection
+is very simple in this situation and the only sacrifice is a few
+milliseconds lost due to all the iterations needed for registers.
 
 
-		// cards
-		'yellow_card': new vmix.title({
-			'title_name': 'yellow_card.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 72,
-				'margin': 100,
-			}
-		}),
-		'red_card': new vmix.title({
-			'title_name': 'red_card.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 20,
-				'margin': 100,
-			}
-		}),
-		'ycbr_card': new vmix.title({
-			'title_name': 'ycbr.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 36,
-				'margin': 100,
-			}
-		}),
++------------------+
+| Home/Enemy Club  |
++-----+------------+
+      |
+      +---+
+          |
+          v
+        +------------+
+    +-->|    Club    |
+    |   +------------+
+    |         |
+    |         |     +------------------+
+    |         +-----+    Club Info     |
+    |         |     +------------------+
+    |         |
+    |         |     +-----------------------------------+
+    |         +-----+ Visual header reference registry  |
+    |         |     +-----------------------------------+
+    |         |
+    |         |     +----------------+
+    |         +-----+ Control Panel  |
+    |         |     +--------+-------+
+    |         |              |
+    |         |              |
+    |         |              |   +------------------+
+    |         |              +---+ Player List DOM  |
+    |         |                  +---------+--------+
+    |         |                            |
+    |         |                            |
+    |         |                            |   +------------------+
+    |         |                            +---+  Player cfg DOM  |
+    |         |                            |   +---------+--------+
+    |         |                            |             |
+    |         |                            ...           |
+    |         |                                          |
+    |         |     +------------------+                 |
+    |         +-----+ Player registry  |                 |
+    |               +--------+---------+                 |
+    |                        |            +--------------+
+    |                        |            |  +----------------------------------------------+
+    |                        |            |  |                                              |
+    |                        |            v  v                                              |
+    |                        |     +------------+                                           |
+    |                        +-----+   Player   |<--------------------------------------+   |
+    |                              +------+-----+                                       |   |
+    |                                     |                                             |   |
+    |                                     |   +------------+                            |   |
+    |                                     +---+    Info    |                            |   |
+    |                                     |   +------------+                            |   |
+    |                                     |                                             |   |
+    |                                     |   +-----------------------------------+     |   |
+    |                                     +---+ DOM element reference registry    |     |   |
+    |                                     |   +-----------------------------------+     |   |
+    |                                     |                             v               |   |
+    |                                     |   +---------------------+   |               |   |
+    |                                     +-->| List item DOM elem  |<--+               ^   |
+    |                                     |   +---------------------+                   |   |
+    |                                     |                                             |   |
+    |                                     |   +----------------+                        |   |
+    |                                     +-->| cfg DOM elem   |                        |   |
+    |                                         +----------------+                        |   |
+    |                                                                                   |   |
+    |   +-------------+                                                                 |   ^
+    +--<| Team Lineup |                                                                 |   |
+        +------+------+                                                                 |   |
+               |                                                                        |   |
+               |   +----------------+                                                   |   |
+               +---+   Main List    |                                                   |   |
+               |   +--------+-------+                                                   |   |
+               |            |                                                           |   |
+               |            |   +----------------+                                      |   |
+               |            +---+   List entry   |>-------------------------------------+   |
+               |            |   +----------------+                                          |
+               |            |                                                               |
+               |            ...                                                             |
+               |                                                                            |
+               |                                                                            |
+               |   +----------------+                                                       |
+               +---+ Reserve List   |                                                       |
+               |   +--------+-------+                                                       |
+               |            |                                                               |
+               |            |   +----------------+                                          |
+               |            +---+   List entry   |>-----------------------------------------+
+               |            |   +----------------+
+               |            |
+               |            ...
+               |
+               |    +----------------+
+               +----+ Control panel  |
+                    +----------------+
 
-		// replacements
-		'replacement_out': new vmix.title({
-			'title_name': 'replacement_leaving.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 35,
-				'margin': 100,
-			}
-		}),
-		'replacement_in': new vmix.title({
-			'title_name': 'replacement_incoming.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 42,
-				'margin': 100,
-			}
-		}),
 
-		// VS
-		'splash': new vmix.title({
-			'title_name': 'splash.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 37,
-				'frames_out': 41,
-				'margin': 100,
-			}
-		}),
+*/
 
-		// Goal / score
-		'gscore': new vmix.title({
-			'title_name': 'scored.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 36,
-				'margin': 100,
-			}
-		}),
 
-		// Coach l4d2
-		'coach': new vmix.title({
-			'title_name': 'coach.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 26,
-				'margin': 100,
-			}
-		}),
 
-		// Commenter
-		'commenter': new vmix.title({
-			'title_name': 'commenter.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 26,
-				'margin': 100,
-			}
-		}),
 
-		// Timer and scores
-		'timer': new vmix.title({
-			'title_name': 'score_and_time.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 23,
-				'margin': 100,
-			}
-		}),
 
-		// Composed scores
-		'final_scores': new vmix.title({
-			'title_name': 'final_scores.gtzip',
-			'timings': {
-				'fps': 25,
-				'frames_in': 59,
-				'margin': 100,
-			}
-		}),
-
-		// Statistics
-		'stats': new vmix.title({
-			'title_name': 'stats.gtzip',
-			'timings': {
-				'fps': 10,
-				'frames_in': 30,
-				'frames_out': 10,
-				'margin': 100,
-			}
-		}),
-	}
-
-}
-
-kbmodules.football_standard.playerbase = {
-	'one': {
-		'main': {},
-		'reserve': {},
-		'both': {},
+const _test = [
+	{
+		'name':    'Олександр',
+		'surname': 'Чернятинський',
+		'num':     '1',
 	},
-	'two': {
-		'main': {},
-		'reserve': {},
-		'both': {},
+	{
+		'name':    'Ернест',
+		'surname': 'Астахов',
+		'num':     '27',
 	},
+	{
+		'name':    'Роман',
+		'surname': 'Андрієшин',
+		'num':     '44',
+	},
+	{
+		'name':    'Андрій',
+		'surname': 'Якимів',
+		'num':     '97',
+	},
+	{
+		'name':    'Олександр',
+		'surname': 'Дударенко',
+		'num':     '3',
+	},
+	{
+		'name':    'Руслан',
+		'surname': 'Дедух',
+		'num':     '18',
+	},
+	{
+		'name':    'Андрій',
+		'surname': 'Співаков',
+		'num':     '14',
+	},
+	{
+		'name':    'Микола',
+		'surname': 'Когут',
+		'num':     '19',
+	},
+	{
+		'name':    'Іван',
+		'surname': 'Когут',
+		'num':     '17',
+	},
+	{
+		'name':    'Владислав',
+		'surname': 'Войцеховський',
+		'num':     '11',
+	},
+	{
+		'name':    'Даниїл',
+		'surname': 'Сухоручко',
+		'num':     '21',
+	},
+];
 
-	// todo: is this collision safe ?
-	'global_index': {},
-}
-kbmodules.football_standard.playerbase[1] = kbmodules.football_standard.playerbase['one'];
-kbmodules.football_standard.playerbase['1'] = kbmodules.football_standard.playerbase['one'];
 
-kbmodules.football_standard.playerbase[2] = kbmodules.football_standard.playerbase['two'];
-kbmodules.football_standard.playerbase['2'] = kbmodules.football_standard.playerbase['two'];
 
-kbmodules.football_standard.tab_switch = function(event){
-	const id_pair = event.target.getAttribute('match_id');
 
-	$('tab').addClass('tab_hidden');
-	$(`tab[tabid="${id_pair}"]`).removeClass('tab_hidden');
-	$('#tabs .tab').removeClass('active_tab');
-	event.target.classList.add('active_tab');
-}
 
 
 kbmodules.football_standard.load = async function(){
-	// 
-	// Index colours
-	// 
-	{
-		kbmodules.football_standard.team_colors = [
-			// '000000',
+	const mctx = ksys.context.module;
+
+	kbmodules.football_standard.resource_index = {
+		available_colors: [
 			'0066c3',
 			'00984c',
 			'00aff1',
@@ -212,188 +204,306 @@ kbmodules.football_standard.load = async function(){
 			'ffc938',
 			'ffe100',
 			'ffffff',
-		]
+		],
 
-		for (const color of kbmodules.football_standard.team_colors){
-			const col = $(`<div class="tcolour" tc="${color}" style="background: #${color}"></div>`);
+		// Club currently being edited
+		club_ctrl: null,
 
-			col.on('click', function(evt){
-				const event = evt;
-				$(event.target).closest('.colour_picker').find('.tcolour').removeClass('col_selected');
-				event.target.classList.add('col_selected');
-			})
 
-			$('.team_param .colour_picker').append(col)
-		}
-	}
+		side: {
+			home: {
+				club: null,
+				lineup: null,
+				field: null,
 
-	kbmodules.football_standard.index_titles()
-	kbmodules.football_standard.postload()
-	$('#teams_layouts .team_layout .ftfield div, #teams_layouts .team_layout .ftfield .goalkeeper').addClass('player_slot');
-	// important todo: such startup info has to be evaluated by the core
-	// const vmix_state = (new DOMParser()).parseFromString((await window.talker.vmix_talk({'Function': ''})), 'application/xml');
-	const vmix_state = await vmix.talker.project();
+				substitute: {
+					leaving: null,
+					inbound: null,
+				},
+			},
+			guest: {
+				club: null,
+				lineup: null,
+				field: null,
 
-	await kbmodules.football_standard.titles.timer.toggle_text('time_added', false);
-	await kbmodules.football_standard.titles.timer.toggle_img('extra_time_bg', false);
-	await kbmodules.football_standard.titles.timer.toggle_text('extra_ticker', false);
-	// await kbmodules.football_standard.titles.timer.set_text('extra_ticker', '00:00');
-	// await kbmodules.football_standard.titles.timer.set_text('base_ticker', '00:00');
+				substitute: {
+					leaving: null,
+					inbound: null,
+				},
+			}
+		},
 
-	const fresh_context = ksys.context.module.pull();
+		home_club: null,
+		guest_club: null,
 
-	// important todo: Fuck VMIX
+		home_lineup: null,
+		guest_lineup: null,
+
+		home_field: null,
+		guest_field: null,
+
+		card_player_filter: null,
+
+		card_manager: null,
+	};
+
+	// --------------------------
+	// index titles
+	// --------------------------
 	{
-		const yellow_card_sel = vmix_state.querySelector(`vmix inputs input[title="${kbmodules.football_standard.titles.yellow_card.title_name}"]`)
-		const red_card_sel = vmix_state.querySelector(`vmix inputs input[title="${kbmodules.football_standard.titles.red_card.title_name}"]`)
+		kbmodules.football_standard.titles = {
+			// field layout
+			'team_layout': new vmix.title({
+				'title_name': 'command_layout.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 41,
+					'margin': 100,
+				},
+			}),
 
-		if (yellow_card_sel && red_card_sel){
-			const yellow_card_num = str(yellow_card_sel.getAttribute('number'))
-			const red_card_num = str(red_card_sel.getAttribute('number'))
 
-			const card_corelation = {};
-			// also, fuck js
-			// todo: use map() ?
-			card_corelation[yellow_card_num] = kbmodules.football_standard.titles.yellow_card;
-			card_corelation[red_card_num] = kbmodules.football_standard.titles.red_card;
-
-			print(yellow_card_num, red_card_num)
-			print(vmix_state)
-
-			// important todo: I sincerely hate VMIX
-			// If both cards are overlayed, but on different overlays - ded
-			for (let overlay of vmix_state.querySelectorAll('vmix overlays overlay')){
-				const occupied_by = overlay.textContent;
-				print('InnerText:', occupied_by)
-				if (!occupied_by){continue}
-				print(occupied_by, 'in', card_corelation)
-				if (occupied_by.trim() in card_corelation){
-					kbmodules.football_standard.next_card_out = card_corelation[occupied_by.trim()]
-					print('Found overlay occupied by a card:', occupied_by, kbmodules.football_standard.next_card_out.title_name)
-					break
+			// cards
+			'yellow_card': new vmix.title({
+				'title_name': 'yellow_card.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 72,
+					'margin': 100,
 				}
+			}),
+			'red_card': new vmix.title({
+				'title_name': 'red_card.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 20,
+					'margin': 100,
+				}
+			}),
+			'ycbr_card': new vmix.title({
+				'title_name': 'ycbr.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 36,
+					'margin': 100,
+				}
+			}),
+
+			// replacements
+			'replacement_out': new vmix.title({
+				'title_name': 'replacement_leaving.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 35,
+					'margin': 100,
+				}
+			}),
+			'replacement_in': new vmix.title({
+				'title_name': 'replacement_incoming.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 42,
+					'margin': 100,
+				}
+			}),
+
+			'replacement_seq': new vmix.title({
+				'title_name': 'replacement_seq.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 42,
+					'margin': 100,
+				}
+			}),
+
+
+			// VS
+			'splash': new vmix.title({
+				'title_name': 'splash.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 37,
+					'frames_out': 41,
+					'margin': 100,
+				}
+			}),
+
+			// Goal / score
+			'gscore': new vmix.title({
+				'title_name': 'scored.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 36,
+					'margin': 100,
+				}
+			}),
+
+			// Coach l4d2
+			'coach': new vmix.title({
+				'title_name': 'coach.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 26,
+					'margin': 100,
+				}
+			}),
+
+			// Commenter
+			'commenter': new vmix.title({
+				'title_name': 'commenter.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 26,
+					'margin': 100,
+				}
+			}),
+
+			// Timer and scores
+			'timer': new vmix.title({
+				'title_name': 'score_and_time.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 23,
+					'margin': 100,
+				}
+			}),
+
+			// Composed scores
+			'final_scores': new vmix.title({
+				'title_name': 'final_scores.gtzip',
+				'timings': {
+					'fps': 25,
+					'frames_in': 59,
+					'margin': 100,
+				}
+			}),
+
+			// Statistics
+			'stats': new vmix.title({
+				'title_name': 'stats.gtzip',
+				'timings': {
+					'fps': 10,
+					'frames_in': 30,
+					'frames_out': 10,
+					'margin': 100,
+				}
+			}),
+		};
+	}
+
+	// --------------------------
+	// Declare global objects
+	// --------------------------
+	{
+		// club selector dropdowns
+		kbmodules.football_standard.resource_index.club_selector_dropdown = new kbmodules.football_standard.ClubSelectorDropdown();
+
+		// Card/goal player picker
+		kbmodules.football_standard.resource_index.card_player_filter = new kbmodules.football_standard.PlayerPicker(
+			[[]],
+			function(){return true},
+			function(list_dom, player_class){
+				const card_manager = kbmodules.football_standard.resource_index.card_manager;
+
+				list_dom.onclick = function(){
+					card_manager.eval_button_states(card_manager)
+				}
+
+				card_manager.redraw_card_vis_feedback_in_list_item(
+					card_manager,
+					list_dom.elem,
+					player_class
+				)
 			}
-		}
-	}
+		)
 
-	// presets
-	{
-		const index_file = JSON.parse(ksys.db.module.read('teams_index.index'))
-		const preset_targets = $('.team_base_params_ctrl .team_preset_selector')
-		if (index_file){
-			for (let team of index_file){
-				preset_targets.append(`
-					<option value="${team}">${team}</option>
-				`)
-			}
-		}
-	}
+		kbmodules.football_standard.resource_index.card_manager = new kbmodules.football_standard.CardManager()
 
-	// context stuff
-	{
-		if (fresh_context.vs_title_bottom_upper_line){
-			$('#vs_text_bottom_upper')[0].value = fresh_context.vs_title_bottom_upper_line
-		}
-		if (fresh_context.vs_title_bottom_lower_line){
-			$('#vs_text_bottom_lower')[0].value = fresh_context.vs_title_bottom_lower_line
-		}
-	}
-
-	// last team preset
-	{
-		const team1_sel = document.querySelector('#team1_def select.team_preset_selector')
-		const team2_sel = document.querySelector('#team2_def select.team_preset_selector')
-		if (fresh_context.last_team_def1){
-			team1_sel.value = fresh_context.last_team_def1
-			team1_sel.dispatchEvent(new Event('change'));
-		}
-		if (fresh_context.last_team_def2){
-			team2_sel.value = fresh_context.last_team_def2
-			team2_sel.dispatchEvent(new Event('change'));
-		}
-		
-	}
-
-	// it's important that the layout is loaded AFTER the player items were created in the control panel
-	kbmodules.football_standard.load_last_layout()
-
-	// the time number
-	kbmodules.football_standard.time_num = fresh_context.time_num || 1;
-
-	// 
-	// index all the selectors and whatever the fucknot
-	// 
-	{
-		const return_selectors = function(t){
-			return {
-				'logo_input':          $(`#team${t}_def [prmname="team_logo"] input`)[0],
-				'team_name':           $(`#team${t}_def [prmname="team_name"] input`)[0],
-				'shorthand':           $(`#team${t}_def [prmname="club_shorthand"] input`)[0],
-				'team_coach':          $(`#team${t}_def [prmname="team_coach"] input`)[0],
-				'player_color_picker': $(`#team${t}_def [prmname="team_player_color"] .colour_picker`)[0],
-				'shorts_color_picker': $(`#team${t}_def [prmname="team_shorts_color"] .colour_picker`)[0],
-				'gk_color_picker':     $(`#team${t}_def [prmname="team_gk_color"] .colour_picker`)[0],
-				'score_pool':          $(`#score_ctrl_team${t} .score_ctrl_table`)[0],
-				'player_pool_main':    $(`#team${t}_def .player_lists .player_list.starters .list_pool`)[0],
-				'player_pool_reserve': $(`#team${t}_def .player_lists .player_list.reserve .list_pool`)[0],
-				logo: function(){
-					const input_elem = $(`#team${t}_def [prmname="team_logo"] input`)[0]
-					if (!input_elem.files[0] && !$(`#team${t}_def`).attr(`logo_path`)){
-						return null
+		// Create substitutes
+		for (const side of ['home', 'guest']){
+			for (const rtype of ['leaving', 'inbound']){
+				kbmodules.football_standard.resource_index.side[side].substitute[rtype] = 
+				new kbmodules.football_standard.PlayerPicker(
+					[[]],
+					function(){return true},
+					function(list_dom){
+						list_dom.onclick = function(){
+							const opposite_side = (side == 'home') ? 'guest' : 'home';
+							kbmodules.football_standard.resource_index.side[opposite_side].substitute.leaving.reset_selection()
+							kbmodules.football_standard.resource_index.side[opposite_side].substitute.inbound.reset_selection()
+						}
 					}
-					if (input_elem.files[0]){
-						return input_elem.files[0].path
-					}else{
-						return $(`#team${t}_def`).attr(`logo_path`)
-					}
-				},
+				)
 
-				'field': {
-					'filter_pool': $(`#teams_layouts #team${t}_layout .player_picker_pool`)[0],
-					'field': $(`#teams_layouts #team${t}_layout .ftfield`)[0],
-				},
-
-				'replace': {
-					'leaving': $(`#replacement #replacement_team${t} .replacement_leaving .replacement_filtered_list`)[0],
-					'inbound': $(`#replacement #replacement_team${t} .replacement_incoming .replacement_filtered_list`)[0],
-				},
+				$(`#replacement_teams .replacement_team[${side}] .replacement_list[${rtype}]`)
+				.append(kbmodules.football_standard.resource_index.side[side].substitute[rtype].box)
 			}
 		}
 
-		const team1_sel = return_selectors(1);
-		const team2_sel = return_selectors(2);
-
-		kbmodules.football_standard.teams = {
-			1: team1_sel,
-			'1': team1_sel,
-			'one': team1_sel,
-
-			2: team2_sel,
-			'2': team2_sel,
-			'two': team2_sel,
-		}
+		// create score manager
+		kbmodules.football_standard.resource_index.score_manager = new kbmodules.football_standard.ScoreManager()
 	}
 
-	// 
-	// Scores
-	// 
+	// --------------------------
+	// Append some global objects to the page
+	// --------------------------
 	{
-		const prev_scores = JSON.parse(ksys.db.module.read('scores.fball')) || {'1':[], '2':[]};
-		for (let team of ['1', '2']){
-			for (let score of prev_scores[team]){
-				// kbmodules.football_standard.playerbase.global_index[score.namecode].score(team, score.time)
-				kbmodules.football_standard.push_score(team, score.surname, score.time, score.ag, score.penalty)
-			}
-		}
+		// club selector dropdown in the club control global
+		$('#load_existing_club_dropdown label').append(
+			kbmodules.football_standard.resource_index.club_selector_dropdown.dropdown_elem(
+				function(evt){
+					kbmodules.football_standard.load_club_by_name(evt.target.value)
+				}
+			)
+		);
+
+		// Home club lineup selector in the lineup ctrl
+		$('home-club-selector').append(
+			kbmodules.football_standard.resource_index.club_selector_dropdown.dropdown_elem(
+				function(evt){
+					kbmodules.football_standard.create_club_lineup('home', evt.target.value);
+
+					// todo: is this the right place for this?
+					// Trigger lineup save
+					kbmodules.football_standard.global_save({'lineup_lists': true})
+				}
+			)
+		);
+
+		// Guest club lineup selector in the lineup ctrl
+		$('guest-club-selector').append(
+			kbmodules.football_standard.resource_index.club_selector_dropdown.dropdown_elem(
+				function(evt){
+					kbmodules.football_standard.create_club_lineup('guest', evt.target.value);
+
+					// todo: is this the right place for this?
+					// Trigger lineup save
+					kbmodules.football_standard.global_save({'lineup_lists': true})
+				}
+			)
+		);
+
+		// Player picker for cards and goals
+		$('#cg_player_picker').append(
+			kbmodules.football_standard.resource_index.card_player_filter.box
+		)
 	}
 
-	// 
-	// Misc
-	// 
 
-	// Commenter
-	$('#commenter_name_input')[0].value = ksys.context.module.cache.todays_commenter || '';
-	kbmodules.football_standard.resync_red_penalty_cards()
+	// --------------------------
+	// Misc.
+	// --------------------------
+	{
+		// Load todays commenter
+		$('#commenter_name_input')[0].value = mctx.cache.todays_commenter;
+		// Load VS sublines
+		$('#vs_text_bottom_upper')[0].value = mctx.cache.vs_title_bottom_upper_line;
+		$('#vs_text_bottom_lower')[0].value = mctx.cache.vs_title_bottom_lower_line;
+
+		kbmodules.football_standard.update_team_colors();
+		kbmodules.football_standard.resource_index.score_manager.resync_score_on_title()
+	}
+
 
 	//
 	// stats
@@ -417,7 +527,7 @@ kbmodules.football_standard.load = async function(){
 			const stat_name = str(stat_info[0]);
 
 			const stat_class = 
-				new kbmodules.football_standard.stat_unit(
+				new kbmodules.football_standard.StatUnit(
 					kbmodules.football_standard.titles.stats,
 					stat_info[1],
 					stat_info[2],
@@ -434,1691 +544,2973 @@ kbmodules.football_standard.load = async function(){
 
 	}
 
-}
-// kbmodules.football_standard.load()
-
-
-kbmodules.football_standard.postload = function(){
-	// picking the player item up
-	document.addEventListener('mousedown', tr_event => {
-
-		// the item can be picked both from the filter menu and field
-		const tgt = event.target.closest('.team_layout .generic_player_item')
-		// also make sure it doesn't trigger on anything but LMB
-		if (tgt && tr_event.which == 1){
-			$('body').blur();
-			// set the current football field context
-			kbmodules.football_standard.player_item_drag_field_context = event.target.closest('.team_layout')
-			tgt.classList.add('dragging')
-			tgt.style.left = tr_event.x + 'px'
-			tgt.style.top = tr_event.y + 'px'
-		}
-
-	});
-
-
-	// dropping/swapping player items
-
-	// important todo: just fucking add some sort of "is dragging" attribute to the field
-	// AND FOR FUCKS SAKE USE JQUERY. AT THIS POINT IT MIGHT AS WELL BE FASTER THAN ALL THIS VANILLA BDSM
-	document.addEventListener('mouseup', tr_event => {
-
-		// the player item which is being dragged
-		const pldrag_item = document.querySelector('.generic_player_item.dragging');
-		// the table cell to drop the player to
-		// important: it has to be a cell related to the current field
-		const player_layout_drop_tgt = tr_event.target.closest('.ftfield .player_slot');
-
-		// if there's a cell underneath the cursor - drop the player item there
-		// AND if this cell is related to the current field
-		if (player_layout_drop_tgt && pldrag_item && kbmodules.football_standard.player_item_drag_field_context.contains(player_layout_drop_tgt)){
-			// if the drop target is a cell already containing a player - swap the players
-			if (player_layout_drop_tgt.querySelector('.generic_player_item')){
-				const player_from_target = player_layout_drop_tgt.querySelector('.generic_player_item');
-				const dragged_player = pldrag_item;
-
-				// todo: WHAT THE FUCK ?!!!!!!
-				const tmp1 = $('<div></div>')[0];
-				const tmp2 = $('<div></div>')[0];
-
-				player_from_target.replaceWith(tmp1);
-				dragged_player.replaceWith(tmp2);
-
-				tmp1.replaceWith(dragged_player)
-				tmp2.replaceWith(player_from_target)
-			}else{
-				player_layout_drop_tgt.append(pldrag_item)
-			}
-
-			// kbmodules.football_standard.save_last_layout()
-		}
-
-		// remove hover effect from the cell
-		const remove_cell_hover_effect = document.querySelector('.ftfield .field_cell_hover')
-		if (remove_cell_hover_effect){
-			remove_cell_hover_effect.classList.remove('field_cell_hover')
-		}
-
-		// if there's an element being currently dragged on the page - remove dragging state from it
-		// (this is something that happens no matter where the player item was droped off)
-		if (pldrag_item){
-			pldrag_item.classList.remove('dragging');
-			pldrag_item.removeAttribute('style');
-		}
-
-		// clear football field context
-		kbmodules.football_standard.player_item_drag_field_context = null;
-
-	});
-
-	// sticking the dragged player item to cursor
-	document.addEventListener('mousemove', tr_event => {
-		// if there's a player element which is marked as dragging - apply XY position to it
-		const player_field_layout_player = document.querySelector('.generic_player_item.dragging')
-		if (player_field_layout_player){
-			player_field_layout_player.style.left = tr_event.x + 'px'
-			player_field_layout_player.style.top = tr_event.y + 'px'
-		}
-	});
-
-
-	// fancy hover effect
-	document.addEventListener('mouseover', tr_event => {
-
-		// whether or not a dragged element exists
-		const is_dragging = document.querySelector('.generic_player_item.dragging')
-		// the target cell the cursor is hovering over
-		// important: it has to be a cell related to the current field
-		const target_cell = tr_event.target.closest('.ftfield .player_slot')
-		// remove hover effect from all the other cells
-		for (let deselect of document.querySelectorAll('.field_cell_hover')){
-			deselect.classList.remove('field_cell_hover')
-		}
-		// add hover effect to the cell, if any
-		if (is_dragging && target_cell && kbmodules.football_standard.player_item_drag_field_context.contains(target_cell)){
-			target_cell.classList.add('field_cell_hover')
-		}
-
-	})
-
-
-	document.addEventListener('contextmenu', tr_event => {
-
-		const field_player = tr_event.target.closest('.generic_player_item')
-		if (field_player && tr_event.altKey){
-			field_player.remove()
-		}
-
-		// delete player from the player definition list
-		const del_player_def = tr_event.target.closest('.teamdef .player_list .player_item')
-		if (del_player_def && tr_event.altKey){
-			del_player_def.remove()
-		}
-	});
-
-
-	document.addEventListener('keydown', tr_event => {
-		if (tr_event.ctrlKey && tr_event.which == 83){
-			kbmodules.football_standard.save_last_layout()
-		}
-		if (tr_event.altKey && tr_event.which == 19){
-			kbmodules.football_standard.quit_all_titles()
-		}
-	});
-}
-
-
-kbmodules.football_standard.quit_all_titles = async function(){
-	document.body.classList.add('emergency_break')
-	for (let quit_title in kbmodules.football_standard.titles){
-		await kbmodules.football_standard.titles[quit_title].overlay_out(1)
+	// 
+	// Modern save data
+	// 
+	{
+		kbmodules.football_standard.load_lineup_lists()
 	}
-	document.body.classList.remove('emergency_break')
-}
 
 
-// update vis feedback of all the logos and team names
-// and write the logo path to the attributes of the team def table
-// important todo: make teams use dict system and not this retarded on-demand manual garbage
-kbmodules.football_standard.upd_vis_feedback = function(){
-	// todo: this is rather stupid
-
-	// TEAM 1
-	let team_logo = $('#team1_def [prmname="team_logo"] input')[0];
-	if (team_logo.files[0]){
-		$('#team1_def').attr('logo_path', team_logo.files[0].path);
-		team_logo = team_logo.files[0].path;
-	}else{
-		team_logo = null;
-	}
-	$('[vis_feedback="team1_logo"]').attr('src', team_logo || $('#team1_def').attr('logo_path'));
-	$('[vis_feedback="team1_name"]').text($('#team1_def [prmname="team_name"] input').val().upper());
-	team_logo = null;
-
-
-	// TEAM 2
-	team_logo = $('#team2_def [prmname="team_logo"] input')[0];
-	if (team_logo.files[0]){
-		$('#team2_def').attr('logo_path', team_logo.files[0].path);
-		team_logo = team_logo.files[0].path;
-	}else{
-		team_logo = null;
-	}
-	$('[vis_feedback="team2_logo"]').attr('src', team_logo || $('#team2_def').attr('logo_path'));
-	$('[vis_feedback="team2_name"]').text($('#team2_def [prmname="team_name"] input').val().upper());
 }
 
 
 
-// player parameters input
-kbmodules.football_standard.player_ctrl = class {
-	constructor(team, is_reserve, pname='', psurname='', number=''){
-		this.name = pname;
-		this.surname = psurname;
-		this.number = number;
-		this.is_reserve = is_reserve;
-		this.scores = 0;
-		this.stats = {
-			'yellow_cards': 0,
-			'red_cards': 0,
-		}
-		// important todo: WHAT THE FUCK IS THIS ?!!!
-		const _team_selector = {
-			1: 'one',
-			2: 'two',
-		};
-		this.team = {
-			'num': team,
-			'num_word': _team_selector[team],
-			// 'elem': $(`${_team_elem_selector[team]}`),
-			'elem': $(`#team${team}_def`),
-			'field': $(`#team${team}_layout .ftfield`),
-		};
-		this.namecode = '';
 
-		// still, fuck javascript
-		const self = this;
 
-		const ctrl_elem = $(`
-			<div class="player_item" namecode="${this.namecode}">
-				<div class="player_param" prmname="pname">
-					<div class="player_param_label">Name</div>
-					<input type="text" class="player_param_input" value="${this.name}">
-				</div>
-				<div class="player_param" prmname="psurname">
-					<div class="player_param_label">Surname</div>
-					<input type="text" class="player_param_input" value="${ksys.util.str_ops.format(this.surname, '2')}">
-				</div>
-				<div class="player_param" prmname="number">
-					<div class="player_param_label">Number</div>
-					<input type="text" class="player_param_input" value="${this.number}">
-				</div>
-			</div>
-		`)
 
-		this.ctrl_elem = ctrl_elem[0];
+/*
 
-		// update the namecode in case player info was passed to the class
-		this._update_namecode(false)
+Each club has:
+	- Logo
+	- Official name
+	- Official name shorthand
+	- Main coach
+	- Players
 
-		// todo: this is still not ideal
-		ctrl_elem.find('[prmname="pname"] input')[0].onchange = function(evt){
-			// print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU')
-			self.name = evt.target.value;
-			self._update_namecode(true);
-		}
-		ctrl_elem.find('[prmname="psurname"] input')[0].onchange = function(evt){
-			// print('FUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU', self, evt.target.value)
-			self.surname = evt.target.value;
-			self._update_namecode(true);
-		}
-		ctrl_elem.find('[prmname="number"] input')[0].onchange = function(evt){
-			self.number = evt.target.value;
-			self._update_namecode(true);
-		}
-		ctrl_elem[0].oncontextmenu = function(evt){
-			if (evt.altKey){
-				self.kill()
-			}
+*/
+
+
+// input_club_struct is a dict where:
+// 	- logo_path: String representing an absolute path
+// 	             pointing to the club's logo on the LOCAL disk.
+// 
+//  - club_name: Official, full name of the club.
+// 
+//  - club_name_shorthand: Club's name shorthand, like ОБОЛОНЬ -> ОБО
+// 
+//  - main_coach: Club's main coach.
+// 
+//  - playerbase: An array of dictionaries representing players and their info:
+//                {
+//                    'name':    player's name,
+//                    'surname': player's surname,
+//                    'num':     player's number,
+//                }
+//                These dictionaries get transformed
+//                into ClubPlayer classes after initialization.
+kbmodules.football_standard.FootballClub = class{
+	constructor(input_club_struct=null, is_enemy=false){
+		const club_struct = input_club_struct || {};
+
+		// Base info
+		this.logo_path =           club_struct.logo_path || './assets/red_cross.png';
+		this.club_name =           (club_struct.club_name || '').lower();
+		this.club_name_shorthand = club_struct.club_name_shorthand || '';
+		this.main_coach =          (club_struct.main_coach || '').lower();
+
+		// important todo: this is very unreliable
+		this.is_enemy =            is_enemy;
+
+		// An array of ClubPlayer classes
+		this.playerbase =          new Set();
+
+		// populate internal registry with initial data, if any
+		for (const player_info of (club_struct.playerbase || [])){
+			this.playerbase.add(new kbmodules.football_standard.ClubPlayer(this, player_info))
 		}
 
-		// register this player in the index
-		kbmodules.football_standard.playerbase[this.team.num_word][this.is_reserve ? 'reserve' : 'main'][this.namecode] = this;
-		kbmodules.football_standard.playerbase[this.team.num_word]['both'][this.namecode] = this;
-		kbmodules.football_standard.playerbase.global_index[this.namecode] = this;
+		// Control panel reference
+		this.control_panel = null;
+
+		// visual headers references
+		this.vis_header_references = new Set();
 	}
 
-	// important todo: this retarded shit logic does an extra lap. TOO BAD
-
-	// update the namecode including the control element
-	_update_namecode(forward){
-		const reserve_or_main = this.is_reserve ? 'reserve' : 'main';
-
-		// global player index
-		delete kbmodules.football_standard.playerbase.global_index[this.namecode];
-		// current team reserve/main
-		delete kbmodules.football_standard.playerbase[this.team.num_word][reserve_or_main][this.namecode];
-		// current team combo of main and reserve
-		delete kbmodules.football_standard.playerbase[this.team.num_word].both[this.namecode];
-
-
-		// Forward update has to come BEFORE the class' namecode is updated,
-		// because all the other generic player items still have an old namecode
-		if (forward){
-			this.forward_update(true)
+	// forward update logos and club name
+	forward_update(){
+		// update visual headers
+		for (const vheader of this.vis_header_references){
+			vheader.index.logo.src = this.logo_path;
+			vheader.index.title.textContent = this.club_name.upper();
 		}
-		this.namecode = `${this.name.lower()} ${this.surname.lower()} ${this.number}`;
-		this.ctrl_elem.setAttribute('namecode', this.namecode);
+		// update player items
+		for (const player of this.playerbase){
+			player.forward_update()
+		}
 
-		kbmodules.football_standard.playerbase[this.team.num_word][reserve_or_main][this.namecode] = this;
-		kbmodules.football_standard.playerbase[this.team.num_word].both[this.namecode] = this;
-		kbmodules.football_standard.playerbase.global_index[this.namecode] = this;
+		// update self
+		this.control_panel.index.logo_feedback.src = this.logo_path;
+		this.control_panel.index.logo_feedback.setAttribute('kbhint', this.logo_path);
 	}
 
-	// remove, destroy, kill, annihilate, obliterate this player from the face of Earth
-	kill(){
-		const reserve_or_main = this.is_reserve ? 'reserve' : 'main';
-
-		// global player index
-		delete kbmodules.football_standard.playerbase.global_index[this.namecode];
-		// current team reserve/main
-		delete kbmodules.football_standard.playerbase[this.team.num_word][reserve_or_main][this.namecode];
-		// current team combo of main and reserve
-		delete kbmodules.football_standard.playerbase[this.team.num_word].both[this.namecode];
-
-		this.ctrl_elem.remove();
-
-		$(`player[namecode="${this.namecode}"]`).remove();
-	}
-
-	// update all the player elements on the page with new data
-	// todo: is this too expensive? Shouldn't be...
-	// Because just how often is this going to be triggered ?
-	forward_update(upd_namecode=true){
-		// print('Forward update...', this.namecode)
-		const tgt_elems = $(`player[namecode="${this.namecode}"]`);
-
-		tgt_elems.find('.player_number').text(this.number)
-		tgt_elems.find('.player_surname').text(ksys.util.str_ops.format(this.surname, '2'))
-
-		if (upd_namecode){
-			this._update_namecode(false)
-		}
-
-		tgt_elems.attr('namecode', this.namecode)
-		
-	}
-
-	get_generic_player_item(asjq=true){
-		const generic_item = $(`
-			<player
-				class="generic_player_item"
-				namecode="${this.namecode}"
-			>
-				<img vis_feedback="team${this.team.num}_logo" src="${this.get_team_logo()}">
-				<div class="player_number">${this.number}</div>
-				<div class="player_surname">${ksys.util.str_ops.format(this.surname, '2')}</div>
-			</player>
-		`)
-
-		if (asjq){
-			return generic_item
-		}else{
-			return generic_item[0]
-		}
-	}
-
-	// get logo filepath of this player's team
-	// returns null if nothing's present
-	get_team_logo(){
-		const input_elem = this.team.elem.find('[prmname="team_logo"] input')[0]
-		if (!input_elem.files[0] && !this.team.elem.attr('logo_path')){
-			return null
-		}
-		if (input_elem.files[0]){
-			return input_elem.files[0].path
-		}else{
-			return this.team.elem.attr('logo_path')
-		}
-		// return (input_elem.files[0].path || this.team.elem.attr('logo_path'))
-	}
-
-	// whether this player is on the field or not
-	is_on_field(){
-		return !!this.team.field[0].querySelector(`[namecode="${this.namecode}"]`)
-	}
-
-	async penalty_card(_card, selected_elem){
-		const _ctx = ksys.context.module.cache;
-
-		const card_selection = {
-			'yellow': 'yellow_card',
-			'red':    'red_card',
-			'ycbr':   'ycbr_card',
-		}
-		let card = kbmodules.football_standard.titles[card_selection[_card]];
-		if (_card == 'yellow' && this.stats.yellow_cards >= 1){
-			card = kbmodules.football_standard.titles['ycbr_card']
-		}
-
-		kbmodules.football_standard.next_card_out = card;
-
-		await card.set_text(
-			'player_name',
-			`${this.number} ${ksys.strf.params.players.format(this.surname)}`,
-		)
-		await card.set_img_src('club_logo', this.get_team_logo())
-		
-		// disable buttons
-		ksys.btns.toggle({
-			'red_card':    false,
-			'yellow_card': false,
-		})
-
-		if (_card == 'red'){
-			kbmodules.football_standard.stats_unit_pool.red_cards.upd_value(this.team.num, 1)
-			ksys.context.module.prm(`team${this.team.num}_rcard_count`, (`team${this.team.num}_rcard_count` in _ctx) ? (_ctx[`team${this.team.num}_rcard_count`] += 1).clamp(0, 3) : 1)
-			kbmodules.football_standard.resync_red_penalty_cards()
-			this.stats.red_cards += 1;
-		}else{
-			kbmodules.football_standard.stats_unit_pool.yellow_cards.upd_value(this.team.num, 1)
-			this.stats.yellow_cards += 1;
-			selected_elem.click()
-		}
-
-		// show the card in vmix
-		await card.overlay_in(1)
-
-		// let them hang for 7 seconds
-		await ksys.util.sleep(7000)
-		// hide card
-		await kbmodules.football_standard.hide_card()
-
-		// re-enable buttons
-		ksys.btns.toggle({
-			'red_card':    true,
-			'yellow_card': true,
-		})
-
-	}
-
-	pardon(elem){
-		kbmodules.football_standard.stats_unit_pool.yellow_cards.upd_value(this.team.num, -1)
-		this.stats.yellow_cards -= 1;
-		elem.click();
-	}
-}
-
-
-kbmodules.football_standard.save_match_stats = function(){
-	const save = {};
-	console.time('Saving stats')
-	for (const stat_name in kbmodules.football_standard.stats_unit_pool){
-		const stat = kbmodules.football_standard.stats_unit_pool[stat_name];
-		save[stat_name] = {
-			1: int(stat.val_selector[1]),
-			2: int(stat.val_selector[2]),
-		}
-	}
-
-	ksys.db.module.write('stats.fball', JSON.stringify(save, null, 4))
-
-	console.timeEnd('Saving stats')
-}
-
-// stat unit
-kbmodules.football_standard.stat_unit = class {
-	constructor(related_title, team1_txt_block, team2_txt_block, visname, init_val_t1=0, init_val_t2=0){
-		this.related_title = related_title;
-		this.visname = visname;
-		this.elem_index = {};
-		const self = this;
-
-		this.text_field_selector = {
-			1: team1_txt_block,
-			2: team2_txt_block,
-		}
-
-		this.val_selector = {
-			1: int(init_val_t1) || 0,
-			2: int(init_val_t2) || 0,
-		}
-
-		this.vis_echo = {
-			1: [],
-			2: [],
-		};
-
-
-		//
-		// append table row to both tables
-		//
-
-		for (const tnum of [1, 2]){
-			$(`.tstats_table_${tnum}`).append(this.table_row_elem(tnum))
-		}
-
-		//
-		// Create quick buttons
-		//
-		for (const tnum of [1, 2]){
-			$(`.tstats_buttons_team_${tnum}`).append(this.quick_button(tnum))
-		}
-
-	}
-
-	// get html element of a quick button
-	quick_button(team){
-		const self = this;
-
-		const qbtn_html = `
-			<div class="team_stat_quick_btn_pair">
-				<div class="team_stat_quick_btn_vis_value">${this.val_selector[team]}</div>
-				<sysbtn stat_action="add" class="team_stat_quick_btn_add">+ ${this.visname}</sysbtn>
-				<sysbtn stat_action="subt" class="team_stat_quick_btn_subt">- ${this.visname}</sysbtn>
-			</div>
-		`
-
-		const qbtn_index = ksys.tplates.index_elem(
-			qbtn_html,
+	// get visual header: an element with club logo + name
+	// this data is expected to be persistent
+	vis_header_elem(){
+		const tplate = ksys.tplates.index_tplate(
+			'#club_header_template',
 			{
-				'add': '.team_stat_quick_btn_add',
-				'subt': '.team_stat_quick_btn_subt',
-				'vis_val': '.team_stat_quick_btn_vis_value',
+				'logo':    'img',
+				'title':   'club-header-title',
 			}
 		);
 
-		qbtn_index.index.add.onclick = function(){
-			self.upd_value(team, 1)
-		}
-		qbtn_index.index.subt.onclick = function(){
-			self.upd_value(team, -1)
+		tplate.index.logo.src = this.logo_path;
+		tplate.index.title.textContent = this.club_name.upper();
+
+		if (this.is_enemy){
+			tplate.elem.setAttribute('is_enemy', true)
 		}
 
-		// register for echo
-		this.vis_echo[team].push({
-			'echo_type': 'elem_text',
-			'tgt': qbtn_index.index.vis_val,
-		})
+		// register reference
+		this.vis_header_references.add(tplate)
 
-		return qbtn_index.elem
+		return tplate.elem
 	}
 
-	table_row_elem(team){
+	// Delete all the club's resources from the interface
+	erase(){
+		// 1 - delete team lineup
+		if (kbmodules.football_standard.resource_index.home_lineup?.club?.club_name?.lower?.() == this.club_name.lower()){
+			$('#team_lineup home-club-lineup').empty()
+		}
+		if (kbmodules.football_standard.resource_index.guest_lineup?.club?.club_name?.lower?.() == this.club_name.lower()){
+			$('#team_lineup guest-club-lineup').empty()
+		}
+
+
+		// Lastly, delete club control panel
+		this.control_panel?.elem?.remove?.()
+	}
+
+	// Register a new player in this club
+	// - input_player_info:dict player info as described in FootballClub class
+	register_player(input_player_info=null){
+		// create player class
+		const player = new kbmodules.football_standard.ClubPlayer(this, input_player_info);
+		// add player to the registry
+		this.playerbase.add(player);
+		// add player cfg box to the club pool
+		this.control_panel.index.player_pool.append(player.player_params_elem().elem)
+		// return the player class
+		return player
+	}
+
+	// Create club control panel
+	control_panel_elem(){
 		const self = this;
 
-		const stat_unit_table_row_html = `
-			<div class="stat_unit_table_row">
-				${this.visname}
-				<input noctrl type="number">
-			</div>
-		`
-		// create and index row element
-		const row_elem = ksys.tplates.index_elem(
-			stat_unit_table_row_html,
-			{'inp': 'input'}
-		)
-		row_elem.index.inp.value = this.val_selector[team]
-		row_elem.index.inp.onchange = function(evt){
-			self.set_value(team, int(evt.target.value) || 0)
-		}
-		row_elem.index.inp.onclick = function(evt){
-			evt.target.select()
+		if (this.control_panel){
+			return this.control_panel
 		}
 
-		// register for echo
-		this.vis_echo[team].push({
-			'echo_type': 'input',
-			'tgt': row_elem.index.inp,
-		})
+		const tplate = ksys.tplates.index_tplate(
+			'#club_def_template',
+			{
+				'logo_feedback':    'img.club_def_logo_visfeedback',
 
-		return row_elem.elem
+				// base params
+				'logo_input':      'club-base-params club-param[prmname="logo"] input',
+				'club_title':      'club-base-params club-param[prmname="title"] input',
+				'title_shorthand': 'club-base-params club-param[prmname="title_shorthand"] input',
+				'main_coach':      'club-base-params club-param[prmname="main_coach"] input',
+
+				// Playerbase
+				'reg_player_btn':  'club-playerbase sysbtn[btname="register_player_in_club"]',
+				'player_pool':     'club-playerbase playerbase-pool',
+			}
+		);
+
+		// save the template
+		// todo: only one definition panel can exist for now
+		this.control_panel = tplate;
+
+		// populate pool with existing players
+		for (const player of this.playerbase){
+			tplate.index.player_pool.append(player.player_params_elem().elem)
+		}
+
+		// write other info
+		tplate.index.club_title.value = this.club_name.upper();
+		tplate.index.title_shorthand.value = this.club_name_shorthand.upper();
+		tplate.index.main_coach.value = this.main_coach.upper();
+		tplate.index.logo_feedback.src = this.logo_path;
+		tplate.index.logo_feedback.setAttribute('kbhint', this.logo_path);
+
+		// bind button for adding new players
+		tplate.index.reg_player_btn.onclick = function(){
+			self.register_player()
+		}
+		// bind logo change
+		tplate.index.logo_input.onchange = function(evt){
+			self.logo_path = evt.target?.files?.[0].path;
+			self.forward_update()
+		}
+		// bind club name change
+		tplate.index.club_title.onchange = function(evt){
+			self.club_name = evt.target.value.lower();
+			self.forward_update()
+		}
+		// bind shorthand change
+		tplate.index.title_shorthand.onchange = function(evt){
+			self.club_name_shorthand = evt.target.value.lower();
+		}
+		// bind coach change
+		tplate.index.main_coach.onchange = function(evt){
+			self.main_coach = evt.target.value.lower();
+		}
+
+		return tplate
 	}
 
-	// set value to a specific number
-	set_value(team, val){
-		// update vmix title
-		this.related_title.set_text(this.text_field_selector[team], val)
-		// update self info
-		this.val_selector[team] = val;
-		// update values in the table rows, etc
-		this.forward_vis_echo()
-		// save stats to file
-		kbmodules.football_standard.save_match_stats()
+	// open club control panel in the club tab
+	open_panel(){
+		// delete previous control panel
+		$('#club_definition club-def').remove();
+		// Append new club
+		$('#club_definition').append(this.control_panel_elem().elem);
 	}
 
-	// addition subtraction
-	// addition/subtraction is determined by the input value
-	// which means to subtract from the value - pass a negative integer
-	upd_value(team, val){
-		// basically same as set_value, except it's addition/subtraction
-		const new_val = this.val_selector[team] + val;
-		this.val_selector[team] = Math.max(new_val, 0);
-		this.related_title.set_text(this.text_field_selector[team], this.val_selector[team]);
-		// update values in the table rows, etc
-		this.forward_vis_echo()
-		// save stats to file
-		kbmodules.football_standard.save_match_stats()
+	// return a json representing this club
+	to_json(){
+		const dump = {
+			'logo_path':           this.logo_path,
+			'club_name':           this.club_name,
+			'club_name_shorthand': this.club_name_shorthand,
+			'main_coach':          this.main_coach,
+			'playerbase':          [],
+		};
+
+		for (const player of this.playerbase){
+			dump.playerbase.push(player.as_dict())
+		}
+
+		print('Club dump info:', dump)
+
+		return dump
 	}
 
-	// update values in the table rows, etc
-	forward_vis_echo(){
-		// each element of the echo array should have a value property
-		for (const team of [1, 2]){
-			for (const echo of this.vis_echo[team]){
-				if (echo.echo_type == 'input'){
-					echo.tgt.value = this.val_selector[team];
-				}
-				if (echo.echo_type == 'elem_text'){
-					echo.tgt.innerText = this.val_selector[team];
-				}
+	// Get player class by nameid
+	get_player_by_nameid(tgt_nameid=null){
+		if (!tgt_nameid){return null};
+
+		for (const player of this.playerbase){
+			if (player.name_id == tgt_nameid){
+				return player
+			}
+		}
+
+		return null
+	}
+}
+
+
+
+// - input_player_info:dict player info as described in FootballClub class
+// - parent_club:FootballClub parent football club.
+// This data is persistent, unless killed
+kbmodules.football_standard.ClubPlayer = class{
+	constructor(parent_club, input_player_info=null){
+		const player_info = input_player_info || {};
+
+		this.club = parent_club;
+
+		this.player_name =    (player_info.name || '').lower();
+		this.player_surname = (player_info.surname || '').lower();
+		this.player_num =     (player_info.num || '').lower();
+
+		// stats
+		this.yellow_cards = 0;
+		this.red_cards = 0;
+
+		// todo: is this really a good idea???
+		// treating JS like C ??!?!?!
+		// POINTERS???
+		// CONSPIRACIES?????
+		this.references = new Set();
+	}
+
+	// forward player data (name, surname, number)
+	// to all the related elements
+	forward_update(){
+		for (const generic_list_elem of this.references){
+			generic_list_elem.index.logo.src =          this.club.logo_path;
+			generic_list_elem.index.num.textContent =     this.player_num.upper();
+			generic_list_elem.index.surname.textContent = this.player_surname.upper();
+		}
+
+		// todo: is this the right place for this?
+		// Trigger lineup save
+		// Reason: To keep data consistency.
+		// Example:
+		//     1 - Players are placed on the field
+		//     2 - Player's name changes
+		//     3 - Last lineup save still has the old name
+		//     4 - Controller reolads and tries loading last layout
+		//     5 - The mechanism encouters the old, unchanged name
+		//     6 - The mechanism creates resonance cascade
+		//     7 - Everybody dies.
+		//         (JK LOL, it simply skips the problematic player,
+		//         aka he will not be added to any lists or field.
+		//         I hope it's understandable, that this is bad enough, or at least stupid)
+		kbmodules.football_standard.global_save({'lineup_lists': true})
+	}
+
+	// Remove the player from EVERYWHERE
+	disqualify(){
+		// Remove DOM elements
+		this.unlist()
+		// Delete self from the club's registry
+		this.club.playerbase.delete(this)
+	}
+
+	// Unlist the player ftom the current match
+	unlist(){
+		// Delete all the GUI elements from the page
+		for (const reference of this.references){
+			reference.elem.remove();
+		}
+	}
+
+	// delete obsolete references
+	// todo: this means there are always redundant
+	// elements until this method is called
+	collect_garbage(){
+		for (const rubbish of this.references){
+			if (!document.body.contains(rubbish.elem)){
+				this.references.delete(rubbish)
 			}
 		}
 	}
 
-	async push_to_vmix(){
-		await this.related_title.set_text(this.text_field_selector[1], this.val_selector[1]);
-		await this.related_title.set_text(this.text_field_selector[2], this.val_selector[2]);
+	// return an indexed template from ksys.tplates.index_tplate
+	generic_list_elem(collect_rubbish=true){
+		const self = this;
+
+		const tplate = ksys.tplates.index_tplate(
+			'#generic_player_list_item_template',
+			{
+				'logo':    'img.player_club_logo',
+				'num':     '.player_number',
+				'surname': '.player_surname',
+			}
+		);
+
+		// delete redundant references
+		if (collect_rubbish){
+			this.collect_garbage()
+		}
+
+		// Write down data
+		tplate.index.logo.src = this.club.logo_path;
+		tplate.index.num.textContent = this.player_num.upper();
+		tplate.index.surname.textContent = this.player_surname.upper();
+
+		// Write down reference to this element
+		self.references.add(tplate)
+
+		// too bad JS doesn't support cool python unpacking
+		// (aka return a, b)
+		return tplate
 	}
 
-}
+	// return player config element
+	// (inputs with name, surname, name, ...)
+	player_params_elem(){
+		const self = this;
 
-
-
-
-// ================================
-//        Text formatting
-// ================================
-
-
-kbmodules.football_standard.resync_red_penalty_cards = function(){
-	const ctx = ksys.context.module.cache;
-	// print('Resyncing cards...')
-	for (let team of ['1', '2']){
-
-		const team_card_count = ctx[`team${team}_rcard_count`]
-		if (!(`team${team}_rcard_count` in ctx)){continue};
-
-		// print('WTF', `team${team}_rcard_count`)
-
-		$(`#red_card_counter_team${team} .red_card_counter_pool img`).removeClass('rcard_shown')
-		for (let card of range(1, 4)){
-			if (card > team_card_count){
-				kbmodules.football_standard.titles.timer.toggle_img(`rcard_${team}_${card}`, false)
-				continue
+		const tplate = ksys.tplates.index_tplate(
+			'#generic_player_config_template',
+			{
+				'name':    'player-param[prmname="player_name"] input',
+				'surname': 'player-param[prmname="player_surname"] input',
+				'num':     'player-param[prmname="player_num"] input',
 			}
-			// print('Syncing card', card)
-			$(`#red_card_counter_team${team} .red_card_counter_pool img.rcard${card}`).addClass('rcard_shown')
-			kbmodules.football_standard.titles.timer.toggle_img(`rcard_${team}_${card}`, true)
+		);
+
+		// Populate params
+		tplate.index.name.value = this.player_name.upper();
+		tplate.index.surname.value = this.player_surname.upper();
+		tplate.index.num.value = this.player_num.upper();
+
+		tplate.index.name.onchange = function(evt){
+			self.player_name = evt.target.value.lower();
+			self.forward_update();
+		}
+		tplate.index.surname.onchange = function(evt){
+			self.player_surname = evt.target.value.lower();
+			self.forward_update();
+		}
+		tplate.index.num.onchange = function(evt){
+			self.player_num = evt.target.value.lower();
+			self.forward_update();
+		}
+
+		// bind deletion of the player from the registry
+		// (alt+RMB)
+		tplate.elem.oncontextmenu = function(evt){
+			if (evt.altKey){
+				// self combustion moment (real)
+				self.disqualify()
+				// remove the box DOM element
+				tplate.elem.remove()
+			}
+		}
+
+		return tplate
+	}
+
+	get name_id(){
+		return `${this.player_name} ${this.player_surname} ${this.player_num}`.lower()
+	}
+
+	get side(){
+		if (this.club.is_enemy){
+			return 'guest'
+		}else{
+			return 'home'
+		}
+	}
+
+	// test whether the player is inside another player array
+	// by his name_id
+	is_in(target_array){
+		for (const player of target_array){
+			if (this.name_id == player.name_id){
+				return true
+			}
+		}
+		return false
+	}
+
+	// return a dictionary representing this player
+	as_dict(){
+		return {
+			'name':    this.player_name,
+			'surname': this.player_surname,
+			'num':     this.player_num,
 		}
 	}
 }
 
-kbmodules.football_standard.mod_penalty_red_card = function(event, team, subtr=false){
 
-	if (!event.altKey){return};
 
-	const ctx = ksys.context.module.cache;
+/*
+Club lineup for the upcoming match.
+	- club is the parent FootballClub class the lineup is constructed from.
 
-	if (subtr){
-		ksys.context.module.prm(`team${team}_rcard_count`, (`team${team}_rcard_count` in ctx) ? (ctx[`team${team}_rcard_count`] -= 1).clamp(0, 3) : 0)
-	}else{
-		ksys.context.module.prm(`team${team}_rcard_count`, (`team${team}_rcard_count` in ctx) ? (ctx[`team${team}_rcard_count`] += 1).clamp(0, 3) : 0)
+	- colors: array of HEX colours available in the colour picker.
+
+	- input_lineup_info is a dictionary containing lineup info:
+	    - main_players:    An array of player name ids.
+	    - reserve_players: An array of player name ids.
+	    - shorts_col: Shorts colour identifier for the match.
+	    - tshirt_col: T-shirt colour identifier for the match.
+	    - gk_col: Goalkeeper colour identifier for the match.
+
+	    - field_layout: UNUSED A dictionary where key is field cell id
+	                    and value is player info dict.
+*/
+kbmodules.football_standard.TeamLineup = class{
+	constructor(club, colors=null, input_lineup_info=null){
+		this.club = club;
+		const lineup_info = input_lineup_info || {};
+
+		// basic config
+		this.shorts_color = lineup_info.shorts_col || null;
+		this.tshirt_color = lineup_info.tshirt_col || null;
+		this.gk_color =     lineup_info.gk_col || null;
+
+		// todo: unused as of now
+		this.field_layout = lineup_info.field_layout || {};
+
+		// Team colours to pick from (hardcoded list of hex colours)
+		// todo: vmix DOES support shape colour shifting
+		this.available_colors = colors || [];
+
+		// Colour picker classes
+		this.shorts_colpick = null;
+		this.tshirt_colpick = null;
+		this.gk_colpick = null;
+
+		// These sets contain player classes
+		this.main_players = new Set();
+		this.reserve_players = new Set();
+
+		// todo: There can be only one control panel
+		// why??
+		this.tplate = null;
+
+
+		// 
+		// Store input data
+		// 
+
+		// todo: is this stupid ?
+		this.input_lineup_info = lineup_info;
+
 	}
 
-	print(ksys.context.module.cache.team1_rcard_count, ksys.context.module.cache.team2_rcard_count)
+	// get control panel element for the lineup
+	control_panel_elem(){
+		const self = this;
 
-	kbmodules.football_standard.resync_red_penalty_cards()
+		// todo: There can be only one control panel
+		if (self.tplate){
+			return self.tplate.elem
+		}
+
+		// Create the control panel itself
+		this.tplate = ksys.tplates.index_tplate(
+			'#club_match_lineup_template',
+			{
+				// Side (home/guest)
+				'side':                'side-indicator',
+
+				// Config (colour pickers)
+				'shorts_color_picker': 'lineup-param[prmname="shorts_color"] .param_content',
+				'tshirt_color_picker': 'lineup-param[prmname="tshirt_color"] .param_content',
+				'gk_color_picker':     'lineup-param[prmname="gk_color"] .param_content',
+
+				// lists
+				'player_picker_placeholder': 'lineup-lists lineup-player-picker',
+				'main_list':                 'lineup-lists lineup-main lineup-pool',
+				'reserve_list':              'lineup-lists lineup-reserve lineup-pool',
+
+				// buttons
+				'append_to_main_list_btn':    'lineup-lists lineup-main sysbtn[btname="append_player_to_main_lineup"]',
+				'append_to_reserve_list_btn': 'lineup-lists lineup-reserve sysbtn[btname="append_player_to_reserve_lineup"]',
+				'edit_club_btn':              'sysbtn[btname="edit_club_from_lineup"]',
+			}
+		);
+
+		// Side indicator
+		if (self.club.is_enemy){
+			self.tplate.index.side.setAttribute('enemy', true)
+		}else{
+			self.tplate.index.side.setAttribute('home', true)
+		}
+
+		//
+		// create player picker
+		// 
+		const player_picker = new kbmodules.football_standard.PlayerPicker(
+			[this.club.playerbase],
+
+			// Filter function to filter out players already in the lists
+			function(target_player){
+				for (const existing_player of [...self.main_players, ...self.reserve_players]){
+					if (existing_player.name_id == target_player.name_id){
+						return false
+					}
+				}
+				return true
+			}
+		);
+
+		// replace the placeholder in the template with a real picker
+		this.tplate.index.player_picker_placeholder.replaceWith(player_picker.box);
+
+
+		//
+		// create colour pickers
+		// 
+		this.shorts_colpick = new kbmodules.football_standard.TeamLineupColorPicker(this.available_colors, kbmodules.football_standard.update_team_colors);
+		this.tplate.index.shorts_color_picker.append(this.shorts_colpick.list)
+
+		this.tshirt_colpick = new kbmodules.football_standard.TeamLineupColorPicker(this.available_colors, kbmodules.football_standard.update_team_colors);
+		this.tplate.index.tshirt_color_picker.append(this.tshirt_colpick.list)
+
+		this.gk_colpick = new kbmodules.football_standard.TeamLineupColorPicker(this.available_colors, kbmodules.football_standard.update_team_colors);
+		this.tplate.index.gk_color_picker.append(this.gk_colpick.list)
+
+		//
+		// create header (visual identifier)
+		// 
+		this.tplate.elem.append(this.club.vis_header_elem())
+
+
+		// 
+		// Bind button actions
+		// 
+
+		// Append chosen player to the main player list
+		this.tplate.index.append_to_main_list_btn.onclick = function(){
+			if (!player_picker.selected_entry){
+				ksys.info_msg.send_msg('No player selected', 'warn', 500);
+				return
+			};
+			self.add_player_to_list(
+				player_picker.selected_entry.player,
+				'main'
+			)
+			player_picker.pull_out_selection()
+
+			// todo: is this the right place for this?
+			// Trigger lineup save
+			kbmodules.football_standard.global_save({'lineup_lists': true})
+		}
+		// Append chosen player to the reserve player list
+		this.tplate.index.append_to_reserve_list_btn.onclick = function(){
+			if (!player_picker.selected_entry){
+				ksys.info_msg.send_msg('No player selected', 'warn', 500);
+				return
+			};
+			self.add_player_to_list(
+				player_picker.selected_entry.player,
+				'reserve'
+			)
+			player_picker.pull_out_selection()
+
+			// todo: is this the right place for this?
+			// Trigger lineup save
+			kbmodules.football_standard.global_save({'lineup_lists': true})
+		}
+		// Edit related club in the club panel
+		this.tplate.index.edit_club_btn.onclick = function(){
+			self.club.open_panel();
+			$('sys-tab[match_id="club_def"]').click();
+		}
+
+
+
+		// 
+		// Apply existing data
+		// 
+
+		// Todo: this FULLY relies on the fact, that there could be only one control panel
+
+		// Colours
+		self.shorts_colpick.selected_color = self.shorts_color;
+		self.tshirt_colpick.selected_color = self.tshirt_color;
+		self.gk_colpick.selected_color = self.gk_color;
+
+		// Players
+		for (const tgt_list of [['main_players', 'main'], ['reserve_players', 'reserve']]){
+			const input_list = tgt_list[0];
+			const add_list = tgt_list[1];
+
+			if (self.input_lineup_info[input_list]){
+				for (const player_nameid of self.input_lineup_info[input_list]){
+					const player = self.club.get_player_by_nameid(player_nameid);
+					if (!player){continue};
+
+					self.add_player_to_list(player, add_list)
+				}
+			}
+		}
+
+
+		return self.tplate.elem
+	}
+
+	// Add a player to either main player list or reserve
+	// - player: ClubPlayer
+	// - which_list: 'main' | 'reserve'
+	add_player_to_list(player, which_list){
+		const self = this;
+
+		const tgt_list = which_list == 'main' ? this.main_players : this.reserve_players;
+		if (tgt_list.size >= 11){
+			ksys.info_msg.send_msg(
+				'There are more than 11 players in this list, proceed with caution',
+				'warn',
+				9000
+			);
+		}
+
+		// print('Target list:', tgt_list, this.main_players, this.reserve_players)
+		// if the player is already in the list - return
+		if (this.main_players.has(player) || this.reserve_players.has(player)){return};
+
+		// Create generic list item
+		const list_elem = player.generic_list_elem();
+
+		// Bind actions to the generic list item
+		list_elem.elem.oncontextmenu = function(evt){
+			if (!evt.altKey){return};
+			// delete self from the DOM list
+			evt.target.closest('player').remove();
+			// delete self from the lineup registry
+			self.remove_player_from_list(player, which_list)
+
+			// todo: is this the right place for this?
+			// Trigger lineup save
+			kbmodules.football_standard.global_save({'lineup_lists': true})
+		}
+		// Add generic list item to the internal registry
+		tgt_list.add(player)
+
+		// Append DOM element to the list
+		if (which_list == 'main'){
+			this.tplate.index.main_list.append(list_elem.elem)
+		}else{
+			this.tplate.index.reserve_list.append(list_elem.elem)
+		}
+
+	}
+
+	// - player: ClubPlayer
+	// - which_list: 'main' | 'reserve'
+	remove_player_from_list(player, which_list){
+		// todo: this is stupid
+		let target_list = null;
+		if (which_list == 'main'){target_list = this.main_players};
+		if (which_list == 'reserve'){target_list = this.reserve_players};
+
+		target_list.delete(player)
+	}
+
+	// get selected lineup colours
+	get colors(){
+		return {
+			'tshirt': this.tshirt_colpick.selected_color,
+			'shorts': this.shorts_colpick.selected_color,
+			'gk': this.gk_colpick.selected_color,
+		}
+	}
+}
+
+/*
+Colour picker for the lineup.
+	- colors: An array of HEX colours to create.
+	- callback: Callback function to trigger on color change.
+	            The function receives exactly 1 argument:
+	            HEX value of the selected colour.
+*/
+kbmodules.football_standard.TeamLineupColorPicker = class{
+	constructor(color_codes, callback=null){
+		const self = this;
+
+		this.color_codes = color_codes || [];
+		this.callback = callback;
+
+		// currently active colour by colour code
+		this._selected_color = color_codes[0];
+
+		// colour objects (js DOM elements)
+		this.colors = {};
+
+		this.tplate = ksys.tplates.index_tplate(
+			'#team_lineup_color_picker_template',
+			{},
+		);
+
+		// the dom element itself
+		this.list = this.tplate.elem;
+
+		for (const col of this.color_codes){
+			const clear_hex = str(col).replaceAll('#', '');
+
+			// create colour DOM element
+			const color_elem = $(`<picker-color style="background: #${clear_hex}"></picker-color>`)[0];
+			// write down colour into palette registry
+			this.colors[clear_hex] = color_elem;
+			// append the DOM element to the list
+			this.tplate.elem.append(color_elem)
+			// Bind actions
+			color_elem.onclick = function(){
+				self.selected_color = clear_hex;
+
+				// todo: is this the right place for this?
+				// Trigger lineup save
+				kbmodules.football_standard.global_save({'lineup_lists': true})
+			}
+		}
+	}
+
+	get selected_color(){
+		return this._selected_color
+	}
+
+	set selected_color(newval){
+		const self = this;
+
+		const col_elem = self.colors[str(newval).replaceAll('#', '').trim()];
+		if (!col_elem){
+			console.warn('Cannot find target colour:', newval);
+			return
+		}
+
+		// visual feedback: Remove outline class from all entries
+		// and then add it back to the one being selected
+		$(self.tplate.elem).find('picker-color').removeClass('active_color');
+		col_elem.classList.add('active_color');
+
+		// write down the selected hex
+		self._selected_color = newval;
+		// Execute callback function, if any and pass the selected hex value to it
+		self?.callback?.(newval)
+
+		// col_elem.click()
+	}
 }
 
 
 
 
+/*
+A regular filter box for quick (aka the only way of) player lookup.
+	- data_sources: Iterable of iterables of player classes.
 
-kbmodules.football_standard.spawn_player = function(event, team){
-	const pool = $(event.target.closest('.player_list')).find('.list_pool')
-	if (!team){
-		console.error('INVALID TEAM')
-		return
-	}
-	const new_player = new kbmodules.football_standard.player_ctrl(team, pool[0].closest('.player_list').classList.contains('reserve'));
-	pool.append(new_player.ctrl_elem)
-}
-
-
-kbmodules.football_standard.save_team_preset = function(team){
-	const _team_selector = {
-		1: {
-			field: '#team1_layout',
-			def: '#team1_def',
-		},
-		2: {
-			field: '#team2_layout',
-			def: '#team2_def',
-		},
-	}
-	const team_def = _team_selector[team].def;
-	const team_field = _team_selector[team].field;
+	- filter: Filter function.
+	          The class checks for name/surname/number match
+	          automatically, then the filter function must
+	          return true for the player to appear in the list.
+	          The function receives exactly 1 argument: Player Class.
+	          pro tip: function(){return true} is a totally legit strat.
 	
-	// check whether the team name is null or not
-	// this is needed not to save nameless malformed files
-	const club_name = $(`${team_def} .team_base_params [prmname="team_name"] input`).val().trim().lower()
-	// fuck me
-	// const has_logo = $(`${team_def} .team_base_params [prmname="team_logo"] input`)[0].files[0]
-	const has_logo = $(team_def).attr('logo_path')
+	- post_filter_action: function to call after the player was added
+	                      to the list.
+	                      The function receives exactly 2 arguments:
+	                      player list item DOM, player class
 
+"onclick" event on the root of the list item is pre-occupied.
+To add custom "onclick" - add "onclick" to the object passed to the post_filter_function
+*/
+kbmodules.football_standard.PlayerPicker = class{
+	constructor(data_sources, filter, post_filter_action=null){
+		const self = this;
 
-	if (!club_name){
-		// alert('Malformed Club Name OPEN YOUR EYES PLEASE ?!!')
-		return
-	}
+		this.data_source = data_sources;
+		this.filter = filter;
+		this.post_filter_action = post_filter_action;
 
-	const club_info = {
-		'club_name': club_name,
-		'coach': $(`${team_def} .team_base_params [prmname="team_coach"] input`).val(),
-		'shorthand': $(`${team_def} .team_base_params [prmname="club_shorthand"] input`).val(),
-		'player_color': $(`${team_def} .team_base_params [prmname="team_player_color"] .tcolour.col_selected`).attr('tc') || '000000',
-		'shorts_color': $(`${team_def} .team_base_params [prmname="team_shorts_color"] .tcolour.col_selected`).attr('tc') || '000000',
-		'gk_color': $(`${team_def} .team_base_params [prmname="team_gk_color"] .tcolour.col_selected`).attr('tc') || '000000',
-		'logo': has_logo || null,
-		'main_players': [],
-		'reserve_players': [],
-	}
+		this.selected_entry = null;
 
-	// main players
-	for (let player of document.querySelectorAll(`${team_def} .player_lists .player_list.starters .player_item`)){
-		club_info.main_players.push({
-			'name': player.querySelector('[prmname="pname"] .player_param_input').value,
-			'surname': player.querySelector('[prmname="psurname"] .player_param_input').value,
-			'number': player.querySelector('[prmname="number"] .player_param_input').value,
-		})
-	}
+		this.filtered_entries = [];
 
-	// reserve
-	for (let player of document.querySelectorAll(`${team_def} .player_lists .player_list.reserve .player_item`)){
-		club_info.reserve_players.push({
-			'name': player.querySelector('[prmname="pname"] .player_param_input').value,
-			'surname': player.querySelector('[prmname="psurname"] .player_param_input').value,
-			'number': player.querySelector('[prmname="number"] .player_param_input').value,
-		})
-	}
-
-	print(club_info)
-
-	// save the team to file
-	ksys.db.module.write(`${club_name}.tdef`, JSON.stringify(club_info, null, 4))
-
-	// 
-	// update index
-	// 
-
-	// Read existing index file, if any
-	const index_file = ksys.db.module.read('teams_index.index')
-	// Eval file into json
-	// If file doesn't exist - the db reader would return "null" which is a valid json
-	// and evaluates into false value
-	// important todo: Fuck
-	const team_presets_index = JSON.parse(index_file) || [];
-
-	// If index doesn't exist - create one. Empty
-	if (!index_file){
-		ksys.db.module.write('teams_index.index', JSON.stringify([], null, 4))
-	}
-
-	// If index doesn't contain the current team - add it
-	if (!team_presets_index.includes(club_name)){
-		team_presets_index.push(club_name)
-		ksys.db.module.write('teams_index.index', JSON.stringify(team_presets_index, null, 4))
-	}
-
-	kbmodules.football_standard.save_last_team_presets()
-}
-
-kbmodules.football_standard.load_team_preset = function(event){
-	print(event)
-	// get preset by file name and evaluate to JSON
-	const team_preset = JSON.parse(ksys.db.module.read(`${event.target.value}.tdef`))
-	// if this files does not exist - don't do anything
-	if (!team_preset){return};
-
-	// Get current team control panel element for later use
-	const tgt_team = $(event.target.closest('.teamdef'))
-
-	// element selectors
-	const _team_selector = {
-		'team1_def': {
-			field: '#team1_layout',
-			// def: '#team1_def',
-			num: 1,
-		},
-		'team2_def': {
-			field: '#team2_layout',
-			// def: '#team2_def',
-			num: 2,
-		},
-	}
-
-	const tgt_team_info = _team_selector[tgt_team[0].id];
-
-	// Set team name input value
-	tgt_team.find('.team_base_params [prmname="team_name"] input')[0].value = team_preset.club_name.upper();
-	// Set team coach name input value
-	tgt_team.find('.team_base_params [prmname="team_coach"] input')[0].value = team_preset.coach.upper();
-
-
-	tgt_team.find('.team_base_params .tcolour').removeClass('col_selected');
-	// Set players colour
-	tgt_team.find(`.team_base_params [prmname="team_player_color"] .tcolour[tc="${team_preset.player_color}"]`).addClass('col_selected');
-	// Set player shorts colour
-	tgt_team.find(`.team_base_params [prmname="team_shorts_color"] .tcolour[tc="${team_preset.shorts_color}"]`).addClass('col_selected');
-	// Set goalkeeper colour
-	tgt_team.find(`.team_base_params [prmname="team_gk_color"] .tcolour[tc="${team_preset.gk_color}"]`).addClass('col_selected');
-
-
-	// empty both player pools of this team
-	tgt_team.find('.player_list .list_pool').empty()
-	// Set logo attribute of the current team
-	tgt_team.attr('logo_path', team_preset.logo)
-	// team shorthand
-	// todo: there's option chaining in latest chromium
-	tgt_team.find('.team_base_params [prmname="club_shorthand"] input')[0].value = (team_preset.shorthand || '').upper();
-
-	// spawn main players
-	// team, is_reserve, pname='', psurname='', number=''
-	for (let player of team_preset.main_players){
-		const new_player = new kbmodules.football_standard.player_ctrl(
-			tgt_team_info.num,
-			false,
-			player.name,
-			player.surname,
-			player.number,
+		// Create the filter box DOM element
+		this.tplate = ksys.tplates.index_tplate(
+			'#player_picker_template',
+			{
+				'input':    'input.player_picker_input',
+				'result':   'player-picker-result',
+			}
 		);
-		tgt_team.find('.player_list.starters .list_pool').append(new_player.ctrl_elem)
+
+		// The DOM element itself
+		this.box = this.tplate.elem;
+
+		// bind events
+		// todo: this can directly point to this.match_query
+		this.tplate.index.input.oninput = function(evt){
+			// const query = evt.target.value;
+			self.match_query(evt.target.value)
+		}
 	}
 
-	// spawn reserve players
-	for (let player of team_preset.reserve_players){
-		const new_player = new kbmodules.football_standard.player_ctrl(
-			tgt_team_info.num,
-			true,
-			player.name,
-			player.surname,
-			player.number,
+	// Filter data source according to query and display the results
+	// - query: query string
+	match_query(query){
+		const self = this;
+
+		// clear previous selection
+		this.selected_entry = null;
+		// clear pool
+		this.tplate.index.result.innerHTML = '';
+		this.filtered_entries = [];
+
+		// look for matches
+		for (const dsource of this.data_source){
+			for (const player of dsource){
+				// const name_id = `${player.player_name} ${player.player_surname} ${player.player_num}`;
+				const name_id = player.name_id;
+				// todo: str() is very slow
+				if (!name_id.includes(str(query).lower())){continue};
+				if (!this.filter(player)){continue};
+
+				// checks passed - append to the list
+				const list_item = player.generic_list_elem()
+				const click = function(){
+					// Remove previous selection highlighting
+					if (self.selected_entry){
+						self.selected_entry.list_elem.classList.remove('selected_entry')
+					}
+					// Write down new selection
+					self.selected_entry = {
+						'player': player,
+						'list_elem': list_item.elem,
+					}
+					// Highlight currently selected element
+					list_item.elem.classList.add('selected_entry')
+				}
+
+				list_item.elem.onclick = function(evt){
+					click()
+					list_item?.onclick?.(evt)
+				}
+
+				// append the matched result to the lists
+				this.tplate.index.result.append(list_item.elem)
+				this.filtered_entries.push({
+					'player': player,
+					'list_elem': list_item.elem,
+				})
+
+				// apply post-filter actions, if any
+				this?.post_filter_action?.(list_item, player)
+			}
+		}
+
+	}
+
+	// remove selection from the filtered list
+	// and deselect
+	pull_out_selection(){
+		if (!this.selected_entry){return};
+		this.selected_entry.list_elem.remove()
+		this.selected_entry = null;
+	}
+
+	// deselect currently selected item
+	reset_selection(){
+		if (!this.selected_entry){return};
+		this.selected_entry.list_elem.classList.remove('selected_entry')
+		this.selected_entry = null;
+	}
+}
+
+
+kbmodules.football_standard.ClubSelectorDropdown = class{
+	constructor(){
+		this.registry = new Set();
+	}
+
+	dropdown_elem(onchane){
+		const tplate = ksys.tplates.index_tplate(
+			'#club_selector_dropdown_template',
+			{}
 		);
-		tgt_team.find('.player_list.reserve .list_pool').append(new_player.ctrl_elem)
+		$(tplate.elem).append('<option value="">--</option>');
+		tplate.elem.onchange = onchane;
+		this.registry.add(tplate.elem);
+		this.resync();
+		return tplate.elem
 	}
 
-	// Update vis feedback, like team logos and team names
-	kbmodules.football_standard.upd_vis_feedback()
-	// save the names of the currently selected teams
-	kbmodules.football_standard.save_last_team_presets()
-
-}
-
-kbmodules.football_standard.save_last_team_presets = function(){
-	ksys.context.module.prm('last_team_def1', $('#team1_def [prmname="team_name"] input')[0].value.lower(), false)
-	ksys.context.module.prm('last_team_def2', $('#team2_def [prmname="team_name"] input')[0].value.lower())
-}
-
-
-kbmodules.football_standard.filter_players = function(event, team){
-	// Worst timing result: 2.5 ms
-
-	// current team's field/players
-	const field_context = event.target.closest('.team_layout');
-	const pool = $(field_context).find('.player_picker .player_picker_pool');
-	// Query from the text input
-	const tquery = event.target.value.toLowerCase();
-
-	// Clear the filtered pool
-	pool.empty()
-
-	for (let player_index in kbmodules.football_standard.playerbase[team].both){
-		const player = kbmodules.football_standard.playerbase[team].both[player_index]
-
-		//    match player name or number           make sure the player is not on the field
-		if (  player.namecode.includes(tquery)  &&  !player.is_on_field()  ){
-			pool.append(player.get_generic_player_item())
+	resync(){
+		// Technically, there could be multiple dropdowns
+		// Practically - why ???
+		for (let dropdown of this.registry){
+			dropdown = $(dropdown);
+			// Delete all previous dropdown entries
+			dropdown.find('option:not([value=""])').remove();
+			// Iterate the 'clubs' subdir in the local db
+			for (const clubname of ksys.db.module.path().join('clubs').globSync('*.clubdef')){
+				dropdown.append(`
+					<option value="${clubname.stem.lower()}">${clubname.stem.upper()}</option>
+				`)
+			}
 		}
 	}
 }
 
 
-kbmodules.football_standard.filter_players_to_punish = function(event){
+kbmodules.football_standard.FieldLayout = class{
+	constructor(lineup){
+		const self = this;
 
-	// the query from the text input
-	const tquery = event.target.value.lower();
+		this.lineup = lineup;
+		this.grid = new Set();
 
-	// todo: get the fuck rid of Jquery
-	const punish_pool = $('#card_player_filter_pool');
-	punish_pool.empty()
+		this.cell_map = new Map();
 
-	// todo: is this too slow ?
-	// and is this faster than getting indexed shit ?
-	// const all_players = [
-	// 	...kbmodules.football_standard.playerbase.one.main,
-	// 	...kbmodules.football_standard.playerbase.one.reserve,
+		// the player being dragged
+		this.drag_target = {
+			// player calss
+			'player': null,
+			// the element itself, NOT index
+			'list_elem': null,
+			// unused
+			'cell': null,
+		};
 
-	// 	...kbmodules.football_standard.playerbase.two.main,
-	// 	...kbmodules.football_standard.playerbase.two.reserve,
-	// ];
+		self.hover_target = null;
 
-	for (let player_index in kbmodules.football_standard.playerbase.global_index){
-		// match player name or number
-		const player = kbmodules.football_standard.playerbase.global_index[player_index];
-		if (player.namecode.includes(tquery)){
-			const filtered_item = player.get_generic_player_item()
-			// filtered_item[0].onclick = kbmodules.football_standard.select_player_for_punishment;
-			filtered_item[0].onclick = function(event){
-				$('#card_player_filter_pool .generic_player_item').removeClass('selected_to_punish')
-				event.target.closest('.generic_player_item').classList.add('selected_to_punish')
-				if (player.stats.yellow_cards > 0){
-					ksys.btns.pool.pardon_yellow_card.toggle(true)
+		// create cells struct
+		for (const row_id of range(9)){
+			const row = new Set();
+			this.grid.add(row)
+
+			for (const cell_id of range(10)){
+				const cell = {
+					'id': `${row_id}_${cell_id}`,
+					'dom': $('<cell></cell>')[0],
+					'player': null,
+				}
+				cell.dom.onmouseup = function(){
+					if (!self.drag_target.player){return};
+
+					if (cell.player){
+						print('Cell has player, swapping:', cell.player)
+
+						// Get data
+						const new_cell = cell;
+						const old_cell = self.cell_struct_from_dom(self, self.drag_target.list_elem.parentElement);
+
+						print('Old cell:', old_cell, 'New cell:', new_cell)
+
+						// Swap list items
+						new_cell.dom.children[0].swapWith(self.drag_target.list_elem)
+
+						// only do it if there's stuff to actually swap
+						if (new_cell && old_cell){
+							print('Sufficient data, swapping struct')
+							old_cell.player = new_cell.player;
+							new_cell.player = self.drag_target.player;
+						}
+
+						// When swapping with an element from a list
+						if (!old_cell && new_cell){
+							print('Swapping from a list')
+							new_cell.player = self.drag_target.player;
+						}
+						print('cells with new players', new_cell, old_cell)
+					}else{
+						const src_cell = self.is_on_field(self.drag_target.player)
+						if (src_cell){
+							print('Detaching from prev cell:', src_cell)
+							src_cell.player = null;
+						}
+						print('Cell doesnt have a player', cell)
+						print('Lift:', self.drag_target)
+						cell.dom.innerHTML = '';
+						cell.dom.append(self.drag_target.list_elem)
+						cell.player = self.drag_target.player;
+						print('cell with new player', cell)
+					}
+
+					self.drag_target = {
+						'player': null,
+						'list_elem': null,
+						'cell': null,
+					};
+				}
+
+				cell.dom.oncontextmenu = function(evt){
+					if (evt.altKey){
+						cell.dom.innerHTML = '';
+						cell.player = null;
+					}
+				}
+
+				// unused
+				cell.dom.onmouseover = function(){
+					self.hover_target = cell;
+				}
+
+				// Absolutely retarded hack.
+				// It has already been forgotten why it's needed,
+				// but eerything breaks without it
+				cell.dom.onmousedown = function(){
+					if (!cell.player){
+						self.drag_target = {
+							// player calss
+							'player': null,
+							// the element itself, NOT index
+							'list_elem': null,
+						};
+					}
+				}
+
+				row.add(cell)
+			}
+		}
+
+		// todo: temp: hide some cells
+		for (const row of this.grid){
+			row.at(0).dom.classList.add('ghost_cell')
+		}
+		for (const cell of this.grid.at(-1)){
+			cell.dom.classList.add('ghost_cell')
+		}
+		this.grid.at(-1).at(5).dom.classList.remove('ghost_cell')
+
+		// instantiate grid DOM
+		this.tplate = ksys.tplates.index_tplate(
+			'#field_layout_template',
+			{
+				'picker': 'field-layout-picker',
+				'grid':   'field-layout-grid',
+				'header': 'field-layout-header',
+			},
+		);
+
+		// append cells to grid DOM
+		for (const cell of this.iter_cells()){
+			this.tplate.index.grid.append(cell.dom)
+		}
+
+		// create player picker
+		this.picker = new kbmodules.football_standard.PlayerPicker(
+			// data source
+			[this.lineup.main_players, this.lineup.reserve_players],
+			// filter
+			function(tgt_player){
+				// Only show players that are NOT on the field
+				if (!self.is_on_field(tgt_player)){
+					return true
 				}else{
-					ksys.btns.pool.pardon_yellow_card.toggle(false)
+					return false
+				}
+			},
+			// post-filter actions:
+			// All the neccessary bindings for dragging and assigning
+			// the target player to the cell
+			function(list_item, tgt_player){
+				self.bind_list_item(self, list_item, tgt_player)
+			}
+		)
+
+		// append player picker to the template
+		this.tplate.index.picker.append(this.picker.box)
+
+		// append cell DOMs to the template
+		for (const cell of this.iter_cells()){
+			this.tplate.index.grid.append(cell.dom)
+			this.cell_map[cell.dom] = cell;
+		}
+
+		// create club header and add it to the template
+		this.tplate.index.header.append(this.lineup.club.vis_header_elem())
+	}
+
+	* iter_cells(){
+		for (const row of this.grid){
+			for (const cell of row){
+				yield cell
+			}
+		}
+	}
+
+	// check whether the player is on the field
+	// and return the associated cell if so
+	is_on_field(player){
+		for (const cell of this.iter_cells()){
+			if (cell.player == player){
+				print(cell.player, player)
+				return cell
+			}
+		}
+		return false
+	}
+
+	// create all the neccessary bindings for a player list item
+	// appended to the field grid
+	bind_list_item(self, list_item, tgt_player){
+
+		// bind mouse down location bind
+		list_item.elem.onmousedown = function(evt){
+			if (evt.altKey){return};
+
+			// make it float
+			list_item.elem.ClientPosFromEvent(evt)
+			list_item.elem.classList.add('is_dragging')
+			self.tplate.index.grid.classList.add('hover')
+			
+			// write down cell, if any
+			const src_cell = self.is_on_field(tgt_player)
+
+			// write down drag target
+			self.drag_target = {
+				'player': tgt_player,
+				'list_elem': list_item.elem,
+			}
+
+			// Create a global system-wide bind to stop the element floating
+			ksys.binds.mouseup = function(){
+
+				// Stop floating and effects
+				list_item.elem.classList.remove('is_dragging')
+				list_item.elem.ClientPosFromEvent(null)
+				self.tplate.index.grid.classList.remove('hover')
+
+				// remove system-wide binds
+				ksys.binds.mousemove = null;
+				ksys.binds.mouseup = null;
+			}
+
+			// Forward cursor position to the element
+			ksys.binds.mousemove = function(evt){
+				list_item.elem.ClientPosFromEvent(evt)
+			}
+		}
+	}
+
+	// get associated cell struct from the cell's dom
+	cell_struct_from_dom(self, cell_dom){
+		print('Requesting struct', cell_dom)
+		for (const cell of self.iter_cells()){
+			if (cell.dom == cell_dom){
+				print('Found DOM match:', cell)
+				return cell
+			}
+		}
+	}
+
+	// unused
+	swap_cells(self, cell_a, cell_b){
+		const cstruct_a = self.cell_map[cell_a];
+		const cstruct_b = self.cell_map[cell_b];
+	}
+}
+
+/*
+this.tplate = ksys.tplates.index_tplate(
+	'#match_signals_template',
+	{
+		'picker':           'msignals-player-picker',
+		'pardon_btn':       'msignals-card-counter vmixbtn[btname="pardon_yellow_card"]',
+		'red_card_counter': 'msignals-red-cards',
+	}
+);
+*/
+
+
+// !!!!!!!!! OBSOLETE !!!!!!!!!
+// vvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+// A single unit of a statistic
+// Anything from cards to goals
+// - stat_struct: mandatory dict desribing the stat unit struct,
+//                possibly carrying existing numbers
+// - log_tabe:    Table acting as a dump, literally a log of changes to this stat
+// - edit_table:  Table where this statistic can be edited quickly,
+//                definitely breaking the log records.
+/*
+
+stat_struct:
+
+{
+	'stat_name': 'name_desribing_the_stat',
+	'vis_name': 'Визуальное Имя в Интерфейсе',
+	'count': 0,
+	'attributes': {
+		'attr_name': 'attr_val',
+	}
+}
+*/
+kbmodules.football_standard._FMStatUnit = class{
+	constructor(stat_struct, log_table, edit_table, expose_in_quick_control=true){
+		this.count = stat_struct.count;
+		this.name = stat_struct.stat_name;
+		this.vis_name = stat_struct.vis_name;
+		this.attributes = stat_struct.attributes || {};
+
+		// whether to expose this stat unit to control or not
+		this.fast_expose = expose_in_quick_control;
+
+		// tables to report to
+		this.log_table = log_table;
+		// this.edit_table = edit_table;
+
+		// The log event stack
+		this.event_stack = [];
+
+		// Row element
+		this._tplate = ksys.tplates.index_tplate(
+			'#match_signals_template',
+			{
+				'picker':           'msignals-player-picker',
+				'pardon_btn':       'msignals-card-counter vmixbtn[btname="pardon_yellow_card"]',
+				'red_card_counter': 'msignals-red-cards',
+			}
+		);
+	}
+}
+
+
+// All kinds of stats
+// - prev_log:
+//   A json containing previous log
+kbmodules.football_standard._FMStats = class{
+	constructor(prev_log=null){
+		this.home_stats = new Set();
+		this.guest_stats = new Set();
+	}
+}
+
+// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+// !!!!!!!!! OBSOLETE !!!!!!!!!
+
+
+
+
+
+
+
+
+
+
+
+// A table representing a set of statistics with a fixed structure
+// table_struct is an array of arrays
+// where each pair represents column id and column GUI display name:
+/*
+[
+	['time',          'Time']
+	['left',          'Left']
+	['replaced_with', 'Replaced With']
+]
+
+Will result into the following table:
++--------+-------------+-----------------+
+|  Time  |    Left     |  Replaced With  |
++--------+-------------+-----------------+
+|  37:55 |   ДАНИЛО    |     ВЕКЛИЧ      |
++--------+-------------+-----------------+
+|  21:32 |  ОЛЕКСАНДР  |    ПОДРЕЗАН     |
++--------+-------------+-----------------+
+...
+
+*/
+
+// table_name: A pair of Table ID name / Table GUI name
+// table_image: GUI image of the table
+kbmodules.football_standard.FMStatsTable = class{
+	constructor(table_struct, table_id, table_image){
+		this.struct = table_struct;
+		this.table_id = table_id;
+		this.table_image = table_image;
+
+		// Stat instances
+		// Displayed in the table from top to bottom
+		// Last element of the set = top
+		// First element of the set = bottom
+		this.stack = new Set();
+	}
+
+	// Cancel last stat
+	cancel_last(){
+		this.stack.del_idx(-1)
+	}
+
+	// Return this table as json
+	to_json(as_string=false){
+		const tgt_json = {
+			'table_id': this.table_id,
+			'entries': [],
+		}
+
+		for (const entry of this.stack){
+			tgt_json.entries.unshift(entry.stat_map)
+		}
+
+		if (as_string){
+			return JSON.stringify(tgt_json)
+		}else{
+			return tgt_json
+		}
+	}
+
+	// Remove a stat from everywhere by its FMStatInstance class instance
+	remove(stat_instance){
+		return this.stack.delete(stat_instance)
+	}
+
+	// Create a stat instance
+	// stat_map is a dict of column_id:value
+	// can also be an array, like ['37:55', 'ДАНИЛО', 'ВЕКЛИЧ']
+	add(stat_map=null){
+		// todo: also check wether all elements are there
+		if (!stat_map){
+			console.error('Tried adding invalid stat:', stat_map)
+			return
+		}
+
+		// todo: just use instanceof
+		if (lizard.includesType(stat_map, [Set, Array])){
+			if ( (stat_map.size || stat_map.length) != this.struct.length ){
+				console.error('Tried adding invalid stat:', stat_map)
+			}
+
+			const struct_dict = {};
+			for (const idx in this.struct){
+				const column_id = this.struct[idx][0];
+				struct_dict[column_id] = stat_map[idx];
+			}
+		}else{
+
+		}
+	}
+
+}
+
+
+// A stat instance.
+// Each table row DOM is tied to its class instance
+// stat_map is a dict of column_id:value
+kbmodules.football_standard.FMStatInstance = class{
+	constructor(stat_map){
+		this.stat_map = stat_map;
+
+		// this stores all the DOM references
+		this.dom_registry = new Set();
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Yellow and red cards manager
+// It's only created once when the system is loaded
+// This entire class is slightly retarded, because it's not a child of Club/Lineup/whatever
+// Which means it has to tie itself to the data manually
+// todo: make it a child too ?
+
+// important todo: There are too many redraw calls.
+// It's totally possible to reduce the load (from 10ms to 9ms)
+kbmodules.football_standard.CardManager = class {
+	constructor(init_data=null){
+		// time in ms the card title should stay on screen
+		// this.title_hang_time = 7000;
+
+		this.player_picker = kbmodules.football_standard.resource_index.card_player_filter;
+
+
+		this.sides = {
+			home: {
+				// persistent
+				card_array: null,
+				dom_index: null,
+
+				// dynamic
+				club: null,
+
+
+				// key: player class
+				// value: dict:
+				/*
+					{
+						warned: false
+						(a boolean indicating wether the player was warned with a yellow card)
+
+						red: false
+						(a boolean indicating wether the player got a red card)
+					}
+				*/
+				// This makes it possible to determine wether the red card
+				// was given out immediately or after a second warning
+				yc_map: new Map(),
+
+
+				// event stack of the red cards
+				// each element is a dict:
+				/*
+				{
+					player: player class,
+					log_record: FMStatInstance class,
+				}
+				*/
+				red_stack: new Set(),
+			},
+			guest: {
+				// persistent
+				card_array: null,
+				dom_index: null,
+
+				// dynamic
+				club: null,
+				yc_map: new Map(),
+				red_stack: new Set(),
+			}
+		}
+
+		// create the controls
+		const self = this;
+		for (const side of ['home', 'guest']){
+			const tplate = ksys.tplates.index_tplate(
+				'#red_card_control_template',
+				{
+					'header':  '.red_card_counter_head',
+					'pool':    '.red_card_counter_pool',
+
+					'card_a':  '.rcard1',
+					'card_b':  '.rcard2',
+					'card_c':  '.rcard3',
+				}
+			);
+			this.sides[side].card_array = [
+				tplate.index['card_a'],
+				tplate.index['card_b'],
+				tplate.index['card_c'],
+			];
+			this.sides[side].dom_index = tplate.index;
+
+			tplate.index.pool.onclick = function(evt){
+				if (evt.altKey){
+					self.reg_red(self, side, null)
 				}
 			}
-			punish_pool.append(filtered_item)
+			tplate.index.pool.oncontextmenu = function(evt){
+				if (evt.altKey){
+					self.cancel_red(self, side)
+				}
+			}
+
+			$('#red_card_counter').append(tplate.elem)
+		}
+
+	}
+
+	// Show the relevant amount of cards in the counters
+	_redraw_counters(){
+		for (const side of ['home', 'guest']){
+			cmap = this.sides[side].yc_map;
+
+			// Go through the records and count all the red cards
+			let red_count = 0;
+
+			// todo: is iterating without .values() faster?
+			for (const record of cmap.values()){
+				// Yes, (0 + true = 1) and (0 + false = 0)
+				// And even (false + false = 0) and (true + true = 2)
+				red_count += record.red;
+			}
+
+			// todo: retarded
+
+			// hide all cards
+			for (const card of this.sides[side].card_array){
+				card.classList.remove('.rcard_shown')
+			}
+			// gradually show cards
+			for (const idx of range(red_count)){
+				const card = this.sides[side].card_array[idx];
+				if (!card){break};
+
+				card.classList.add('.rcard_shown');
+			}
 		}
 	}
 
+	// Show the relevant amount of cards in the counters
+	redraw_counters(self){
+		for (const side of ['home', 'guest']){
+			// todo: retarded.
+			// hide all cards
+			for (const card of self.sides[side].card_array){
+				card.classList.remove('rcard_shown')
+			}
+			// gradually show cards
+			for (const idx of range(self.sides[side].red_stack.size)){
+				const card = self.sides[side].card_array[idx];
+				if (!card){break};
+
+				card.classList.add('rcard_shown');
+			}
+		}
+
+		// also resync vmix title
+		// todo: is this the right place ?
+		self.resync_vmix(self)
+	}
+
+
+	// Show the cards the player has received
+	// Directly in the list item
+	// todo: get rid of jquery
+	redraw_card_vis_feedback_in_list_item(self, list_dom=null, player=null){
+		let items = [];
+		if (!list_dom && !player){
+			items = [...self.player_picker.filtered_entries];
+			print('Redrawing entire list:', items)
+		}else{
+			items = [{
+				'list_elem': list_dom,
+				'player': player,
+			}]
+		}
+
+		for (const list_item of items){
+			print('Redrawing vis feedback for', list_item);
+
+			const card_container = $('<div class="list_item_card_vis_feedback"></div>');
+			const record = self.get_pside(self, list_item.player).yc_map.get(list_item.player);
+			if (!record){continue};
+
+			// if the player was warned - append a yellow card
+			if (record.warned){
+				card_container.prepend('<img contain src="./assets/yellow_card.png">');
+			}
+
+			// if the player has a red card - append the red card
+			if (record.red){
+				card_container.prepend('<img contain src="./assets/red_card.png">');
+			}
+
+			$(list_item.list_elem).find('.list_item_card_vis_feedback').remove();
+			$(list_item.list_elem).append(card_container)
+		}
+
+	}
+
+
+	// Enable/disable buttons based on selected player
+	// And append cards to the list item
+	eval_button_states(self){
+		print('evaluating button states')
+		// todo: it's really stupid that it's here
+		self.redraw_card_vis_feedback_in_list_item(self)
+
+		ksys.btns.toggle({
+			'red_card':           false,
+			'yellow_card':        false,
+			'pardon_yellow_card': false,
+		})
+		const player = self.player_picker?.selected_entry?.player;
+		if (!player){return};
+
+		const record = self.get_pside(self, player).yc_map.get(player)
+		// No record means this player may receive any card
+		if (!record){
+			ksys.btns.toggle({
+				'red_card':    true,
+				'yellow_card': true,
+			})
+			return
+		};
+
+
+		// A player can only receive 1 extra card: Another yellow
+		if (record.warned){
+			ksys.btns.toggle({
+				'red_card':    true,
+				'yellow_card': true,
+			})
+		}
+
+		// A player cannot receive any more cards after a red one
+		if (record.red){
+			ksys.btns.toggle({
+				'red_card':    false,
+				'yellow_card': false,
+			})
+		}else{
+			ksys.btns.toggle({
+				'red_card':    true,
+				'yellow_card': true,
+			})
+		}
+
+		// Pardon is only available for players with cards
+		if (record.red || record.warned){
+			ksys.btns.toggle({
+				'pardon_yellow_card': true,
+			})
+		}
+	}
+
+
+	// Resync dependencies:
+	// If the club changed - purge old player card map and red counter
+	resync(){
+		for (const side of ['home', 'guest']){
+			// the club currently loaded for this side in the system
+			const active_club = kbmodules.football_standard.resource_index.side[side].club;
+			// the club referenced in the CardManager registry
+			const referenced_club = this.sides[side].club;
+			// can only proceed if there's a club loaded for this side
+			if (!active_club){continue};
+
+			// if the referenced club does not match the club loaded in the system - resync
+			// It's also intended to work when the referenced club is null
+			if (active_club != referenced_club){
+				this.sides[side].club = active_club;
+				this.sides[side].yc_map = new Map();
+				this.sides[side].red_stack = new Set();
+				// and overwrite the visual header
+				$(this.sides[side].dom_index.header).html(active_club.vis_header_elem())
+			}
+		}
+
+		// Redraw the red card counters for both sides to reflect the current state
+		this.redraw_counters(this)
+	}
+
+	// Get player's side (home/guest)
+	// Player doesn't has to be registered for this to work
+	get_pside(self, player, as_index=true){
+		const side_id = player.club.is_enemy ? 'guest' : 'home';
+		if (as_index){
+			return self.sides[side_id]
+		}else{
+			return side_id
+		}
+	}
+
+	// ensure that the player exists in the registry and return the record
+	ensure_player_is_registered(self, player){
+		// todo: duplicated code ?
+		// const tgt_club = player.club;
+		// const pside = tgt_club.is_enemy ? 'guest' : 'home';
+		// const yc_map = self.sides[pside].yc_map;
+		const yc_map = self.get_pside(self, player).yc_map
+
+		// first check if the player exists in the card registry
+		if (!yc_map.has(player)){
+			yc_map.set(
+				player,
+				{
+					'warned': false,
+					'red': false,
+				}
+			)
+		}
+
+		return yc_map.get(player)
+	}
+
+	// 1+ code duplications is too much
+	async show_card_title(title, player){
+		// Set the player's surname
+		await title.set_text(
+			'player_name',
+			`${player.player_num} ${ksys.strf.params.players.format(player.player_surname)}`,
+		)
+		// Set club logo
+		await title.set_img_src('club_logo', player.club.logo_path)
+
+		// show the title
+		await title.overlay_in(1)
+		// let it hang for 7 seconds
+		await ksys.util.sleep(7000)
+		// hide the title
+		await title.overlay_out(1)
+	}
+
+	// hand a yellow card to a player
+	async hand_yellow(self, player){
+		if (!player){
+			// this warning should never appear, because the caller should be
+			// responsible for handing a valid player class
+			ksys.info_msg.send_msg(
+				`No player selected for yellow warning (this warning should never appear) ${player}`,
+				'err',
+				9000
+			);
+			console.error('Invalid side when handing a warning yellow card:', side);
+			return
+		}
+
+		// ensure that the player exists in the registry
+		const pcard_info = self.ensure_player_is_registered(self, player);
+
+		// All 3 titles (yellow, red, ycbr) have the same fields
+		// So the logic is: Figure out what's going on -> update registry ->
+		// select the title to show -> update the title -> show the title
+		let title = null;
+
+		// If this is a second warning - the title is yellow+yellow=red
+		if (pcard_info.warned){
+			pcard_info.red = true;
+			title = kbmodules.football_standard.titles.ycbr_card;
+			// register this red card
+			self.reg_red(self, self.get_pside(self, player, false), player)
+		}else{
+			// otherwise - it's a first warning
+			pcard_info.warned = true;
+			title = kbmodules.football_standard.titles.yellow_card;
+		}
+
+		self.eval_button_states(self)
+
+		// update the corresponding vmix title and show it
+		await this.show_card_title(title, player)
+
+	}
+
+	// immediately hand a red card to a player, skipping the first warning
+	async hand_red(self, player){
+		if (!player){
+			// this warning should never appear, because the caller should be
+			// responsible for handing a valid player class
+			ksys.info_msg.send_msg(
+				`No player selected for immediate red (this warning should never appear) ${player}`,
+				'err',
+				9000
+			);
+			console.error('Invalid side when handing an immediate red card:', side);
+			return
+		}
+
+		// ensure that the player exists in the registry
+		const pcard_info = self.ensure_player_is_registered(self, player);
+		// todo: also flip warned to false ?
+		pcard_info.red = true;
+		// register this red card
+		const pside = player.club.is_enemy ? 'guest' : 'home';
+		self.reg_red(self, pside, player)
+
+		const title = kbmodules.football_standard.titles.red_card;
+		// update the corresponding title and show it
+		await self.show_card_title(title, player)
+	}
+
+	// register a red card for the club
+	reg_red(self, side, player=null){
+		if (self.sides[side].red_stack.size >= 3){
+			ksys.info_msg.send_msg(
+				`There are 3 red cards already`,
+				'warn',
+				3000
+			);
+			return
+		}
+		// register this red card in the stack
+		self.sides[side].red_stack.add({
+			'player': player,
+		})
+		self.redraw_counters(self)
+		self.eval_button_states(self)
+	}
+
+	// Cancel the last red card on team basis
+	cancel_red(self, side){
+		if (self.sides[side].red_stack.size <= 0){
+			ksys.info_msg.send_msg(
+				`There are no cards to remove`,
+				'warn',
+				3000
+			);
+			return
+		}
+		// delete the last card from the stack
+		const last_red_player = self.sides[side].red_stack.at(-1)?.player;
+		if (last_red_player){
+			const record = self.get_pside(self, last_red_player).yc_map.get(last_red_player)
+			if (record){
+				record.red = false;
+			}
+		}
+		self.sides[side].red_stack.del_idx(-1)
+		self.redraw_counters(self)
+		self.eval_button_states(self)
+	}
+
+	// pardon a red card by player class
+	named_red_pardon(self, player){
+		const pside = self.get_pside(self, player)
+		for (const rcard_record of pside.red_stack){
+			if (rcard_record.player == player){
+				pside.red_stack.delete(rcard_record)
+			}
+		}
+	}
+
+	// Pardon the player
+	pardon(self, player){
+		const pcard_info = self.ensure_player_is_registered(self, player);
+		const pside = player.club.is_enemy ? 'guest' : 'home';
+
+		// Cancel first warning only
+		if (pcard_info.warned && !pcard_info.red){
+			print('Cancelling first warning')
+			pcard_info.warned = false;
+			self.eval_button_states(self)
+			self.redraw_counters(self)
+			return
+		}
+
+		// Cancel ycbr
+		if (pcard_info.warned && pcard_info.red){
+			print('Cancelling ycbr')
+			pcard_info.red = false;
+			// self.cancel_red(self, pside)
+			self.named_red_pardon(self, player)
+			self.eval_button_states(self)
+			self.redraw_counters(self)
+			return
+		}
+
+		// Cancel immediate red
+		if (!pcard_info.warned && pcard_info.red){
+			print('Immediate red')
+			pcard_info.red = false;
+			// self.cancel_red(self, pside)
+			self.named_red_pardon(self, player)
+			self.eval_button_states(self)
+			self.redraw_counters(self)
+			return
+		}
+
+	}
+
+	// resync title state in vmix
+	async resync_vmix(self){
+		// L
+		// todo: there's an automatic assumption that home is index 1 of the cards
+		const retarded = ['home', 'guest'];
+		for (const _side_idx in retarded){
+			const side_idx = int(_side_idx)
+			const side = self.sides[retarded[side_idx]];
+
+			for (const card_idx of range(3)){
+				await kbmodules.football_standard.titles.timer.toggle_img(`rcard_${side_idx+1}_${card_idx+1}`, !!side.red_stack.at(card_idx))
+			}
+		}
+	}
 }
 
 
-kbmodules.football_standard.save_last_layout = function(){
-	console.time('Saved laout')
-	const layout = {
-		'team1': {},
-		'team2': {},
+
+
+
+
+
+kbmodules.football_standard.ClubGoals = class {
+	constructor(parent_club, init_data=null){
+		this.parent_club = parent_club;
+
+		this.tplate = ksys.tplates.index_tplate(
+			'#club_score_list_template',
+			{
+				'header':        'club-score club-score-header',
+				'list':          'club-score-list',
+				'add_score_btn': 'club-score-buttons .club_score_add_record',
+			}
+		);
+
+		// The dom element of the control panel
+		this.dom = this.tplate.elem;
+
+		// The score stack. Last element = latest score
+		// it's an array of dicts:
+		/*
+			{
+				'author': player class or null,
+				'flags': {
+					'autogoal': false,
+					'penalty': false,
+				},
+				'time': score timestamp in seconds,
+
+				'dom_struct': the dom of the score element,
+			}
+		*/
+		this.score_stack = new Set();
+
+		this.selected_record = null;
+
+		// append header
+		this.tplate.index.header.append(parent_club.vis_header_elem())
+
+		// bind button
+		const self = this;
+
+		this.tplate.index.add_score_btn.onclick = function(evt){
+			const selected_player = kbmodules.football_standard.resource_index.score_manager.player_picker?.selected_entry?.player;
+			if (!selected_player && !evt.altKey){
+				ksys.info_msg.send_msg(
+					`Hold ALT key to add authorless score`,
+					'warn',
+					3000
+				);
+				return
+			}
+
+			self.add_score(self, selected_player)
+		}
+	}
+
+	// Add a score
+	add_score(self, player=null, flags=null){
+		const input_flags = flags || {};
+		// create a dom template
+		const tplate = ksys.tplates.index_tplate(
+			'#club_score_record_template',
+			{
+				'timestamp':     'input.score_timestamp',
+				'score_author':  '.score_author',
+
+				// flags
+				'autogoal_flag':  'score-record-flags record-flag[flag_name="auto_goal"] input',
+				'penalty_flag':   'score-record-flags record-flag[flag_name="penalty"] input',
+
+				'autogoal_hitbox':  'score-record-flags record-flag[flag_name="auto_goal"]',
+				'penalty_hitbox':   'score-record-flags record-flag[flag_name="penalty"]',
+			}
+		);
+
+		// sanity check
+		if (!kbmodules.football_standard?.base_counter?.tick){
+			ksys.info_msg.send_msg(
+				`Main timer does not exist (no timestamp will be added to the score record)`,
+				'warn',
+				9000
+			);
+		}
+
+		// get combined current time in minutes 
+		const calculated_timestamp = kbmodules.football_standard.get_current_time(true);
+
+		// create a registry record
+		const record = {
+			'author': player,
+			'flags': {
+				'autogoal': input_flags.autogoal || false,
+				'penalty':  input_flags.penalty || false,
+			},
+			'time': calculated_timestamp,
+
+			'dom_struct': tplate,
+		}
+
+		// push the record to the stack
+		self.score_stack.add(record)
+
+
+		// modify the template
+
+		// add flags
+		tplate.index.autogoal_flag.checked = record.flags.autogoal;
+		tplate.index.autogoal_flag.penalty = record.flags.penalty;
+
+		// set timestamp in minutes
+		if (calculated_timestamp.extra){
+			tplate.index.timestamp.value = `${calculated_timestamp.base} + ${calculated_timestamp.extra}`;
+		}else{
+			tplate.index.timestamp.value = calculated_timestamp.base;
+		}
+
+		// set author, if any
+		if (player){
+			// todo: get rid of jquery?
+			$(tplate.index.score_author).html(player.generic_list_elem().elem);
+
+			// idiot
+			if (!self.parent_club.playerbase.has(player)){
+				// todo: make it present by default, but with visibility disabled
+				// todo: duplicated code
+				$(tplate.index.score_author).append(
+					'<img contain class="self_score_indicator" src="./assets/clown.png">'
+				)
+			}
+		}
+
+
+		// Add bindings
+
+		// Time change
+		tplate.index.timestamp.onchange = function(evt){
+			record.time = evt.target.value;
+		}
+
+		// flags
+		{
+			// todo: this is retarded
+
+			// explanation: since the entire data struct relies on "change" event
+			// coming from checkboxes - it'd be much easier to simulate an onclick event
+			// rather than bothering with maintaining the struct
+			// (cbox.checked = true does not trigger onchange event)
+			const click_switch = function(evt){
+				const target_cbox = evt.target.closest('record-flag').querySelector('input');
+
+				// switch off other flags
+				for (const flag of evt.target.closest('score-record-flags').querySelectorAll('record-flag input')){
+					if (target_cbox == flag){continue};
+
+					if (flag.checked){
+						flag.click()
+					}
+				}
+
+				// activate target
+				evt.target.closest('record-flag').querySelector('input').click();
+			}
+
+			// autogoal flag change
+			tplate.index.autogoal_flag.onchange = function(evt){
+				record.flags.autogoal = evt.target.checked;
+			}
+			// penalty flag change
+			tplate.index.penalty_flag.onchange = function(evt){
+				record.flags.penalty = evt.target.checked;
+			}
+
+			tplate.index.autogoal_hitbox.onclick = click_switch;
+			tplate.index.penalty_hitbox.onclick = click_switch;
+		}
+
+
+		// Deletion
+		tplate.elem.oncontextmenu = function(evt){
+			if (evt.altKey){
+				// if deleted record is also the one currently selected - deselect
+				if (record == self.selected_record){
+					self.selected_record = null;
+				}
+				self.score_stack.delete(record);
+				tplate.elem.remove()
+				kbmodules.football_standard.resource_index.score_manager.resync_score_on_title()
+			}
+		}
+
+		// changing the author
+		tplate.elem.onclick = function(evt){
+			if (!evt.target.closest('.score_author')){return};
+			// stupid hack to make it possible to toggle
+			const do_toggle = self.selected_record == record;
+
+			kbmodules.football_standard.resource_index.score_manager.reset_player_selection();
+
+			self.set_selected_record(self, record)
+
+			if (do_toggle){
+				kbmodules.football_standard.resource_index.score_manager.reset_player_selection();
+			}
+		}
+
+		// finally, append the template to the DOM
+		self.tplate.index.list.append(tplate.elem)
+
+		kbmodules.football_standard.resource_index.score_manager.resync_score_on_title()
+
+	}
+
+	// modify the author of the selected score record
+	mod_author(self){
+		// sanity check
+		if (!self.selected_record){
+			ksys.info_msg.send_msg(
+				`Unable to modify the author, because no record is selected (This message should never appear)`,
+				'err',
+				9000
+			);
+			return
+		}
+
+		// get the new player selected in the player picker
+		const new_player = kbmodules.football_standard.resource_index.score_manager.player_picker.selected_entry;
+
+		// modify the record
+		self.selected_record.author = new_player;
+
+		$(self.selected_record.dom_struct.score_author).html(new_player.generic_list_elem())
+
+		// reset the record selection to prevent accidents
+		kbmodules.football_standard.resource_index.score_manager.reset_player_selection();
+
+		// idiot
+		if (!self.parent_club.playerbase.has(new_player)){
+			// todo: make it present by default, but with visibility disabled
+			$(self.selected_record.dom_struct.score_author).append(
+				'<img class="self_score_indicator" src="./assets/clown.png">'
+			)
+		}else{
+			$(self.selected_record.dom_struct.score_author).find('.self_score_indicator').remove()
+		}
+	}
+
+	set_selected_record(self, record){
+		self.selected_record = record;
+		$(self.dom).find('.selected_score_record').removeClass('selected_score_record');
+		record.dom_struct.elem.classList.add('selected_score_record');
+	}
+}
+
+
+
+// This class keeps track of both sides' scores
+kbmodules.football_standard.ScoreManager = class {
+	constructor(init_data=null){
+		this.sides = {
+			'home': {
+				'score_list': null,
+			},
+			'guest': {
+				'score_list': null,
+			},
+		}
+
+		// create the player picker
+		this.player_picker = new kbmodules.football_standard.PlayerPicker(
+			[[]],
+			function(){return true}
+		)
+
+		$('#score_ctrl_player_search').append(this.player_picker.box)
+	}
+
+	resync_picker_sources(){
+		const new_source = [];
+		for (const side of ['home', 'guest']){
+			// todo: if not lineup - continue
+			new_source.push(kbmodules.football_standard.resource_index.side[side]?.lineup?.main_players || []);
+			new_source.push(kbmodules.football_standard.resource_index.side[side]?.lineup?.reserve_players || []);
+		}
+		this.player_picker.data_source = new_source;
+	}
+
+	// resync lineups
+	resync_lineups(){
+		// todo: there are too many 'for side of home, guest' loops
+		for (const side of ['home', 'guest']){
+			const club_data = kbmodules.football_standard.resource_index.side[side]
+			if (club_data.lineup){
+				const club_goals = new kbmodules.football_standard.ClubGoals(club_data.club);
+				this.sides[side].score_list = club_goals;
+				$(`#score_ctrl_${side}`).html(club_goals.dom);
+			}
+		}
+	}
+
+	reset_player_selection(){
+		// important todo: Global level: don't even bother checking
+		// wether both sides have lineups defined.
+		// Simply make such tabs inaccessible.
+		for (const side of ['home', 'guest']){
+			const score_list = kbmodules.football_standard.resource_index.score_manager.sides[side].score_list;
+			if (!score_list){continue};
+
+			score_list.selected_record = null;
+			$(score_list.dom).find('.selected_score_record').removeClass('selected_score_record');
+		}
+		
+	}
+
+	async resync_score_on_title(){
+		const title = kbmodules.football_standard.titles.timer;
+
+		// important todo: keep doing these stupid checks or simply lock all tabs till both lineups are present ?
+		const home_score_list = kbmodules.football_standard.resource_index.score_manager.sides?.home?.score_list
+		if (home_score_list){
+			await title.set_text('score_l', home_score_list.score_stack.size)
+		}
+
+		const guest_score_list = kbmodules.football_standard.resource_index.score_manager.sides?.guest?.score_list
+		if (guest_score_list){
+			await title.set_text('score_r', guest_score_list.score_stack.size)
+		}
+		
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Create new club and overwrite previous club control
+// This is triggered when a "New Club" button is pressed in the "Club" panel
+kbmodules.football_standard.create_new_club = function(club_resources=null, open_panel=true){
+	kbmodules.football_standard.save_club_to_local_db()
+
+	// create new club class
+	const new_club = new kbmodules.football_standard.FootballClub(club_resources);
+	// write club reference to the registry
+	kbmodules.football_standard.resource_index.club_ctrl = new_club;
+	new_club.open_panel()
+}
+
+// Save file to an abstract location on disk
+kbmodules.football_standard.save_club_to_file = function(){
+	const tgt_dir = $('#club_ctrl_save_to_file_target .tgtdir').val();
+
+	// this checks whether the save path input DOM element has at least something in it
+	// and wether the club exists at all
+	if (!tgt_dir || !kbmodules.football_standard.resource_index.club_ctrl){
+		ksys.info_msg.send_msg('Dir path or filename is invalid (not specified)', 'err', 5000);
+		return
 	};
 
-	const playerbase_keyed = kbmodules.football_standard.playerbase;
+	// construct path
+	// todo: lowercase the club name ?
+	const tgt_file = Path(
+		tgt_dir,
+		($('#club_ctrl_save_to_file_target .tgtfname').val() || 'club_info') + '.clubdef',
+	);
 
-	for (let team of [1, 2]){
-		for (let player of document.querySelectorAll(`#team${team}_layout .ftfield .player_slot`)){
-			const player_info = player.querySelector('.generic_player_item')
-			if (!player_info){
-				layout[`team${team}`][player.getAttribute('t_num')] = null
-				continue
-			}
-			const player_item = playerbase_keyed[team].both[player_info.getAttribute('namecode')]
-			layout[`team${team}`][player.getAttribute('t_num')] = {
-				'player_num': player_item.number,
-				'name':       player_item.name,
-				'surname':    player_item.surname,
-				'namecode':   player_item.namecode,
-			}
-		}
-	}
-
-	ksys.db.module.write('last_layout.lol', JSON.stringify(layout, null, 4))
-
-	// print('saved last layout')
-	console.timeEnd('Saved laout')
+	// important todo: check if the path exists
+	// Write the json file
+	tgt_file.writeFileSync(
+		JSON.stringify(kbmodules.football_standard.resource_index.club_ctrl.to_json(), null, '\t')
+	)
 }
 
-kbmodules.football_standard.load_last_layout = function(){
-	// get last layout file and evaluate it as JSON
-	const last_layout = JSON.parse(ksys.db.module.read('last_layout.lol'))
-	print(last_layout)
-	// if file does not exist/invalid - return
-	// Yes, it works, because JSON.parse(null) returns null
-	if (!last_layout){return};
+// Delete currently edited club from disk
+// and wipe anything referencing that club from the interface
+kbmodules.football_standard.delete_current_club = function(evt){
+	if (!evt.ctrlKey){return};
 
-	// get playerbase as an indexed dict
-	const pbase_indexed = kbmodules.football_standard.playerbase;
+	const club = kbmodules.football_standard.resource_index.club_ctrl;
+	if (!club){return};
 
-	print('WHAT THE FUCK', pbase_indexed)
-	// Go through each slot number in the last layout dict
-	// and see if value of this key contains something that is not null
-
-	// TEAM 1
-	for (let slotnum in last_layout.team1){
-		// Get player info from the last layout dict by slot number, if any (can map to null if cell is empty)
-		const player_info = last_layout.team1[slotnum]
-		// todo: empty the cell ?
-		if (!player_info){continue};
-		// Get the corresponding slot on the field grid
-		const slot = document.querySelector(`#team1_layout .ftfield [t_num="${slotnum}"]`)
-		// append generic player element to the cell
-		// print('GO FUCKING DIE', player_info.namecode)
-		$(slot).append(pbase_indexed.one.both[player_info.namecode].get_generic_player_item())
-	}
-
-	// TEAM 2
-	for (let slotnum in last_layout.team2){
-		const player_info = last_layout.team2[slotnum]
-		if (!player_info){continue};
-
-		const slot = document.querySelector(`#team2_layout .ftfield [t_num="${slotnum}"]`)
-
-		$(slot).append(pbase_indexed.two.both[player_info.namecode].get_generic_player_item())
-	}
+	// 1 - erase club from GUI
+	club.erase()
+	// 2 - delete from database
+	print('DELETE ME PLEASE')
+	ksys.db.module.path().join('clubs', `${club.club_name.lower()}.clubdef`).deleteSync()
+	// 3 - resync dropdowns
+	kbmodules.football_standard.resource_index.club_selector_dropdown.resync()
 }
 
 
+kbmodules.football_standard.save_club_to_local_db = function(mute=true){
+	// Make sure there's a club to save
+	if (!kbmodules.football_standard.resource_index?.club_ctrl?.club_name){
+		if (!mute){
+			ksys.info_msg.send_msg(`Invalid club name`, 'err', 5000);
+		}
+		return
+	};
+	// ensure that the club title is not empty
+	const club_info = kbmodules.football_standard.resource_index.club_ctrl.to_json();
 
-kbmodules.football_standard.filter_players_replacement = function(event, _team){
-	const team_relation = {
-		'one': 1,
-		'two': 2,
+	// write file
+	ksys.db.module.write(
+		`clubs/${club_info.club_name.lower()}.clubdef`,
+		JSON.stringify(club_info, null, '\t')
+	)
+
+	ksys.info_msg.send_msg(`Save OK`, 'ok', 500);
+
+	// re-index dropdowns
+	kbmodules.football_standard.resource_index.club_selector_dropdown.resync()
+}
+
+
+// get club json by name without any further actions
+kbmodules.football_standard.get_club_info_by_name = function(clubname=null){
+	if (!clubname){return};
+
+	const club_name = clubname.lower();
+	const club_info = ksys.db.module.read(`clubs/${club_name}.clubdef`, 'json');
+	if (!club_info){return};
+
+	return club_info
+}
+
+// Load existing club into the control panel, this does NOT create a lineup
+// This is only needed for EDITING the club
+kbmodules.football_standard.load_club_by_name = function(clubname=null){
+	if (!clubname){return};
+
+	const existing_home = kbmodules.football_standard.resource_index.home_club;
+	const existing_guest = kbmodules.football_standard.resource_index.guest_club;
+
+	if (clubname.lower() == existing_home?.club_name.lower()){
+		existing_home.open_panel()
+		return
 	}
-	// todo: FUUUUUUUUUUUU
-	// although this is still a slight improvement
-	const team = team_relation[_team];
+	if (clubname.lower() == existing_guest?.club_name.lower()){
+		existing_guest.open_panel()
+		return
+	}
+	kbmodules.football_standard.create_new_club(kbmodules.football_standard.get_club_info_by_name(clubname))
+}
 
-	// the query from the text input
-	const tquery = event.target.value.toLowerCase();
 
-	// important todo: get rid of jquery
-	// get the player pool to append the filtered items to
-	const replacement_pool = $(event.target.closest('.replacement_list').querySelector('.replacement_filtered_list'));
-	replacement_pool.empty();
 
-	// main, replacement
-	// const pools = kbmodules.football_standard.playerbase[_team][event.target.closest('')];
-	// const all_players = kbmodules.football_standard.playerbase_as_dict()[_team];
-	// const all_players = [...kbmodules.football_standard.playerbase[_team].main, ...kbmodules.football_standard.playerbase[_team].reserve];
+// Create lineup from club name. This will forward club info the rest of the controller
+// (add visual header cues and so on)
+// This is triggered when:
+//     - A club is selected from the Home/Guest club dropdown in Config/Lists
+//     - Club being loaded from previous controller state
+kbmodules.football_standard.create_club_lineup = function(side, clubname, input_lineup_info=null){
+	if (!clubname){
+		// This should never happen, because this function can only be triggered
+		// internally
+		ksys.info_msg.send_msg(
+			`Why did this even happen? No clubname supplied to lineup loader: ${clubname}`,
+			'err',
+			9000
+		);
+		return
+	};
 
-	// important todo: create a function to return players on the field or reservees or whatever
-	// basically groups
-	const on_field_demand = !!event.target.closest('.replacement_leaving');
-	const reserve_demand = !!event.target.closest('.replacement_incoming');
+	let club = null;
 
-	// for (let player of document.querySelectorAll(`${team} .list_pool .player_item`)){
-	for (let player_index in kbmodules.football_standard.playerbase[team].both){
-		const player = kbmodules.football_standard.playerbase[team].both[player_index];
+	// todo: if the club that's being edited at the momment
+	// gets chosen as both home and guest club - everything breaks
 
-		const player_is_on_field = player.is_on_field()
+	// Check if the requested club is the one being edited in the Clubs panel
+	if (kbmodules.football_standard.resource_index.club_ctrl?.club_name?.lower?.() == clubname.lower()){
+		// if so - get the Club class reference from the resource index
+		club = kbmodules.football_standard.resource_index.club_ctrl;
+		// and update the is_enemy flag
+		kbmodules.football_standard.resource_index.club_ctrl.is_enemy = (side == 'guest');
 
-		if (on_field_demand && !player_is_on_field){
-			// continue
+	}else{
+		// if not - create new Club class,
+		// because a lineup cannot exist without a club
+		// Lineup class is always a parent of a Club class
+		club = new kbmodules.football_standard.FootballClub(
+			kbmodules.football_standard.get_club_info_by_name(clubname),
+			side == 'guest'
+		);
+	}
+
+	// create player lineup for the club
+	const lineup = new kbmodules.football_standard.TeamLineup(
+		// parent club
+		club,
+		// available uniform colours
+		kbmodules.football_standard.resource_index.available_colors,
+		// input info (player lists, field layout, etc ...)
+		input_lineup_info
+	)
+
+	// create field layout
+	const field_layout = new kbmodules.football_standard.FieldLayout(lineup)
+
+	if (side == 'home'){
+		// write down the club to the resource index
+		kbmodules.football_standard.resource_index.home_club = club;
+		// write down lineup to the resource index
+		kbmodules.football_standard.resource_index.home_lineup = lineup;
+		// write field reference to the resource index
+		kbmodules.football_standard.resource_index.home_field = field_layout;
+	}
+
+	if (side == 'guest'){
+		// write down the club to the resource index
+		kbmodules.football_standard.resource_index.guest_club = club;
+		// write down lineup to the resource index
+		kbmodules.football_standard.resource_index.guest_lineup = lineup;
+		// write field reference to the resource index
+		kbmodules.football_standard.resource_index.guest_field = field_layout;
+	}
+
+	// New fancy system
+	// (should've been like that from the very beginning)
+	if (['home', 'guest'].includes(side)){
+		kbmodules.football_standard.resource_index.side[side].club = club;
+		kbmodules.football_standard.resource_index.side[side].lineup = lineup;
+		kbmodules.football_standard.resource_index.side[side].field = field_layout;
+	}
+
+
+
+	// stupid, but works, who cares
+
+	// create lineup panel
+	$(`${side}-club-lineup`).html(lineup.control_panel_elem());
+	// Create field layout
+	$(`${side}-field-layout`).html(field_layout.tplate.elem);
+	// Overwrite header element in the Field Layout Control section
+	$(`#${side}_layout_ctrl .layout_ctrl_head`).html(lineup.club.vis_header_elem())
+
+
+	// Update sources for the card/goal filter
+	// It would be easier to store a reference to the player pools
+	// somewhere in the global index, but that will introduce
+	// completely unneccessary complications
+	kbmodules.football_standard.resource_index.card_player_filter.data_source = [
+		(kbmodules.football_standard.resource_index.home_lineup ? kbmodules.football_standard.resource_index.home_lineup.main_players : []),
+		(kbmodules.football_standard.resource_index.home_lineup ? kbmodules.football_standard.resource_index.home_lineup.reserve_players : []),
+
+		(kbmodules.football_standard.resource_index.guest_lineup ? kbmodules.football_standard.resource_index.guest_lineup.main_players : []),
+		(kbmodules.football_standard.resource_index.guest_lineup ? kbmodules.football_standard.resource_index.guest_lineup.reserve_players : []),
+	]
+
+	// update sources for substitutes
+	for (const side of ['home', 'guest']){
+		for (const rtype of ['leaving', 'inbound']){
+			kbmodules.football_standard.resource_index.side[side].substitute[rtype].data_source = [
+				(kbmodules.football_standard.resource_index.side[side]?.lineup?.main_players || []),
+				(kbmodules.football_standard.resource_index.side[side]?.lineup?.reserve_players || []),
+			]
 		}
+	}
 
-		// if (reserve_demand && (!player.is_reserve || player_is_on_field)){
-		if (reserve_demand && !player.is_reserve){
-			continue
-		}
+	// update sources for score picker
+	kbmodules.football_standard.resource_index.score_manager.resync_picker_sources()
 
-		// todo: do the same for other filters
-		if (!player.namecode.includes(tquery)){
-			continue
-		}
+	// resync score manager
+	kbmodules.football_standard.resource_index.score_manager.resync_lineups()
 
-		const player_item = player.get_generic_player_item()
-		// todo: make this selection generic
-		player_item[0].onclick = kbmodules.football_standard.mark_replacement_player;
-		replacement_pool.append(player_item);
+	// resync card manager
+	kbmodules.football_standard.resource_index.card_manager.resync(kbmodules.football_standard.resource_index.card_manager)
+}
 
+
+// forward team colours to vmix timer + score title
+kbmodules.football_standard.update_team_colors = function(){
+	const base_path = Path('C:/custom/vmix_assets/t_shirts/overlay');
+	const home = kbmodules.football_standard.resource_index.home_lineup;
+	const guest = kbmodules.football_standard.resource_index.guest_lineup;
+
+	if (home){
+		// tshirt home
+		kbmodules.football_standard.titles.timer.set_img_src(
+			'team_col_l_top',
+			base_path.join(`l_top_${home.colors.tshirt}.png`),
+		)
+		// shorts home
+		kbmodules.football_standard.titles.timer.set_img_src(
+			'team_col_l_bot',
+			base_path.join(`l_bot_${home.colors.shorts}.png`),
+		)
+	}
+
+	if (guest){
+		// tshirt guest
+		kbmodules.football_standard.titles.timer.set_img_src(
+			'team_col_r_top',
+			base_path.join(`r_top_${guest.colors.tshirt}.png`),
+		)
+		// shorts guest
+		kbmodules.football_standard.titles.timer.set_img_src(
+			'team_col_r_bot',
+			base_path.join(`r_bot_${guest.colors.shorts}.png`),
+		)
 	}
 }
 
-kbmodules.football_standard.mark_replacement_player = function(event){
-	var list_pair = '.replacement_incoming';
-	if (event.target.closest('.replacement_list').classList.contains('replacement_leaving')){
-		var list_pair = '.replacement_leaving';
+// Clear the player list in the lineup vmix title
+kbmodules.football_standard.wipe_player_list_from_title = async function(){
+	for (const idx of range(1, 12)){
+		// player number
+		await kbmodules.football_standard.titles.team_layout.set_text(`plist_num_${idx}`, '')
+		// player surname
+		await kbmodules.football_standard.titles.team_layout.set_text(`plist_pname_${idx}`, '');
 	}
-	$(`#replacement .replacement_team .replacement_list${list_pair} .replacement_filtered_list .generic_player_item`).removeClass('selected_replacement')
-	event.target.closest('.generic_player_item').classList.add('selected_replacement');
+	await ksys.util.sleep(500)
 }
 
-kbmodules.football_standard.replacement_player_title = async function(event){
-	kbmodules.football_standard.shadow_swap()
+// Push current field layout/lineup to the field layout title in vmix
+kbmodules.football_standard.forward_field_layout_to_vmix = async function(team){
+	const tgt_side = str(team).lower();
+	const tgt_field = kbmodules.football_standard.resource_index.side?.[tgt_side]?.field;
 
-	const tgtbtn = event.target.closest('vmixbtn')
-
-	const leaving_player = $('#replacement .replacement_list.replacement_leaving .selected_replacement')
-	const incoming_player = $('#replacement .replacement_list.replacement_incoming .selected_replacement')
-
-	if (!leaving_player[0] || !incoming_player[0]){
+	if (!tgt_field){
+		ksys.info_msg.send_msg('Lineup does not exist for this side', 'warn', 9000);
 		return
 	}
 
-	// todo: do the same for other titles
-	// const pdict = kbmodules.football_standard.playerbase_as_dict()
-	const all_players = kbmodules.football_standard.playerbase.global_index;
-
-	const leaving_player_object = all_players[leaving_player.attr('namecode')];
-	const incoming_player_object = all_players[incoming_player.attr('namecode')];
-
-	await kbmodules.football_standard.titles.replacement_out.set_text(
-		'player_name',
-		leaving_player_object.number + ' ' + ksys.strf.params.players.format(leaving_player_object.surname)
-	)
-	await kbmodules.football_standard.titles.replacement_out.set_img_src(
-		'club_logo',
-		leaving_player_object.get_team_logo()
-	)
-	await kbmodules.football_standard.titles.replacement_in.set_text(
-		'player_name',
-		incoming_player_object.number + ' ' + ksys.strf.params.players.format(incoming_player_object.surname)
-	)
-	await kbmodules.football_standard.titles.replacement_in.set_img_src('club_logo', incoming_player_object.get_team_logo())
-
-	ksys.btns.pool.exec_replacement_sequence.toggle(false)
-
-	await kbmodules.football_standard.titles.replacement_out.overlay_in(1)
-	await ksys.util.sleep(5000)
-	await kbmodules.football_standard.titles.replacement_in.overlay_in(1)
-	await ksys.util.sleep(5000)
-	await kbmodules.football_standard.titles.replacement_in.overlay_out(1)
-
-	ksys.btns.pool.exec_replacement_sequence.toggle(true)
-}
-
-
-kbmodules.football_standard.select_player_for_punishment = function(event){
-	$('#card_player_filter_pool .generic_player_item').removeClass('selected_to_punish')
-	event.target.closest('.generic_player_item').classList.add('selected_to_punish')
-	if (player.stats.yellow_cards > 0){
-		ksys.btns.pool.pardon_yellow_card.toggle(true)
-	}else{
-		ksys.btns.pool.pardon_yellow_card.toggle(false)
-	}
-}
-
-kbmodules.football_standard.show_card = async function(card){
-	const selected_player = document.querySelector('#card_player_filter .generic_player_item.selected_to_punish')
-	if (selected_player){
-		const player_object = kbmodules.football_standard.playerbase.global_index[selected_player.getAttribute('namecode')].penalty_card(card, selected_player);
-	}
-}
-
-kbmodules.football_standard.pardon_player = async function(){
-	const selected_player = document.querySelector('#card_player_filter .generic_player_item.selected_to_punish')
-	if (selected_player){
-		const player_object = kbmodules.football_standard.playerbase.global_index[selected_player.getAttribute('namecode')].pardon(selected_player);
-	}
-}
-
-
-
-kbmodules.football_standard.hide_card = async function(){
-	// disable buttons
+	// Switch off all buttons responsible for showing the title on screen
 	ksys.btns.toggle({
-		'red_card':    false,
-		'yellow_card': false,
-		'kill_card':   false,
+		'show_home_field_layout':    false,
+		'hide_home_field_layout':    false,
+		'show_guest_field_layout':   false,
+		'hide_guest_field_layout':   false,
+
+		'prepare_home_team_layout':  false,
+		'prepare_guest_team_layout': false,
 	})
 
-	if (kbmodules.football_standard.next_card_out){
-		print('Turning off', kbmodules.football_standard.next_card_out.title_name)
-		await kbmodules.football_standard.next_card_out.overlay_out(1)
-	}
-
-	// re-enable buttons
-	ksys.btns.toggle({
-		'red_card':    true,
-		'yellow_card': true,
-		'kill_card':   true,
-	})
-}
-
-
-kbmodules.football_standard.upd_player_layout = async function(team){
-
-	const _ctx = ksys.context.module.cache;
-
+	// target vmix title
 	const title = kbmodules.football_standard.titles.team_layout;
 
-	const _team_selector = {
-		1: {
-			field: '#team1_layout',
-			def: '#team1_def',
-			num: 'one',
-		},
-		2: {
-			field: '#team2_layout',
-			def: '#team2_def',
-			num: 'two',
-		},
-	}
-
-	const team_field = _team_selector[team].field;
-	const team_def = _team_selector[team].def;
-
-	const player_pool = kbmodules.football_standard.playerbase[_team_selector[team].num].both;
-	// const player_pool = [...kbmodules.football_standard.playerbase[_team_selector[team].num].main, ...kbmodules.football_standard.playerbase[_team_selector[team].num].reserve]
-
-	// 
-	// player layout
-	// 
-
-	// player thshirt colour
+	// t-shirt colours
+	// todo: remove hardcoded paths
 	const player_tshirt_col =
 	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
-	.join(`${$(team_def).find('[prmname="team_player_color"] .tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
+	.join(`${tgt_field.lineup.colors.tshirt || 'ffffff'}.png`);
 
-	for (let player_slot of document.querySelectorAll(`${team_field} .ftfield .player_slot`)){
-		const player_item = player_slot.querySelector('.generic_player_item');
-		const slot_has_player = !!player_item;
-		const cell_id = player_slot.getAttribute('t_num');
+	await title.pause_render()
 
+	// 
+	// player slots
+	// 
+	await kbmodules.football_standard.wipe_player_list_from_title()
+	for (const cell of tgt_field.iter_cells()){
 		// tshirt colour
-		await title.set_img_src(`plr_bg_${cell_id}`, str(player_tshirt_col))
-		
+		await title.set_img_src(`plr_bg_${cell.id}`, str(player_tshirt_col));
 		// player number
-		await title.toggle_text(`plr_num_${cell_id}`, slot_has_player)
+		await title.toggle_text(`plr_num_${cell.id}`, !!cell.player)
 		// player name
-		await title.toggle_text(`plr_name_${cell_id}`, slot_has_player)
+		await title.toggle_text(`plr_name_${cell.id}`, !!cell.player)
 		// tshirt image
-		await title.toggle_img(`plr_bg_${cell_id}`, slot_has_player)
+		await title.toggle_img(`plr_bg_${cell.id}`, !!cell.player)
 
-		if (slot_has_player){
-			const player_object = player_pool[player_item.getAttribute('namecode')];
+		if (cell.player){
 			// player number
-			await title.set_text(`plr_num_${cell_id}`, player_object.number);
+			await title.set_text(`plr_num_${cell.id}`, cell.player.player_num);
 			// player name
-			await title.set_text(`plr_name_${cell_id}`, ksys.strf.params.players.format(player_object.surname));
+			await title.set_text(`plr_name_${cell.id}`, ksys.strf.params.players.format(cell.player.player_surname));
 		}
 	}
-
 	// goalkeeper tshirt colour
 	const gk_tshirt_col =
 	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
-	.join(`${$(team_def).find('[prmname="team_gk_color"] .tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
+	.join(`${tgt_field.lineup.colors.gk || 'ffffff'}.png`);
 	await title.set_img_src(`plr_bg_8_5`, str(gk_tshirt_col))
 
 
 
 	// 
-	// main player list
+	// Main players
 	// 
 
-	// 
-	// I sincerely fucking hate javascript retarded fucking useless pointless stupid garbage
-	// Go fucking die in a car crash and then in a fire
-	// (fuck .map, especially)
-	// 
-	const player_list_sorted = [];
-	// for (let player in kbmodules.football_standard.playerbase[team].main){
-	for (let player of kbmodules.football_standard.teams[team].player_pool_main.querySelectorAll('.player_item')){
-		player = kbmodules.football_standard.playerbase[team].main[player.getAttribute('namecode')]
-		// player_list_sorted.push(kbmodules.football_standard.playerbase[team].main[player])
-		player_list_sorted.push(player)
-	}
-	// player_list_sorted.sort(function(a, b){
-	// 	return int(a.number) - int(b.number)
-	// })
-	const player_list = [];
-	const player_nums = [];
-	for (let player of player_list_sorted){
-		player_nums.push(player.number)
-		player_list.push(ksys.strf.params.players.format(player.surname))
+	// todo: stupid counter ?
+	let counter = 1;
+	for (const player of tgt_field.lineup.main_players){
+		// player number
+		await title.set_text(`plist_num_${counter}`, player.player_num)
+		// player surname
+		await title.set_text(`plist_pname_${counter}`, ksys.strf.params.players.format(player.player_surname));
+
+		counter += 1;
 	}
 
-	// names
-	await title.set_text('playerlist', player_list.join('\n'))
-	// numbers
-	await title.set_text('playerlist_nums', player_nums.join('\n'))
 
 
-
-	// 
-	// reserve list
-	// 
-	const reserve_list_sorted = [];
-	for (let player in kbmodules.football_standard.playerbase[team].reserve){
-		reserve_list_sorted.push(kbmodules.football_standard.playerbase[team].reserve[player])
-	}
-	reserve_list_sorted.sort(function(a, b){
-		// print(a, b)
-		return int(a.number) - int(b.number)
-	})
-	const reserve_list = [];
-	const reserve_nums = [];
-	for (let player of reserve_list_sorted){
-		reserve_nums.push(player.number)
-		reserve_list.push(ksys.strf.params.players.format(player.surname))
-	}
-	// names
-	await title.set_text('reserve_list', reserve_list.join('\n'))
-	// numbers
-	await title.set_text('reserve_list_nm', reserve_nums.join('\n'))
-
-
-
-	// 
-	// coach
-	// 
+	// Coach
 	await title.set_text(
 		'coach_name',
-		ksys.strf.params.coach.format($(`${team_def} [prmname="team_coach"] input`).val())
+		ksys.strf.params.coach.format(tgt_field.lineup.club.main_coach)
 	)
-
-	// 
-	// team name
-	// 
+	// Club name
 	await title.set_text(
 		'club_name',
-		ksys.strf.params.club_name.format($(`${team_def} [prmname="team_name"] input`).val())
+		ksys.strf.params.club_name.format(tgt_field.lineup.club.club_name)
 	)
+	// Club logo
+	await title.set_img_src('club_logo', tgt_field.lineup.club.logo_path)
+	print('Finished')
 
-	// 
-	// logo
-	// 
-	await title.set_img_src('club_logo', $(team_def).attr('logo_path'))
+	await title.resume_render()
+
+	// Enable buttons responsible for showing the team's layout which was just prepared
+	{
+		ksys.btns.pool[`show_${tgt_side}_field_layout`].toggle(true)
+		ksys.btns.pool[`hide_${tgt_side}_field_layout`].toggle(true)
+
+		ksys.btns.pool[`prepare_home_team_layout`].toggle(true)
+		ksys.btns.pool[`prepare_guest_team_layout`].toggle(true)
+	}
 }
 
-
+// Show the field layout on screen
 kbmodules.football_standard.show_field_layout = async function(team){
-	const btn_pool = ksys.btns.pool;
+	const tgt_lineup = kbmodules.football_standard.resource_index.side?.[str(team).lower()]?.lineup;
 
-	btn_pool.show_field_layout_command1.toggle(false)
-	btn_pool.hide_field_layout_command1.toggle(false)
-	btn_pool.show_field_layout_command2.toggle(false)
-	btn_pool.hide_field_layout_command2.toggle(false)
-	// await kbmodules.football_standard.upd_player_layout(team)
-	await kbmodules.football_standard.titles.team_layout.overlay_in(1)
-	btn_pool.show_field_layout_command1.toggle(true)
-	btn_pool.hide_field_layout_command1.toggle(true)
-	btn_pool.show_field_layout_command2.toggle(true)
-	btn_pool.hide_field_layout_command2.toggle(true)
+	{
+		ksys.btns.pool[`show_home_field_layout`].toggle(false)
+		ksys.btns.pool[`show_guest_field_layout`].toggle(false)
+	}
+
+	const title = kbmodules.football_standard.titles.team_layout
+
+	// pause render
+	await title.pause_render()
+
+	// ?????
+	await ksys.util.sleep(100)
+
+	// show the overlay
+	await title.overlay_in(1)
+
+	// wait for 10 seconds
+	// await ksys.util.sleep(10000)
+
+
+	// commit warcrimes (changes)
+	// await kbmodules.football_standard.wipe_player_list_from_title()
+	let counter = 1;
+	for (const idx of range(1, 12)){
+		// await ksys.util.sleep(100)
+		const player = tgt_lineup.reserve_players.at(idx - 1);
+		if (player){
+			// player number
+			await title.set_text(`plist_num_${idx}`, player.player_num)
+			// player surname
+			await title.set_text(`plist_pname_${idx}`, ksys.strf.params.players.format(player.player_surname));
+		}else{
+			// player number
+			await title.set_text(`plist_num_${idx}`, ' ')
+			// player surname
+			await title.set_text(`plist_pname_${idx}`, ' ');
+		}
+
+
+		// counter += 1;
+	}
+
+	// sleep for extra second, just in case
+	await ksys.util.sleep(1000)
+
+	// unpause render
+	await title.resume_render()
 }
 
-
-kbmodules.football_standard.hide_field_layout = async function(team){
+kbmodules.football_standard.hide_field_layout = async function(){
 	const btn_pool = ksys.btns.pool;
 
-	btn_pool.show_field_layout_command1.toggle(false)
-	btn_pool.hide_field_layout_command1.toggle(false)
-	btn_pool.show_field_layout_command2.toggle(false)
-	btn_pool.hide_field_layout_command2.toggle(false)
-	// await kbmodules.football_standard.upd_player_layout(team)
+	// btn_pool.show_home_field_layout.toggle(false)
+	// btn_pool.hide_home_field_layout.toggle(false)
+	// btn_pool.show_guest_field_layout.toggle(false)
+	// btn_pool.hide_guest_field_layout.toggle(false)
 	await kbmodules.football_standard.titles.team_layout.overlay_out(1)
-	btn_pool.show_field_layout_command1.toggle(true)
-	btn_pool.hide_field_layout_command1.toggle(true)
-	btn_pool.show_field_layout_command2.toggle(true)
-	btn_pool.hide_field_layout_command2.toggle(true)
+	// btn_pool.show_home_field_layout.toggle(true)
+	// btn_pool.hide_home_field_layout.toggle(true)
+	// btn_pool.show_guest_field_layout.toggle(true)
+	// btn_pool.hide_guest_field_layout.toggle(true)
 }
 
 
 
 
 
+// ================================
+//        Commenter stuff
+// ================================
+kbmodules.football_standard.save_commenter = function(){
+	ksys.context.module.prm('todays_commenter', $('#commenter_name_input')[0].value)
+}
+
+kbmodules.football_standard.show_commenter = async function(){
+	ksys.btns.pool.show_commenter.toggle(false)
+
+	await kbmodules.football_standard.titles.commenter.set_text(
+		'name',
+		$('#commenter_name_input')[0].value
+	)
+	await kbmodules.football_standard.titles.commenter.overlay_in(1)
+
+	ksys.btns.pool.show_commenter.toggle(true)
+}
+
+kbmodules.football_standard.hide_commenter = async function(){
+	ksys.btns.pool.show_commenter.toggle(false)
+	await kbmodules.football_standard.titles.commenter.overlay_out(1)
+	ksys.btns.pool.show_commenter.toggle(true)
+}
+
+
+
+
+// ================================
+//        VS stuff
+// ================================
 kbmodules.football_standard.save_vs_sublines = function(){
 	ksys.context.module.prm('vs_title_bottom_upper_line', $('#vs_text_bottom_upper')[0].value, false)
 	ksys.context.module.prm('vs_title_bottom_lower_line', $('#vs_text_bottom_lower')[0].value)
 }
 
 kbmodules.football_standard.show_vs_title = async function(){
-	const _ctx = ksys.context.module.cache;
+
+	if (!kbmodules.football_standard.resource_index.side.home.club || !kbmodules.football_standard.resource_index.side.guest.club){
+		ksys.info_msg.send_msg(
+			`Both sides should be present for this title`,
+			'warn',
+			2000
+		);
+		return
+	}
+
+	// lock the button
 	ksys.btns.pool.show_splash.toggle(false)
+
+	// Set bottom lines text
 	await kbmodules.football_standard.titles.splash.set_text('title_lower_top', $('#vs_text_bottom_upper').val())
 	await kbmodules.football_standard.titles.splash.set_text('title_lower_bot', $('#vs_text_bottom_lower').val())
 
-	await kbmodules.football_standard.titles.splash.set_img_src('logo_l', $('#team1_def').attr('logo_path'))
-	await kbmodules.football_standard.titles.splash.set_img_src('logo_r', $('#team2_def').attr('logo_path'))
+	// Set logos
+	await kbmodules.football_standard.titles.splash.set_img_src('logo_l', kbmodules.football_standard.resource_index?.home_club?.logo_path || '')
+	await kbmodules.football_standard.titles.splash.set_img_src('logo_r', kbmodules.football_standard.resource_index?.guest_club?.logo_path || '')
 
+	// Set Club names
 	await kbmodules.football_standard.titles.splash.set_text(
 		'club_name_l',
-		ksys.strf.params.club_name.format($('#team1_def [prmname="team_name"] input').val())
+		ksys.strf.params.club_name.format(
+			kbmodules.football_standard.resource_index?.home_club?.club_name || ''
+		)
 	)
 	await kbmodules.football_standard.titles.splash.set_text(
 		'club_name_r',
-		ksys.strf.params.club_name.format($('#team2_def [prmname="team_name"] input').val())
+		ksys.strf.params.club_name.format(
+			kbmodules.football_standard.resource_index?.guest_club?.club_name || ''
+		)
 	)
 
+	// Show the title
 	await kbmodules.football_standard.titles.splash.overlay_in(1)
 
+	// unlock the button
 	ksys.btns.pool.show_splash.toggle(true)
 }
 
 kbmodules.football_standard.hide_vs_title = async function(){
 	ksys.btns.pool.show_splash.toggle(false)
-	ksys.btns.pool.hide_splash.toggle(false)
 	await kbmodules.football_standard.titles.splash.overlay_out(1)
 	ksys.btns.pool.show_splash.toggle(true)
-	ksys.btns.pool.hide_splash.toggle(true)
-}
-
-kbmodules.football_standard.save_commenter = function(){
-	ksys.context.module.prm('todays_commenter', $('#commenter_name_input')[0].value)
-}
-
-kbmodules.football_standard.show_commenter = async function(){
-	await kbmodules.football_standard.titles.commenter.set_text(
-		'name',
-		$('#commenter_name_input')[0].value
-	)
-	await kbmodules.football_standard.titles.commenter.overlay_in(1)
-}
-
-kbmodules.football_standard.hide_commenter = async function(){
-	await kbmodules.football_standard.titles.commenter.overlay_out(1)
 }
 
 
 
 
-kbmodules.football_standard.goal_score_on = async function(){
-	const selected_player = document.querySelector('#card_player_filter .generic_player_item.selected_to_punish')
 
-	if (!selected_player){return};
+// ================================
+//        Coach stuff
+// ================================
+kbmodules.football_standard.show_coach = async function(side){
 
-	const player_object = kbmodules.football_standard.playerbase.global_index[selected_player.getAttribute('namecode')]
+	const tgt_club = kbmodules.football_standard.resource_index.side?.[str(side).lower()]?.club;
 
-	// register this goal
-	kbmodules.football_standard.push_score(player_object.team.num, player_object.surname)
-
-	await kbmodules.football_standard.titles.gscore.set_text(
-		'player_name',
-		`${player_object.number} ${ksys.strf.params.players.format(player_object.surname)}`
-	)
-	await kbmodules.football_standard.titles.gscore.set_img_src('club_logo', player_object.get_team_logo())
-
-	await kbmodules.football_standard.titles.timer.set_text('score_l', $(kbmodules.football_standard.teams[1].score_pool).find('.team_score_record').length)
-	await kbmodules.football_standard.titles.timer.set_text('score_r', $(kbmodules.football_standard.teams[2].score_pool).find('.team_score_record').length)
-
-	// disable buttons
-	ksys.btns.pool.scored.toggle(false)
-
-	await kbmodules.football_standard.titles.gscore.overlay_in(1)
-
-	// hold for 7 seconds
-	await ksys.util.sleep(7000)
-
-	// hide title
-	await kbmodules.football_standard.goal_score_off()
-
-	// re-enable buttons
-	ksys.btns.pool.scored.toggle(true)
-}
-
-
-kbmodules.football_standard.goal_score_off = async function(){
-	ksys.btns.pool.scored.toggle(false)
-	ksys.btns.pool.scored_off.toggle(false)
-
-	await kbmodules.football_standard.titles.gscore.overlay_out(1)
-
-	ksys.btns.pool.scored.toggle(true)
-	ksys.btns.pool.scored_off.toggle(true)
-}
-
-
-kbmodules.football_standard.show_coach = async function(team){
-	const _team_selector = {
-		1: {
-			field: '#team1_layout',
-			def: '#team1_def',
-		},
-		2: {
-			field: '#team2_layout',
-			def: '#team2_def',
-		},
+	if (!tgt_club){
+		ksys.info_msg.send_msg('No club selected', 'warn', 5000);
+		return
 	}
 
-	const teamdef = _team_selector[team].def
-
-	const _ctx = ksys.context.module.cache;
-
-	ksys.btns.pool.show_coach_team1.toggle(false)
-	ksys.btns.pool.hide_coach_team1.toggle(false)
-	ksys.btns.pool.show_coach_team2.toggle(false)
-	ksys.btns.pool.hide_coach_team2.toggle(false)
+	ksys.btns.pool.show_coach_home_team.toggle(false)
+	// ksys.btns.pool.hide_coach_home_team.toggle(false)
+	ksys.btns.pool.show_coach_guest_team.toggle(false)
+	// ksys.btns.pool.hide_coach_guest_team.toggle(false)
 
 	await kbmodules.football_standard.titles.coach.set_text(
 		'name',
-		ksys.strf.params.coach.format($(`${teamdef} [prmname="team_coach"] input`)[0].value)
+		ksys.strf.params.coach.format(tgt_club.main_coach)
 	)
 	await kbmodules.football_standard.titles.coach.set_img_src(
 		'club_logo',
-		$(teamdef).attr('logo_path')
+		tgt_club.logo_path
 	)
 	await kbmodules.football_standard.titles.coach.overlay_in(1)
 
-	ksys.btns.pool.show_coach_team1.toggle(true)
-	ksys.btns.pool.hide_coach_team1.toggle(true)
-	ksys.btns.pool.show_coach_team2.toggle(true)
-	ksys.btns.pool.hide_coach_team2.toggle(true)
+	ksys.btns.pool.show_coach_home_team.toggle(true)
+	ksys.btns.pool.hide_coach_home_team.toggle(true)
+	ksys.btns.pool.show_coach_guest_team.toggle(true)
+	ksys.btns.pool.hide_coach_guest_team.toggle(true)
 }
-
 
 kbmodules.football_standard.hide_coach = async function(){
-	ksys.btns.pool.show_coach_team1.toggle(false)
-	ksys.btns.pool.hide_coach_team1.toggle(false)
-	ksys.btns.pool.show_coach_team2.toggle(false)
-	ksys.btns.pool.hide_coach_team2.toggle(false)
 	await kbmodules.football_standard.titles.coach.overlay_out(1)
-	ksys.btns.pool.show_coach_team1.toggle(true)
-	ksys.btns.pool.hide_coach_team1.toggle(true)
-	ksys.btns.pool.show_coach_team2.toggle(true)
-	ksys.btns.pool.hide_coach_team2.toggle(true)
 }
 
-kbmodules.football_standard.shadow_swap = async function(){
-	const leaving_player = $('#replacement .replacement_list.replacement_leaving .selected_replacement')
-	const incoming_player = $('#replacement .replacement_list.replacement_incoming .selected_replacement')
-	if (!leaving_player[0] || !incoming_player[0]){
+
+
+
+
+// ================================
+//        Card stuff
+// ================================
+kbmodules.football_standard.hand_card = async function(card_type){
+	// sanity check
+	if (!['yellow', 'red'].includes(card_type)){
+		ksys.info_msg.send_msg(
+			`Fatal error: unknown card type: ${card_type}`,
+			'err',
+			9000
+		);
+		console.error(
+			`hand_card received an invalid card type: ${card_type}`
+		)
 		return
 	}
-	const new_player_elem = kbmodules.football_standard.playerbase.global_index[incoming_player.attr('namecode')].get_generic_player_item(true)
-	$(`.ftfield [namecode="${leaving_player.attr('namecode')}"]`).replaceWith(new_player_elem)
-}
 
-
-kbmodules.football_standard.filter_players_for_score = function(event){
-
-	const pool = document.querySelector('#score_ctrl_player_search_pool')
-	// Query from the text input
-	const tquery = event.target.value.toLowerCase();
-
-	// Clear the filtered pool
-	pool.innerHTML = '';
-
-	for (let player_index in kbmodules.football_standard.playerbase.global_index){
-		const player = kbmodules.football_standard.playerbase.global_index[player_index]
-
-		if (player.namecode.includes(tquery)){
-			const player_elem = player.get_generic_player_item(false)
-			player_elem.onclick = function(event){
-				$(event.target).closest('#score_ctrl_player_search_pool').find('.generic_player_item').removeClass('selected_to_punish')
-				event.target.closest('.generic_player_item').classList.add('selected_to_punish')
-				// console.log('kys', player)
-				// if (player.stats.yellow_cards > 0){
-				// 	ksys.btns.pool.pardon_yellow_card.toggle(true)
-				// }else{
-				// 	ksys.btns.pool.pardon_yellow_card.toggle(false)
-				// }
-			}
-			pool.append(player_elem)
-		}
+	// ensure there's a player selected
+	const sel_entry = kbmodules.football_standard.resource_index.card_player_filter.selected_entry;
+	const card_manager = kbmodules.football_standard.resource_index.card_manager;
+	if (!sel_entry){
+		ksys.info_msg.send_msg(
+			`No player selected`,
+			'warn',
+			2000
+		);
+		return
 	}
-}
 
-
-
-
-
-// ================================
-//        Scores
-// ================================
-
-kbmodules.football_standard.add_score = function(team){
-	const selected_player = $('#score_ctrl_player_search_pool .generic_player_item.selected_to_punish').attr('namecode')
-	if (!selected_player){return};
-	const player_info = kbmodules.football_standard.playerbase.global_index[selected_player]
-	kbmodules.football_standard.push_score(team, player_info.surname)
-}
-
-kbmodules.football_standard.push_score = function(team, surname, time=null, ag=false, penalty=false){
-	// print(
-	// 	'kys',
-	// 	time,
-	// 	kbmodules.football_standard?.base_counter?.tick?.global,
-	// 	kbmodules.football_standard?.extra_counter?.tick?.global,
-	// )
-	const calc_time = Math.ceil(
-		(
-			(kbmodules.football_standard?.base_counter?.tick?.global || 1)
-			+
-			(kbmodules.football_standard?.extra_counter?.tick?.global || 1)
+	if (card_type == 'yellow'){
+		await card_manager.hand_yellow(
+			card_manager,
+			sel_entry.player,
 		)
-		/
-		60
+	}
+
+	if (card_type == 'red'){
+		await card_manager.hand_red(
+			card_manager,
+			sel_entry.player,
+		)
+	}
+
+}
+
+// todo: duplicated code
+kbmodules.football_standard.pardon_player = async function(){
+	// ensure there's a player selected
+	const sel_entry = kbmodules.football_standard.resource_index.card_player_filter.selected_entry;
+	const card_manager = kbmodules.football_standard.resource_index.card_manager;
+	if (!sel_entry){
+		ksys.info_msg.send_msg(
+			`No player selected`,
+			'warn',
+			2000
+		);
+		return
+	}
+
+	card_manager.pardon(
+		card_manager,
+		sel_entry.player,
 	)
-	const score_elem = $(`
-		<div class="team_score_record">
-			<input onchange="kbmodules.football_standard.update_scores()" value="${time || calc_time}" type="text" class="score_record_time">
-			<input onchange="kbmodules.football_standard.update_scores()" value="${surname}" type="text" class="score_record_player">
-			АГ:
-			<input${ag ? ' checked' : ''} type="checkbox" onchange="kbmodules.football_standard.update_scores(); $(event.target).closest('.team_score_record').find('.score_record_penalty').prop('checked', false)" class="score_record_ag score_record_cbox">
-			П:
-			<input${penalty ? ' checked' : ''} type="checkbox" onchange="kbmodules.football_standard.update_scores(); $(event.target).closest('.team_score_record').find('.score_record_ag').prop('checked', false)" class="score_record_penalty score_record_cbox">
-		</div>
-	`)
-
-	score_elem[0].oncontextmenu = function(event){
-		if (event.altKey){
-			event.target.closest('.team_score_record').remove()
-			kbmodules.football_standard.update_scores()
-		}
-	}
-
-	$(`#score_ctrl_team${team} .score_ctrl_table`)[0].append(score_elem[0])
-
-	kbmodules.football_standard.update_scores()
-}
-
-kbmodules.football_standard.update_scores = function(){
-	const score_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
-	const score_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
-	kbmodules.football_standard.titles.timer.set_text('score_l', score_l)
-	kbmodules.football_standard.titles.timer.set_text('score_r', score_r)
-
-	const score_map = {
-		'1': [],
-		'2': [],
-	};
-
-	for (let team of ['1', '2']){
-		for (let goal of document.querySelectorAll(`#score_ctrl_team${team} .score_ctrl_table .team_score_record`)){
-			score_map[team].push({
-				'time': goal.querySelector('.score_record_time').value,
-				'surname': goal.querySelector('.score_record_player').value,
-				'namecode': goal.getAttribute('namecode'),
-				'ag': goal.querySelector('.score_record_ag').checked,
-				'penalty': goal.querySelector('.score_record_penalty').checked,
-			})
-		}
-	}
-
-	ksys.db.module.write('scores.fball', JSON.stringify(score_map, null, 4))
-
-}
-
-kbmodules.football_standard.score_sum_vis = async function(state){
-	if (state == true){
-
-		const nums_l = [];
-		const names_l = [];
-		for (let player of document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record')){
-			// nums_l.push(player.querySelector('.score_record_time').value + `'`)
-			names_l.unshift(
-				ksys.strf.params.players.format(player.querySelector('.score_record_player').value)
-				+
-				' '
-				+
-				player.querySelector('.score_record_time').value
-				+
-				`'`
-				+
-				(player.querySelector('.score_record_ag').checked ? ' (АГ)' : '')
-				+
-				(player.querySelector('.score_record_penalty').checked ? ' (П)' : '')
-			)
-		}
-
-
-		const nums_r = [];
-		const names_r = [];
-		for (let player of document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record')){
-			// nums_r.push(player.querySelector('.score_record_time').value + `'`)
-			names_r.unshift(
-				(player.querySelector('.score_record_ag').checked ? '(АГ) ' : '')
-				+
-				(player.querySelector('.score_record_penalty').checked ? '(П) ' : '')
-				+
-				player.querySelector('.score_record_time').value
-				+
-				`'`
-				+
-				' '
-				+
-				ksys.strf.params.players.format(player.querySelector('.score_record_player').value)
-			)
-		}
-
-
-
-		// composite
-		const score_amt_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
-		const score_amt_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
-		await kbmodules.football_standard.titles.final_scores.set_text('score_sum', `${score_amt_l} : ${score_amt_r}`)
-
-		// Show the appropriate amount of fields
-		await kbmodules.football_standard.titles.final_scores.toggle_img('anim_full', false)
-		await kbmodules.football_standard.titles.final_scores.toggle_img('anim_half', false)
-		/*
-		if (score_amt_l > 2 || score_amt_r > 2){
-			await kbmodules.football_standard.titles.final_scores.toggle_img('anim_full', true)
-		}else{
-			names_r.unshift(' ')
-			names_r.unshift(' ')
-			names_l.unshift(' ')
-			names_l.unshift(' ')
-
-			nums_r.unshift(' ')
-			nums_r.unshift(' ')
-			nums_l.unshift(' ')
-			nums_l.unshift(' ')
-			await kbmodules.football_standard.titles.final_scores.toggle_img('anim_half', true)
-		}*/
-		const need_rows = Math.max(score_amt_l, score_amt_r).clamp(1, 5)
-		kbmodules.football_standard.titles.final_scores.set_img_src(
-			'upper_bg',
-			Path('C:/custom/vmix_assets/differential').join(`${need_rows}.png`)
-		)
-
-		// Set the numbers/surnames
-		await kbmodules.football_standard.titles.final_scores.set_text('scores_r', names_r.join('\n'))
-		// await kbmodules.football_standard.titles.final_scores.set_text('scores_r_num', nums_r.join('\n'))
-
-		await kbmodules.football_standard.titles.final_scores.set_text('scores_l', names_l.join('\n'))
-		// await kbmodules.football_standard.titles.final_scores.set_text('scores_l_num', nums_l.join('\n'))
-
-
-
-		// team name LEFT
-		await kbmodules.football_standard.titles.final_scores.set_text(
-			'team_name_l',
-			ksys.strf.params.club_name.format(kbmodules.football_standard.teams.one.team_name.value)
-		)
-		// team logo LEFT
-		await kbmodules.football_standard.titles.final_scores.set_img_src('team_logo_l', kbmodules.football_standard.teams.one.logo())
-
-		// team name RIGHT
-		await kbmodules.football_standard.titles.final_scores.set_text(
-			'team_name_r',
-			ksys.strf.params.club_name.format(kbmodules.football_standard.teams.two.team_name.value)
-		)
-		// team logo RIGHT
-		await kbmodules.football_standard.titles.final_scores.set_img_src('team_logo_r', kbmodules.football_standard.teams.two.logo())
-
-		await kbmodules.football_standard.titles.final_scores.set_text('bottom_text', $('#vs_text_bottom_lower').val())
-
-		// show the title
-		await kbmodules.football_standard.titles.final_scores.overlay_in(1)
-	}
-
-	if (state == false){
-		await kbmodules.football_standard.titles.final_scores.overlay_out(1)
-	}
 }
 
 
 
+
+
+// ================================
+//        Substitute
+// ================================
+kbmodules.football_standard.exec_substitute = async function(){
+	const leaving_player = (
+		kbmodules.football_standard.resource_index.side.home.substitute['leaving']?.selected_entry?.player
+		||
+		kbmodules.football_standard.resource_index.side.guest.substitute['leaving']?.selected_entry?.player
+	);
+	const incoming_player = (
+		kbmodules.football_standard.resource_index.side.home.substitute['inbound']?.selected_entry?.player
+		||
+		kbmodules.football_standard.resource_index.side.guest.substitute['inbound']?.selected_entry?.player
+	);
+
+	if (!leaving_player || !incoming_player){
+		ksys.info_msg.send_msg(
+			`Selection incomplete`,
+			'warn',
+			2000
+		);
+		return
+	}
+
+	const title = kbmodules.football_standard.titles.replacement_seq;
+
+	// Set players' names
+
+	// leaving
+	await title.set_text(
+		'leaving_player',
+		`${leaving_player.player_num} ${ksys.strf.params.players.format(leaving_player.player_surname)}`,
+	)
+	// inbound
+	await title.set_text(
+		'incoming_player',
+		`${incoming_player.player_num} ${ksys.strf.params.players.format(incoming_player.player_surname)}`,
+	)
+	// Set club logo
+	await title.set_img_src('club_logo', leaving_player.club.logo_path)
+
+	// show the title
+	await title.overlay_in(1)
+	// let it hang for 11 seconds
+	// (this wait time also accounts for the scripted animation sequence inside the title)
+	await ksys.util.sleep(11000)
+	// hide the title
+	await title.overlay_out(1)
+}
 
 
 
@@ -2189,7 +3581,11 @@ kbmodules.football_standard.start_base_timer = async function(rnum){
 kbmodules.football_standard.timer_callback = function(tick){
 	const minutes = Math.floor(tick.global / 60)
 	const seconds = tick.global - (60*minutes)
-	kbmodules.football_standard.titles.timer.set_text('base_ticker', `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`)
+
+	const text = `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`;
+
+	kbmodules.football_standard.titles.timer.set_text('base_ticker', text)
+	$('#timer_feedback_main').text(text)
 }
 
 kbmodules.football_standard.resume_main_timer_from_offset = function(event){
@@ -2236,42 +3632,27 @@ kbmodules.football_standard.main_timer_vis = async function(state){
 	const title = kbmodules.football_standard.titles.timer;
 
 	if (state == true){
-		// player_color_picker
-		// gk_color_picker
 
+		if (!kbmodules.football_standard.resource_index?.side?.home?.club || !kbmodules.football_standard.resource_index?.side?.guest?.club){
+			ksys.info_msg.send_msg(
+				`This action requires both clubs present`,
+				'warn',
+				3000
+			);
+			return
+		}
 
+		await title.set_text(
+			'command_l',
+			str(kbmodules.football_standard.resource_index.side.home.club.club_name_shorthand).upper()
+		)
+		await title.set_text(
+			'command_r',
+			str(kbmodules.football_standard.resource_index.side.guest.club.club_name_shorthand).upper()
+		)
 
-		// TEAM COLOR L
-		// t-shirts
-		const team_col_l_top =
-		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`l_top_${$(kbmodules.football_standard.teams[1].player_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-		await title.set_img_src(`team_col_l_top`, str(team_col_l_top))
-		// shorts
-		const team_col_l_bot =
-		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`l_bot_${$(kbmodules.football_standard.teams[1].shorts_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-		await title.set_img_src(`team_col_l_bot`, str(team_col_l_bot))
-
-		// TEAM COLOR R
-		// t-shirts
-		const team_col_r_top =
-		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`r_top_${$(kbmodules.football_standard.teams[2].player_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-		await title.set_img_src(`team_col_r_top`, str(team_col_r_top))
-		// shorts
-		const team_col_r_bot =
-		Path('C:\\custom\\vmix_assets\\t_shirts\\overlay')
-		.join(`r_bot_${$(kbmodules.football_standard.teams[2].shorts_color_picker).find('.tcolour.col_selected').attr('tc') || 'ffffff'}.png`);
-		await title.set_img_src(`team_col_r_bot`, str(team_col_r_bot))
-
-
-
-		await title.set_text('command_l', kbmodules.football_standard.teams[1].shorthand.value)
-		await title.set_text('command_r', kbmodules.football_standard.teams[2].shorthand.value)
-
-		await title.set_text('score_l', $(kbmodules.football_standard.teams[1].score_pool).find('.team_score_record').length)
-		await title.set_text('score_r', $(kbmodules.football_standard.teams[2].score_pool).find('.team_score_record').length)
+		// push current score to the title
+		kbmodules.football_standard.resource_index.score_manager.resync_score_on_title()
 
 		title.overlay_in(2)
 	}
@@ -2331,7 +3712,11 @@ kbmodules.football_standard.launch_extra_time = async function(){
 kbmodules.football_standard.extra_timer_callback = function(tick){
 	const minutes = Math.floor(tick.global / 60)
 	const seconds = tick.global - (60*minutes)
-	kbmodules.football_standard.titles.timer.set_text('extra_ticker', `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`)
+
+	const text = `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`;
+
+	kbmodules.football_standard.titles.timer.set_text('extra_ticker', text)
+	$('#timer_feedback_extra').text(text)
 }
 
 kbmodules.football_standard.extra_time_vis = async function(state){
@@ -2363,13 +3748,289 @@ kbmodules.football_standard.stop_extra_time = function(){
 }
 
 
+// base = global or 1
+// extra = extra or 1
+
+// todo: unfortunately, a score on 45:00 + 2 would result into 46 + 2
+// There's a stupid hack for now, but later this issue should be addressed
+// systematically
+kbmodules.football_standard.get_current_time = function(minutes=false, tsum=false){
+	const divider = (minutes ? 60 : 1);
+
+	if (tsum){
+		const calc_sum = 
+		Math.ceil(
+			(
+				(kbmodules.football_standard?.base_counter?.tick?.global || 1)
+				+
+				(kbmodules.football_standard?.extra_counter?.tick?.global || 1)
+			)
+			/
+			divider
+		)
+
+		if (minutes && calc_sum == 46){
+			return 45
+		}else{
+			return calc_sum
+		}
+
+	}else{
+		let extra_t = kbmodules.football_standard?.extra_counter?.tick?.global;
+		if (kbmodules.football_standard?.extra_counter?.tick?.global === 0) {
+			extra_t = 1;
+		}
+
+		let base_t = Math.ceil(
+			(kbmodules.football_standard?.base_counter?.tick?.global || 1) / divider
+		);
+		if (minutes && base_t == 46){
+			base_t = 45;
+		}
+
+		return {
+			'base': base_t,
+			'extra': Math.ceil(
+				extra_t / divider
+			),
+		}
+	}
+
+}
+
 
 
 
 
 // ================================
-//        Stats
+//               Scores
 // ================================
+
+// todo: add sanity check for player's side
+kbmodules.football_standard.add_score_from_cards_panel = async function(){
+	const player = kbmodules.football_standard.resource_index.card_player_filter?.selected_entry?.player;
+	// selected_entry.player
+
+	if (!player){
+		ksys.info_msg.send_msg(
+			`No player selected. Go to the Stats panel for advanced manipulations`,
+			'warn',
+			9000
+		);
+		return
+	}
+
+	const side = player.club.is_enemy ? 'guest' : 'home';
+	const score_list = kbmodules.football_standard.resource_index.score_manager.sides[side].score_list
+	score_list.add_score(
+		score_list,
+		player
+	)
+
+	// Show the title
+
+	// Set logo
+	await kbmodules.football_standard.titles.gscore.set_img_src(
+		'club_logo',
+		player.club.logo_path
+	)
+
+	// Set player's surname
+	await kbmodules.football_standard.titles.gscore.set_img_src(
+		'player_name',
+		`${player.player_num} ${ksys.strf.params.players.format(player.player_surname)}`
+	)
+
+	kbmodules.football_standard.titles.gscore.overlay_in(1)
+}
+
+kbmodules.football_standard.hide_scored_title = function(){
+	kbmodules.football_standard.titles.gscore.overlay_out(1)
+}
+
+
+
+
+
+// ================================
+//               Stats
+// ================================
+
+kbmodules.football_standard.save_match_stats = function(){
+	const save = {};
+	console.time('Saving stats')
+	for (const stat_name in kbmodules.football_standard.stats_unit_pool){
+		const stat = kbmodules.football_standard.stats_unit_pool[stat_name];
+		save[stat_name] = {
+			1: int(stat.val_selector[1]),
+			2: int(stat.val_selector[2]),
+		}
+	}
+
+	ksys.db.module.write('stats.fball', JSON.stringify(save, null, 4))
+
+	console.timeEnd('Saving stats')
+}
+
+// stat unit
+kbmodules.football_standard.StatUnit = class {
+	constructor(related_title, team1_txt_block, team2_txt_block, visname, init_val_t1=0, init_val_t2=0){
+		this.related_title = related_title;
+		this.visname = visname;
+		this.elem_index = {};
+		const self = this;
+
+		this.text_field_selector = {
+			1: team1_txt_block,
+			2: team2_txt_block,
+		}
+
+		this.val_selector = {
+			1: int(init_val_t1) || 0,
+			2: int(init_val_t2) || 0,
+		}
+
+		this.vis_echo = {
+			1: [],
+			2: [],
+		};
+
+
+		//
+		// append table row to both tables
+		//
+
+		for (const tnum of [1, 2]){
+			$(`.tstats_table_${tnum}`).append(this.table_row_elem(tnum))
+		}
+
+		//
+		// Create quick buttons
+		//
+		for (const tnum of [1, 2]){
+			$(`.tstats_buttons_team_${tnum}`).append(this.quick_button(tnum))
+		}
+
+	}
+
+	// get html element of a quick button
+	quick_button(team){
+		const self = this;
+
+		const qbtn_html = `
+			<div class="team_stat_quick_btn_pair">
+				<div class="team_stat_quick_btn_vis_value">${this.val_selector[team]}</div>
+				<sysbtn stat_action="add" class="team_stat_quick_btn_add">+ ${this.visname}</sysbtn>
+				<sysbtn stat_action="subt" class="team_stat_quick_btn_subt">- ${this.visname}</sysbtn>
+			</div>
+		`;
+
+		const qbtn_index = ksys.tplates.index_elem(
+			qbtn_html,
+			{
+				'add': '.team_stat_quick_btn_add',
+				'subt': '.team_stat_quick_btn_subt',
+				'vis_val': '.team_stat_quick_btn_vis_value',
+			},
+			true
+		);
+
+		qbtn_index.index.add.onclick = function(){
+			self.upd_value(team, 1)
+		}
+		qbtn_index.index.subt.onclick = function(){
+			self.upd_value(team, -1)
+		}
+
+		// register for echo
+		this.vis_echo[team].push({
+			'echo_type': 'elem_text',
+			'tgt': qbtn_index.index.vis_val,
+		})
+
+		return qbtn_index.elem
+	}
+
+	table_row_elem(team){
+		const self = this;
+
+		const stat_unit_table_row_html = `
+			<div class="stat_unit_table_row">
+				${this.visname}
+				<input noctrl type="number">
+			</div>
+		`
+		// create and index row element
+		const row_elem = ksys.tplates.index_elem(
+			stat_unit_table_row_html,
+			{'inp': 'input'},
+			true
+		)
+		row_elem.index.inp.value = this.val_selector[team]
+		row_elem.index.inp.onchange = function(evt){
+			self.set_value(team, int(evt.target.value) || 0)
+		}
+		row_elem.index.inp.onclick = function(evt){
+			evt.target.select()
+		}
+
+		// register for echo
+		this.vis_echo[team].push({
+			'echo_type': 'input',
+			'tgt': row_elem.index.inp,
+		})
+
+		return row_elem.elem
+	}
+
+	// set value to a specific number
+	set_value(team, val){
+		// update vmix title
+		this.related_title.set_text(this.text_field_selector[team], val)
+		// update self info
+		this.val_selector[team] = val;
+		// update values in the table rows, etc
+		this.forward_vis_echo()
+		// save stats to file
+		kbmodules.football_standard.save_match_stats()
+	}
+
+	// addition subtraction
+	// addition/subtraction is determined by the input value
+	// which means to subtract from the value - pass a negative integer
+	upd_value(team, val){
+		// basically same as set_value, except it's addition/subtraction
+		const new_val = this.val_selector[team] + val;
+		this.val_selector[team] = Math.max(new_val, 0);
+		this.related_title.set_text(this.text_field_selector[team], this.val_selector[team]);
+		// update values in the table rows, etc
+		this.forward_vis_echo()
+		// save stats to file
+		kbmodules.football_standard.save_match_stats()
+	}
+
+	// update values in the table rows, etc
+	forward_vis_echo(){
+		// each element of the echo array should have a value property
+		for (const team of [1, 2]){
+			for (const echo of this.vis_echo[team]){
+				if (echo.echo_type == 'input'){
+					echo.tgt.value = this.val_selector[team];
+				}
+				if (echo.echo_type == 'elem_text'){
+					echo.tgt.innerText = this.val_selector[team];
+				}
+			}
+		}
+	}
+
+	async push_to_vmix(){
+		await this.related_title.set_text(this.text_field_selector[1], this.val_selector[1]);
+		await this.related_title.set_text(this.text_field_selector[2], this.val_selector[2]);
+	}
+
+}
+
 
 kbmodules.football_standard.show_team_stats = async function(){
 
@@ -2411,3 +4072,209 @@ kbmodules.football_standard.hide_team_stats = async function(){
 	ksys.btns.pool.hide_team_stats.toggle(true)
 	ksys.btns.pool.show_team_stats.toggle(true)
 }
+
+
+
+
+
+
+// ================================
+//           Save/Load sys
+// ================================
+
+// А ЧЁ?! СЛАБО БАЙТЫ ПИСАТЬ, А?!
+// (Безполезная трата времени, это не питон. Буфер API тут мега всратый)
+
+// Every separate save target gets saved to a separate file:
+// save_lineup_lists: lineup_lists.kbsave
+
+
+
+
+// ---------------
+//  Lineup lists
+// ---------------
+
+// File: lineup_lists.kbsave
+// Save entries:
+//     - Club name
+//     - T-Shirt colour
+//     - Shorts colour
+//     - Golakeeper colour
+//     - Lineup lists: main/reserve
+
+// Triggered when:
+// 	- tshirt/shorts/gk colour changes
+// 	- Player is added/removed from main/reserve player list by the USER
+//  - A club is loaded by the USER
+//  - Player's name is changed in the club config panel
+
+// Save struct:
+/*
+{
+	'lineup_info': {
+		'home': {
+			'club_name': lowercase club name,
+
+			'tshirt_col': t-shirt colour,
+			'shorts_col': shorts colour,
+			'gk_col':     goalkeeper colour,
+
+			// main/reserve players
+			'player_lineup': {
+				'main_players': [
+					'player nameid',
+					'player nameid',
+					...
+				],
+				'reserve_players': [],
+			}
+		},
+
+		// same as home
+		'guest':{},
+	}
+}
+*/
+kbmodules.football_standard.save_lineup_lists = function(){
+	print('saving lineup lists');
+
+	const save_data = {};
+
+	const res_idx = kbmodules.football_standard.resource_index;
+
+	// important todo: fix inconsistencies in home/guest
+	for (const side of ['home', 'guest']){
+
+		// Only save if there's a lineup to save
+
+		// todo: data corruption?
+		// do not allow saving till both sides are loaded ????
+		const tgt_lineup = res_idx.side[side].lineup;
+		const tgt_club = res_idx.side[side].club;
+		if (!tgt_lineup){continue};
+
+
+		// 
+		// first, easy part - save club name & colours and define the save file struct
+		// 
+		save_data[side] = {
+
+			// club name
+			'club_name': str(tgt_club.club_name).lower(),
+
+
+			// shorts_colpick
+			// tshirt_colpick
+			// gk_colpick
+
+			// colours
+			// todo: lineup has a built-in colours getter (lineup.colors)
+			// returns a dict
+			'tshirt_col': tgt_lineup.tshirt_colpick.selected_color,
+			'shorts_col': tgt_lineup.shorts_colpick.selected_color,
+			'gk_col':     tgt_lineup.gk_colpick.selected_color,
+
+			// create player struct
+			'player_lineup': {
+				'main_players': [],
+				'reserve_players': [],
+			},
+		}
+
+
+
+		// 
+		// Now, save player lists
+		// 
+
+		// Each lineup stores 2 player arrays: main and reserve.
+		// Iterate over their names and grab them from the lineup class
+
+		// SO, for list type...
+		for (const tgt_list of ['main_players', 'reserve_players']){
+			// main_players
+			// reserve_players
+
+			// Iterate over the said list type to grab players in there...
+			for (const player of tgt_lineup[tgt_list]){
+				// The player class has a name_id getter.
+				// Append player's nameid to the target save list.
+				save_data[side].player_lineup[tgt_list].push(player.name_id)
+			}
+		}
+	}
+
+
+	// 
+	// Save data to file
+	// 
+	ksys.db.module.write(
+		'lineup_lists.kbsave',
+		JSON.stringify(save_data, null, '\t')
+	)
+}
+
+// Load lineup lists and colours
+kbmodules.football_standard.load_lineup_lists = function(){
+	// Check if there's anything in the save file
+	const last_save = ksys.db.module.read('lineup_lists.kbsave', 'json');
+	if (!last_save){return};
+
+	for (const side of ['home', 'guest']){
+		const side_info = last_save[side];
+		if (!side_info){continue};
+
+		kbmodules.football_standard.create_club_lineup(
+			side,
+			side_info.club_name,
+			{
+				'tshirt_col': side_info.tshirt_col,
+				'shorts_col': side_info.shorts_col,
+				'gk_col':     side_info.gk_col,
+
+				'main_players':    side_info.player_lineup.main_players,
+				'reserve_players': side_info.player_lineup.reserve_players,
+			}
+		)
+	}
+	
+
+}
+
+
+
+
+
+
+
+
+
+// pass null to save everything
+kbmodules.football_standard.global_save = function(save_targets=null){
+	const what_to_save = Object.assign(
+		{
+			'lineup_lists': false,
+			'field_layout': false,
+			'card_info': false,
+			'scores': false,
+		},
+		save_targets || {},
+	);
+
+	// print('What to save:', what_to_save)
+
+	// todo: use for loop?
+
+	// Save lineup lists
+	if (what_to_save.lineup_lists || save_targets == null){
+		// print('saving lineup_lists')
+		kbmodules.football_standard.save_lineup_lists()
+	}
+
+
+}
+
+
+
+
