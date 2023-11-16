@@ -40,6 +40,24 @@ const db_module_write_file = function(fname=null, data=null){
 	tgt_file.writeSync(data)
 }
 
+// delete file
+const db_module_delete_file = function(fname=null){
+	// obviously, both filename and data should be present and valid
+	if (!fname){
+		console.warn('Tried deleting invalid file', fname)
+		return false
+	}
+
+	const tgt_file = app_root.join('db', 'module', ksys.context.module_name, fname)
+	if (tgt_file.isFileSync()){
+		// Delete
+		tgt_file.removeSync()
+		return true
+	}
+
+	return false
+}
+
 // read file
 // Load as: 'text' | 'buffer' | 'json' (deafult to 'text')
 const db_global_read_file = function(fname=null, load_as='text'){
@@ -89,6 +107,7 @@ module.exports = {
 		read: db_module_read_file,
 		write: db_module_write_file,
 		path: db_path_to_module_dir,
+		delete: db_module_delete_file,
 	},
 	global: {
 		read: db_global_read_file,

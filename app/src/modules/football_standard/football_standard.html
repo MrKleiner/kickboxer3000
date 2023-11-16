@@ -59,7 +59,12 @@
 		</string-formatting>
 
 		<lineup-global-control subtle_box>
-			<sysbtn btname="init_new_match" kbhint="Wipe previous match stats, like goals. Hold CTRL">New Match</sysbtn>
+			<sysbtn
+				btname="init_new_match"
+				kbhint="Wipe previous match stats, like goals. Hold CTRL"
+				onclick="$this.init_new_match(event)"
+			>New Match</sysbtn>
+			
 			<home-club-selector class="lineup_global_ctrl_param">
 				<label>Home club</label>
 			</home-club-selector>
@@ -243,6 +248,7 @@
 
 			<div regular_box nosel id="red_card_counter" kbhint="To manually add/subtract - hover the cards, hold ALT and press LMB/RMB">
 				<vmixbtn
+					off
 					titled
 					abs_pos
 					seq_info="auto_tweaks"
@@ -255,11 +261,11 @@
 			<div regular_box id="cg_buttons">
 				<div id="cg_buttons_cards">
 					<div id="cg_buttons_turn_onn">
-						<vmixbtn seq_info="auto_seq" titled btname="yellow_card" onclick="$this.hand_card('yellow')">
+						<vmixbtn off seq_info="auto_seq" titled btname="yellow_card" onclick="$this.hand_card('yellow')">
 							<img draggable="false" contain class="punish_card_vis" src="./assets/yellow_card.png">
 							<div class="punish_card_title">YELLOW</div>
 						</vmixbtn>
-						<vmixbtn seq_info="auto_tweaks+auto_seq" titled btname="red_card" onclick="$this.hand_card('red')">
+						<vmixbtn off seq_info="auto_tweaks+auto_seq" titled btname="red_card" onclick="$this.hand_card('red')">
 							<img draggable="false" contain class="punish_card_vis" src="./assets/red_card.png">
 							<div class="punish_card_title">RED</div>
 						</vmixbtn>
@@ -373,25 +379,42 @@
 		</div>
 
 		<div id="score_ctrl_buttons">
-			<vmixbtn seq_info="update+vis_show" btname="show_score_results" onclick="$this.score_sum_vis(true)">Show scores</vmixbtn>
-			<vmixbtn seq_info="vis_hide" btname="show_score_results" onclick="$this.score_sum_vis(false)">Hide scores</vmixbtn>
+			<vmixbtn
+				seq_info="update+vis_show"
+				btname="show_score_results"
+				onclick="$this.show_score_summary()"
+			>Show scores</vmixbtn>
+
+			<vmixbtn
+				seq_info="vis_hide"
+				btname="hide_score_results"
+				onclick="$this.hide_score_summary(false)"
+			>Hide scores</vmixbtn>
+
+			<vmixbtn
+				kbhint="Hold ALT"
+				halfsize
+				seq_info="auto_tweaks"
+				btname="mod_score_author"
+				onclick="$this.mod_score_author(event)"
+			>Modify Author</vmixbtn>
 		</div>
 
 		<div id="team_stats_tables">
 
 			<!-- Team L -->
 			<div class="team_stats_table_container">
-				<div class="team_stats_table_header">
+				<div class="team_stats_table_header" id="team_stats_theader_home">
 					<img contain vis_feedback="team1_logo" src="./assets/red_cross.png">
-					<h1 vis_feedback="team1_name">_t1</h1>
+					<h1 vis_feedback="team1_name">_home</h1>
 				</div>
 				<div class="team_stats_table tstats_table_1"></div>
 			</div>
 			<!-- Team R -->
 			<div class="team_stats_table_container">
-				<div class="team_stats_table_header">
+				<div class="team_stats_table_header" id="team_stats_theader_guest">
 					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png">
-					<h1 vis_feedback="team2_name">_t1</h1>
+					<h1 vis_feedback="team2_name">_guest</h1>
 				</div>
 				<div class="team_stats_table tstats_table_2"></div>
 			</div>
@@ -412,17 +435,17 @@
 
 			<!-- Team L -->
 			<div class="team_stats" regular_box>
-				<div class="team_stats_head">
+				<div class="team_stats_head" id="team_stats_btn_ctrl_home">
 					<img contain vis_feedback="team1_logo" src="./assets/red_cross.png">
-					<h1 vis_feedback="team1_name">_t1</h1>
+					<h1 vis_feedback="team1_name">_home</h1>
 				</div>
 				<div class="team_stats_buttons tstats_buttons_team_1"></div>
 			</div>
 			<!-- Team R -->
 			<div class="team_stats" regular_box>
-				<div class="team_stats_head">
+				<div class="team_stats_head" id="team_stats_btn_ctrl_guest">
 					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png">
-					<h1 vis_feedback="team2_name">_t1</h1>
+					<h1 vis_feedback="team2_name">_guest</h1>
 				</div>
 				<div class="team_stats_buttons tstats_buttons_team_2"></div>
 			</div>
@@ -551,7 +574,7 @@
 
 			<side-indicator></side-indicator>
 
-			<lineup-config>
+			<lineup-config kbhint="Colours update/save automatically upon changes">
 
 				<sysbtn
 				 kbhint="Open this club for editing in the club panel"
@@ -576,13 +599,13 @@
 
 				<lineup-player-picker></lineup-player-picker>
 
-				<lineup-main kbhint="Main players" lineup_list>
+				<lineup-main kbhint="Main players. ALT + RMB to remove a player from the list" lineup_list>
 					<sysbtn btname="append_player_to_main_lineup">Add Here</sysbtn>
 					<lineup-pool></lineup-pool>
 					<img contain class="club_side_indicator" src="./assets/flying_rocket.svg">
 				</lineup-main>
 
-				<lineup-reserve kbhint="Reserve players" lineup_list>
+				<lineup-reserve kbhint="Reserve players. ALT + RMB to remove a player from the list" lineup_list>
 					<sysbtn btname="append_player_to_reserve_lineup">Add Here</sysbtn>
 					<lineup-pool></lineup-pool>
 					<img invert_rgb contain class="club_side_indicator" src="./assets/bench.png">

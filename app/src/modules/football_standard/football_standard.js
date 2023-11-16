@@ -241,6 +241,8 @@ $this.load = async function(){
 		card_player_filter: null,
 
 		card_manager: null,
+
+		score_manager: null,
 	};
 
 	// --------------------------
@@ -490,6 +492,9 @@ $this.load = async function(){
 	// Misc.
 	// --------------------------
 	{
+		// todo: save this info to a file too?
+		// Or even better: Make these fields part of the core
+
 		// Load todays commenter
 		$('#commenter_name_input')[0].value = mctx.cache.todays_commenter;
 		// Load VS sublines
@@ -505,6 +510,7 @@ $this.load = async function(){
 	// stats
 	//
 	{
+		// todo: this is old copypasted code
 		const prev_stats = JSON.parse(ksys.db.module.read('stats.fball')) || {'1':{}, '2':{}};
 
 		$this.stats_unit_pool = {};
@@ -544,7 +550,10 @@ $this.load = async function(){
 	// Modern save data
 	// 
 	{
-		$this.load_lineup_lists()
+		$this.load_lineup_lists();
+		$this.load_field_layouts();
+		$this.load_card_data();
+		$this.load_score_data();
 	}
 
 
@@ -683,6 +692,7 @@ $this.FootballClub = class{
 	}
 
 	// Create club control panel
+	// todo: somehow make the file input element look like a file has just been selected
 	control_panel_elem(){
 		const self = this;
 
@@ -755,6 +765,8 @@ $this.FootballClub = class{
 		$('#club_definition club-def').remove();
 		// Append new club
 		$('#club_definition').append(this.control_panel_elem().elem);
+		// set reference to this club in the resource index
+		$this.resource_index.club_ctrl = this;
 	}
 
 	// return a json representing this club
@@ -825,21 +837,13 @@ $this.ClubPlayer = class{
 			generic_list_elem.index.surname.textContent = this.player_surname.upper();
 		}
 
-		// todo: is this the right place for this?
-		// Trigger lineup save
-		// Reason: To keep data consistency.
-		// Example:
-		//     1 - Players are placed on the field
-		//     2 - Player's name changes
-		//     3 - Last lineup save still has the old name
-		//     4 - Controller reolads and tries loading last layout
-		//     5 - The mechanism encouters the old, unchanged name
-		//     6 - The mechanism creates resonance cascade
-		//     7 - Everybody dies.
-		//         (JK LOL, it simply skips the problematic player,
-		//         aka he will not be added to any lists or field.
-		//         I hope it's understandable, that this is bad enough, or at least stupid)
-		$this.global_save({'lineup_lists': true})
+		// todo: there used to be
+		/*
+		$this.global_save({
+			'lineup_lists': true,
+			'field_layout': true,
+		})
+		*/
 	}
 
 	// Remove the player from EVERYWHERE
@@ -1155,6 +1159,9 @@ $this.TeamLineup = class{
 		// Edit related club in the club panel
 		this.tplate.index.edit_club_btn.onclick = function(){
 			self.club.open_panel();
+
+			// Switch to the "Clubs" tab
+			// (Standard panel from the very top)
 			$('sys-tab[match_id="club_def"]').click();
 		}
 
@@ -1500,6 +1507,8 @@ $this.FieldLayout = class{
 		this.lineup = lineup;
 		this.grid = new Set();
 
+		// Map of cell dom:linked cell dict
+		// todo: unused
 		this.cell_map = new Map();
 
 		// the player being dragged
@@ -1528,6 +1537,7 @@ $this.FieldLayout = class{
 				cell.dom.onmouseup = function(){
 					if (!self.drag_target.player){return};
 
+					// todo: it seems like this could benefit from a few return statements...
 					if (cell.player){
 						print('Cell has player, swapping:', cell.player)
 
@@ -1545,12 +1555,20 @@ $this.FieldLayout = class{
 							print('Sufficient data, swapping struct')
 							old_cell.player = new_cell.player;
 							new_cell.player = self.drag_target.player;
+
+							// todo: is this the right place for this?
+							// Save field layout
+							$this.global_save({'field_layout': true})
 						}
 
 						// When swapping with an element from a list
 						if (!old_cell && new_cell){
 							print('Swapping from a list')
 							new_cell.player = self.drag_target.player;
+
+							// todo: is this the right place for this?
+							// Save field layout
+							$this.global_save({'field_layout': true})
 						}
 						print('cells with new players', new_cell, old_cell)
 					}else{
@@ -1564,7 +1582,11 @@ $this.FieldLayout = class{
 						cell.dom.innerHTML = '';
 						cell.dom.append(self.drag_target.list_elem)
 						cell.player = self.drag_target.player;
-						print('cell with new player', cell)
+						print('cell with new player', cell);
+
+						// todo: is this the right place for this?
+						// Save field layout
+						$this.global_save({'field_layout': true})
 					}
 
 					self.drag_target = {
@@ -1578,6 +1600,10 @@ $this.FieldLayout = class{
 					if (evt.altKey){
 						cell.dom.innerHTML = '';
 						cell.player = null;
+
+						// todo: is this the right place for this?
+						// Save field layout
+						$this.global_save({'field_layout': true})
 					}
 				}
 
@@ -1739,6 +1765,68 @@ $this.FieldLayout = class{
 	swap_cells(self, cell_a, cell_b){
 		const cstruct_a = self.cell_map[cell_a];
 		const cstruct_b = self.cell_map[cell_b];
+	}
+
+	// dump field layout to json
+	/*
+	{
+		'cell_id': 'name_id',
+		'cell_id': 'name_id',
+		...
+	}
+	*/
+	to_json(){
+		const layout = {};
+
+		for (const cell of this.iter_cells()){
+			if (!cell.player){continue};
+
+			layout[cell.id] = cell.player.name_id;
+		}
+
+		return layout;
+	}
+
+	wipe_field(){
+		this.hover_target = null;
+		this.drag_target = {
+			'player': null,
+			'list_elem': null,
+			'cell': null,
+		};
+
+		for (const cell in this.iter_cells()){
+			cell.player = null;
+			$(cell.dom).empty();
+		}
+	}
+
+	// layout_data is a dict of cell_id:name_id
+	apply_layout(layout_data){
+		if (!layout_data){
+			console.error('No layout data supplied to apply_layout', layout_data, this.lineup)
+			return
+		}
+
+		// First - wipe the field
+		this.wipe_field()
+
+		// Now, add players
+		for (const cell of this.iter_cells()){
+			const player = this.lineup.club.get_player_by_nameid(layout_data[cell.id])
+			if (!player){continue};
+
+			cell.player = player;
+
+			// create generic player list item
+			const player_list_item = player.generic_list_elem();
+
+			// create binds
+			this.bind_list_item(this, player_list_item, player);
+
+			// todo: get rid of jquery
+			$(cell.dom).html(player_list_item.elem);
+		}
 	}
 }
 
@@ -1953,6 +2041,8 @@ $this.FMStatInstance = class{
 // This entire class is slightly retarded, because it's not a child of Club/Lineup/whatever
 // Which means it has to tie itself to the data manually
 // todo: make it a child too ?
+// todo: add to_json() method
+// todo: over time the entire club would be in the red card registry. Too bad
 
 // important todo: There are too many redraw calls.
 // It's totally possible to reduce the load (from 10ms to 9ms)
@@ -1972,7 +2062,6 @@ $this.CardManager = class {
 
 				// dynamic
 				club: null,
-
 
 				// key: player class
 				// value: dict:
@@ -2097,7 +2186,7 @@ $this.CardManager = class {
 			}
 		}
 
-		// also resync vmix title
+		// also resync vmix title (tiny red squares above timer)
 		// todo: is this the right place ?
 		self.resync_vmix(self)
 	}
@@ -2307,6 +2396,10 @@ $this.CardManager = class {
 			// otherwise - it's a first warning
 			pcard_info.warned = true;
 			title = $this.titles.yellow_card;
+
+			// todo: is this the right place?
+			// save card data
+			$this.global_save({'card_data': true})
 		}
 
 		self.eval_button_states(self)
@@ -2359,6 +2452,10 @@ $this.CardManager = class {
 		})
 		self.redraw_counters(self)
 		self.eval_button_states(self)
+
+		// todo: is this the right place?
+		// save card data
+		$this.global_save({'card_data': true})
 	}
 
 	// Cancel the last red card on team basis
@@ -2379,7 +2476,13 @@ $this.CardManager = class {
 				record.red = false;
 			}
 		}
+
 		self.sides[side].red_stack.del_idx(-1)
+
+		// todo: is this the right place?
+		// save card data
+		$this.global_save({'card_data': true})
+
 		self.redraw_counters(self)
 		self.eval_button_states(self)
 	}
@@ -2392,6 +2495,10 @@ $this.CardManager = class {
 				pside.red_stack.delete(rcard_record)
 			}
 		}
+
+		// todo: is this the right place?
+		// save card data
+		$this.global_save({'card_data': true})
 	}
 
 	// Pardon the player
@@ -2405,6 +2512,10 @@ $this.CardManager = class {
 			pcard_info.warned = false;
 			self.eval_button_states(self)
 			self.redraw_counters(self)
+
+			// todo: is this the right place?
+			// save card data
+			$this.global_save({'card_data': true})
 			return
 		}
 
@@ -2416,6 +2527,10 @@ $this.CardManager = class {
 			self.named_red_pardon(self, player)
 			self.eval_button_states(self)
 			self.redraw_counters(self)
+
+			// todo: is this the right place?
+			// save card data
+			$this.global_save({'card_data': true})
 			return
 		}
 
@@ -2427,6 +2542,10 @@ $this.CardManager = class {
 			self.named_red_pardon(self, player)
 			self.eval_button_states(self)
 			self.redraw_counters(self)
+
+			// todo: is this the right place?
+			// save card data
+			$this.global_save({'card_data': true})
 			return
 		}
 
@@ -2445,6 +2564,48 @@ $this.CardManager = class {
 				await $this.titles.timer.toggle_img(`rcard_${side_idx+1}_${card_idx+1}`, !!side.red_stack.at(card_idx))
 			}
 		}
+	}
+
+	// todo: check whether club names match
+	apply_data(input_data){
+		if (!input_data){
+			console.warn('Tried loading invalid card data:', input_data);
+			return
+		};
+
+		for (const side of ['home', 'guest']){
+			// todo: is it fine to get club by side ?
+			const club = this.sides[side].club;
+
+			if (!input_data[side] || !club){continue};
+
+			this.sides[side].yc_map = new Map();
+			this.sides[side].red_stack = new Set();
+
+			// reconstruct yc map
+			for (const player_nameid in input_data[side].yc_map){
+				const player = club.get_player_by_nameid(player_nameid);
+				const record_data = input_data[side].yc_map[player_nameid];
+				if (!player){continue};
+
+				this.sides[side].yc_map.set(player, record_data);
+			}
+
+			// reconstruct red stack
+			for (const player_nameid of input_data[side].red_stack){
+				const player = club.get_player_by_nameid(player_nameid);
+				if (!player && player_nameid !== false){continue};
+
+				this.sides[side].red_stack.add({
+					'player': player || null,
+				})
+			}
+		}
+
+		// redraw/resync stuff
+		this.redraw_counters(this)
+		this.redraw_card_vis_feedback_in_list_item(this)
+		this.eval_button_states(this)
 	}
 }
 
@@ -2479,7 +2640,7 @@ $this.ClubGoals = class {
 					'autogoal': false,
 					'penalty': false,
 				},
-				'time': score timestamp in seconds,
+				'time': score timestamp components,
 
 				'dom_struct': the dom of the score element,
 			}
@@ -2510,7 +2671,7 @@ $this.ClubGoals = class {
 	}
 
 	// Add a score
-	add_score(self, player=null, flags=null){
+	add_score(self, player=null, flags=null, timestamp_override=null, dosave=true, ignore_timer=false){
 		const input_flags = flags || {};
 		// create a dom template
 		const tplate = ksys.tplates.index_tplate(
@@ -2529,7 +2690,7 @@ $this.ClubGoals = class {
 		);
 
 		// sanity check
-		if (!$this?.base_counter?.tick){
+		if (!$this?.base_counter?.tick && !ignore_timer){
 			ksys.info_msg.send_msg(
 				`Main timer does not exist (no timestamp will be added to the score record)`,
 				'warn',
@@ -2537,10 +2698,13 @@ $this.ClubGoals = class {
 			);
 		}
 
-		// get combined current time in minutes 
-		const calculated_timestamp = $this.get_current_time(true);
+		// get combined current time in minutes
+		// todo: is it possible for timestamp_override to happen to be random rubbish data
+		// therefore corrupting half the data structure ?
+		const calculated_timestamp = timestamp_override || $this.get_current_time(true);
 
 		// create a registry record
+		// todo: protection from garbage in input_flags.autogoal & input_flags.penalty
 		const record = {
 			'author': player,
 			'flags': {
@@ -2560,7 +2724,7 @@ $this.ClubGoals = class {
 
 		// add flags
 		tplate.index.autogoal_flag.checked = record.flags.autogoal;
-		tplate.index.autogoal_flag.penalty = record.flags.penalty;
+		tplate.index.penalty_flag.checked = record.flags.penalty;
 
 		// set timestamp in minutes
 		if (calculated_timestamp.extra){
@@ -2589,7 +2753,11 @@ $this.ClubGoals = class {
 
 		// Time change
 		tplate.index.timestamp.onchange = function(evt){
-			record.time = evt.target.value;
+			const components = evt.target.value.split('+');
+			record.time.base = int(components[0] || 0);
+			record.time.extra = int(components[1] || 0);
+
+			$this.global_save({'scores': true});
 		}
 
 		// flags
@@ -2600,7 +2768,8 @@ $this.ClubGoals = class {
 			// coming from checkboxes - it'd be much easier to simulate an onclick event
 			// rather than bothering with maintaining the struct
 			// (cbox.checked = true does not trigger onchange event)
-			const click_switch = function(evt){
+			// todo: update: this breaks saving
+			const _click_switch = function(evt){
 				const target_cbox = evt.target.closest('record-flag').querySelector('input');
 
 				// switch off other flags
@@ -2614,19 +2783,57 @@ $this.ClubGoals = class {
 
 				// activate target
 				evt.target.closest('record-flag').querySelector('input').click();
+
+				// $this.global_save({'scores': true})
 			}
 
 			// autogoal flag change
-			tplate.index.autogoal_flag.onchange = function(evt){
-				record.flags.autogoal = evt.target.checked;
-			}
+			// tplate.index.autogoal_flag.onchange = function(evt){
+			// 	record.flags.autogoal = evt.target.checked;
+			// }
 			// penalty flag change
-			tplate.index.penalty_flag.onchange = function(evt){
-				record.flags.penalty = evt.target.checked;
-			}
+			// tplate.index.penalty_flag.onchange = function(evt){
+			// 	record.flags.penalty = evt.target.checked;
+			// }
 
-			tplate.index.autogoal_hitbox.onclick = click_switch;
-			tplate.index.penalty_hitbox.onclick = click_switch;
+			// todo: this is a stupid retarded hack. What if there are more checkboxes ?
+			// (this is related to )
+			tplate.index.autogoal_hitbox.onclick = function(evt){
+				if (tplate.index.autogoal_flag.checked){
+					tplate.index.autogoal_flag.checked = false;
+					tplate.index.penalty_flag.checked = false;
+
+					record.flags.autogoal = false;
+					record.flags.penalty = false;
+				}else{
+					tplate.index.autogoal_flag.checked = false;
+					tplate.index.penalty_flag.checked = false;
+
+					tplate.index.autogoal_flag.checked = true;
+					record.flags.penalty = false;
+					record.flags.autogoal = true;
+				}
+
+				$this.global_save({'scores': true})
+			};
+			tplate.index.penalty_hitbox.onclick = function(evt){
+				if (tplate.index.penalty_flag.checked){
+					tplate.index.autogoal_flag.checked = false;
+					tplate.index.penalty_flag.checked = false;
+
+					record.flags.autogoal = false;
+					record.flags.penalty = false;
+				}else{
+					tplate.index.autogoal_flag.checked = false;
+					tplate.index.penalty_flag.checked = false;
+
+					tplate.index.penalty_flag.checked = true;
+					record.flags.autogoal = false;
+					record.flags.penalty = true;
+				}
+
+				$this.global_save({'scores': true})
+			};
 		}
 
 
@@ -2640,6 +2847,8 @@ $this.ClubGoals = class {
 				self.score_stack.delete(record);
 				tplate.elem.remove()
 				$this.resource_index.score_manager.resync_score_on_title()
+
+				$this.global_save({'scores': true})
 			}
 		}
 
@@ -2658,11 +2867,17 @@ $this.ClubGoals = class {
 			}
 		}
 
+		// todo: is this stupid?
+		if (dosave){
+			$this.global_save({'scores': true})
+		}
+
 		// finally, append the template to the DOM
 		self.tplate.index.list.append(tplate.elem)
 
+		// todo: what about async methods in here?
+		// this function is also used to load scores from the previous save...
 		$this.resource_index.score_manager.resync_score_on_title()
-
 	}
 
 	// modify the author of the selected score record
@@ -2678,25 +2893,30 @@ $this.ClubGoals = class {
 		}
 
 		// get the new player selected in the player picker
-		const new_player = $this.resource_index.score_manager.player_picker.selected_entry;
+		const new_player = $this.resource_index.score_manager.player_picker.selected_entry.player;
 
 		// modify the record
 		self.selected_record.author = new_player;
 
-		$(self.selected_record.dom_struct.score_author).html(new_player.generic_list_elem())
+		print('Selected don struct', self.selected_record)
 
-		// reset the record selection to prevent accidents
-		$this.resource_index.score_manager.reset_player_selection();
+		$(self.selected_record.dom_struct.index.score_author).html(new_player.generic_list_elem().elem)
 
 		// idiot
 		if (!self.parent_club.playerbase.has(new_player)){
 			// todo: make it present by default, but with visibility disabled
-			$(self.selected_record.dom_struct.score_author).append(
+			$(self.selected_record.dom_struct.index.score_author).append(
 				'<img class="self_score_indicator" src="./assets/clown.png">'
 			)
 		}else{
-			$(self.selected_record.dom_struct.score_author).find('.self_score_indicator').remove()
+			$(self.selected_record.dom_struct.index.score_author).find('.self_score_indicator').remove()
 		}
+
+		// reset the record selection to prevent accidents
+		$this.resource_index.score_manager.reset_player_selection();
+
+		// todo: is this the right place ?
+		$this.global_save({'scores': true})
 	}
 
 	set_selected_record(self, record){
@@ -2781,6 +3001,91 @@ $this.ScoreManager = class {
 		}
 		
 	}
+
+	// todo: add as_string param to all to_json() methods
+	to_json(){
+		const dump = {
+			'home': {
+				'club_name': null,
+				'score_list': [],
+			},
+			'guest': {
+				'club_name': null,
+				'score_list': [],
+			},
+		};
+
+		for (const side of ['home', 'guest']){
+			if (!this.sides[side].score_list){continue};
+
+			dump[side].club_name = this.sides[side].score_list.parent_club.club_name.lower();
+
+			for (const score of this.sides[side].score_list.score_stack){
+				dump[side].score_list.push({
+					'author': score?.author?.name_id || null,
+					'flags': score.flags,
+					'timestamp': score.time,
+				})
+			}
+		}
+
+		return dump
+	}
+
+	// todo: check club names
+	// todo: make all to_json/apply_data functions be like in this class
+	// (solid data structure and the save function from outside doesn't even create a temp buffer)
+	apply_data(input_data){
+		for (const side of ['home', 'guest']){
+			const tgt_score_list = this.sides[side].score_list;
+			const src_score_list = input_data[side].score_list;
+			if (!tgt_score_list || !src_score_list){continue};
+
+			for (const score of src_score_list){
+				const player =
+					this.sides.home?.score_list?.parent_club?.get_player_by_nameid?.(score.author)
+					||
+					this.sides.guest?.score_list?.parent_club?.get_player_by_nameid?.(score.author)
+					||
+					null
+
+				tgt_score_list.add_score(
+					tgt_score_list,
+					player,
+					score.flags,
+					score.timestamp,
+					false,
+					true,
+				)
+			}
+		}
+
+		// todo: is this really needed ?
+		this.resync_score_on_title()
+	}
+
+	// todo: unused
+	get selected_score_record(){
+		return (
+			this.sides?.home?.score_list?.selected_record
+			||
+			this.sides?.guest?.score_list?.selected_record
+			||
+			null
+		)
+	}
+
+	modify_score_author(){
+		// todo: beautify ?
+		if (this.sides?.home?.score_list?.selected_record){
+			this.sides.home.score_list.mod_author(this.sides.home.score_list)
+			return
+		}
+		if (this.sides?.guest?.score_list?.selected_record){
+			this.sides.guest.score_list.mod_author(this.sides.guest.score_list)
+			return
+		}
+	}
 }
 
 
@@ -2841,6 +3146,10 @@ $this.save_club_to_file = function(){
 	tgt_file.writeFileSync(
 		JSON.stringify($this.resource_index.club_ctrl.to_json(), null, '\t')
 	)
+
+	// todo: is this the right place for it?
+	// see explanation in save_club_to_local_db about why is it here
+	$this.global_save(null)
 }
 
 // Delete currently edited club from disk
@@ -2882,6 +3191,22 @@ $this.save_club_to_local_db = function(mute=true){
 
 	// re-index dropdowns
 	$this.resource_index.club_selector_dropdown.resync()
+
+	// todo: is this the right place for this?
+	// Trigger full global save
+	// Reason: To keep data consistency.
+	// Example:
+	//     1 - Players are placed on the field
+	//     2 - Player's name changes
+	//     3 - Last lineup save still has the old name
+	//     4 - Controller reolads and tries loading last layout
+	//     5 - The mechanism encouters the old, unchanged name
+	//     6 - The mechanism creates resonance cascade
+	//     7 - Everybody dies.
+	//         (JK LOL, it simply skips the problematic player,
+	//         aka he will not be added to any lists or field.
+	//         I hope it's understandable, that this is bad enough, or at least stupid)
+	$this.global_save(null)
 }
 
 
@@ -2927,7 +3252,7 @@ $this.create_club_lineup = function(side, clubname, input_lineup_info=null){
 		// This should never happen, because this function can only be triggered
 		// internally
 		ksys.info_msg.send_msg(
-			`Why did this even happen? No clubname supplied to lineup loader: ${clubname}`,
+			`How did this even happen? No clubname supplied to lineup loader (everything's fine): >${clubname}<`,
 			'err',
 			9000
 		);
@@ -3037,6 +3362,19 @@ $this.create_club_lineup = function(side, clubname, input_lineup_info=null){
 
 	// resync card manager
 	$this.resource_index.card_manager.resync($this.resource_index.card_manager)
+
+	// resync old system stats headers
+	// todo: finally make old stat system use new stuff
+	{
+		if ($this.resource_index.side.home.club){
+			$('#team_stats_theader_home').html($this.resource_index.side.home.club.vis_header_elem());
+			$('#team_stats_btn_ctrl_home').html($this.resource_index.side.home.club.vis_header_elem());
+		}
+		if ($this.resource_index.side.guest.club){
+			$('#team_stats_theader_guest').html($this.resource_index.side.guest.club.vis_header_elem());
+			$('#team_stats_btn_ctrl_guest').html($this.resource_index.side.guest.club.vis_header_elem());
+		}		
+	}
 }
 
 
@@ -3120,6 +3458,10 @@ $this.forward_field_layout_to_vmix = async function(team){
 	// player slots
 	// 
 	await $this.wipe_player_list_from_title()
+
+	// Set label back to starters
+	await await title.set_text('playerlist_head', 'СТАРТОВІ');
+
 	for (const cell of tgt_field.iter_cells()){
 		// tshirt colour
 		await title.set_img_src(`plr_bg_${cell.id}`, str(player_tshirt_col));
@@ -3210,10 +3552,15 @@ $this.show_field_layout = async function(team){
 
 	// wait for 10 seconds
 	// await ksys.util.sleep(10000)
+	await ksys.util.sleep(1000)
 
 
 	// commit warcrimes (changes)
 	// await $this.wipe_player_list_from_title()
+
+	// Set label to reserve
+	await title.set_text('playerlist_head', 'ЗАПАСНІ');
+
 	let counter = 1;
 	for (const idx of range(1, 12)){
 		// await ksys.util.sleep(100)
@@ -3787,7 +4134,7 @@ $this.get_current_time = function(minutes=false, tsum=false){
 		return {
 			'base': base_t,
 			'extra': Math.ceil(
-				extra_t / divider
+				(extra_t || 0) / divider
 			),
 		}
 	}
@@ -3844,6 +4191,196 @@ $this.hide_scored_title = function(){
 	$this.titles.gscore.overlay_out(1)
 }
 
+$this.mod_score_author = function(evt){
+	if (!evt.altKey){return};
+
+	const selected_player = $this.resource_index.score_manager.player_picker?.selected_entry?.player;
+	const selected_score_entry = $this.resource_index.score_manager.selected_score_record;
+	if (!selected_player){
+		ksys.info_msg.send_msg(
+			`No player selected`,
+			'warn',
+			2000
+		);
+		return
+	}
+	if (!selected_score_entry){
+		ksys.info_msg.send_msg(
+			`No score record selected`,
+			'warn',
+			2000
+		);
+		return
+	}
+
+	$this.resource_index.score_manager.modify_score_author()
+
+}
+
+
+// todo: get rid of ?.
+$this.show_score_summary = async function(){
+	// todo: this is only a dict for easy access
+	const score_summary = {
+		'home': [],
+		'guest': [],
+	}
+
+	// 
+	// Create the scores list for both teams
+	// 
+	for (const side of ['home', 'guest']){
+		const score_stack = $this.resource_index?.score_manager?.sides[side]?.score_list?.score_stack;
+		if (!score_stack){continue};
+
+		// todo: not only there's certainly a better way of doing this,
+		// but this should also be sorted
+
+		// per every player
+		// todo: this "player" variable naming is a direct violation of at least 9 Geneva conventions
+		const collected_players = [];
+		for (const player of score_stack){
+
+			// Don't re-collect same players 
+			if (collected_players.includes(player.author)){
+				continue
+			}else{
+				collected_players.push(player.author)
+			}
+
+			const collected_scores = [];
+
+			// traverse the entire list again
+			// and collect all scores associated with him
+			for (const score of score_stack){
+				if (score.author == player.author){
+					collected_scores.push(score)
+				}
+			}
+
+
+			// Now process collected scores
+
+			// Create timestamps with flags
+			const score_times = [];
+			for (const score of collected_scores){
+				const score_t = [];
+
+				if (score.time.extra){
+					score_t.push(`${score.time.base}"+${score.time.extra}"`)
+				}else{
+					score_t.push(`${score.time.base}"`)
+				}
+
+				// todo: use else. There could be only one flag
+				if (score.flags.autogoal){
+					score_t.push('(аг.)')
+				}
+
+				if (score.flags.penalty){
+					score_t.push('(пен.)')
+				}
+
+				score_times.push(score_t.join(' '))
+			}
+
+			// Append constructed string to the final table
+
+			let score_string = '';
+			if (side == 'guest'){
+				score_string = 
+				`${ksys.strf.params.players.format(player.author.player_surname)} ${score_times.join(', ')}`;
+			}else{
+				score_string = 
+				`${score_times.join(', ')} ${ksys.strf.params.players.format(player.author.player_surname)}`;
+			}
+
+			score_summary[side].push(score_string)
+
+		}
+	}
+
+
+	// 
+	// Composite the title
+	// 
+
+
+	
+	// ------------------------------
+	// Set bottom score (0:0)
+	// ------------------------------
+	const score_amt_l = $this.resource_index?.score_manager?.sides?.home?.score_list?.score_stack?.size || 0;
+	const score_amt_r = $this.resource_index?.score_manager?.sides?.guest?.score_list?.score_stack?.size || 0;
+	await $this.titles.final_scores.set_text('score_sum', `${score_amt_l} : ${score_amt_r}`)
+
+
+	// ------------------------------
+	// Show the appropriate amount of fields
+	// ------------------------------
+	await $this.titles.final_scores.toggle_img('anim_full', false)
+	await $this.titles.final_scores.toggle_img('anim_half', false)
+
+	const need_rows = Math.max(score_amt_l, score_amt_r).clamp(1, 5)
+	// todo: hardcoded path. Too bad.
+	$this.titles.final_scores.set_img_src(
+		'upper_bg',
+		Path('C:/custom/vmix_assets/differential').join(`${need_rows}.png`)
+	)
+
+
+	// ------------------------------
+	// Push score lists to the title
+	// ------------------------------
+	await $this.titles.final_scores.set_text(
+		'scores_l',
+		score_summary.home.join('\n')
+	)
+	await $this.titles.final_scores.set_text(
+		'scores_r',
+		score_summary.guest.join('\n')
+	)
+
+
+	// ------------------------------
+	// Misc.
+	// ------------------------------
+
+	// team name LEFT
+	await $this.titles.final_scores.set_text(
+		'team_name_l',
+		ksys.strf.params.club_name.format($this.resource_index.side.home?.club?.club_name)
+	)
+	// team logo LEFT
+	await $this.titles.final_scores.set_img_src(
+		'team_logo_l',
+		$this.resource_index.side.home?.club?.logo_path || ''
+	)
+
+	// team name RIGHT
+	await $this.titles.final_scores.set_text(
+		'team_name_r',
+		ksys.strf.params.club_name.format($this.resource_index.side.guest?.club?.club_name || '')
+	)
+	// team logo RIGHT
+	await $this.titles.final_scores.set_img_src(
+		'team_logo_r',
+		$this.resource_index.side.guest?.club?.logo_path || ''
+	)
+
+	// Set bottom text
+	await $this.titles.final_scores.set_text(
+		'bottom_text',
+		$('#vs_text_bottom_lower').val()
+	)
+
+	// show the title
+	await $this.titles.final_scores.overlay_in(1)
+}
+
+$this.hide_score_summary = async function(){
+	await $this.titles.final_scores.overlay_out(1)
+}
 
 
 
@@ -3851,6 +4388,8 @@ $this.hide_scored_title = function(){
 // ================================
 //               Stats
 // ================================
+
+// todo: this is old, copypasted code
 
 $this.save_match_stats = function(){
 	const save = {};
@@ -4036,22 +4575,33 @@ $this.show_team_stats = async function(){
 		$this.stats_unit_pool[stat_name].push_to_vmix()
 	}
 
-	const score_amt_l = document.querySelectorAll('#score_ctrl_team1 .score_ctrl_table .team_score_record').length
-	const score_amt_r = document.querySelectorAll('#score_ctrl_team2 .score_ctrl_table .team_score_record').length
+	// Set scores
+	const score_amt_l = $this.resource_index.score_manager.sides.home.score_list.score_stack.size
+	const score_amt_r = $this.resource_index.score_manager.sides.guest.score_list.score_stack.size
 	await $this.titles.stats.set_text('scores', `${score_amt_l} : ${score_amt_r}`)
 
-	await $this.titles.stats.set_img_src('team_logo_l', $('#team1_def').attr('logo_path'))
-	await $this.titles.stats.set_img_src('team_logo_r', $('#team2_def').attr('logo_path'))
+	// set logos
+	await $this.titles.stats.set_img_src(
+		'team_logo_l',
+		$this.resource_index.side.home?.club?.logo_path || ''
+	)
+	await $this.titles.stats.set_img_src(
+		'team_logo_r',
+		$this.resource_index.side.guest?.club?.logo_path || ''
+	)
 
+	// set bottom text
+	// todo: pull it from a more reliable place ?
 	await $this.titles.stats.set_text('bottom_text', $('#vs_text_bottom_lower').val())
 
+	// Set club names
 	await $this.titles.stats.set_text(
 		'team_name_l',
-		ksys.strf.params.club_name.format($('#team1_def [prmname="team_name"] input').val())
+		ksys.strf.params.club_name.format($this.resource_index.side.home?.club?.club_name)
 	)
 	await $this.titles.stats.set_text(
 		'team_name_r',
-		ksys.strf.params.club_name.format($('#team2_def [prmname="team_name"] input').val())
+		ksys.strf.params.club_name.format($this.resource_index.side.guest?.club?.club_name)
 	)
 
 	await $this.titles.stats.overlay_in(1)
@@ -4074,15 +4624,24 @@ $this.hide_team_stats = async function(){
 
 
 
+
+
 // ================================
 //           Save/Load sys
 // ================================
 
-// А ЧЁ?! СЛАБО БАЙТЫ ПИСАТЬ, А?!
-// (Безполезная трата времени, это не питон. Буфер API тут мега всратый)
-
 // Every separate save target gets saved to a separate file:
 // save_lineup_lists: lineup_lists.kbsave
+
+
+// important todo: under some circumstances it's very important to check whether
+// the loaded player exists in any of the lineup lists.
+// Right now it's only checked against global club playerbase.
+
+// todo: add docs to some of the functions below
+
+
+
 
 
 
@@ -4108,28 +4667,26 @@ $this.hide_team_stats = async function(){
 // Save struct:
 /*
 {
-	'lineup_info': {
-		'home': {
-			'club_name': lowercase club name,
+	'home': {
+		'club_name': lowercase club name,
 
-			'tshirt_col': t-shirt colour,
-			'shorts_col': shorts colour,
-			'gk_col':     goalkeeper colour,
+		'tshirt_col': t-shirt colour,
+		'shorts_col': shorts colour,
+		'gk_col':     goalkeeper colour,
 
-			// main/reserve players
-			'player_lineup': {
-				'main_players': [
-					'player nameid',
-					'player nameid',
-					...
-				],
-				'reserve_players': [],
-			}
-		},
+		// main/reserve players
+		'player_lineup': {
+			'main_players': [
+				'player nameid',
+				'player nameid',
+				...
+			],
+			'reserve_players': [],
+		}
+	},
 
-		// same as home
-		'guest':{},
-	}
+	// same as home
+	'guest':{},
 }
 */
 $this.save_lineup_lists = function(){
@@ -4217,6 +4774,7 @@ $this.load_lineup_lists = function(){
 	const last_save = ksys.db.module.read('lineup_lists.kbsave', 'json');
 	if (!last_save){return};
 
+	// todo: compare club names
 	for (const side of ['home', 'guest']){
 		const side_info = last_save[side];
 		if (!side_info){continue};
@@ -4234,8 +4792,211 @@ $this.load_lineup_lists = function(){
 			}
 		)
 	}
-	
+}
 
+
+
+
+
+// ---------------
+//  Field layout
+// ---------------
+
+// File: field_layout.kbsave
+// Save entries:
+//     - Club name
+//     - field layout
+
+// Triggered when:
+// 	- Any field layout is changed
+//  - Player's name is changed in the club config panel
+
+// Save struct:
+/*
+{
+	'home': {
+		'club_name': lowercase club name,
+
+		'field': {
+			'cell_id': 'name_id',
+			'cell_id': 'name_id',
+			...
+		}
+	},
+
+	// same as home
+	'guest':{},
+}
+*/
+$this.save_field_layouts = function(){
+	print('Saving field layouts')
+	// todo: save layouts by club name ?
+	// aka without any ties to home/guest
+
+	const save_data = {
+		'home': {
+			'club_name': null,
+			'field': {},
+		},
+
+		'guest': {
+			'club_name': null,
+			'field': {},
+		},
+	}
+
+	for (const side of ['home', 'guest']){
+		save_data[side].club_name = $this.resource_index.side[side]?.club?.club_name?.lower?.();
+		save_data[side].field = $this.resource_index.side[side]?.field?.to_json?.() || {};
+	}
+
+	ksys.db.module.write(
+		'field_layout.kbsave',
+		JSON.stringify(save_data, null, '\t')
+	)
+}
+
+$this.load_field_layouts = function(){
+	// Check if there's anything in the save file
+	const last_save = ksys.db.module.read('field_layout.kbsave', 'json');
+	if (!last_save){return};
+
+	for (const side of ['home', 'guest']){
+		if (!$this.resource_index.side[side].field){continue};
+
+		$this.resource_index.side[side].field.apply_layout(last_save[side].field)
+	}
+}
+
+
+
+
+
+
+
+
+// ---------------
+//    Card info
+// ---------------
+
+// File: card_info.kbsave
+// Save entries:
+//     - All the card info
+
+// Triggered when:
+// 	- Card info is modified
+//  - Player's name is changed in the club config panel
+$this.save_card_data = function(){
+	print('Saving card data');
+
+	const card_manager = $this.resource_index.card_manager;
+
+	if (!card_manager){return};
+
+	const save_data = {
+		'home': {
+			'club_name': null,
+			'yc_map': {},
+			'red_stack': [],
+		},
+		'guest': {
+			'club_name': null,
+			'yc_map': {},
+			'red_stack': [],
+		},
+	}
+
+	for (const side of ['home', 'guest']){
+		const target_side = card_manager.sides[side];
+
+		if (target_side.club){
+			save_data[side].club_name = target_side.club.club_name.lower();
+
+			// yc map
+			for (const yc_record of target_side.yc_map){
+				const player = yc_record[0];
+				const record_data = yc_record[1];
+
+				save_data[side].yc_map[player.name_id] = record_data;
+			}
+
+			// red stack
+			for (const rcard_record of target_side.red_stack){
+				save_data[side].red_stack.push(rcard_record?.player?.name_id || false)
+			}
+		}
+	}
+
+	// save file
+	ksys.db.module.write(
+		'card_info.kbsave',
+		JSON.stringify(save_data, null, '\t')
+	)
+
+}
+
+
+$this.load_card_data = function(){
+	// Check if there's anything in the save file
+	const last_save = ksys.db.module.read('card_info.kbsave', 'json');
+	if (!last_save){return};
+
+	// sanity check
+	if (!$this.resource_index.card_manager){
+		console.error(`Why doesn't the card manager exist ?????`);
+		return
+	}
+
+	$this.resource_index.card_manager.apply_data(last_save)
+}
+
+
+
+
+// ---------------
+//     Scores
+// ---------------
+
+// File: score_data.kbsave
+// Save entries:
+//     - All scores
+
+// Triggered when:
+// 	- Score is added/removed
+//  - Player's name is changed in the club config panel
+$this.save_score_data = function(){
+	print('Saving score data')
+
+	const score_manager = $this.resource_index.score_manager;
+	if (!score_manager){
+		ksys.info_msg.send_msg(
+			`Score manager does not exist ???!!!`,
+			'err',
+			4000
+		);
+		console.error('Score manager does not exist:', score_manager)
+		return
+	}
+
+	// save file
+	ksys.db.module.write(
+		'score_data.kbsave',
+		JSON.stringify(score_manager.to_json(), null, '\t')
+	)
+}
+
+$this.load_score_data = function(){
+	// Check if there's anything in the save file
+	const last_save = ksys.db.module.read('score_data.kbsave', 'json');
+	if (!last_save){return};
+
+	const score_manager = $this.resource_index.score_manager;
+	if (!score_manager){
+		console.error('Score manager does not exist at the momment of loading save data');
+		return
+	}
+
+	score_manager.apply_data(last_save)
 }
 
 
@@ -4246,13 +5007,20 @@ $this.load_lineup_lists = function(){
 
 
 
+
+
+
+// ---------------
+//  Saving gateway
+// ---------------
+
 // pass null to save everything
 $this.global_save = function(save_targets=null){
 	const what_to_save = Object.assign(
 		{
 			'lineup_lists': false,
 			'field_layout': false,
-			'card_info': false,
+			'card_data': false,
 			'scores': false,
 		},
 		save_targets || {},
@@ -4264,13 +5032,60 @@ $this.global_save = function(save_targets=null){
 
 	// Save lineup lists
 	if (what_to_save.lineup_lists || save_targets == null){
-		// print('saving lineup_lists')
 		$this.save_lineup_lists()
 	}
 
+	// Save field layouts
+	if (what_to_save.field_layout || save_targets == null){
+		$this.save_field_layouts()
+	}
 
+	// Save card data
+	if (what_to_save.card_data || save_targets == null){
+		$this.save_card_data()
+	}
+
+	// Save score data
+	if (what_to_save.scores || save_targets == null){
+		$this.save_score_data()
+	}
 }
 
+
+
+
+
+
+
+
+
+
+
+
+// ================================
+//         Create new match
+// ================================
+$this.init_new_match = function(evt){
+	if (!evt.ctrlKey){return};
+	// First of all - delete files
+	const del_entries = [
+		'lineup_lists.kbsave',
+		'field_layout.kbsave',
+		'card_info.kbsave',
+		'score_data.kbsave',
+		'stats.fball',
+	]
+
+	for (const fname of del_entries){
+		ksys.db.module.delete(fname)
+	}
+
+	ksys.fbi.warn_critical(
+		'Just press CTRL + R. This is way more reliable, than cleaning up structures manually'
+	)
+
+	$('body').css({'pointer-events': 'none'})
+}
 
 
 
