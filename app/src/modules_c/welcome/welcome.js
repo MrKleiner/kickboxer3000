@@ -19,6 +19,17 @@ kbmodules.welcome.add_pgview_keybind = function(){
 
 
 
+kbmodules.welcome.edit_vmix_ip_addr = function(){
+	const ip_data = $('#vmix_ip_address_editor > input').val().split(':');
 
+	ksys.context.global.cache['vmix_ip'] = ip_data[0];
+	ksys.context.global.cache['vmix_port'] = ip_data[1] || '';
+	ksys.context.global.save()
+
+	ksys.fbi.warn_critical(
+		`Please press CTRL + R (there's nothing else you can do)`
+	)
+	$('body').css({'pointer-events': 'none'})
+}
 
 

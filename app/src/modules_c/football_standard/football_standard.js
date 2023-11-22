@@ -119,69 +119,6 @@ milliseconds lost due to all the iterations needed for registers.
 
 
 
-const _test = [
-	{
-		'name':    'Олександр',
-		'surname': 'Чернятинський',
-		'num':     '1',
-	},
-	{
-		'name':    'Ернест',
-		'surname': 'Астахов',
-		'num':     '27',
-	},
-	{
-		'name':    'Роман',
-		'surname': 'Андрієшин',
-		'num':     '44',
-	},
-	{
-		'name':    'Андрій',
-		'surname': 'Якимів',
-		'num':     '97',
-	},
-	{
-		'name':    'Олександр',
-		'surname': 'Дударенко',
-		'num':     '3',
-	},
-	{
-		'name':    'Руслан',
-		'surname': 'Дедух',
-		'num':     '18',
-	},
-	{
-		'name':    'Андрій',
-		'surname': 'Співаков',
-		'num':     '14',
-	},
-	{
-		'name':    'Микола',
-		'surname': 'Когут',
-		'num':     '19',
-	},
-	{
-		'name':    'Іван',
-		'surname': 'Когут',
-		'num':     '17',
-	},
-	{
-		'name':    'Владислав',
-		'surname': 'Войцеховський',
-		'num':     '11',
-	},
-	{
-		'name':    'Даниїл',
-		'surname': 'Сухоручко',
-		'num':     '21',
-	},
-];
-
-
-
-
-
-
 kbmodules.football_standard.load = async function(){
 	const mctx = ksys.context.module;
 
@@ -257,6 +194,7 @@ kbmodules.football_standard.load = async function(){
 			// field layout
 			'team_layout': new vmix.title({
 				'title_name': 'command_layout.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
 					'frames_in': 41,
@@ -268,6 +206,7 @@ kbmodules.football_standard.load = async function(){
 			// cards
 			'yellow_card': new vmix.title({
 				'title_name': 'yellow_card.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
 					'frames_in': 72,
@@ -276,6 +215,7 @@ kbmodules.football_standard.load = async function(){
 			}),
 			'red_card': new vmix.title({
 				'title_name': 'red_card.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
 					'frames_in': 20,
@@ -284,6 +224,7 @@ kbmodules.football_standard.load = async function(){
 			}),
 			'ycbr_card': new vmix.title({
 				'title_name': 'ycbr.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
 					'frames_in': 36,
@@ -294,6 +235,7 @@ kbmodules.football_standard.load = async function(){
 			// replacements
 			'replacement_out': new vmix.title({
 				'title_name': 'replacement_leaving.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
 					'frames_in': 35,
@@ -302,6 +244,7 @@ kbmodules.football_standard.load = async function(){
 			}),
 			'replacement_in': new vmix.title({
 				'title_name': 'replacement_incoming.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
 					'frames_in': 42,
@@ -311,6 +254,7 @@ kbmodules.football_standard.load = async function(){
 
 			'replacement_seq': new vmix.title({
 				'title_name': 'replacement_seq.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
 					'frames_in': 42,
@@ -322,6 +266,7 @@ kbmodules.football_standard.load = async function(){
 			// VS
 			'splash': new vmix.title({
 				'title_name': 'splash.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
 					'frames_in': 37,
@@ -333,6 +278,7 @@ kbmodules.football_standard.load = async function(){
 			// Goal / score
 			'gscore': new vmix.title({
 				'title_name': 'scored.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
 					'frames_in': 36,
@@ -343,6 +289,7 @@ kbmodules.football_standard.load = async function(){
 			// Coach l4d2
 			'coach': new vmix.title({
 				'title_name': 'coach.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
 					'frames_in': 26,
@@ -353,6 +300,7 @@ kbmodules.football_standard.load = async function(){
 			// Commenter
 			'commenter': new vmix.title({
 				'title_name': 'commenter.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
 					'frames_in': 26,
@@ -363,6 +311,7 @@ kbmodules.football_standard.load = async function(){
 			// Timer and scores
 			'timer': new vmix.title({
 				'title_name': 'score_and_time.gtzip',
+				'default_overlay': 1,
 				'timings': {
 					'fps': 25,
 					'frames_in': 23,
@@ -373,6 +322,7 @@ kbmodules.football_standard.load = async function(){
 			// Composed scores
 			'final_scores': new vmix.title({
 				'title_name': 'final_scores.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
 					'frames_in': 59,
@@ -383,6 +333,7 @@ kbmodules.football_standard.load = async function(){
 			// Statistics
 			'stats': new vmix.title({
 				'title_name': 'stats.gtzip',
+				'default_overlay': 2,
 				'timings': {
 					'fps': 10,
 					'frames_in': 30,
@@ -943,6 +894,19 @@ kbmodules.football_standard.ClubPlayer = class{
 		// bind deletion of the player from the registry
 		// (alt+RMB)
 		tplate.elem.oncontextmenu = function(evt){
+			const cant_del = [
+				kbmodules.football_standard.resource_index.side.home?.club?.club_name?.lower?.(),
+				kbmodules.football_standard.resource_index.side.guest?.club?.club_name?.lower?.(),
+			]
+			if (cant_del.includes(self.club.club_name.lower())){
+				ksys.info_msg.send_msg(
+					`Unfortunately, the data structure doesn't allow deleting players,
+					if their club is loaded in the lineup (to prevent data corruption)`,
+					'warn',
+					15000
+				);
+				return
+			}
 			if (evt.altKey){
 				// self combustion moment (real)
 				self.disqualify()
@@ -1735,7 +1699,7 @@ kbmodules.football_standard.FieldLayout = class{
 			}
 
 			// Create a global system-wide bind to stop the element floating
-			ksys.binds.mouseup = function(){
+			ksys.binds.mouseup = function(evt){
 
 				// Stop floating and effects
 				list_item.elem.classList.remove('is_dragging')
@@ -1745,6 +1709,13 @@ kbmodules.football_standard.FieldLayout = class{
 				// remove system-wide binds
 				ksys.binds.mousemove = null;
 				ksys.binds.mouseup = null;
+
+				if (!evt.target.closest('field-layout-grid cell')){
+					self.drag_target = {
+						'player': null,
+						'list_elem': null,
+					}
+				}
 			}
 
 			// Forward cursor position to the element
@@ -2361,11 +2332,11 @@ kbmodules.football_standard.CardManager = class {
 		await title.set_img_src('club_logo', player.club.logo_path)
 
 		// show the title
-		await title.overlay_in(1)
+		await title.overlay_in()
 		// let it hang for 7 seconds
 		await ksys.util.sleep(7000)
 		// hide the title
-		await title.overlay_out(1)
+		await title.overlay_out()
 	}
 
 	// hand a yellow card to a player
@@ -2757,7 +2728,18 @@ kbmodules.football_standard.ClubGoals = class {
 
 		// Time change
 		tplate.index.timestamp.onchange = function(evt){
-			const components = evt.target.value.split('+');
+			const input_val = evt.target.value;
+
+			// sanity check
+			if (input_val.includes('+') && (!input_val.includes('45') && !input_val.includes('90'))){
+				ksys.info_msg.send_msg(
+					`Are you sure this is a valid format ?`,
+					'warn',
+					5000
+				);
+			}
+
+			const components = input_val.split('+');
 			record.time.base = int(components[0] || 0);
 			record.time.extra = int(components[1] || 0);
 
@@ -3156,6 +3138,7 @@ kbmodules.football_standard.save_club_to_file = function(){
 	kbmodules.football_standard.global_save(null)
 }
 
+
 // Delete currently edited club from disk
 // and wipe anything referencing that club from the interface
 kbmodules.football_standard.delete_current_club = function(evt){
@@ -3234,10 +3217,16 @@ kbmodules.football_standard.load_club_by_name = function(clubname=null){
 	const existing_guest = kbmodules.football_standard.resource_index.guest_club;
 
 	if (clubname.lower() == existing_home?.club_name.lower()){
+		// todo: is this the right place for this ?
+		kbmodules.football_standard.save_club_to_local_db()
+
 		existing_home.open_panel()
 		return
 	}
 	if (clubname.lower() == existing_guest?.club_name.lower()){
+		// todo: is this the right place for this ?
+		kbmodules.football_standard.save_club_to_local_db()
+
 		existing_guest.open_panel()
 		return
 	}
@@ -3262,6 +3251,15 @@ kbmodules.football_standard.create_club_lineup = function(side, clubname, input_
 		);
 		return
 	};
+
+	if (clubname.lower() == kbmodules.football_standard.resource_index.side[side == 'home' ? 'guest' : 'home']?.club?.club_name?.lower?.()){
+		ksys.info_msg.send_msg(
+			`Unfortunately, the data structure does not allow clubs palying against themselves`,
+			'err',
+			9000
+		);
+		return
+	}
 
 	let club = null;
 
@@ -3464,7 +3462,7 @@ kbmodules.football_standard.forward_field_layout_to_vmix = async function(team){
 	await kbmodules.football_standard.wipe_player_list_from_title()
 
 	// Set label back to starters
-	await await title.set_text('playerlist_head', 'СТАРТОВІ');
+	await title.set_text('playerlist_head', 'СТАРТОВІ');
 
 	for (const cell of tgt_field.iter_cells()){
 		// tshirt colour
@@ -3538,12 +3536,13 @@ kbmodules.football_standard.forward_field_layout_to_vmix = async function(team){
 kbmodules.football_standard.show_field_layout = async function(team){
 	const tgt_lineup = kbmodules.football_standard.resource_index.side?.[str(team).lower()]?.lineup;
 
+	// todo: there's a batch switch now
 	{
 		ksys.btns.pool[`show_home_field_layout`].toggle(false)
 		ksys.btns.pool[`show_guest_field_layout`].toggle(false)
 	}
 
-	const title = kbmodules.football_standard.titles.team_layout
+	const title = kbmodules.football_standard.titles.team_layout;
 
 	// pause render
 	await title.pause_render()
@@ -3552,7 +3551,7 @@ kbmodules.football_standard.show_field_layout = async function(team){
 	await ksys.util.sleep(100)
 
 	// show the overlay
-	await title.overlay_in(1)
+	await title.overlay_in()
 
 	// wait for 10 seconds
 	// await ksys.util.sleep(10000)
@@ -3599,12 +3598,14 @@ kbmodules.football_standard.hide_field_layout = async function(){
 	// btn_pool.hide_home_field_layout.toggle(false)
 	// btn_pool.show_guest_field_layout.toggle(false)
 	// btn_pool.hide_guest_field_layout.toggle(false)
-	await kbmodules.football_standard.titles.team_layout.overlay_out(1)
+	await kbmodules.football_standard.titles.team_layout.overlay_out()
 	// btn_pool.show_home_field_layout.toggle(true)
 	// btn_pool.hide_home_field_layout.toggle(true)
 	// btn_pool.show_guest_field_layout.toggle(true)
 	// btn_pool.hide_guest_field_layout.toggle(true)
 }
+
+
 
 
 
@@ -3624,14 +3625,14 @@ kbmodules.football_standard.show_commenter = async function(){
 		'name',
 		$('#commenter_name_input')[0].value
 	)
-	await kbmodules.football_standard.titles.commenter.overlay_in(1)
+	await kbmodules.football_standard.titles.commenter.overlay_in()
 
 	ksys.btns.pool.show_commenter.toggle(true)
 }
 
 kbmodules.football_standard.hide_commenter = async function(){
 	ksys.btns.pool.show_commenter.toggle(false)
-	await kbmodules.football_standard.titles.commenter.overlay_out(1)
+	await kbmodules.football_standard.titles.commenter.overlay_out()
 	ksys.btns.pool.show_commenter.toggle(true)
 }
 
@@ -3683,7 +3684,7 @@ kbmodules.football_standard.show_vs_title = async function(){
 	)
 
 	// Show the title
-	await kbmodules.football_standard.titles.splash.overlay_in(1)
+	await kbmodules.football_standard.titles.splash.overlay_in()
 
 	// unlock the button
 	ksys.btns.pool.show_splash.toggle(true)
@@ -3691,7 +3692,7 @@ kbmodules.football_standard.show_vs_title = async function(){
 
 kbmodules.football_standard.hide_vs_title = async function(){
 	ksys.btns.pool.show_splash.toggle(false)
-	await kbmodules.football_standard.titles.splash.overlay_out(1)
+	await kbmodules.football_standard.titles.splash.overlay_out()
 	ksys.btns.pool.show_splash.toggle(true)
 }
 
@@ -3724,7 +3725,7 @@ kbmodules.football_standard.show_coach = async function(side){
 		'club_logo',
 		tgt_club.logo_path
 	)
-	await kbmodules.football_standard.titles.coach.overlay_in(1)
+	await kbmodules.football_standard.titles.coach.overlay_in()
 
 	ksys.btns.pool.show_coach_home_team.toggle(true)
 	ksys.btns.pool.hide_coach_home_team.toggle(true)
@@ -3733,7 +3734,7 @@ kbmodules.football_standard.show_coach = async function(side){
 }
 
 kbmodules.football_standard.hide_coach = async function(){
-	await kbmodules.football_standard.titles.coach.overlay_out(1)
+	await kbmodules.football_standard.titles.coach.overlay_out()
 }
 
 
@@ -3805,7 +3806,9 @@ kbmodules.football_standard.pardon_player = async function(){
 	)
 }
 
-
+kbmodules.football_standard.hide_card = async function(){
+	await vmix.talker.overlay_out()
+}
 
 
 
@@ -3851,12 +3854,12 @@ kbmodules.football_standard.exec_substitute = async function(){
 	await title.set_img_src('club_logo', leaving_player.club.logo_path)
 
 	// show the title
-	await title.overlay_in(1)
+	await title.overlay_in()
 	// let it hang for 11 seconds
 	// (this wait time also accounts for the scripted animation sequence inside the title)
 	await ksys.util.sleep(11000)
 	// hide the title
-	await title.overlay_out(1)
+	await title.overlay_out()
 }
 
 
@@ -4009,10 +4012,10 @@ kbmodules.football_standard.main_timer_vis = async function(state){
 		// push current score to the title
 		kbmodules.football_standard.resource_index.score_manager.resync_score_on_title()
 
-		title.overlay_in(2)
+		title.overlay_in()
 	}
 	if (state == false){
-		title.overlay_out(2)
+		title.overlay_out()
 	}
 }
 
@@ -4198,11 +4201,13 @@ kbmodules.football_standard.add_score_from_cards_panel = async function(){
 		`${player.player_num} ${ksys.strf.params.players.format(player.player_surname)}`
 	)
 
-	kbmodules.football_standard.titles.gscore.overlay_in(1)
+	await kbmodules.football_standard.titles.gscore.overlay_in()
+	await ksys.util.sleep(7000)
+	await kbmodules.football_standard.titles.gscore.overlay_out()
 }
 
-kbmodules.football_standard.hide_scored_title = function(){
-	kbmodules.football_standard.titles.gscore.overlay_out(1)
+kbmodules.football_standard.hide_scored_title = async function(){
+	await kbmodules.football_standard.titles.gscore.overlay_out()
 }
 
 kbmodules.football_standard.mod_score_author = function(evt){
@@ -4286,9 +4291,9 @@ kbmodules.football_standard.show_score_summary = async function(){
 				const score_t = [];
 
 				if (score.time.extra){
-					score_t.push(`${score.time.base}"+${score.time.extra}"`)
+					score_t.push(`${score.time.base}'+${score.time.extra}`)
 				}else{
-					score_t.push(`${score.time.base}"`)
+					score_t.push(`${score.time.base}'`)
 				}
 
 				// todo: use else. There could be only one flag
@@ -4354,12 +4359,12 @@ kbmodules.football_standard.show_score_summary = async function(){
 	// 
 
 
-	
+
 	// ------------------------------
 	// Set bottom score (0:0)
 	// ------------------------------
-	const score_amt_l = kbmodules.football_standard.resource_index?.score_manager?.sides?.home?.score_list?.score_stack?.size || 0;
-	const score_amt_r = kbmodules.football_standard.resource_index?.score_manager?.sides?.guest?.score_list?.score_stack?.size || 0;
+	const score_amt_l = score_summary.home.length || 0;
+	const score_amt_r = score_summary.guest.length || 0;
 	await kbmodules.football_standard.titles.final_scores.set_text('score_sum', `${score_amt_l} : ${score_amt_r}`)
 
 
@@ -4423,11 +4428,11 @@ kbmodules.football_standard.show_score_summary = async function(){
 	)
 
 	// show the title
-	await kbmodules.football_standard.titles.final_scores.overlay_in(1)
+	await kbmodules.football_standard.titles.final_scores.overlay_in()
 }
 
 kbmodules.football_standard.hide_score_summary = async function(){
-	await kbmodules.football_standard.titles.final_scores.overlay_out(1)
+	await kbmodules.football_standard.titles.final_scores.overlay_out()
 }
 
 
@@ -4652,7 +4657,7 @@ kbmodules.football_standard.show_team_stats = async function(){
 		ksys.strf.params.club_name.format(kbmodules.football_standard.resource_index.side.guest?.club?.club_name)
 	)
 
-	await kbmodules.football_standard.titles.stats.overlay_in(1)
+	await kbmodules.football_standard.titles.stats.overlay_in()
 
 	ksys.btns.pool.show_team_stats.toggle(true)
 }
@@ -4661,7 +4666,7 @@ kbmodules.football_standard.hide_team_stats = async function(){
 
 	ksys.btns.pool.hide_team_stats.toggle(false)
 
-	await kbmodules.football_standard.titles.stats.overlay_out(1)
+	await kbmodules.football_standard.titles.stats.overlay_out()
 
 	ksys.btns.pool.hide_team_stats.toggle(true)
 	ksys.btns.pool.show_team_stats.toggle(true)
@@ -5129,7 +5134,7 @@ kbmodules.football_standard.init_new_match = function(evt){
 	}
 
 	ksys.fbi.warn_critical(
-		'Just press CTRL + R. This is way more reliable, than cleaning up structures manually'
+		`Please press CTRL + R (there's nothing else you can do)`
 	)
 
 	$('body').css({'pointer-events': 'none'})

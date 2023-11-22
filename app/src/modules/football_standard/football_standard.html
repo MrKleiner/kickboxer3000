@@ -169,7 +169,6 @@
 						>Field Layout ONN</vmixbtn>
 						
 						<vmixbtn
-							off
 							seq_info="vis_hide"
 							btname="hide_home_field_layout"
 							onclick="$this.hide_field_layout()"
@@ -214,7 +213,6 @@
 						>Field Layout ONN</vmixbtn>
 						
 						<vmixbtn
-							off
 							seq_info="vis_hide"
 							btname="hide_guest_field_layout"
 							onclick="$this.hide_field_layout()"
@@ -393,10 +391,10 @@
 
 			<vmixbtn
 				kbhint="Hold ALT"
-				halfsize
 				seq_info="auto_tweaks"
 				btname="mod_score_author"
 				onclick="$this.mod_score_author(event)"
+				style="margin-left: 50px;"
 			>Modify Author</vmixbtn>
 		</div>
 
@@ -641,7 +639,7 @@
 			<field-layout-header></field-layout-header>
 			<field-layout-body>
 				<field-layout-picker></field-layout-picker>
-				<field-layout-grid></field-layout-grid>
+				<field-layout-grid kbhint="ALT + RMB to remove a player from the field"></field-layout-grid>
 			</field-layout-body>
 		</field-layout>
 	</template>

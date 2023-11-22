@@ -61,6 +61,9 @@ const ksys = {
 const vmix = {
 	talker: require('./sys/vmix_talker.js'),
 	title:  require('./sys/titlectrl.js'),
+	util: {
+		
+	}
 };
 
 

@@ -1,4 +1,11 @@
-#starting_page
+
+
+/*
+!~~ welcome
+*/
+
+
+welcome #starting_page
 {
 	display: flex;
 	flex-grow: 1;
@@ -15,20 +22,20 @@ welcome, greetings
 	flex-grow: 1;
 }
 
-#welcome_screen_title
+welcome #welcome_screen_title
 {
 	font-size: 50px;
 	text-align: center;
 }
 
-#welcome_screen_title_2
+welcome #welcome_screen_title_2
 {
 	text-align: center;
 	padding: 10px 30px 10px 30px;
 }
 
 
-greetings img
+welcome greetings img
 {
 	object-fit: contain;
 	object-position: center;
@@ -37,7 +44,7 @@ greetings img
 
 
 
-#system_selector
+welcome #system_selector
 {
 	/*padding: 30px;*/
 	margin: 30px;
@@ -47,7 +54,7 @@ greetings img
 }
 
 
-.vmix_preset_system
+welcome .vmix_preset_system
 {
 	user-select: none;
 	display: flex;
@@ -57,13 +64,13 @@ greetings img
 	font-size: 15px;
 }
 
-.vmix_preset_system:hover
+welcome .vmix_preset_system:hover
 {
 	background: rgba(255, 255, 255, 0.15);
 	outline: 1px solid rgb(120, 120, 120);
 }
 
-.vmix_preset_system:active
+welcome .vmix_preset_system:active
 {
 	outline-color: lime;
 	background-color: rgba(200, 255, 255, 0.15)
@@ -74,4 +81,30 @@ welcome sysbtn
 {
 	padding: 10px;
 	margin-left: 10px;
+}
+
+welcome #vmix_ip_address_editor{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	margin-top: 30px;
+}
+
+welcome #vmix_ip_address_editor > input{
+	flex-grow: 0;
+}
+
+welcome please-read{
+	top: 0px;
+	left: 0px;
+	width: 24vw;
+	position: fixed;
+	margin: 40px;
+}
+
+welcome please-read ul li{
+	color: red;
+	font-size: 20px;
+	margin-top: 10px;
 }

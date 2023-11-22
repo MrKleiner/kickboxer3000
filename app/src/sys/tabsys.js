@@ -2,6 +2,7 @@
 _tabsys = {};
 
 document.addEventListener('keydown', evt => {
+	return
 	if (evt.repeat){return};
 
 	if (evt.keyCode == 192 && _tabsys.quicktab){
@@ -12,6 +13,7 @@ document.addEventListener('keydown', evt => {
 });
 
 document.addEventListener('keyup', evt => {
+	return
 	if (_tabsys.quicktab_prev_tab && evt.keyCode == 192){
 		if (_tabsys.quicktab_prev_tab.classList.contains('active_tab')){return};
 		_tabsys.quicktab_prev_tab.click()

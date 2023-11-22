@@ -22,6 +22,7 @@ document.addEventListener('keypress', evt => {
 */
 
 document.addEventListener('keydown', evt => {
+	return
 	if (event.repeat != undefined) {
 		__allowed = !event.repeat;
 	}
@@ -47,6 +48,7 @@ document.addEventListener('keydown', evt => {
 });
 
 document.addEventListener('keyup', evt => {
+	return
 	if (evt.keyCode == 192 && _pgview.quick_view){
 		_pgview.quick_view.hide()
 	}
