@@ -1,0 +1,38 @@
+
+Resource manager rotates around title files
+and resources having different versions/revisions.
+
+It could be so that a titling session requires
+a slightly edited version of the same title
+as before.
+
+OR a single GT title having multiple revisions,
+fixes and whatever the fucknot.
+
+All of this combined with easier organization
+and pushing content to vmix.
+
+Pushing content to vmix:
+Creating a single file (archive/payload) of all the content
+needed for the current titling session.
+And then adding all of that to VMIX with a single button push.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

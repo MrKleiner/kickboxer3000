@@ -20,6 +20,7 @@ const hintsys_pool = {
 	},
 };
 
+// todo: stack hints from DOM tree
 
 
 document.addEventListener('mouseover', evt => {

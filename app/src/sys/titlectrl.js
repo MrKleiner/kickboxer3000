@@ -105,7 +105,7 @@ class vmix_title
 	}
 
 	async overlay_out(overlay_num=null, wait=true){
-		const target_overlay = overlay_num || this.last_overlay || 1;
+		const target_overlay = overlay_num || this.last_overlay || this.default_overlay || 1;
 
 		await vmix.talker.talk({
 			'Function': `OverlayInput${target_overlay}Out`,

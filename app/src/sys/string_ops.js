@@ -1,6 +1,8 @@
 
 const ops = {};
 
+
+// Data from official .gov website
 const translit_rules = [
 	{'pattern': 'а', 'replace': 'a'},
 	{'pattern': 'б', 'replace': 'b'},

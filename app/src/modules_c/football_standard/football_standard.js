@@ -197,7 +197,7 @@ kbmodules.football_standard.load = async function(){
 				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
-					'frames_in': 41,
+					'frames_in': 50,
 					'margin': 100,
 				},
 			}),
@@ -3425,7 +3425,7 @@ kbmodules.football_standard.wipe_player_list_from_title = async function(){
 }
 
 // Push current field layout/lineup to the field layout title in vmix
-kbmodules.football_standard.forward_field_layout_to_vmix = async function(team){
+kbmodules.football_standard._forward_field_layout_to_vmix = async function(team){
 	const tgt_side = str(team).lower();
 	const tgt_field = kbmodules.football_standard.resource_index.side?.[tgt_side]?.field;
 
@@ -3454,12 +3454,12 @@ kbmodules.football_standard.forward_field_layout_to_vmix = async function(team){
 	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
 	.join(`${tgt_field.lineup.colors.tshirt || 'ffffff'}.png`);
 
-	await title.pause_render()
+	// await title.pause_render()
 
 	// 
 	// player slots
 	// 
-	await kbmodules.football_standard.wipe_player_list_from_title()
+	// await kbmodules.football_standard.wipe_player_list_from_title()
 
 	// Set label back to starters
 	await title.set_text('playerlist_head', 'СТАРТОВІ');
@@ -3494,14 +3494,20 @@ kbmodules.football_standard.forward_field_layout_to_vmix = async function(team){
 	// 
 
 	// todo: stupid counter ?
-	let counter = 1;
-	for (const player of tgt_field.lineup.main_players){
-		// player number
-		await title.set_text(`plist_num_${counter}`, player.player_num)
-		// player surname
-		await title.set_text(`plist_pname_${counter}`, ksys.strf.params.players.format(player.player_surname));
+	// let counter = 1;
+	// for (const player of tgt_field.lineup.main_players){
+	for (const player_idx of range(11)){
+		const player = tgt_field.lineup.main_players.at(player_idx);
 
-		counter += 1;
+		const player_num = player?.player_num || '';
+		const player_surname = ksys.strf.params.players.format(player?.player_surname || '')
+
+		// player number
+		await title.set_text(`plist_num_${player_idx + 1}`, player_num)
+		// player surname
+		await title.set_text(`plist_pname_${player_idx + 1}`, player_surname);
+
+		// counter += 1;
 	}
 
 
@@ -3520,7 +3526,7 @@ kbmodules.football_standard.forward_field_layout_to_vmix = async function(team){
 	await title.set_img_src('club_logo', tgt_field.lineup.club.logo_path)
 	print('Finished')
 
-	await title.resume_render()
+	// await title.resume_render()
 
 	// Enable buttons responsible for showing the team's layout which was just prepared
 	{
@@ -3532,8 +3538,144 @@ kbmodules.football_standard.forward_field_layout_to_vmix = async function(team){
 	}
 }
 
+
+kbmodules.football_standard.forward_field_layout_to_vmix = async function(team){
+	const tgt_side = str(team).lower();
+	const tgt_field = kbmodules.football_standard.resource_index.side?.[tgt_side]?.field;
+
+	if (!tgt_field){
+		ksys.info_msg.send_msg('Lineup does not exist for this side', 'warn', 9000);
+		return
+	}
+
+	// Switch off all buttons responsible for showing the title on screen
+	ksys.btns.toggle({
+		'show_home_field_layout':    false,
+		'hide_home_field_layout':    false,
+
+		'show_guest_field_layout':   false,
+		'hide_guest_field_layout':   false,
+
+		'prepare_home_team_layout':  false,
+		'prepare_guest_team_layout': false,
+	})
+
+	// get target vmix title
+	const title = kbmodules.football_standard.titles.team_layout;
+
+	// construct t-shirt colour path
+	// (absolute path to the corresponding tshirt colour)
+	// todo: remove hardcoded paths
+	const player_tshirt_col =
+	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
+	.join(`${tgt_field.lineup.colors.tshirt || 'ffffff'}.png`);
+
+
+
+
+	// -------------------
+	// player cells on field
+	// -------------------
+	for (const cell of tgt_field.iter_cells()){
+		// tshirt colour
+		await title.set_img_src(`plr_bg_${cell.id}`, str(player_tshirt_col));
+		// player number
+		await title.toggle_text(`plr_num_${cell.id}`, !!cell.player)
+		// player name
+		await title.toggle_text(`plr_name_${cell.id}`, !!cell.player)
+		// tshirt image
+		await title.toggle_img(`plr_bg_${cell.id}`, !!cell.player)
+
+		if (cell.player){
+			// player number
+			await title.set_text(`plr_num_${cell.id}`, cell.player.player_num);
+			// player name
+			await title.set_text(`plr_name_${cell.id}`, ksys.strf.params.players.format(cell.player.player_surname));
+		}
+	}
+	// goalkeeper tshirt colour
+	const gk_tshirt_col =
+	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
+	.join(`${tgt_field.lineup.colors.gk || 'ffffff'}.png`);
+	await title.set_img_src(`plr_bg_8_5`, str(gk_tshirt_col))
+
+
+
+
+	// -------------------
+	// player slots in lineup
+	// -------------------
+
+	// 
+	// Player slots in lineup
+	// 
+	const data_mapping = [
+		{
+			'plist': tgt_field.lineup.main_players,
+			'slot_type': 'm',
+		},
+		{
+			'plist': tgt_field.lineup.reserve_players,
+			'slot_type': 'r',
+		},
+	]
+	for (const list_data of data_mapping){
+		for (const player_idx of range(11)){
+
+			const player = list_data.plist.at(player_idx);
+
+			const player_num = player?.player_num || '';
+			const player_surname = ksys.strf.params.players.format(player?.player_surname || '')
+
+			// player number
+			await title.set_text(
+				`plist_num_${list_data.slot_type}_${player_idx + 1}`,
+				player_num
+			)
+			// player surname
+			await title.set_text(
+				`plist_pname_${list_data.slot_type}_${player_idx + 1}`,
+				player_surname
+			);
+		}
+	}
+
+
+
+	// -------------------
+	// Misc.
+	// -------------------
+
+	// Coach
+	await title.set_text(
+		'coach_name',
+		ksys.strf.params.coach.format(tgt_field.lineup.club.main_coach)
+	)
+	// Club name
+	await title.set_text(
+		'club_name',
+		ksys.strf.params.club_name.format(tgt_field.lineup.club.club_name)
+	)
+	// Club logo
+	await title.set_img_src('club_logo', tgt_field.lineup.club.logo_path)
+	print('Finished forwarding layout data to VMIX')
+
+	await ksys.util.sleep(1000)
+
+	// Enable buttons responsible for showing the team's layout which was just prepared
+	{
+		ksys.btns.pool[`show_${tgt_side}_field_layout`].toggle(true)
+		ksys.btns.pool[`hide_${tgt_side}_field_layout`].toggle(true)
+
+		// do these two in batch
+		ksys.btns.pool[`prepare_home_team_layout`].toggle(true)
+		ksys.btns.pool[`prepare_guest_team_layout`].toggle(true)
+	}
+}
+
+
 // Show the field layout on screen
-kbmodules.football_standard.show_field_layout = async function(team){
+kbmodules.football_standard._show_field_layout = async function(team){
 	const tgt_lineup = kbmodules.football_standard.resource_index.side?.[str(team).lower()]?.lineup;
 
 	// todo: there's a batch switch now
@@ -3544,19 +3686,26 @@ kbmodules.football_standard.show_field_layout = async function(team){
 
 	const title = kbmodules.football_standard.titles.team_layout;
 
-	// pause render
-	await title.pause_render()
 
 	// ?????
-	await ksys.util.sleep(100)
+	await ksys.util.sleep(1000)
 
 	// show the overlay
 	await title.overlay_in()
 
+	// ?????
+	await ksys.util.sleep(7000)
+
 	// wait for 10 seconds
 	// await ksys.util.sleep(10000)
-	await ksys.util.sleep(1000)
+	await ksys.util.sleep(5000)
 
+
+	// pause render
+	await title.pause_render()
+
+	// ?????
+	await ksys.util.sleep(1000)
 
 	// commit warcrimes (changes)
 	// await kbmodules.football_standard.wipe_player_list_from_title()
@@ -3591,18 +3740,24 @@ kbmodules.football_standard.show_field_layout = async function(team){
 	await title.resume_render()
 }
 
-kbmodules.football_standard.hide_field_layout = async function(){
-	const btn_pool = ksys.btns.pool;
+kbmodules.football_standard.show_field_layout = async function(team){
+	ksys.btns.pool[`show_${team}_field_layout`].toggle(false)
 
-	// btn_pool.show_home_field_layout.toggle(false)
-	// btn_pool.hide_home_field_layout.toggle(false)
-	// btn_pool.show_guest_field_layout.toggle(false)
-	// btn_pool.hide_guest_field_layout.toggle(false)
+	await kbmodules.football_standard.titles.team_layout.overlay_in()
+
+	ksys.btns.pool[`show_${team}_field_layout`].toggle(true)
+}
+
+kbmodules.football_standard.hide_field_layout = async function(){
+	ksys.btns.toggle({
+		'hide_home_field_layout':    false,
+		'hide_guest_field_layout':   false,
+	})
 	await kbmodules.football_standard.titles.team_layout.overlay_out()
-	// btn_pool.show_home_field_layout.toggle(true)
-	// btn_pool.hide_home_field_layout.toggle(true)
-	// btn_pool.show_guest_field_layout.toggle(true)
-	// btn_pool.hide_guest_field_layout.toggle(true)
+	ksys.btns.toggle({
+		'hide_home_field_layout':    true,
+		'hide_guest_field_layout':   true,
+	})
 }
 
 
@@ -4298,11 +4453,11 @@ kbmodules.football_standard.show_score_summary = async function(){
 
 				// todo: use else. There could be only one flag
 				if (score.flags.autogoal){
-					score_t.push('(аг.)')
+					score_t.push('(АГ)')
 				}
 
 				if (score.flags.penalty){
-					score_t.push('(пен.)')
+					score_t.push('(ПЕН)')
 				}
 
 				score_times.push(score_t.join(' '))
@@ -4508,8 +4663,8 @@ kbmodules.football_standard.StatUnit = class {
 		const qbtn_html = `
 			<div class="team_stat_quick_btn_pair">
 				<div class="team_stat_quick_btn_vis_value">${this.val_selector[team]}</div>
-				<sysbtn stat_action="add" class="team_stat_quick_btn_add">+ ${this.visname}</sysbtn>
-				<sysbtn stat_action="subt" class="team_stat_quick_btn_subt">- ${this.visname}</sysbtn>
+				<sysbtn click_timeout="700" stat_action="add" class="team_stat_quick_btn_add">+ ${this.visname}</sysbtn>
+				<sysbtn click_timeout="700" stat_action="subt" class="team_stat_quick_btn_subt">- ${this.visname}</sysbtn>
 			</div>
 		`;
 

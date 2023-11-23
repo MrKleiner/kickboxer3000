@@ -609,7 +609,10 @@ sys buttons
 }
 
 
-
+[click_timeout].is_timeout_blocked{
+	pointer-events: none !important;
+	filter: grayscale(1);
+}
 
 
 

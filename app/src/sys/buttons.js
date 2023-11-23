@@ -13,10 +13,28 @@ Element.prototype.vmixbtn = function(state=false) {
 
 
 
+// todo: finally clean the mess
+// todo: buttons with timeouts (automatic, cool looking)
+// todo: there are quite a few global document listeners at this point
 
 
+document.addEventListener('click', evt => {
+	const tgt_btn = evt.target.closest('sysbtn, vmixbtn');
+	if (!tgt_btn){return};
+
+	const timeout_attr = tgt_btn.getAttribute('click_timeout');
+	if (!timeout_attr){return};
+
+	const timeout_amount = int(timeout_attr);
+	if (!timeout_amount){return};
 
 
+	tgt_btn.classList.add('is_timeout_blocked');
+	ksys.util.sleep(timeout_amount)
+	.then(function(){
+		tgt_btn.classList.remove('is_timeout_blocked');
+	})
+});
 
 
 
