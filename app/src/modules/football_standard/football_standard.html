@@ -61,7 +61,7 @@
 		<lineup-global-control subtle_box>
 			<sysbtn
 				btname="init_new_match"
-				kbhint="Wipe previous match stats, like goals. Hold CTRL"
+				kbhint="Wipe previous match stats: cards, scores, stats, etc. Hold CTRL"
 				onclick="$this.init_new_match(event)"
 			>New Match</sysbtn>
 			
@@ -483,7 +483,7 @@
 						btname="save_club_definition"
 						kbhint="Save the club under current club title to the local database. Duplicate name WILL overwrite previous file"
 						onclick="$this.save_club_to_local_db(false)"
-					>Save Definition</sysbtn>
+					>Save Club Data</sysbtn>
 				</club-def-actions>
 
 
@@ -670,7 +670,8 @@
 			<club-score-header></club-score-header>
 			<club-score-list></club-score-list>
 			<club-score-buttons>
-				<sysbtn class="club_score_add_record">Add</sysbtn>
+				<sysbtn class="club_score_add_record add_score_with_player">Add with player</sysbtn>
+				<sysbtn class="club_score_add_record add_score_blank">Add Blank</sysbtn>
 			</club-score-buttons>
 		</club-score>
 	</template>

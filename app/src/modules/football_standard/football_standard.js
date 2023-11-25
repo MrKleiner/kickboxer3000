@@ -1899,7 +1899,7 @@ $this._FMStats = class{
 	['replaced_with', 'Replaced With']
 ]
 
-Will result into the following table:
+Will result into the following table structure:
 +--------+-------------+-----------------+
 |  Time  |    Left     |  Replaced With  |
 +--------+-------------+-----------------+
@@ -2593,9 +2593,10 @@ $this.ClubGoals = class {
 		this.tplate = ksys.tplates.index_tplate(
 			'#club_score_list_template',
 			{
-				'header':        'club-score club-score-header',
-				'list':          'club-score-list',
-				'add_score_btn': 'club-score-buttons .club_score_add_record',
+				'header':              'club-score club-score-header',
+				'list':                'club-score-list',
+				'add_score_named_btn': 'club-score-buttons .club_score_add_record.add_score_with_player',
+				'add_score_anon_btn': 'club-score-buttons .club_score_add_record.add_score_blank',
 			}
 		);
 
@@ -2626,11 +2627,11 @@ $this.ClubGoals = class {
 		// bind button
 		const self = this;
 
-		this.tplate.index.add_score_btn.onclick = function(evt){
+		this.tplate.index.add_score_named_btn.onclick = function(evt){
 			const selected_player = $this.resource_index.score_manager.player_picker?.selected_entry?.player;
-			if (!selected_player && !evt.altKey){
+			if (!selected_player){
 				ksys.info_msg.send_msg(
-					`Hold ALT key to add authorless score`,
+					`No player selected !`,
 					'warn',
 					3000
 				);
@@ -2638,6 +2639,10 @@ $this.ClubGoals = class {
 			}
 
 			self.add_score(self, selected_player)
+		}
+
+		this.tplate.index.add_score_anon_btn.onclick = function(evt){
+			self.add_score(self, null)
 		}
 	}
 
@@ -3367,10 +3372,12 @@ $this.create_club_lineup = function(side, clubname, input_lineup_info=null){
 		if ($this.resource_index.side.home.club){
 			$('#team_stats_theader_home').html($this.resource_index.side.home.club.vis_header_elem());
 			$('#team_stats_btn_ctrl_home').html($this.resource_index.side.home.club.vis_header_elem());
+			$('#replacement_team1 .replacement_team_head').html($this.resource_index.side.home.club.vis_header_elem());
 		}
 		if ($this.resource_index.side.guest.club){
 			$('#team_stats_theader_guest').html($this.resource_index.side.guest.club.vis_header_elem());
 			$('#team_stats_btn_ctrl_guest').html($this.resource_index.side.guest.club.vis_header_elem());
+			$('#replacement_team2 .replacement_team_head').html($this.resource_index.side.guest.club.vis_header_elem());
 		}		
 	}
 }
@@ -4388,6 +4395,78 @@ $this.mod_score_author = function(evt){
 }
 
 
+
+
+/*
+Algorithm responsible for displaying the score summary
+and collapsing multiple scores with the same author into a
+single row/string/call it whatever you want
+
+
+> Loop through every score unit of the team, as 'unit_a'
+    > If 'unit_a' doesn't has an author - skip, continue iteration
+
+    > If the author of 'unit_a' should be ignored - skip, continue iteration
+
+	> Append the author of 'unit_a' to an array
+	  to ignore units with the same author on next iteration
+
+
+	Basically, we get a player who scored at least a single score
+	and iterate over the score stack again to collect all the scores
+	belonging to him.
+
+
+    > Loop through every score unit of the team again, as 'unit_b'
+        > Check if the author of 'unit_b' equals to 'unit_a'. If not - continue iteration.
+
+        > Append the 'unit_b' to an array as text, such as 45'+2 (АГ)
+          (an array would look like this: [`14'`, `27' (АГ)`, `45'+2`])
+
+    > Depending on the side (home/guest)
+      join the array mentioned above into a string with a ` ,` separator
+      and add author name derived from 'unit_a' to the string either
+      to the beginning or end:
+      HOME:  [`14'`, `27' (АГ)`, `45'+2`].join(', ') + 'unit_a'.author
+      GUEST: 'unit_a'.author + [`14'`, `27' (АГ)`, `45'+2`].join(', ')
+      And append the resulting string to an array of rows that will be
+      displayed in the VMIX title
+
+
+Yes, here you will see that authorless scores are fucking evil
+PLEASE, don't do this.
+
+> Loop through every score unit of the team yet again, as 'unit_a'
+    > Skip the unit if it DOES has an author
+
+    > Append the score unit as text (e.g. `45'+2 (АГ)`)
+      to an array of rows that will be displayed in the VMIX title
+
+This is the only logical thing to do in case of authorless scores...
+Sorry...
+(get rekt lmfao, don't care, not sorry)
+
+
+The text block inside of the score summary VMIX title
+where the score summary is displayed
+represents a single huge block of text,
+there are no rows whatsoever, therefore...
+
+> Join the array of rows with `\n` separator
+  and send the resulting string to the VMIX title:
+  [
+      `11' ПЕТРОВ`,
+      `14', 27' (АГ), 45'+2 ВОЙЦЕХОВСЬКИЙ`,
+      ...
+  ].join('\n')
+  =
+  11' ПЕТРОВ\n
+  14', 27' (АГ), 45'+2 ВОЙЦЕХОВСЬКИЙ
+
+> Profit.
+
+*/
+
 // todo: get rid of ?.
 $this.show_score_summary = async function(){
 	// todo: this is only a dict for easy access
@@ -4395,6 +4474,31 @@ $this.show_score_summary = async function(){
 		'home': [],
 		'guest': [],
 	}
+
+	// Convert a score unit to text, such as 35'+5 (АГ)
+	// todo: re-declaring this function each time the score should be shown
+	// is not a problem, but just stupid...
+	const score_unit_to_text = function(score_unit){
+		const result = [];
+
+		if (score_unit.time.extra){
+			result.push(`${score_unit.time.base}'+${score_unit.time.extra}`)
+		}else{
+			result.push(`${score_unit.time.base}'`)
+		}
+
+		// todo: use else. There could be only one flag
+		if (score_unit.flags.autogoal){
+			result.push('(АГ)')
+		}
+
+		if (score_unit.flags.penalty){
+			result.push('(ПЕН)')
+		}
+
+		return result.join(' ')
+	}
+
 
 	// 
 	// Create the scores list for both teams
@@ -4439,24 +4543,7 @@ $this.show_score_summary = async function(){
 			// Create timestamps with flags
 			const score_times = [];
 			for (const score of collected_scores){
-				const score_t = [];
-
-				if (score.time.extra){
-					score_t.push(`${score.time.base}'+${score.time.extra}`)
-				}else{
-					score_t.push(`${score.time.base}'`)
-				}
-
-				// todo: use else. There could be only one flag
-				if (score.flags.autogoal){
-					score_t.push('(АГ)')
-				}
-
-				if (score.flags.penalty){
-					score_t.push('(ПЕН)')
-				}
-
-				score_times.push(score_t.join(' '))
+				score_times.push(score_unit_to_text(score))
 			}
 
 			// Append constructed string to the final table
@@ -4477,30 +4564,10 @@ $this.show_score_summary = async function(){
 
 		// Collect uncredited poor souls
 		// imporatnt todo: duplicated code.
-		for (const player of score_stack){
-			if (player.author){continue};
+		for (const score of score_stack){
+			if (score.author){continue};
 
-			const score_t = [];
-
-			const score = player;
-
-			if (score.time.extra){
-				score_t.push(`${score.time.base}"+${score.time.extra}"`)
-			}else{
-				score_t.push(`${score.time.base}"`)
-			}
-
-			// todo: use else. There could be only one flag
-			if (score.flags.autogoal){
-				score_t.push('(аг.)')
-			}
-
-			if (score.flags.penalty){
-				score_t.push('(пен.)')
-			}
-
-
-			score_summary[side].push(score_t.join(', '))
+			score_summary[side].push(score_unit_to_text(score))
 		}
 	}
 
@@ -4514,9 +4581,12 @@ $this.show_score_summary = async function(){
 	// ------------------------------
 	// Set bottom score (0:0)
 	// ------------------------------
-	const score_amt_l = score_summary.home.length || 0;
-	const score_amt_r = score_summary.guest.length || 0;
-	await $this.titles.final_scores.set_text('score_sum', `${score_amt_l} : ${score_amt_r}`)
+	const score_amt_l = $this.resource_index?.score_manager?.sides.home?.score_list?.score_stack?.size || 0;
+	const score_amt_r = $this.resource_index?.score_manager?.sides.guest?.score_list?.score_stack?.size || 0
+	await $this.titles.final_scores.set_text(
+		'score_sum',
+		`${score_amt_l} : ${score_amt_r}`
+	)
 
 
 	// ------------------------------
@@ -4525,7 +4595,7 @@ $this.show_score_summary = async function(){
 	await $this.titles.final_scores.toggle_img('anim_full', false)
 	await $this.titles.final_scores.toggle_img('anim_half', false)
 
-	const need_rows = Math.max(score_amt_l, score_amt_r).clamp(1, 5)
+	const need_rows = Math.max(score_summary.home.length || 0, score_summary.guest.length || 0).clamp(1, 5)
 	// todo: hardcoded path. Too bad.
 	$this.titles.final_scores.set_img_src(
 		'upper_bg',
@@ -4652,7 +4722,8 @@ $this.StatUnit = class {
 
 	}
 
-	// get html element of a quick button
+	// get html element of a quick buttons
+	// where you click to add/subtract one
 	quick_button(team){
 		const self = this;
 
@@ -4780,9 +4851,9 @@ $this.show_team_stats = async function(){
 	}
 
 	// Set scores
-	const score_amt_l = $this.resource_index.score_manager.sides.home.score_list.score_stack.size
-	const score_amt_r = $this.resource_index.score_manager.sides.guest.score_list.score_stack.size
-	await $this.titles.stats.set_text('scores', `${score_amt_l} : ${score_amt_r}`)
+	const score_amt_l = $this.resource_index.score_manager.sides.home.score_list.score_stack.size;
+	const score_amt_r = $this.resource_index.score_manager.sides.guest.score_list.score_stack.size;
+	await $this.titles.stats.set_text('scores', `${score_amt_l} : ${score_amt_r}`);
 
 	// set logos
 	await $this.titles.stats.set_img_src(
@@ -4874,9 +4945,9 @@ $this.hide_team_stats = async function(){
 	'home': {
 		'club_name': lowercase club name,
 
-		'tshirt_col': t-shirt colour,
-		'shorts_col': shorts colour,
-		'gk_col':     goalkeeper colour,
+		'tshirt_col': t-shirt colour (hex),
+		'shorts_col': shorts colour (hex),
+		'gk_col':     goalkeeper colour (hex),
 
 		// main/reserve players
 		'player_lineup': {
@@ -5269,6 +5340,8 @@ $this.global_save = function(save_targets=null){
 // ================================
 //         Create new match
 // ================================
+
+// (Wipe previous data)
 $this.init_new_match = function(evt){
 	if (!evt.ctrlKey){return};
 	// First of all - delete files
@@ -5284,6 +5357,8 @@ $this.init_new_match = function(evt){
 		ksys.db.module.delete(fname)
 	}
 
+	// why bother...
+	// Just reload the controller...
 	ksys.fbi.warn_critical(
 		`Please press CTRL + R (there's nothing else you can do)`
 	)

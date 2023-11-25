@@ -1,5 +1,5 @@
 
-_tabsys = {};
+const _tabsys = {};
 
 document.addEventListener('keydown', evt => {
 	return
@@ -22,6 +22,7 @@ document.addEventListener('keyup', evt => {
 	}
 });
 
+// todo: this is broken
 $(window).on('scroll', function() {
 	if (_tabsys.viewing_quick){return};
 	_tabsys.remember_last_scroll = $(window).scrollTop()
@@ -59,13 +60,6 @@ _tabsys.resync = function(){
 	}
 
 }
-
-
-
-
-
-
-
 
 
 

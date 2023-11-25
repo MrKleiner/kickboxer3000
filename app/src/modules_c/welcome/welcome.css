@@ -101,6 +101,7 @@ welcome please-read{
 	width: 24vw;
 	position: fixed;
 	margin: 40px;
+	z-index: -1;
 }
 
 welcome please-read ul li{

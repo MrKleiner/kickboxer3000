@@ -211,6 +211,7 @@ ksys.util.ask_file = function(multiple=false)
 }
 
 
+// todo: this is broken
 ksys.util.ask_folder = function(multiple=false)
 {
 	return new Promise(function(resolve, reject){
@@ -230,6 +231,7 @@ ksys.util.ask_folder = function(multiple=false)
 // ------------------------------
 //     get contents of a url
 // ------------------------------
+
 // url = request URL
 // ctype = text|bytes (default to text)
 ksys.util.url_get = async function(url=null, ctype='text'){
@@ -315,6 +317,8 @@ ksys.util.vmix_ok = function(txt){
 }
 
 
+// Start listening for the keys pressed
+// and return the first one to be pushed
 ksys.util.get_key = function(){
 	return new Promise(function(resolve, reject){
 		$('.__kb_shadow_input').remove()
@@ -340,7 +344,9 @@ ksys.util.get_key = function(){
 		}
 		shadow_input.onkeydown = function(evt){
 			resolve(evt)
-			try{shadow_input.remove()}catch(e){};
+			try{
+				shadow_input.remove()
+			}catch(e){};
 			print('Resolving:', evt)
 		}
 
@@ -440,7 +446,7 @@ const sys_load = function(nm, save_state=true)
 		ksys.context.global.prm('last_module', nm)
 	}
 
-	// refresh context
+	// refresh context cache
 	ksys.context.module.pull()
 
 	// resync buttons
@@ -469,7 +475,7 @@ const sys_load = function(nm, save_state=true)
 		}
 	}catch (error){
 		console.error('Error occured while loading a module:', error)
-		console.trace()
+		console.trace(error)
 	}
 }
 

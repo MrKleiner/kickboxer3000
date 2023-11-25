@@ -514,11 +514,19 @@ $this.upd_personal_title = async function(player)
 
 	const title = $this.titles.personal
 
-	const p_name = player_info.name.value.trim().split(' ')
+	const p_name = new Set(player_info.name.value.trim().split(' '))
 	const frmt = ksys.strf.params.players;
 
-	await title.set_text('name',    frmt.format(p_name[0]))
-	await title.set_text('surname', frmt.format(p_name.at(-1)))
+	const psurname = frmt.format(p_name.at(-1));
+	p_name.del_idx(-1)
+	// const pname = frmt.format(
+	// 	Array.from(p_name).join(' ')
+	// );
+	const pname = frmt.format(p_name.join(' '));
+
+
+	await title.set_text('name',    pname)
+	await title.set_text('surname', psurname)
 
 	for (const i in $this.personal_label_index){
 		const box = $this.personal_label_index[i]

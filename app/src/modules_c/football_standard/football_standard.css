@@ -1106,6 +1106,11 @@ card vis feedback on list items
 	justify-content: center;
 }
 
+#score_ctrl #score_ctrl_player_search player-picker
+{
+	max-height: 500px;
+}
+
 #score_ctrl club-score-list
 {
 	display: flex;
@@ -1116,8 +1121,25 @@ card vis feedback on list items
 	box-shadow: inset 0px 0px 5px 0px rgb(0 0 0);
 	outline: 1px solid rgb(90, 90, 90);
 	padding: 15px;
+	padding-bottom: 35px;
 }
 
+#score_ctrl club-score-buttons
+{
+	display: flex;
+	flex-direction: row;
+	padding-top: 15px;
+	justify-content: space-between;
+}
+
+#score_ctrl club-score-buttons .club_score_add_record
+{
+	padding-top: 7px;
+	padding-bottom: 7px;
+	color: rgb(245, 245, 245);
+	font-size: 19px;
+	width: 42%;
+}
 
 
 /*
@@ -1145,6 +1167,8 @@ card vis feedback on list items
 	font-size: 35px;
 	/*margin-left: 20px;*/
 }
+
+
 
 
 

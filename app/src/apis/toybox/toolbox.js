@@ -130,7 +130,7 @@ const _lizard = {
 	// Implement Array.at for sets
 	Set.prototype.at = function(index) {
 		if (Math.abs(index) > this.size){
-			return null;
+			return
 		}
 
 		let idx = index;
@@ -154,6 +154,16 @@ const _lizard = {
 		}
 
 		return this.delete(array_elem)
+	}
+
+	// Join set into a string, like an Array
+	// todo: this can be better
+	Set.prototype.join = function(separator='') {
+		const arr = [];
+		for (const i of this){
+			arr.push(i)
+		}
+		return arr.join(separator)
 	}
 }
 
@@ -261,7 +271,7 @@ const _lizard = {
 
 // ============================================================
 // ============================================================
-//                      Functions
+//                            Functions
 // ============================================================
 // ============================================================
 

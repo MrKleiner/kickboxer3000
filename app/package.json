@@ -5,7 +5,7 @@
   "description": "Chuck Norris can divide by zero.",
   "main": "src/index.js",
   "icon": "icon.png",
-  "version_native": "3.1.4a",
+  "version_native": "3.1.4c",
   "scripts": {
     "start": "electron-forge start",
     "package": "electron-forge package",

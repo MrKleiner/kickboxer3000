@@ -120,6 +120,10 @@ class vmix_title
 	}
 
 
+	// todo: these manipulations require
+	// beyond sattelite manufacturing precision,
+	// otherwise retarded artifacts occur
+
 	// Pause title rendering while making multiple updates
 	async pause_render(){
 		await vmix.talker.talk({

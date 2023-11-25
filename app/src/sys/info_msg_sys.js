@@ -1,7 +1,7 @@
 const msgsys = {};
 
 
-// Todo: the magic circle is half-broken
+// Todo: the magic circle timing is half-broken
 
 
 const polarToCartesian = function(centerX, centerY, radius, angleInDegrees) {
@@ -83,6 +83,7 @@ const info_msg = class{
 }
 
 
+// the "new" keyword is stoopid
 const fuck_js = function(text, msg_type='warn', dur=1000){
 	return new info_msg(text, msg_type, dur)
 }

@@ -101,6 +101,7 @@
 	width: 24vw;
 	position: fixed;
 	margin: 40px;
+	z-index: -1;
 }
 
 ~~ please-read ul li{
