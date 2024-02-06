@@ -3824,8 +3824,14 @@ $this.show_vs_title = async function(){
 	await $this.titles.splash.set_text('title_lower_bot', $('#vs_text_bottom_lower').val())
 
 	// Set logos
-	await $this.titles.splash.set_img_src('logo_l', $this.resource_index?.home_club?.logo_path || '')
-	await $this.titles.splash.set_img_src('logo_r', $this.resource_index?.guest_club?.logo_path || '')
+	await $this.titles.splash.set_img_src(
+		'logo_l',
+		$this.resource_index?.home_club?.logo_path || ''
+	)
+	await $this.titles.splash.set_img_src(
+		'logo_r',
+		$this.resource_index?.guest_club?.logo_path || ''
+	)
 
 	// Set Club names
 	await $this.titles.splash.set_text(
@@ -3866,14 +3872,14 @@ $this.show_coach = async function(side){
 	const tgt_club = $this.resource_index.side?.[str(side).lower()]?.club;
 
 	if (!tgt_club){
-		ksys.info_msg.send_msg('No club selected', 'warn', 5000);
+		ksys.info_msg.send_msg('No club selected', 'err', 5000);
 		return
 	}
 
-	ksys.btns.pool.show_coach_home_team.toggle(false)
-	// ksys.btns.pool.hide_coach_home_team.toggle(false)
-	ksys.btns.pool.show_coach_guest_team.toggle(false)
-	// ksys.btns.pool.hide_coach_guest_team.toggle(false)
+	ksys.btns.toggle({
+		'show_coach_home_team': false,
+		'show_coach_guest_team': false,
+	})
 
 	await $this.titles.coach.set_text(
 		'name',
@@ -3885,10 +3891,12 @@ $this.show_coach = async function(side){
 	)
 	await $this.titles.coach.overlay_in()
 
-	ksys.btns.pool.show_coach_home_team.toggle(true)
-	ksys.btns.pool.hide_coach_home_team.toggle(true)
-	ksys.btns.pool.show_coach_guest_team.toggle(true)
-	ksys.btns.pool.hide_coach_guest_team.toggle(true)
+	ksys.btns.toggle({
+		'show_coach_home_team': true,
+		'hide_coach_home_team': true,
+		'show_coach_guest_team': true,
+		'hide_coach_guest_team': true,
+	})
 }
 
 $this.hide_coach = async function(){
@@ -3911,7 +3919,8 @@ $this.hand_card = async function(card_type){
 			9000
 		);
 		console.error(
-			`hand_card received an invalid card type: ${card_type}`
+			`hand_card received an invalid card type: ${card_type}`,
+			card_type
 		)
 		return
 	}
@@ -3974,6 +3983,7 @@ $this.hide_card = async function(){
 //        Substitute
 // ================================
 $this.exec_substitute = async function(){
+	// todo: is this stupid ?
 	const leaving_player = (
 		$this.resource_index.side.home.substitute['leaving']?.selected_entry?.player
 		||
@@ -4327,7 +4337,6 @@ $this.get_current_time = function(minutes=false, tsum=false){
 // todo: add sanity check for player's side
 $this.add_score_from_cards_panel = async function(){
 	const player = $this.resource_index.card_player_filter?.selected_entry?.player;
-	// selected_entry.player
 
 	if (!player){
 		ksys.info_msg.send_msg(
@@ -4418,7 +4427,7 @@ single row/string/call it whatever you want
 
 
     > Loop through every score unit of the team again, as 'unit_b'
-        > Check if the author of 'unit_b' equals to 'unit_a'. If not - continue iteration.
+        > Check if the author of 'unit_b' equals to 'unit_a'. If not - skip, continue iteration.
 
         > Append the 'unit_b' to an array as text, such as 45'+2 (АГ)
           (an array would look like this: [`14'`, `27' (АГ)`, `45'+2`])
@@ -4582,7 +4591,7 @@ $this.show_score_summary = async function(){
 	// Set bottom score (0:0)
 	// ------------------------------
 	const score_amt_l = $this.resource_index?.score_manager?.sides.home?.score_list?.score_stack?.size || 0;
-	const score_amt_r = $this.resource_index?.score_manager?.sides.guest?.score_list?.score_stack?.size || 0
+	const score_amt_r = $this.resource_index?.score_manager?.sides.guest?.score_list?.score_stack?.size || 0;
 	await $this.titles.final_scores.set_text(
 		'score_sum',
 		`${score_amt_l} : ${score_amt_r}`
@@ -5344,6 +5353,7 @@ $this.global_save = function(save_targets=null){
 // (Wipe previous data)
 $this.init_new_match = function(evt){
 	if (!evt.ctrlKey){return};
+
 	// First of all - delete files
 	const del_entries = [
 		'lineup_lists.kbsave',
