@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{47ef7bd8-71d4-4cd1-82e0-0b972c164e99}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)KbTickerReceivers.cpp">
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdcpp20</LanguageStandard>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)KbTickers.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)KbTickerThreadedClass.cpp" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)KbUDPserverClass.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)KbShowTickersStatuses.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)KbTickerReceivers.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)KbTickers.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)KbUdpPacketHeaders.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)KbTickerThreadedClass.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)KbUDPserverClass.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="$(MSBuildThisFileDirectory)KbUDPPacketsDescription.txt" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,323 @@
+    
+******************************************************************************
+*                                                                            *
+*  UDP PACKET STRUCTURE DEFINITION                                           *
+*  for KickBoxer Vmix Ticker                                                 *
+*  (udp listerer/caller )                                                    *
+*                                                                            *
+******************************************************************************
+
+
+
+
+******************************************************************************
+
+REMARK
+
+    Not required, but highly recommended!
+    Incoming message must fit to one unfragmeted udp packet.
+    (typically less than 1472 bytes for Ethernet physical layer)
+
+
+
+
+******************************************************************************
+
+IMPORTANT!!!
+
+    UDP packet size should be equal to real payload size! 
+    Garbage after real payload not allowed! It may be miss-interpreted!
+
+
+
+
+******************************************************************************
+
+VMIX TICKER UDP PACKET STRUCTURE IN-BRIEF (REQUEST)
+
+    First  byte               : {73} (0x49)   |  ==        Two-bytes "IFF"         ==
+    Second byte               : {73} (0x49)   |  == (Identification Friend or Foe) == 
+    Third  byte               : {1..254}      | one-byte command code
+    Rest of udp packet        : {bytearray}   | payload for supplied command code
+
+    Minimal request udp packet length : 3 bytes     {73, 73, one-byte command code}
+
+
+
+
+******************************************************************************
+
+VMIX TICKER UDP PACKET STRUCTURE IN-BRIEF (RESPONSE)
+
+    First  byte               : {37} (0x25)   |  ==        Two-bytes "IFF"         ==
+    Second byte               : {37} (0x25)   |  == (Identification Friend or Foe) ==
+    Third  byte               : {0..254}      | one-byte response code
+    Rest of udp packet        : {bytearray}   | payload for supplied command code
+
+    Minimal response udp packet length : 3 bytes     {37, 37, one-byte response code}
+
+
+
+
+******************************************************************************
+
+AVAILIABLE COMMANDS (third byte)
+
+    0 : reserved
+    1 : Start per-second ticker
+    2 : Pause per-second ticker
+    3 : Resume per-second ticker
+    4 : Stop per-second timer            (and clear all receivers)
+    5 : Attach url to per-second ticiker ("assign" http-receiver for this timer. Vmix url should be supplied)
+    6 : Get current timer status         (one-time udp request)
+    7 : Subscribe to timer status        (get timer status every second to supplied udp port)
+    8 : Subscribe to "END TIME" event    (if end time specified for "start timer" command)
+
+
+
+
+******************************************************************************
+
+AVAILIABLE RESPONSE CODES (third byte)
+
+      0: everything_good
+      1: everything_bad 
+      2: wrong_message_format
+      3: wrong_number_of_args
+      4: wrong_timer_number
+      . (reserved)
+      . (reserved)
+    200: everything_good_and_payload
+
+
+
+
+
+******************************************************************************
+******************************************************************************
+
+COMMANDS - DETAILED DESCRIPTION
+
+******************************************************************************
+******************************************************************************
+
+
+
+
+******************************************************************************
+
+1 : START PER-SECOND TICKER
+   (All previously assgined receivers remains active, so this command can be used to adjust time on working ticker)
+
+    | REQUEST   |
+    | STRUCTURE |
+    byte[0]                                  : {73}       Two-bytes IFF
+    byte[1]                                  : {73}
+    byte[2]                                  : {1}                                    (unsiged char)
+    byte[3]                                  : {1-255}    ticker number               (unsiged char)
+    byte[4]                                  : {0-255}    start time - minutes        (unsiged char)
+    byte[5]                                  : {0-60 }    start time - seconds        (unsiged char)
+    byte[6]                                  : {0-255}    end time - minutes          (unsiged char)
+    byte[7]                                  : {0-60 }    end time - seconds          (unsiged char)
+
+    | RESPONSE  |
+    | STRUCTURE |
+    byte[0]                                  : {37}       Two-bytes IFF
+    byte[1]                                  : {37}
+    byte[2]                                  : {0..1}     0 - everything is good      (unsiged char)
+                                                          1 - everything is bad       (unsiged char)
+                                                         (1 means wrong number of command args in most cases)
+
+
+
+******************************************************************************
+
+2 : PAUSE PER-SECOND TICKER
+
+    | REQUEST   |
+    | STRUCTURE |
+    byte[0]                                  : {73}       Two-bytes IFF
+    byte[1]                                  : {73}
+    byte[2]                                  : {2}        command                  (unsiged char)
+    byte[3]                                  : {1-255}    ticker number            (unsiged char)
+
+    | RESPONSE  |
+    | STRUCTURE |
+    byte[0]                                  : {37}       Two-bytes IFF
+    byte[1]                                  : {37}
+    byte[2]                                  : {0..1}     response code
+                                                          0 - everything is good         (unsiged char)
+                                                          1 - everything is bad          (unsiged char)
+                                                         (1 means wrong number of command args in most cases)
+
+
+
+******************************************************************************
+
+3 : RESUME PER-SECOND TIMER
+
+    | REQUEST   |
+    | STRUCTURE |
+    byte[0]                                  : {73}       Two-bytes IFF
+    byte[1]                                  : {73}
+    byte[2]                                  : {3}        command                  (unsiged char)
+    byte[3]                                  : {1-255}    ticker number            (unsiged char)
+
+    | RESPONSE  |
+    | STRUCTURE |
+    byte[0]                                  : {37}       Two-bytes IFF
+    byte[1]                                  : {37}
+    byte[2]                                  : {0..1}     response code            (unsiged char)
+                                                          0 - everything is good         
+                                                          1 - everything is bad 
+                                                         (1 means wrong number of command args in most cases)
+
+
+
+
+******************************************************************************
+
+4 : STOP PER-SECOND TIMER (and clear all receivers - udp, tcp, per-second, end-time)
+
+    | REQUEST   |
+    | STRUCTURE |
+    byte[0]                                  : {73}       Two-bytes IFF
+    byte[1]                                  : {73}
+    byte[2]                                  : {4}        command               (unsiged char)
+    byte[3]                                  : {1-255}    ticker number         (unsiged char)
+
+    | RESPONSE  |
+    | STRUCTURE |
+    byte[0]                                  : {37}    Two-bytes IFF
+    byte[1]                                  : {37}
+    byte[2]                                  : {0..1}  response code            (unsiged char)
+                                                       0 - everything is good         
+                                                       1 - everything is bad 
+                                                      (1 means wrong number of command args in most cases)
+
+
+
+
+******************************************************************************
+
+5 : Attach url to per-second timer ("assign" tcp-receiver(s) for this timer)
+
+    | REQUEST   |
+    | STRUCTURE |
+    byte[0]                                  : {73}            Two-bytes IFF
+    byte[1]                                  : {73}
+    byte[2]                                  : {5}             command              (unsiged char)
+    byte[3]                                  : {1-255}         ticker number        (unsiged char)
+    byte[4..7]                               : {four octets}   ipv4 adress          (byte-array)
+    byte[8..9]                               : {0-65535}       tcp port number      (unsigned int16, little-endian)
+    byte[10 .. up-to-null-character]         : {bytearray}     path                 (url WITHOUT "scheme://address:port" to send command to vmix - null-terminated byte-array)
+    
+                                              *** For future using *** byte[end-of-http-url .. up-to-null-char] : {bytearray}     placeholder for time in http url (null-terminated byte-array) ***
+
+
+    | RESPONSE  |
+    | STRUCTURE |
+    byte[0]                                  : {37}       Two-bytes IFF
+    byte[1]                                  : {37}
+    byte[2]                                  : {0..1}     response code                 (unsiged char)
+                                                          0 - everything is good         
+                                                          1 - everything is bad 
+                                                         (1 means wrong number of command args in most cases)
+
+
+
+
+******************************************************************************
+
+6 : GET CURRENT TIMER STATUS (one-time udp request)
+
+    | REQUEST   |
+    | STRUCTURE |
+    byte[0]                                  : {73}        Two-bytes IFF
+    byte[1]                                  : {73}
+    byte[2]                                  : {6}         command                  (unsiged char)
+    byte[3]                                  : {1..255}    ticker number            (unsiged char)
+
+    | RESPONSE  |
+    | STRUCTURE |
+    byte[0]                                  : {37}        Two-bytes IFF
+    byte[1]                                  : {37}
+    byte[2]                                  : {1..2}      response code            (unsiged char)
+                                                           1 - everything is bad (1 means wrong number of command args in most cases)
+                                                           2 - response has payload (timer status)
+    byte[3]                                  : {1..255}    ticker number            (unsiged char)
+    byte[4]                                  : {0..255}    starting time - minutes  (unsiged char)
+    byte[5]                                  : {0..59 }    starting time - seconds  (unsiged char)
+
+    Remark: if byte[2] = 1, 
+              then byte[3], byte[4], byte[5]  has indeterminate  meaning
+
+
+
+
+******************************************************************************
+
+7 : SUBSCRIBE TO TIMER STATUS  (get timer status every second to supplied udp port)
+
+    | REQUEST   |
+    | STRUCTURE |
+    byte[0]                                  : {73}             Two-bytes IFF
+    byte[1]                                  : {73}
+    byte[2]                                  : {7}               command            (unsiged char)
+    byte[3]                                  : {0-255}           ticker number      (unsiged char)
+    byte[4..7]                               : {four octets}     ipv4 adress        (byte-array)
+    byte[8..9]                               : {0-65535}         udp port number    (unsigned int16, little-endian)
+
+    | RESPONSE  |
+    | STRUCTURE |
+    byte[0]                                  : {37}       Two-bytes IFF
+    byte[1]                                  : {37}
+    byte[2]                                  : {0..1}     response status           (unsiged char)
+                                                          0 - everything is good         
+                                                          1 - everything is bad 
+                                                         (1 means wrong number of command args in most cases)
+                                                   
+                                                   
+
+    After successful response (byte[2]=0), subscriber will receive (every seconds) timer status within six-bytes udp packet:
+    byte[0]                                  : {37}        Two-bytes IFF
+    byte[1]                                  : {37}
+    byte[2]                                  : {2}         packet has payload       (unsiged char)
+    byte[3]                                  : {1..255}    ticker number            (unsiged char)
+    byte[4]                                  : {0..255}    ticker status - minutes  (unsiged char)
+    byte[5]                                  : {0..59 }    ticker status - seconds  (unsiged char)
+
+
+
+
+******************************************************************************
+
+
+8 : SUBSCRIBE TO "END TIME" EVENT - TIMER STOP  (if end time specified for "start timer" command)
+    | REQUEST   |
+    | STRUCTURE |
+    byte[0]                                  : {73}             Two-bytes IFF
+    byte[1]                                  : {73}
+    byte[2]                                  : {8}               command            (unsiged char)
+    byte[3]                                  : {0-255}           ticker number      (unsiged char)
+    byte[4..7]                               : {four octets}     ipv4 adress        (byte-array)
+    byte[8..9]                               : {0-65535}         udp port number    (unsigned int16, little-endian)
+
+    | RESPONSE  |
+    | STRUCTURE |
+    byte[0]                                  : {37}       Two-bytes IFF
+    byte[1]                                  : {37}
+    byte[2]                                  : {0..1}     response status           (unsiged char)
+                                                          0 - everything is good         
+                                                          1 - everything is bad 
+                                                         (1 means wrong number of command args in most cases)
+                                                   
+                                                   
+
+    After successful response (byte[2]=0), subscriber will receive tiñcker status within six-bytes udp packet:
+    byte[0]                                  : {37}        Two-bytes IFF
+    byte[1]                                  : {37}
+    byte[2]                                  : {2}         packet has payload       (unsiged char)
+    byte[3]                                  : {1..255}    ticker number            (unsiged char)
+    byte[4]                                  : {0..255}    ticker status - minutes  (unsiged char)
+    byte[5]                                  : {0..59 }    ticker status - seconds  (unsiged char)
