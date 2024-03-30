@@ -107,7 +107,8 @@ COMMANDS - DETAILED DESCRIPTION
 ******************************************************************************
 
 1 : START PER-SECOND TICKER
-   (All previously assgined receivers remains active, so this command can be used to adjust time on working ticker)
+   (All previously assgined receivers remain active, so this command can be used
+    to adjust time on working ticker)
 
     | REQUEST   |
     | STRUCTURE |
@@ -116,9 +117,9 @@ COMMANDS - DETAILED DESCRIPTION
     byte[2]                                  : {1}                                    (unsiged char)
     byte[3]                                  : {1-255}    ticker number               (unsiged char)
     byte[4]                                  : {0-255}    start time - minutes        (unsiged char)
-    byte[5]                                  : {0-60 }    start time - seconds        (unsiged char)
+    byte[5]                                  : {0-59 }    start time - seconds        (unsiged char)
     byte[6]                                  : {0-255}    end time - minutes          (unsiged char)
-    byte[7]                                  : {0-60 }    end time - seconds          (unsiged char)
+    byte[7]                                  : {0-59 }    end time - seconds          (unsiged char)
 
     | RESPONSE  |
     | STRUCTURE |
@@ -177,7 +178,8 @@ COMMANDS - DETAILED DESCRIPTION
 
 ******************************************************************************
 
-4 : STOP PER-SECOND TIMER (and clear all receivers - udp, tcp, per-second, end-time)
+4 : KILL PER-SECOND TIMER
+   (and clear all receivers - udp, tcp, per-second, end-time)
 
     | REQUEST   |
     | STRUCTURE |
@@ -246,8 +248,8 @@ COMMANDS - DETAILED DESCRIPTION
                                                            1 - everything is bad (1 means wrong number of command args in most cases)
                                                            2 - response has payload (timer status)
     byte[3]                                  : {1..255}    ticker number            (unsiged char)
-    byte[4]                                  : {0..255}    starting time - minutes  (unsiged char)
-    byte[5]                                  : {0..59 }    starting time - seconds  (unsiged char)
+    byte[4]                                  : {0..255}    current time - minutes  (unsiged char)
+    byte[5]                                  : {0..59 }    current time - seconds  (unsiged char)
 
     Remark: if byte[2] = 1, 
               then byte[3], byte[4], byte[5]  has indeterminate  meaning
@@ -257,7 +259,8 @@ COMMANDS - DETAILED DESCRIPTION
 
 ******************************************************************************
 
-7 : SUBSCRIBE TO TIMER STATUS  (get timer status every second to supplied udp port)
+7 : SUBSCRIBE TO TIMER STATUS
+   (get timer status every second to supplied udp port)
 
     | REQUEST   |
     | STRUCTURE |
@@ -293,7 +296,8 @@ COMMANDS - DETAILED DESCRIPTION
 ******************************************************************************
 
 
-8 : SUBSCRIBE TO "END TIME" EVENT - TIMER STOP  (if end time specified for "start timer" command)
+8 : SUBSCRIBE TO "END TIME" EVENT - TIMER STOP
+   (if end time specified for "start timer" command)
     | REQUEST   |
     | STRUCTURE |
     byte[0]                                  : {73}             Two-bytes IFF
