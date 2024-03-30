@@ -28,7 +28,7 @@
     to absolute path pointing to "app/src"
 
 7 - To reload scripts on runtime it's required to run bootlegger (which only takes a second or two)
-    And then press ctrl+r inside of the controller.
+    And then press ctrl+r inside the controller.
 
 
 8 - To build a base it's required to first compile it with npm itself.
