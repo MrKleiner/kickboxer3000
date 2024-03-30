@@ -1,4 +1,19 @@
+// Long story short: fuck javascript
 window.self = undefined;
+
+
+
+
+// todo:
+
+// The default folder "db" is not present when pulling clean repo.
+// Either validate its existence on every application startup or whatever.
+
+// Finally move all the icons needed for install into the repo folder
+
+// The repo is also missing the release folder
+
+
 
 
 // ===================================
@@ -15,6 +30,7 @@ const fsaver = require('./apis/filesaverjs/2_0_4/FileSaver.js');
 const fs = require('fs');
 
 // Python-like pathlib
+// https://mauricepasternak.github.io/pathlib-js/
 const pathlib = require('pathlib-js').default;
 const Path = function(){
 	return (new pathlib(...arguments))
@@ -57,7 +73,7 @@ const ksys = {
 
 
 
-// Vmix-bound operations, like talker
+// Vmix bound operations, like talker
 const vmix = {
 	talker: require('./sys/vmix_talker.js'),
 	title:  require('./sys/titlectrl.js'),
@@ -76,8 +92,9 @@ const vmix = {
 // ===================================
 
 // Get app root path
+// todo: this can be improved
 function _get_app_root_path(){
-	var got_root = Path(__dirname);
+	let got_root = Path(__dirname);
 	while (true) {
 		const exs = got_root.join('roothook.lizard').isFileSync()
 		if (exs == true){
@@ -195,7 +212,7 @@ ksys.util.sleep = function jsleep(amt=500, ref='a') {
 // ------------------------------
 
 // returns a promise which resolves into a path
-// - whether to return an array of files or first file only
+// multiple - whether to return an array of files or first file only
 ksys.util.ask_file = function(multiple=false)
 {
 	return new Promise(function(resolve, reject){
@@ -366,7 +383,7 @@ Element.prototype.swapWith = function(tgt_node) {
 }
 
 
-// set position of an element from an event
+// Set position of an element from an event
 Element.prototype.ClientPosFromEvent = function(evt, lock_x=false, lock_y=false) {
 	if (evt == null){
 		this.style.left = null;
@@ -381,8 +398,7 @@ Element.prototype.ClientPosFromEvent = function(evt, lock_x=false, lock_y=false)
 	}
 }
 
-
-// set position of an element from an event
+// Set position of an element from an event
 Element.prototype.PagePosFromEvent = function(evt, lock_x=false, lock_y=false) {
 	if (evt == null){
 		this.style.left = null;
@@ -398,6 +414,7 @@ Element.prototype.PagePosFromEvent = function(evt, lock_x=false, lock_y=false) {
 }
 
 // FUCK JAVASCRIPT
+// Pro tip: this is already in the toolbox
 /*
 Set.prototype.at = function(index) {
 	if (Math.abs(index) > this.size){
@@ -432,9 +449,11 @@ Set.prototype.at = function(index) {
 
 const sys_load = function(nm, save_state=true)
 {
-	print('trying to load', nm, save_state)
+	print('Trying to load', nm, save_state)
 	// load html layout of the module
-	const page = fs.readFileSync(app_root.join('modules_c', nm, `${nm}.html`).toString(), {encoding:'utf8', flag:'r'});
+	const page = fs.readFileSync(
+		app_root.join('modules_c', nm, `${nm}.html`).toString(), {encoding:'utf8', flag:'r'}
+	);
 	// display loaded html on the page
 	$('#app_sys').html(page);
 	// get css of the module
@@ -464,7 +483,7 @@ const sys_load = function(nm, save_state=true)
 	// images are not draggable by default
 	$('img:not(img[candrag])').attr('draggable', false);
 
-	// init load for module
+	// If requested module has a "load" function - execute it
 	try{
 		const module_loader = kbmodules[nm]?.load;
 
@@ -478,6 +497,7 @@ const sys_load = function(nm, save_state=true)
 		console.trace(error)
 	}
 }
+
 
 
 
@@ -501,13 +521,18 @@ async function app_init()
 	// Therefore, check whether this is a raw base or not
 	if (app_root.join('raw_base_is.bad').isFileSync()){
 		document.body.style.pointerEvents = 'none';
-		ksys.fbi.warn_critical('The current installation is a raw base. Patch has to be applied. Close the controller and apply the patch.')
+		ksys.fbi.warn_critical(
+			'The current installation is a raw base. Patch has to be applied. Close the controller and apply the patch.'
+		)
 		return
 	}
 
 	// display a warning if it wasn't displayed before
+	// todo: this is basically useless
 	if (ksys.context.global.cache['been_warned'] != true){
-		ksys.fbi.warn_critical('Do not forget to turn on alpha channel on the required outputs (sdi/ndi)!')
+		ksys.fbi.warn_critical(
+			'Do not forget to turn on alpha channel on the required outputs (sdi/ndi)!'
+		)
 	}
 
 	// pre-index button icons
@@ -534,7 +559,9 @@ async function app_init()
 	// if vmix is not reachable - do not save the IP/port and simply prompt input again
 	if (reach == false){
 		// display an error
-		$('#welcome_screen_title_2').html(`Unable to reach VMIX at <addr>${ksys.util.str_ops.validate(ctx_cache.vmix_ip)}</addr> : <addr>${ksys.util.str_ops.validate(ctx_cache.vmix_port)}</addr>. Please enter a valid ip/port to proceed or ensure that the networking is not malfunctioning (aka rubbish bootleg firewalls, wrong LAN, etc...) and VMIX is running with Web Controller ONN.`)
+		$('#welcome_screen_title_2').html(
+			`Unable to reach VMIX at <addr>${ksys.util.str_ops.validate(ctx_cache.vmix_ip)}</addr> : <addr>${ksys.util.str_ops.validate(ctx_cache.vmix_port)}</addr>. Please enter a valid ip/port to proceed or ensure that the networking is not malfunctioning (aka rubbish bootleg firewalls, wrong LAN, etc...) and VMIX is running with Web Controller ONN.`
+		)
 		$('startpage').append(`
 			<div id="welcome_enter_info">
 				<input style="color: white" type="text" placeholder="IP (absolute)" ip>:<input style="color: white" type="number" placeholder="Port" port>
