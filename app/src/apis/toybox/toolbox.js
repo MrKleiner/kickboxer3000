@@ -156,6 +156,18 @@ const _lizard = {
 		return this.delete(array_elem)
 	}
 
+	// Find index of an element in a set
+	Set.prototype.indexof = function(tgt_elem) {
+		let counter = 0;
+		for (const elem of this){
+			if (elem == tgt_elem){
+				return counter
+			}
+			counter += 1;
+		}
+		return -1
+	}
+
 	// Join set into a string, like an Array
 	// todo: this can be better
 	Set.prototype.join = function(separator='') {
