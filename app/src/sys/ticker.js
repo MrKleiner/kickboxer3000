@@ -91,14 +91,14 @@ class _kb_ticker{
 			while (self.alive == true && ((self.global_tick < self.duration) || self.infinite == true)){
 
 				// global timer
-				let new_tick = Math.floor(
+				let new_tick = Math.ceil(
 					((new Date()).getTime() - self.zero) / 1000
 				);
 
 				if (self.paused == true){
 					await self.pause_promise
 					self.zero = (new Date()).getTime();
-					new_tick = Math.floor(
+					new_tick = Math.ceil(
 						((new Date()).getTime() - self.zero) / 1000
 					);
 					last_tick = 0;
@@ -210,12 +210,22 @@ class _kb_ticker{
 	}
 
 	get tick(){
-		return {
-			'global':    (this.reversed ? (this.duration - this.global_tick) : this.global_tick) + this.offset,
-			'iteration': ((this.reversed ? (this.duration - this.global_tick) : this.global_tick) + this.offset) % this.duration,
-			'loops':     Math.floor((this.global_tick + this.offset) / this.duration),
-			'all':       this,
+		if (this.reversed){
+			return {
+				'global':    ((this.duration - this.global_tick) + this.offset) - 1,
+				'iteration': (((this.duration - this.global_tick) + this.offset) % this.duration) - 1,
+				'loops':     Math.floor((this.global_tick + this.offset) / this.duration),
+				'all':       this,
+			}
+		}else{
+			return {
+				'global':    (this.global_tick + this.offset) + 1,
+				'iteration': ((this.global_tick + this.offset) % this.duration) + 1,
+				'loops':     Math.floor((this.global_tick + this.offset) / this.duration),
+				'all':       this,
+			}
 		}
+
 	}
 
 	set_global_tick(tick, trigger_callback=false){
