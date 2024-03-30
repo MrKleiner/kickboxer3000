@@ -1903,7 +1903,7 @@ kbmodules.football_standard._FMStats = class{
 	['replaced_with', 'Replaced With']
 ]
 
-Will result into the following table:
+Will result into the following table structure:
 +--------+-------------+-----------------+
 |  Time  |    Left     |  Replaced With  |
 +--------+-------------+-----------------+
@@ -3828,8 +3828,14 @@ kbmodules.football_standard.show_vs_title = async function(){
 	await kbmodules.football_standard.titles.splash.set_text('title_lower_bot', $('#vs_text_bottom_lower').val())
 
 	// Set logos
-	await kbmodules.football_standard.titles.splash.set_img_src('logo_l', kbmodules.football_standard.resource_index?.home_club?.logo_path || '')
-	await kbmodules.football_standard.titles.splash.set_img_src('logo_r', kbmodules.football_standard.resource_index?.guest_club?.logo_path || '')
+	await kbmodules.football_standard.titles.splash.set_img_src(
+		'logo_l',
+		kbmodules.football_standard.resource_index?.home_club?.logo_path || ''
+	)
+	await kbmodules.football_standard.titles.splash.set_img_src(
+		'logo_r',
+		kbmodules.football_standard.resource_index?.guest_club?.logo_path || ''
+	)
 
 	// Set Club names
 	await kbmodules.football_standard.titles.splash.set_text(
@@ -3870,14 +3876,14 @@ kbmodules.football_standard.show_coach = async function(side){
 	const tgt_club = kbmodules.football_standard.resource_index.side?.[str(side).lower()]?.club;
 
 	if (!tgt_club){
-		ksys.info_msg.send_msg('No club selected', 'warn', 5000);
+		ksys.info_msg.send_msg('No club selected', 'err', 5000);
 		return
 	}
 
-	ksys.btns.pool.show_coach_home_team.toggle(false)
-	// ksys.btns.pool.hide_coach_home_team.toggle(false)
-	ksys.btns.pool.show_coach_guest_team.toggle(false)
-	// ksys.btns.pool.hide_coach_guest_team.toggle(false)
+	ksys.btns.toggle({
+		'show_coach_home_team': false,
+		'show_coach_guest_team': false,
+	})
 
 	await kbmodules.football_standard.titles.coach.set_text(
 		'name',
@@ -3889,10 +3895,12 @@ kbmodules.football_standard.show_coach = async function(side){
 	)
 	await kbmodules.football_standard.titles.coach.overlay_in()
 
-	ksys.btns.pool.show_coach_home_team.toggle(true)
-	ksys.btns.pool.hide_coach_home_team.toggle(true)
-	ksys.btns.pool.show_coach_guest_team.toggle(true)
-	ksys.btns.pool.hide_coach_guest_team.toggle(true)
+	ksys.btns.toggle({
+		'show_coach_home_team': true,
+		'hide_coach_home_team': true,
+		'show_coach_guest_team': true,
+		'hide_coach_guest_team': true,
+	})
 }
 
 kbmodules.football_standard.hide_coach = async function(){
@@ -3915,7 +3923,8 @@ kbmodules.football_standard.hand_card = async function(card_type){
 			9000
 		);
 		console.error(
-			`hand_card received an invalid card type: ${card_type}`
+			`hand_card received an invalid card type: ${card_type}`,
+			card_type
 		)
 		return
 	}
@@ -3978,6 +3987,7 @@ kbmodules.football_standard.hide_card = async function(){
 //        Substitute
 // ================================
 kbmodules.football_standard.exec_substitute = async function(){
+	// todo: is this stupid ?
 	const leaving_player = (
 		kbmodules.football_standard.resource_index.side.home.substitute['leaving']?.selected_entry?.player
 		||
@@ -4095,7 +4105,15 @@ kbmodules.football_standard.timer_callback = function(tick){
 	const minutes = Math.floor(tick.global / 60)
 	const seconds = tick.global - (60*minutes)
 
-	const text = `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`;
+	let text = `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`;
+
+	if (text == '45:01'){
+		text = '45:00'
+	}
+
+	if (text == '90:01'){
+		text = '90:00'
+	}
 
 	kbmodules.football_standard.titles.timer.set_text('base_ticker', text)
 	$('#timer_feedback_main').text(text)
@@ -4331,7 +4349,6 @@ kbmodules.football_standard.get_current_time = function(minutes=false, tsum=fals
 // todo: add sanity check for player's side
 kbmodules.football_standard.add_score_from_cards_panel = async function(){
 	const player = kbmodules.football_standard.resource_index.card_player_filter?.selected_entry?.player;
-	// selected_entry.player
 
 	if (!player){
 		ksys.info_msg.send_msg(
@@ -4422,7 +4439,7 @@ single row/string/call it whatever you want
 
 
     > Loop through every score unit of the team again, as 'unit_b'
-        > Check if the author of 'unit_b' equals to 'unit_a'. If not - continue iteration.
+        > Check if the author of 'unit_b' equals to 'unit_a'. If not - skip, continue iteration.
 
         > Append the 'unit_b' to an array as text, such as 45'+2 (АГ)
           (an array would look like this: [`14'`, `27' (АГ)`, `45'+2`])
@@ -4586,7 +4603,7 @@ kbmodules.football_standard.show_score_summary = async function(){
 	// Set bottom score (0:0)
 	// ------------------------------
 	const score_amt_l = kbmodules.football_standard.resource_index?.score_manager?.sides.home?.score_list?.score_stack?.size || 0;
-	const score_amt_r = kbmodules.football_standard.resource_index?.score_manager?.sides.guest?.score_list?.score_stack?.size || 0
+	const score_amt_r = kbmodules.football_standard.resource_index?.score_manager?.sides.guest?.score_list?.score_stack?.size || 0;
 	await kbmodules.football_standard.titles.final_scores.set_text(
 		'score_sum',
 		`${score_amt_l} : ${score_amt_r}`
@@ -4949,9 +4966,9 @@ kbmodules.football_standard.hide_team_stats = async function(){
 	'home': {
 		'club_name': lowercase club name,
 
-		'tshirt_col': t-shirt colour,
-		'shorts_col': shorts colour,
-		'gk_col':     goalkeeper colour,
+		'tshirt_col': t-shirt colour (hex),
+		'shorts_col': shorts colour (hex),
+		'gk_col':     goalkeeper colour (hex),
 
 		// main/reserve players
 		'player_lineup': {
@@ -5344,8 +5361,11 @@ kbmodules.football_standard.global_save = function(save_targets=null){
 // ================================
 //         Create new match
 // ================================
+
+// (Wipe previous data)
 kbmodules.football_standard.init_new_match = function(evt){
 	if (!evt.ctrlKey){return};
+
 	// First of all - delete files
 	const del_entries = [
 		'lineup_lists.kbsave',
@@ -5359,6 +5379,8 @@ kbmodules.football_standard.init_new_match = function(evt){
 		ksys.db.module.delete(fname)
 	}
 
+	// why bother...
+	// Just reload the controller...
 	ksys.fbi.warn_critical(
 		`Please press CTRL + R (there's nothing else you can do)`
 	)

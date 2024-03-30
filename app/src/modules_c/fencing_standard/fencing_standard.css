@@ -1,0 +1,218 @@
+#fencing_standard
+{
+	display: flex;
+	flex-direction: column;
+	flex-grow: 1;
+	padding-bottom: 20px;
+}
+
+
+/*
+===============================================
+           		Controls
+===============================================
+!~~ [tabid="ctrl_base"]
+*/
+[tabid="ctrl_base"] {
+	display: flex;
+	flex-direction: row;
+	height: 95%;
+	width: fill-available;
+	overflow: hidden;
+	/*padding: 0px 20px 0px 20px;*/
+	padding-left: 20px;
+	padding-right: 20px;
+	justify-content: space-around;
+}
+
+#title_ctrl_btns{
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	display: flex;
+	flex-direction: row;
+	margin-top: 20px;
+}
+
+
+/*
+!~~ [tabid="ctrl_base"] #ctrl_buttons
+*/
+[tabid="ctrl_base"] #ctrl_buttons {
+	display: flex;
+	flex-direction: column;
+	/*width: 45%;*/
+}
+
+[tabid="ctrl_base"] #ctrl_buttons #player_fight_ctrl_horizontal{
+	display: flex;
+	flex-direction: row;
+}
+
+/*
+!~~ [tabid="ctrl_base"] #ctrl_buttons .player_fight_ctrl_container
+*/
+
+[tabid="ctrl_base"] #ctrl_buttons .player_fight_ctrl_container{
+	display: flex;
+	flex-direction: column;
+	width: 480px;
+	/*width: 100%;*/
+	/*height: 45%;*/
+	/*height: 330px;*/
+}
+
+/*
+!~~ [tabid="ctrl_base"] #ctrl_buttons .player_fight_ctrl_container .player_fight_ctrl
+*/
+
+[tabid="ctrl_base"] #ctrl_buttons .player_fight_ctrl_container .player_fight_ctrl {
+	display: flex;
+	flex-direction: column;
+}
+
+[tabid="ctrl_base"] #ctrl_buttons .player_fight_ctrl_container .player_fight_ctrl .fight_vis_feed{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	font-size: 30px;
+}
+
+[tabid="ctrl_base"] #ctrl_buttons .player_fight_ctrl_container .player_fight_ctrl .fight_ctrl_btns{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+[tabid="ctrl_base"] #ctrl_buttons .player_fight_ctrl_container .player_fight_ctrl .score_math{
+	display: flex;
+}
+
+[tabid="ctrl_base"] #ctrl_buttons .player_fight_ctrl_container .player_fight_ctrl .score_math vmixbtn{
+	font-size: 35px !important;
+	font-weight: 900;
+}
+
+[tabid="ctrl_base"] #ctrl_buttons .player_fight_ctrl_container .player_fight_ctrl .score_math.subtract_score vmixbtn{
+	/*color: #561515;*/
+	/*color: black;*/
+}
+
+[tabid="ctrl_base"] #ctrl_buttons .player_fight_ctrl_container .player_fight_ctrl .fight_score_manual_input{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+}
+
+[tabid="ctrl_base"] #ctrl_buttons .player_fight_ctrl_container .player_fight_ctrl .fight_score_manual_input input{
+	width: 70px;
+	font-size: 27px;
+	text-align: center;
+	
+}
+
+
+#mid_header{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	height: 100%;
+	padding: 0px 20px 0px 20px;
+	font-size: 40px;
+	font-weight: 900;
+}
+
+
+
+
+
+
+/*
+===============================================
+           		Player list
+===============================================
+!~~ [tabid="ctrl_base"] #pair_pool
+*/
+
+[tabid="ctrl_base"] #pair_pool  {
+	display: flex;
+	flex-direction: column;
+	width: 400px;
+	height: 700px;
+}
+
+#pair_pool_entries{
+	display: flex;
+	flex-direction: column;
+	overflow-y: scroll;
+	height: 100%;
+	padding: 0px 5px 0px 5px;
+}
+
+[tabid="ctrl_base"] #pair_pool .pair_entry{
+	margin-top: 20px;
+	padding: 10px;
+	outline: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+[tabid="ctrl_base"] #pair_pool .pair_entry.active_pair{
+	outline: 1px solid lime;
+}
+
+[tabid="ctrl_base"] #pair_pool .pair_entry:hover{
+	background: rgba(255, 255, 255, 0.1);
+}
+
+
+[tabid="ctrl_base"] #pair_pool .editor_data_separator{
+	display: flex;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
+}
+
+/*
+!~~ [tabid="ctrl_base"][edit_mode="true"] #pair_pool
+*/
+
+[tabid="ctrl_base"][edit_mode="true"] #pair_pool .pair_entry .pair_entry_vis_feedback{
+	display: none;
+}
+
+[tabid="ctrl_base"][edit_mode="true"] #pair_pool .pair_entry .pair_entry_config{
+	display: flex;
+	flex-direction: row;
+	width: fill-available;
+}
+
+[tabid="ctrl_base"][edit_mode="true"] #pair_pool .pair_entry .pair_entry_config .pair_player_data{
+	display: flex;
+	flex-direction: column;
+}
+
+/*
+!~~ [tabid="ctrl_base"][edit_mode="false"] #pair_pool
+*/
+
+[tabid="ctrl_base"][edit_mode="false"] #pair_pool sysbtn[btname="add_pair"]{
+	display: none !important;
+}
+
+[tabid="ctrl_base"][edit_mode="false"] #pair_pool .pair_entry .pair_entry_vis_feedback{
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	padding: 5px 0px 5px 0px;
+}
+
+[tabid="ctrl_base"][edit_mode="false"] #pair_pool .pair_entry .pair_entry_config{
+	display: none;
+}
+
+
+

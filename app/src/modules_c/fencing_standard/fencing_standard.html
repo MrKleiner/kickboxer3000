@@ -1,0 +1,108 @@
+<div id="fencing_standard">
+
+	<tabsys>
+		<sys-tab match_id="cfg" default>Config</sys-tab>
+		<sys-tab match_id="ctrl_base" default>Controls</sys-tab>
+	</tabsys>
+
+	<tab class="tab_hidden" tabid="cfg">
+		<string-formatting>
+			<f-param
+				display_name="Player Names"
+				fpid="player_names"
+				translit_default="0"
+				format_default="all_upper"
+			></f-param>
+		</string-formatting>
+	</tab>
+
+	<tab class="tab_hidden" tabid="ctrl_base" edit_mode="false">
+		<div id="ctrl_buttons">
+
+			<div id="player_fight_ctrl_horizontal">
+				<div regular_box id="player_ctrl_left" class="player_fight_ctrl_container"></div>
+				<div id="mid_header">VS</div>
+				<div regular_box id="player_ctrl_right" class="player_fight_ctrl_container"></div>
+			</div>
+
+
+			<div id="title_ctrl_btns">
+				<vmixbtn
+					seq_info="vis_show"
+					onclick="kbmodules.fencing_standard.fight_tracker_vis_ctrl(true)"
+				>Show Fight Title</vmixbtn>
+				<vmixbtn
+					seq_info="vis_hide"
+					onclick="kbmodules.fencing_standard.fight_tracker_vis_ctrl(false)"
+				>Hide Fight Title</vmixbtn>
+			</div>
+		</div>
+
+		<div regular_box id="pair_pool" kbhint="RMB to select a pair (names are pushed to VMIX automatically). Alt + RMB in edit mode to delete">
+			<div id="pair_pool_ctrl_btns">
+				<sysbtn btname="toggle_edit" onclick="kbmodules.fencing_standard.toggle_edit_mode()">Toggle Edit</sysbtn>
+				<sysbtn btname="add_pair" onclick="kbmodules.fencing_standard.create_chaotic_pair()">Add Pair</sysbtn>
+			</div>
+
+			<div id="pair_pool_entries"></div>
+		</div>
+	</tab>
+
+
+
+	<!-- TEMPLATES -->
+
+	<!-- A single pair -->
+	<template id="pair_template">
+		<div class="pair_entry">
+			<div class="pair_entry_vis_feedback">
+				<div class="vis_feed_pname_left">-</div>
+				<div class="vis_feed_vs_sign">VS</div>
+				<div class="vis_feed_pname_right">-</div>
+			</div>
+			<div class="pair_entry_config"></div>
+		</div>
+	</template>
+
+	<!-- A single player -->
+	<template id="pair_player_template">
+		<div class="pair_player_data">
+			<!-- 
+				todo: is this stupid?
+				This was done, because it's speculated, that fuck any html inside js.
+				With this approach everything is visualized with proper highlighting
+				and is more accessible for tweaks/adding more entries.
+			-->
+			<input
+				type="text"
+				data_link="player_name"
+				class="player_data_input"
+				placeholder="Name"
+			>
+			<input
+				type="text"
+				data_link="player_surname"
+				class="player_data_input"
+				placeholder="Surname"
+			>
+		</div>
+	</template>
+
+	<!-- A single player's fight controls -->
+	<template id="player_fight_ctrl_template">
+		<div class="player_fight_ctrl">
+			<div class="fight_vis_feed">
+				<div class="fight_vis_feed_player_name">-</div>
+				<div class="fight_vis_feed_player_score">-</div>
+			</div>
+			<div class="fight_ctrl_btns">
+				<div class="score_math add_score"></div>
+				<div class="score_math subtract_score"></div>
+			</div>
+			<div class="fight_score_manual_input">
+				<input noctrl type="number">
+			</div>
+		</div>
+	</template>
+
+</div>

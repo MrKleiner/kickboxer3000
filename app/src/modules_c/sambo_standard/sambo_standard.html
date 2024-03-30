@@ -1,0 +1,182 @@
+<kbstandard>
+	<tabsys>
+		<sys-tab match_id="config">Config</sys-tab>
+		<sys-tab match_id="ctrl" default>Control</sys-tab>
+	</tabsys>
+
+	<tab tabid="config" tabname="Config" default>
+		<string-formatting>
+			<f-param display_name="Players" fpid="players" translit_default="1" format_default="all_upper"></f-param>
+			<f-param display_name="Labels" fpid="labels" translit_default="1" format_default="all_upper"></f-param>
+		</string-formatting>
+		<box regular_box>
+			<column res_loc>
+				<rowlabel>Resources Location</rowlabel>
+				<input type="text" res_path placeholder="Absolute path to a folder. Quotation marks allowed">
+				<sysbtn btname="save_res_path" onclick="kbmodules.sambo_standard.save_res_path()">Save Path</sysbtn>
+			</column>
+		</box>
+	</tab>
+
+	<tab tabid="ctrl" tabname="Control" default row>
+		<div id="lside">
+			<box regular_box>
+				<vmixbtn seq_info="vis_hide" btname="vs_off" onclick="kbmodules.sambo_standard.vs_off()">VS OFF</vmixbtn>
+				<vmixbtn seq_info="vis_show" btname="vs_onn" onclick="kbmodules.sambo_standard.vs_onn(this)">VS ON</vmixbtn>
+				<fbr></fbr>
+				<vmixbtn seq_info="vis_hide" btname="player_off" onclick="kbmodules.sambo_standard.player_off(this)">Player OFF</vmixbtn>
+				<vmixbtn seq_info="vis_show" btname="player_onn" onclick="kbmodules.sambo_standard.player_onn(this)">Player ON</vmixbtn>
+				<div id="category_change">
+				</div>
+			</box>
+
+
+			<box regular_box id="timer_ctrl">
+				<bxtitle>Timer</bxtitle>
+				<vmixbtn
+					bottom
+					seq_align="vertical"
+					btname=""
+					seq_info="alive+<+cond+vis_show+resume+>+<+else+update+play+vis_show+>"
+					onclick="kbmodules.sambo_standard.respawn_manager(true)"
+				>
+					<span>Start</span>
+				</vmixbtn>
+				<vmixbtn btname="" seq_info="vis_hide+pause" onclick="kbmodules.sambo_standard.timer_hide(true)">OFF</vmixbtn>
+				<fbr></fbr>
+				<vmixbtn btname="" seq_info="stop+update" onclick="kbmodules.sambo_standard.respawn_timer(false)">Reset</vmixbtn>
+				<vmixbtn btname="" seq_info="pause" onclick="kbmodules.sambo_standard.timer_pause(true)">Pause</vmixbtn>
+				<vmixbtn btname="" seq_info="resume" onclick="kbmodules.sambo_standard.timer_pause(false)">Resume</vmixbtn>
+				<input type="text" newtime placeholder="Expressions allowed">
+				<fbr></fbr>
+				<row>
+					<vmixbtn btname="" seq_info="update+resume" onclick="kbmodules.sambo_standard.timer_set_time(eval($('input[newtime]').val().trim()))">Set Time</vmixbtn>
+					<score-ctrl>
+
+						<div class="score_ctrl_group" id="score_ctrl_red">
+							<div class="side_id side_red"></div>
+							<input onchange="kbmodules.sambo_standard.forward_scores(true)" type="number">
+							<div class="score_ctrl_btn_pool">
+								<sysbtn onclick="kbmodules.sambo_standard.score_add('red')" class="score_ctrl_btn btn_add">+</sysbtn>
+								<sysbtn onclick="kbmodules.sambo_standard.score_subtract('red')" class="score_ctrl_btn btn_subtract">-</sysbtn>
+							</div>
+						</div>
+
+						<div class="score_ctrl_group" id="score_ctrl_blue">
+							<div class="side_id side_blue"></div>
+							<input onchange="kbmodules.sambo_standard.forward_scores(true)" type="number">
+							<div class="score_ctrl_btn_pool">
+								<sysbtn onclick="kbmodules.sambo_standard.score_add('blue')" class="score_ctrl_btn btn_add">+</sysbtn>
+								<sysbtn onclick="kbmodules.sambo_standard.score_subtract('blue')" class="score_ctrl_btn btn_subtract">-</sysbtn>
+							</div>
+						</div>
+
+					</score-ctrl>
+				</row>
+
+				<row round_dur>
+					<rowlabel>Round Duration</rowlabel>
+					<input type="text" round_duration placeholder="Expressions allowed">
+					<sysbtn btname="set_round_duration" onclick="kbmodules.sambo_standard.save_timer_duration()">Set Duration</sysbtn>
+				</row>
+
+
+
+
+
+
+				<row null_shit_to_avoid_selection></row>
+			</box>
+
+		</div>
+
+
+		<div id="rside">
+			<div id="pairs_pool" regular_box>
+				<sysbtn onclick="kbmodules.sambo_standard.toggle_edit()" btname="toggle_edit_mode">Toggle Edit</sysbtn>
+				<sysbtn style="display: none" onclick="kbmodules.sambo_standard.add_pair()" btname="edit_add_pair">Add Pair</sysbtn>
+				<sysbtn style="display: none" onclick="kbmodules.sambo_standard.load_pairs_from_file()" btname="load_pairs_from_file">Load Pairs From File</sysbtn>
+				<sysbtn onclick="kbmodules.sambo_standard.save_pairs()" style="display: none" btname="save_pairs">Save</sysbtn>
+				<sysbtn onclick="kbmodules.sambo_standard.save_pairs_to_file()" style="display: none" btname="save_pairs_to_file">Save To File</sysbtn>
+			</div>
+		</div>
+	</tab>
+
+
+
+
+
+
+
+	<div>
+
+		<template id="pair_asset">
+			<pair>
+				<pairnum click_contrast></pairnum>
+				<players>
+					<player left click_contrast noclick>
+						<display></display>
+						<p_param p_name>
+							<descr>Name</descr>
+							<input type="text" placeholder="Player Name">
+						</p_param>
+						<p_param p_age>
+							<descr>Age</descr>
+							<input type="text" placeholder="Player Age">
+						</p_param>
+						<p_param p_weight>
+							<descr>Weight</descr>
+							<input type="text" placeholder="Player Weight">
+						</p_param>
+						<p_param p_height>
+							<descr>Height</descr>
+							<input type="text" placeholder="Player Height">
+						</p_param>
+						<p_param p_record>
+							<descr>Record</descr>
+							<input type="text" placeholder="Player Record">
+						</p_param>
+						<p_param p_country>
+							<descr>Country</descr>
+							<input type="text" placeholder="Player's Country of Origin">
+						</p_param>
+					</player>
+
+					<player right click_contrast noclick>
+						<display></display>
+						<p_param p_name>
+							<descr>Name</descr>
+							<input type="text" placeholder="Player Name">
+						</p_param>
+						<p_param p_age>
+							<descr>Age</descr>
+							<input type="text" placeholder="Player Age">
+						</p_param>
+						<p_param p_weight>
+							<descr>Weight</descr>
+							<input type="text" placeholder="Player Weight">
+						</p_param>
+						<p_param p_height>
+							<descr>Height</descr>
+							<input type="text" placeholder="Player Height">
+						</p_param>
+						<p_param p_record>
+							<descr>Record</descr>
+							<input type="text" placeholder="Player Record">
+						</p_param>
+						<p_param p_country>
+							<descr>Country</descr>
+							<input type="text" placeholder="Player's Country of Origin">
+						</p_param>
+					</player>
+				</players>
+			</pair>
+		</template>
+
+	</div>
+
+
+
+
+
+</kbstandard>

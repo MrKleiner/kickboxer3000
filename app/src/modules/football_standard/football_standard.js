@@ -4101,7 +4101,15 @@ $this.timer_callback = function(tick){
 	const minutes = Math.floor(tick.global / 60)
 	const seconds = tick.global - (60*minutes)
 
-	const text = `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`;
+	let text = `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`;
+
+	if (text == '45:01'){
+		text = '45:00'
+	}
+
+	if (text == '90:01'){
+		text = '90:00'
+	}
 
 	$this.titles.timer.set_text('base_ticker', text)
 	$('#timer_feedback_main').text(text)
