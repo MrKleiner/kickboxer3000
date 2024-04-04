@@ -95,6 +95,7 @@ public:
                     case '6': getTickerCurrentStatus(s); break;
                     case '7': addTickerUdpReceiver(s);   break;
                     case '8': addTickerEndTimeUdpReceiver(s); break;
+                    case '9': getSystemStatus(s); break;
                     default : zeroHandler(s);  break;
                 }
             }
@@ -314,6 +315,19 @@ public:
 
     }
 
+
+
+    void getSystemStatus(std::string s) {
+        cout << "Check service status\n";
+        GetSystemStatusUdpPacketHeader request_pkt_hdr;
+        UDPmessageStruct server_response_buf;
+        server_response_buf = sendUDPmessage((char*)&request_pkt_hdr, sizeof(request_pkt_hdr) );
+        if (server_response_buf.message_len > 0)
+            cout << "\nServer response: " << Stringer::charBufToCharCodes(server_response_buf.message, server_response_buf.message_len, false) << "\n\n\n";
+        else
+            cout << "\nServer responded with zero length message\n\n\n";
+    
+    }
 
     /**
        @brief Wrapper for stoi() with exception processing.

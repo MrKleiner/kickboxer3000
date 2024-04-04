@@ -11,7 +11,7 @@ enum KbResponseCodesEnum : uint8_t {
     everything_bad              = 1,
     wrong_message_format        = 2,
     wrong_number_of_args        = 3,
-    wrong_timer_number          = 4,
+    wrong_ticker_number         = 4,
     everything_good_and_payload = 200
 };
 
@@ -21,7 +21,7 @@ const std::map <KbResponseCodesEnum, std::string> kb_response_codes_str = {
     { everything_bad,              "Everything bad" },
     { wrong_message_format,        "Wrong message format" },
     { wrong_number_of_args,        "Wrong number of args for given command" },
-    { wrong_timer_number,          "Wrong timer number" },
+    { wrong_ticker_number,         "Wrong ticker number" },
     { everything_good_and_payload, "everithing good and response has payload after return code" }
 };
 
@@ -40,6 +40,17 @@ struct GeneralResponseUdpPacketHeader {
     uint8_t IFF1 = 37;
     uint8_t IFF2 = 37;
     KbResponseCodesEnum response_code = everything_good;
+};
+
+
+/**
+ {IFF1, IFF2, response_code}
+ By default response_code = 0 (everything_good)
+ */
+struct GetSystemStatusUdpPacketHeader {
+    uint8_t IFF1 = 73;
+    uint8_t IFF2 = 73;
+    uint8_t command = 9;
 };
 
 
