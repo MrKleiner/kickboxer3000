@@ -1,2 +1,2 @@
 #pragma once
-#define PROGRAM_VERSION "0.5.2"
+#define PROGRAM_VERSION "0.6.3"
