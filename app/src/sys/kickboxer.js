@@ -67,6 +67,7 @@ const ksys = {
 	tabsys:   require('./sys/tabsys.js'),
 	hintsys:  require('./sys/hintsys.js'),
 	info_msg: require('./sys/info_msg_sys.js'),
+	switches: require('./sys/switches.js'),
 	// Global events listeners
 	binds:   {},
 };
@@ -476,6 +477,9 @@ const sys_load = function(nm, save_state=true)
 
 	// resync tabs
 	ksys.tabsys.resync()
+
+	// resync switches
+	ksys.switches.resync()
 
 	// wipe binds
 	ksys.binds = {};
