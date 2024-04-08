@@ -29,6 +29,12 @@ const fsaver = require('./apis/filesaverjs/2_0_4/FileSaver.js');
 // Electron File System Access
 const fs = require('fs');
 
+// Basically, sockets
+const dgram = require('dgram');
+
+// os module, just like in python
+const os_em = require('os');
+
 // Python-like pathlib
 // https://mauricepasternak.github.io/pathlib-js/
 const pathlib = require('pathlib-js').default;
@@ -372,6 +378,25 @@ ksys.util.get_key = function(){
 
 		shadow_input.focus()
 	});
+}
+
+// Get local ipv4 address
+// This is so retarded...
+ksys.util.get_local_ipv4_addr = function(octets=true){
+	const interfaces = os_em.networkInterfaces();
+	for (const interfaceName in interfaces) {
+		const addresses = interfaces[interfaceName];
+		for (const address of addresses) {
+			if (address.family === 'IPv4' && !address.internal) {
+				if (octets){
+					return address.address.split('.').map(function(e){return int(e)});
+				}else{
+					return address.address
+				}
+			}
+		}
+	}
+	return false
 }
 
 

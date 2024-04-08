@@ -61,6 +61,17 @@ vtalker._talk = async function(rparams=null){
 }
 
 
+vtalker.create_url = function(rparams=null, with_scheme=false){
+	const ctx_cache = ksys.context.global.cache;
+	const prms = new URLSearchParams(rparams || {});
+
+	if (with_scheme){
+		return `http://${ctx_cache.vmix_ip}:${ctx_cache.vmix_port}/API/?${prms.toString()}`
+	}else{
+		return `/API/?${prms.toString()}`
+	}
+}
+
 
 
 // Send a command to VMIX API
