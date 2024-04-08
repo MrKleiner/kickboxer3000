@@ -20,7 +20,7 @@ const db_module_read_file = function(fname=null, load_as='text'){
 	}
 
 	if (load_as == 'json'){
-		return JSON.parse(target_file.readFileSync())
+		return JSON.parse(target_file.readFileSync('utf-8'))
 	}
 
 	return target_file.readFileSync('utf-8')

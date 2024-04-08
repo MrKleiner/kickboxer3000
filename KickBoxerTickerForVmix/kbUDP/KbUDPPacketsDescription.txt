@@ -334,7 +334,7 @@ COMMANDS - DETAILED DESCRIPTION
 
 ******************************************************************************
 
-9 : Check if KickBoxerTickerForVmix is active      (global status, not depend on current per-second ticker(s) activities)
+9 : Check if KickBoxerTickerForVmix is active      (global status, doesn't depend on current per-second ticker(s) activities)
 
     | REQUEST   |
     | STRUCTURE |
