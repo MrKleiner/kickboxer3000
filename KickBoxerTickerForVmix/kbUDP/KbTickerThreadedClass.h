@@ -47,6 +47,11 @@ public:
 
     }
 
+    void clearAllUDPreceivers() {
+        udp_tcp_per_second_receivers.clearAllUDPreceivers();
+        udp_tcp_end_time_receivers.clearAllReceivers();
+    }
+
 
     void startThread(uint8_t start_mins, uint8_t start_secs, uint8_t end_mins, uint8_t end_secs) {
         start_mins_ = start_mins;

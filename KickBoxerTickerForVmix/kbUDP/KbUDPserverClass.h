@@ -206,18 +206,19 @@ public:
             printf("\n\n\nReceived packet from %s:%d\n", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
 
             // if (message_len>2 && message[0]==73 && message[1]==73) {
-            if (message_len > 2 && *(uint16_t*)message == 0x4949 && message[2] > 0 && message[2] < 10) { // only 9 commands availible for now
+            if (message_len > 2 && *(uint16_t*)message == 0x4949 && message[2] > 0 && message[2] < 11) { // only 9 commands availible for now
                 switch (message[2]) {
-                    case 0: zeroHandler(message, message_len);             break;
-                    case 1: startTicker(message, message_len);             break;
-                    case 2: pauseTicker(message, message_len);             break;
-                    case 3: resumeTicker(message, message_len);            break;
-                    case 4: stopTicker(message, message_len);              break;
-                    case 5: addHttpReceiver(message, message_len);         break;
-                    case 6: getTickerCurrentState(message, message_len);   break;
-                    case 7: addUdpReceiver(message, message_len);          break;
-                    case 8: subscribeToEndTimeEvent(message, message_len); break;
-                    case 9: getKbTickerForVmixState(message, message_len); break;
+                    case  0: zeroHandler(message, message_len);             break;
+                    case  1: startTicker(message, message_len);             break;
+                    case  2: pauseTicker(message, message_len);             break;
+                    case  3: resumeTicker(message, message_len);            break;
+                    case  4: stopTicker(message, message_len);              break;
+                    case  5: addHttpReceiver(message, message_len);         break;
+                    case  6: getTickerCurrentState(message, message_len);   break;
+                    case  7: addUdpReceiver(message, message_len);          break;
+                    case  8: subscribeToEndTimeEvent(message, message_len); break;
+                    case  9: getKbTickerForVmixState(message, message_len); break;
+                    case 10: clearAllUDPreceivers(message, message_len);    break;
                     default: break;
                 }
             }
@@ -324,13 +325,36 @@ public:
         }
         else {
             response_pkt_hdr.response_code = wrong_ticker_number;
-            cout << "\n\nTicker # cannot be zero\n\n";
+            cout << "\n\nWrong ticker number\n\n";
         }
 
         if (sendto(server_socket, (char*)&response_pkt_hdr, sizeof(response_pkt_hdr), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR)
             printf("sendto() failed with error code: %d", WSAGetLastError());
     };
 
+
+
+    void clearAllUDPreceivers(const char* message, int message_len) { 
+        cout << "\n\nClear all UDP receivers\n\n";
+        // First three bytes already checked (73,73,10)
+        GeneralResponseUdpPacketHeader response_pkt_hdr;
+
+        // parse header
+        StopTickerRequestUdpPacketHeader* request_pkt_hdr = (StopTickerRequestUdpPacketHeader*)message;
+
+        if (request_pkt_hdr->timer_no > 0 && request_pkt_hdr->timer_no < tickers_total) {
+            tickers[request_pkt_hdr->timer_no].clearAllUDPreceivers();
+        }
+        else {
+            response_pkt_hdr.response_code = wrong_ticker_number;
+            cout << "\n\nWrong ticker number\n\n";
+        }
+
+        if (sendto(server_socket, (char*)&response_pkt_hdr, sizeof(response_pkt_hdr), 0, (sockaddr*)&client, sizeof(sockaddr_in)) == SOCKET_ERROR)
+            printf("sendto() failed with error code: %d", WSAGetLastError());
+
+
+    }
 
 
     void getTickerCurrentState(const char* message, int message_len) {

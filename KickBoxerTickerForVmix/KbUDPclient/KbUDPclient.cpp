@@ -40,7 +40,7 @@ public:
         }
 
         // Set timeout for recvfrom()
-        DWORD recvfrom_timeout = 1 * 2000;
+        DWORD recvfrom_timeout = 1 * 700;
         setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*) &recvfrom_timeout, sizeof(recvfrom_timeout));
 
         // setup address structure
@@ -96,7 +96,8 @@ public:
                     case '7': addTickerUdpReceiver(s);   break;
                     case '8': addTickerEndTimeUdpReceiver(s); break;
                     case '9': getSystemStatus(s); break;
-                    default : zeroHandler(s);  break;
+                    case 'a': clearAllUDPreceivers(s); break;
+                    default  : zeroHandler(s);  break;
                 }
             }
             else {
@@ -196,15 +197,37 @@ public:
         else {
             request_pkt_hdr.command = strToChar(tokens[0]);
             request_pkt_hdr.timer_no = strToChar(tokens[1]);
+            UDPmessageStruct server_response_buf;
+            server_response_buf = sendUDPmessage((char*)&request_pkt_hdr, sizeof(request_pkt_hdr));
+            if (server_response_buf.message_len > 0) {
+                string s = Stringer::charBufToCharCodes(server_response_buf.message, server_response_buf.message_len, false);
+                printf("\nServer response for stopTicker() request: %s\n\n\n", s.data());
+            }
+            else {
+                cout << "\nServer responded with zero length message\n\n\n";
+            }
         }
-        UDPmessageStruct server_response_buf;
-        server_response_buf = sendUDPmessage((char*)&request_pkt_hdr, sizeof(request_pkt_hdr));
-        if (server_response_buf.message_len > 0) {
-            string s = Stringer::charBufToCharCodes(server_response_buf.message, server_response_buf.message_len, false);
-            printf("\nServer response for stopTicker() request: %s\n\n\n", s.data());
+    }
+
+    void clearAllUDPreceivers(string s) {
+        cout << "Clear all udp receivers request\n";
+        StopTickerRequestUdpPacketHeader request_pkt_hdr;
+        std::vector<std::string> tokens = splitToVector(s);
+        if (tokens.size() != StopTickerRequestUdpPacketHeaderSignificantFieldsCount) {
+            printf("Wrong number of arguments for clearAllUDPreceivers. Expected: %d. Founded: %zu.\n", StopTickerRequestUdpPacketHeaderSignificantFieldsCount, tokens.size());
         }
         else {
-            cout << "\nServer responded with zero length message\n\n\n";
+            request_pkt_hdr.command = 10;
+            request_pkt_hdr.timer_no = strToChar(tokens[1]);
+            UDPmessageStruct server_response_buf;
+            server_response_buf = sendUDPmessage((char*)&request_pkt_hdr, sizeof(request_pkt_hdr));
+            if (server_response_buf.message_len > 0) {
+                string s = Stringer::charBufToCharCodes(server_response_buf.message, server_response_buf.message_len, false);
+                printf("\nServer response for clearAllUDPreceivers() request: %s\n\n\n", s.data());
+            }
+            else {
+                cout << "\nServer responded with zero length message\n\n\n";
+            }
         }
     }
 

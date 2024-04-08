@@ -31,6 +31,9 @@ public:
         path_ = path;
     }
 
+    string path() { return path_; }
+
+
     bool receiverExist(uint8_t ipaddr[4], uint16_t PORT, string path = "") const {
         return memcmp(ipaddr, ipaddr_, sizeof(ipaddr_)) == 0 && PORT == PORT_ && path.compare(path_) == 0;
     }
@@ -57,7 +60,7 @@ public:
             // exit(EXIT_FAILURE);
         } else {
             // Set timeout for recvfrom()
-            DWORD recvfrom_timeout = 1 * 1000;
+            DWORD recvfrom_timeout = 1 * 700;
             setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&recvfrom_timeout, sizeof(recvfrom_timeout));
 
             // setup address structure
@@ -117,8 +120,7 @@ public:
         string timenow = std::format("{:#02}%3A{:#02}", mm, ss);
         Socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (connect(Socket, (SOCKADDR*)(&SockAddr), sizeof(SockAddr)) != 0) {
-            cout << "\n\nERROR: Could not connect to vmix api\n\n";
-            //return 1;
+            cout << "\rERROR: Could not connect to vmix api";
         }
         else {
             string get_http = get_http_begin + timenow + get_http_end;
@@ -161,6 +163,12 @@ public:
     void clearAllReceivers() {
         ticker_receivers.clear();
     }
+
+    void clearAllUDPreceivers() {
+        for (int i = ticker_receivers.size(); i-- > 0; ) 
+            if (ticker_receivers[i]->path() == "") ticker_receivers.erase(ticker_receivers.begin()+i);
+    }
+
 
     /**
      * Input parameters will be checked to see if a receiver with exactly the same parameters exists (ipaddr, port).

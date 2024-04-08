@@ -352,3 +352,28 @@ COMMANDS - DETAILED DESCRIPTION
                                                           1 - everything is bad 
 
 
+
+
+
+
+
+******************************************************************************
+
+10: Clear all UDP receivers      (for example - after Ctrl-R was pressed in controller)
+
+    | REQUEST   |
+    | STRUCTURE |
+    byte[0]                                  : {73}        Two-bytes IFF
+    byte[1]                                  : {73}
+    byte[2]                                  : {10}        command                  (unsiged char)
+
+
+    | RESPONSE  |
+    | STRUCTURE |
+    byte[0]                                  : {37}       Two-bytes IFF
+    byte[1]                                  : {37}
+    byte[2]                                  : {0..1}     response status           (unsiged char)
+                                                          0 - everything is good         
+                                                          1 - everything is bad 
+
+
