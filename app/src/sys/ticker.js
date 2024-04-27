@@ -291,9 +291,12 @@ _ticker.pool = function()
 // Spoiler: everything below will work exponentially worse,
 // than the previous ticker
 
+// It's very important to kill functions,
+// that run in a loop
+const kb_atat_listen_pool = new Set();
 
 const valid_commands_list = [
-	0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 ];
 
 
@@ -369,19 +372,23 @@ const kbat_iff_data = {
 //   Indicates whether the payload was sent.
 // - error:
 //   This key is only present, when there was an error
-//   during execution.
+//   during js execution.
 
 const KbAtCMDGateway = class{
 	// This is useless, but at the same time rather important:
 	// This is JS execution timeout
 	static js_execution_timeout = 9000;
 
-	static recv_timeout = 800;
+	// important todo: it appears, that a timeout of 2 seconds
+	// is an absolute minimum, because AT-AT seems to choke
+	// when there are multiple streams of commands being
+	// stuffed in it.
+	// static recv_timeout = 800;
+	static recv_timeout = 2000;
 
 	// todo: is this the right place for these functions ?
 
-	// Convert an array of uint16 numbers to electron Buffer class
-	// OR a single number
+	// Convert an array of uint16 numbers (OR a single number) to electron Buffer class
 	static uint16_buf(input_data, endian='LE'){
 		// print('To uint16 input data:', input_data)
 		if (!Number.isInteger(input_data) && !Array.isArray(input_data)){
@@ -563,11 +570,13 @@ const KbAtCMDGateway = class{
 	// and returning a fail
 	// The amount of retries is not indicated anywhere
 	static async exec_cmd(addr, cmd_id, data_chunks){
+		const test = lizard.rndwave();
 		for (const retry of range(2)){
 			console.warn(
 				'exec_cmd: retry №', retry + 1, 'of', 2,
 				'Sending cmd', cmd_id,
 				'With data', data_chunks,
+				test
 			);
 
 			const linear_lock = create_promise_lock();
@@ -581,9 +590,24 @@ const KbAtCMDGateway = class{
 			skt.on(
 				'message',
 				function(msg_buf, rinfo){
+					// important todo: Apparently, this still triggers
+					// if there was a reply after all the timeouts.
+					// This is good, but does not represent the expected behaviour, so...
+					// Make this not trigger, if the timeout was reached.
+					if (recv_status.error == 'timed_out'){
+						console.error(
+							'exec_cmd: received a reply after timeout on retry №',
+							retry + 1, 'of', 2,
+							'With the following data', msg_buf, rinfo,
+							test
+						)
+						return
+					}
+
 					console.warn(
 						'exec_cmd: received a reply on retry №', retry + 1, 'of', 2,
-						'With the following data', msg_buf, rinfo
+						'With the following data', msg_buf, rinfo,
+						test
 					);
 					recv_status.received = true;
 					recv_status.msg_data = KbAtCMDGateway.msg_in_iff_pipe(msg_buf);
@@ -607,10 +631,21 @@ const KbAtCMDGateway = class{
 					if (!recv_status.received){
 						console.error(
 							'exec_cmd: Timed out on waiting for the reply',
-							'on retry №', retry + 1, 'of', 2
+							'on retry №', retry + 1, 'of', 2, '. Where payload had the following data:',
+							'Command id:', cmd_id, 'Payload:', data_chunks,
+							test
 						)
 						// Todo: use a special class instead of 'timed_out' string ?
 						recv_status.error = 'timed_out';
+
+						// important todo: this craches the AT-AT
+						// try{
+						// 	skt.close();
+						// }catch(e){
+						// 	console.error(
+						// 		`Couldn't close a timed out socket`, test, 'because', e
+						// 	)
+						// }
 					}
 
 					// Release the lock
@@ -627,6 +662,7 @@ const KbAtCMDGateway = class{
 			if (!recv_status.received && retry != 1){
 				continue
 			}
+
 			return recv_status
 		}
 	}
@@ -645,8 +681,11 @@ const KbAtCMDGateway = class{
 // - error (str || object):
 //   For now can only contain 'timed_out'
 const KbAtStatusWatcher = class{
+
 	// The actual UDP timeout
-	static recv_timeout = 800;
+	// important todo: see KbAtCMDGateway's comment on this
+	// static recv_timeout = 800;
+	static recv_timeout = 2000;
 
 	constructor(atat_ip, atat_port, callback){
 		const self = this;
@@ -679,6 +718,13 @@ const KbAtStatusWatcher = class{
 
 		self.restart(self);
 		self.main(self);
+
+		// Fuck js
+		{
+			self.terminate = function(){
+				return self._terminate(self);
+			}
+		}
 	}
 
 	restart(self){
@@ -742,7 +788,7 @@ const KbAtStatusWatcher = class{
 			// Actual UDP timeout (bootleg)
 			setTimeout(
 				function(){
-					if (!recv_status.received){
+					if (!recv_status.received && !self.terminated){
 						// todo: this console error is for debug only
 						console.error(
 							'Status Watcher timed out on waiting for the reply',
@@ -792,13 +838,17 @@ const KbAtStatusWatcher = class{
 		}
 	}
 
-	terminate(self){
+	_terminate(self){
 		self.terminated = true;
 	}
 }
 
 
+
 // Class for direct manipulations with ticker
+
+// todo: there's a very confusing mix of places
+// vmix ip/at_at ip/at_at port is taken from.
 const KbAtTicker = class{
 	constructor(cfg){
 		const self = this;
@@ -816,6 +866,11 @@ const KbAtTicker = class{
 		// 	// Optional
 		// 	'end': [255, 59],
 		// }
+
+		self.time = {
+			'minutes': 0,
+			'seconds': 0,
+		}
 
 		// Both minutes and seconds are mandatory, for now,
 		// aka this [35,] is invalid
@@ -864,10 +919,17 @@ const KbAtTicker = class{
 			self.resub_to_echo = async function(){
 				return await self._resub_to_echo(self)
 			}
+			self.resub_to_end = async function(){
+				return await self._resub_to_end(self)
+			}
+			self.resume_from_offset = async function(timings){
+				return await self._resume_from_offset(self, timings)
+			}
 		}
 
 	}
 
+	// todo: what would be a not naive status check?
 	static naive_status_ok(cmd_exec_reply_data){
 		return (
 			// First check if the message fully went through
@@ -881,10 +943,11 @@ const KbAtTicker = class{
 	// Convert reply buffer to time dict
 	static exec_reply_buf_to_time_dict(cmd_exec_reply_data){
 		return {
-			'minutes': cmd_exec_reply_data.msg_data.data_buff[4],
-			'seconds': cmd_exec_reply_data.msg_data.data_buff[5],
+			'minutes': cmd_exec_reply_data.msg_data.data_buf[2],
+			'seconds': cmd_exec_reply_data.msg_data.data_buf[3],
 		}
 	}
+
 
 	// auto_attach = automatically attach target URL
 	// auto_sub = automatically sub to timer progress echo
@@ -893,6 +956,8 @@ const KbAtTicker = class{
 		// attach
 		// start
 		// sub
+
+		// todo: actually use this
 		const exec_status = {};
 
 		// Attach target URL BEFORE launching the ticker 
@@ -911,19 +976,12 @@ const KbAtTicker = class{
 		}
 
 		// Actually launch the ticker
-		exec_status.start = await KbAtCMDGateway.exec_cmd(
-			[self.ip, self.port],
-			1,
-			[
-				self.id,
-				self.timings.start,
-				self.timings.end || [255, 59],
-			]
-		)
+		exec_status.start = await self._resume_from_offset(self, self.timings);
 
 		// Subscribe to progression echo
 		if (auto_echo_sub){
 			exec_status.sub = await self._resub_to_echo(self);
+			await self._resub_to_end(self);
 			print('Auto sub cmd echo:', exec_status.sub);
 		}
 
@@ -946,7 +1004,7 @@ const KbAtTicker = class{
 		return {
 			'reply_data': cmd_exec_reply,
 			// A very naive status check
-			'ok': self.naive_status_ok(cmd_exec_reply)
+			'ok': KbAtTicker.naive_status_ok(cmd_exec_reply)
 		};
 	}
 
@@ -962,7 +1020,7 @@ const KbAtTicker = class{
 		return {
 			'reply_data': cmd_exec_reply,
 			// A very naive status check
-			'ok': self.naive_status_ok(cmd_exec_reply)
+			'ok': KbAtTicker.naive_status_ok(cmd_exec_reply)
 		};
 	}
 
@@ -980,24 +1038,24 @@ const KbAtTicker = class{
 		return {
 			'reply_data': cmd_exec_reply,
 			// A very naive status check
-			'ok': self.naive_status_ok(cmd_exec_reply)
+			'ok': KbAtTicker.naive_status_ok(cmd_exec_reply)
 		};
 	}
 
 	async _get_curtime(self){
 		const cmd_exec_reply = await KbAtCMDGateway.exec_cmd(
 			[self.ip, self.port],
-			4,
+			6,
 			[self.id,]
 		)
-		print('Terminate CMD echo:', cmd_exec_reply);
+		print('_get_curtime CMD echo:', cmd_exec_reply);
 
-		const is_ok = self.naive_status_ok(cmd_exec_reply);
+		const is_ok = KbAtTicker.naive_status_ok(cmd_exec_reply);
 
 		let time = null;
 
 		if (is_ok){
-			time = self.exec_reply_buf_to_time_dict(cmd_exec_reply);
+			time = KbAtTicker.exec_reply_buf_to_time_dict(cmd_exec_reply);
 		}
 
 		return {
@@ -1030,8 +1088,13 @@ const KbAtTicker = class{
 		self.echo_sub_skt.on(
 			'message',
 			function(msg_buf, rinfo){
-				print('KB AT-AT received timer echo:', msg_buf, rinfo);
-				self?.echo_callback?.(msg_buf, rinfo);
+				const piped_msg_data = KbAtCMDGateway.msg_in_iff_pipe(msg_buf)
+				print('KB AT-AT received timer echo:', msg_buf, piped_msg_data, rinfo);
+				if (piped_msg_data == 2){
+					self.time.minutes = piped_msg_data[2];
+					self.time.seconds = piped_msg_data[3];
+				}
+				self?.echo_callback?.(piped_msg_data, rinfo);
 			}
 		)
 
@@ -1094,6 +1157,9 @@ const KbAtTicker = class{
 		self.end_skt.on(
 			'message',
 			function(msg_buf, rinfo){
+				console.error(
+					'Received end from AT-AT',
+				)
 				print('KB AT-AT received timer end:', msg_buf, rinfo);
 				self?.finish_callback?.(msg_buf, rinfo);
 			}
@@ -1133,6 +1199,21 @@ const KbAtTicker = class{
 		print('Subscribe CMD echo:', cmd_exec_reply);
 
 		return cmd_exec_reply;
+	}
+
+	// This is also used to launch the timer in the first place
+	// Have a better name for this function?
+	// Please comment on github
+	async _resume_from_offset(self, timings){
+		return await KbAtCMDGateway.exec_cmd(
+			[self.ip, self.port],
+			1,
+			[
+				self.id,
+				timings.start,
+				timings.end || [255, 59],
+			]
+		)
 	}
 }
 
@@ -1235,7 +1316,7 @@ const KbAtPersistentReceiver = class{
 	}
 }
 
-// Kick Boxer Advanced Ticker
+// Kickboxer Advanced Ticker
 // The magic UDP .exe integration
 _ticker.KbAt = class {
 	constructor(ticker_id=null, tgt_ip=null, tgt_port=null){
@@ -1652,13 +1733,59 @@ _ticker.KbAt = class {
 
 */
 
+const _bury_bodies = function(){
+	for (const status_watcher of kb_atat_listen_pool){
+		if (status_watcher.terminated){
+			kb_atat_listen_pool.delete(status_watcher);
+		}
+	}
+}
+
+_ticker.kb_at.clear_receivers = async function(){
+	const cmd_exec_reply_clear = await KbAtCMDGateway.exec_cmd(
+		[ksys.context.global.cache.vmix_ip, int(ksys.context.global.cache.atat_port)],
+		10,
+	)
+	// todo: change to print
+	console.error(
+		'Commandeered AT-AT to clear all receivers',
+		cmd_exec_reply_clear
+	)
+}
+
+// Perform a couple VERY important actions
+_ticker.kb_at.sys_restart = async function(){
+	// First - kill all watcher
+	for (const status_watcher of kb_atat_listen_pool){
+		try{
+			status_watcher.terminate();
+		}catch(e){}
+	}
+	_bury_bodies();
+
+	// Now, command the AT-AT to fuckoff
+	await _ticker.kb_at.clear_receivers();
+}
+
+// NEVER instantiate KbAtStatusWatcher by hand !!
+// There are loops, that will keep running forever if you loose
+// reference to their terminate function.
+
+// This function ensures, that such phantom problems do not happen.
+_ticker.kb_at.StatusWatcher = function(){
+	// important todo: does it make sense, that this is here?
+	_bury_bodies();
+
+	const the_ticker = new KbAtStatusWatcher(...arguments);
+	kb_atat_listen_pool.add(the_ticker);
+	return the_ticker
+}
 
 
 
 
 
-
-_ticker.kb_at.StatusWatcher = KbAtStatusWatcher;
+// _ticker.kb_at.StatusWatcher = KbAtStatusWatcher;
 _ticker.kb_at.AtAtTicker = KbAtTicker;
 
 
