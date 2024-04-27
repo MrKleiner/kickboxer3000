@@ -112,8 +112,24 @@ milliseconds lost due to all the iterations needed for registers.
 */
 
 
+// todo: is it fine this is here ?
+$this.timer_fset = {
+	'at_at': {},
+	'builtin': {},
+	// todo: move this to the sys level
+	'first_load': true,
+};
 
-
+$this.ticker_time = {
+	'base':{
+		'minutes': 0,
+		'seconds': 0,
+	},
+	'extra':{
+		'minutes': 0,
+		'seconds': 0,
+	},
+};
 
 $this.load = async function(){
 	const mctx = ksys.context.module;
@@ -183,7 +199,7 @@ $this.load = async function(){
 	};
 
 	// --------------------------
-	// index titles
+	// Index titles
 	// --------------------------
 	{
 		$this.titles = {
@@ -458,7 +474,7 @@ $this.load = async function(){
 
 
 	//
-	// stats
+	// Stats
 	//
 	{
 		// todo: this is old copypasted code
@@ -497,9 +513,9 @@ $this.load = async function(){
 
 	}
 
-	// 
-	// Modern save data
-	// 
+	// --------------------------
+	//     Modern save data
+	// --------------------------
 	{
 		$this.load_lineup_lists();
 		$this.load_field_layouts();
@@ -507,7 +523,39 @@ $this.load = async function(){
 		$this.load_score_data();
 	}
 
+	// --------------------------
+	//           AT-AT
+	// --------------------------
+	{
+		// todo: create a core function that does something like pulling
+		// data to inputs from context automatically or something
+		document.querySelector('#atat_port_input').value = int(ksys.context.global.cache.atat_port || '');
 
+		// todo: make use of this
+		$this.at_at = {
+			'service_ping': null,
+			// important todo: is this absolutely fucking retarded?
+			// Not really, because see KbAtCMDGateway's in /sys/ticker.js
+			// comment on this matter.
+			// Long story short: The less spam - the better.
+			'btns_enable_lock': false,
+		}
+
+		const tgt_timer_fset = ksys.switches.entries.timer_system;
+
+		$this.timer_ctrl = $this.timer_fset[tgt_timer_fset];
+
+		if (tgt_timer_fset == 'at_at'){
+			$this.toggle_atat_status_indicator(true);
+			$this.restart_atat_service();
+			$this.restore_atat_line();
+		}else{
+			$this.toggle_atat_btns(true);
+			$this.toggle_atat_status_indicator(false);
+		}
+
+		// $this.update_selected_timer_system(tgt_timer_fset);
+	}
 }
 
 
@@ -2027,7 +2075,8 @@ $this.CardManager = class {
 
 		this.sides = {
 			home: {
-				// persistent
+				// Persistent
+				// (DOM stuff, such as card images n stuff)
 				card_array: null,
 				dom_index: null,
 
@@ -2046,12 +2095,16 @@ $this.CardManager = class {
 					}
 				*/
 				// This makes it possible to determine wether the red card
-				// was given out immediately or after a second warning
+				// was issued immediately or as a result of a second warning
 				yc_map: new Map(),
 
 
 				// event stack of the red cards
 				// each element is a dict:
+				// important todo:
+				// The specification does not require sets to preserve
+				// the element order, meanwhile the entire system relies
+				// on element order in this set.
 				/*
 				{
 					player: player class,
@@ -2072,7 +2125,7 @@ $this.CardManager = class {
 			}
 		}
 
-		// create the controls
+		// Create the controls
 		const self = this;
 		for (const side of ['home', 'guest']){
 			const tplate = ksys.tplates.index_tplate(
@@ -2110,6 +2163,7 @@ $this.CardManager = class {
 	}
 
 	// Show the relevant amount of cards in the counters
+	// (old implementation)
 	_redraw_counters(){
 		for (const side of ['home', 'guest']){
 			cmap = this.sides[side].yc_map;
@@ -2666,7 +2720,8 @@ $this.ClubGoals = class {
 		);
 
 		// sanity check
-		if (!$this?.base_counter?.tick && !ignore_timer){
+		// if (!$this?.base_counter?.tick && !ignore_timer){
+		if (false){
 			ksys.info_msg.send_msg(
 				`Main timer does not exist (no timestamp will be added to the score record)`,
 				'warn',
@@ -4041,244 +4096,96 @@ $this.exec_substitute = async function(){
 
 
 // ================================
-//        Timers
+//             Timers
 // ================================
 
 
-$this.start_base_timer = async function(rnum){
-
-	$this?.base_counter?.force_kill?.()
-	$this.base_counter = null;
-
-	$this?.extra_counter?.force_kill()
-	$this.extra_counter = null;
-
-	$this.titles.timer.set_text('time_added', '')
-
-	await $this.titles.timer.set_text('extra_ticker', '00:00');
-	await $this.extra_time_vis(false)
-
-	ksys.context.module.prm('round_num', rnum)
-
-	const dur = 45;
-
-	await $this.titles.timer.set_text('base_ticker', (rnum == 1) ? '00:00' : '45:00');
-
-	$this.base_counter = ksys.ticker.spawn({
-		// 'duration': (rnum == 2) ? (((dur*60)*1)+1) : ((dur*60)+1),
-		'duration': ((dur*60)+1),
-		'name': `giga_timer${rnum}`,
-		'offset': (rnum == 2) ? (dur*60) : 0,
-		'infinite': false,
-		'reversed': false,
-		'callback': $this.timer_callback,
-		'wait': true,
-	})
-
-	$this.base_counter.fire()
-	.then(function(_ticker) {
-		// turn off automatically
-		const pre_killed = _ticker.killed;
-		if (_ticker){
-			_ticker.force_kill()
-			/*
-			if (document.querySelector('#timer_ctrl_additional input').value.trim() && !pre_killed){
-			// if (document.querySelector('#timer_ctrl_additional input').value.trim()){
-				$this.launch_extra_time()
-			}
-			*/
-			if (!pre_killed){
-				$this.launch_extra_time()
-			}
-		}
-	})
-
-	// print($this.base_counter)
-
-}
-
-$this.timer_callback = function(tick){
-	const minutes = Math.floor(tick.global / 60)
-	const seconds = tick.global - (60*minutes)
-
-	let text = `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`;
-
-	if (text == '45:01'){
-		text = '45:00'
-	}
-
-	if (text == '90:01'){
-		text = '90:00'
-	}
-
-	$this.titles.timer.set_text('base_ticker', text)
-	$('#timer_feedback_main').text(text)
-}
-
-$this.resume_main_timer_from_offset = function(event){
-
-	$this?.extra_counter?.force_kill?.()
-	$this.extra_counter = null;
-
-	$this?.base_counter?.force_kill?.()
-	$this.base_counter = null;
-
-	$this.titles.timer.set_text('time_added', '')
-
-
-	const rnum = int(ksys.context.module.prm('round_num')) || 1;
-
-	const offs = eval(document.querySelector('#timer_ctrl_base_resume input').value);
-
-	const dur = (45*60);
-
-	$this.base_counter = ksys.ticker.spawn({
-		// 'duration': (rnum == 2) ? ((dur*2)+1) : (dur+1),
-		'duration': (dur-(offs%dur))+1,
-		'name': `giga_timer_offs${rnum}`,
-		// 'offset': (rnum == 2) ? (dur+offs) : (0+offs),
-		'offset': offs,
-		'infinite': false,
-		'reversed': false,
-		'callback': $this.timer_callback,
-		'wait': true,
-	})
-
-	$this.base_counter.fire()
-	.then(function(_ticker) {
-		// turn off automatically
-		const pre_killed = _ticker.killed;
-		if (_ticker){
-			_ticker.force_kill()
-			// if (document.querySelector('#timer_ctrl_additional input').value.trim()){
-			// 	$this.launch_extra_time()
-			// }
-			if (!pre_killed){
-				$this.launch_extra_time()
-			}
-		}
-	})
-
-	// print($this.base_counter)
-}
-
-$this.main_timer_vis = async function(state){
-	const title = $this.titles.timer;
-
-	if (state == true){
-
-		if (!$this.resource_index?.side?.home?.club || !$this.resource_index?.side?.guest?.club){
-			ksys.info_msg.send_msg(
-				`This action requires both clubs present`,
-				'warn',
-				3000
-			);
-			return
-		}
-
-		await title.set_text(
-			'command_l',
-			str($this.resource_index.side.home.club.club_name_shorthand).upper()
-		)
-		await title.set_text(
-			'command_r',
-			str($this.resource_index.side.guest.club.club_name_shorthand).upper()
-		)
-
-		// push current score to the title
-		$this.resource_index.score_manager.resync_score_on_title()
-
-		title.overlay_in()
-	}
-	if (state == false){
-		title.overlay_out()
-	}
-}
-
-
-
-
-$this.launch_extra_time = async function(){
-	$this?.extra_counter?.force_kill?.()
-	$this.extra_counter = null;
-
-	await $this.update_extra_time_amount()
-
-	/*
-	let extra_amount = $('#timer_ctrl_additional input').val()
-	if (!extra_amount){
-		return
-	}
-	extra_amount = eval(_extra_amount);
-	if (!extra_amount){
-		return
-	}
-	*/
-	const extra_amount = 60;
-
-	$this.extra_counter = ksys.ticker.spawn({
-		'duration': extra_amount*60,
-		'name': `gigas_timer${1}`,
-		'infinite': true,
-		'reversed': false,
-		'callback': $this.extra_timer_callback,
-		'wait': true,
-	})
-
-	$this.extra_counter.fire()
-	.then(function(_ticker) {
-		// turn off automatically
-		if (_ticker){
-			_ticker.force_kill()
-		}
-	})
-
-	print('EXTRA AMOUNT?!', extra_amount)
-	await $this.titles.timer.set_text('extra_ticker', '00:00');
-	// await $this.titles.timer.set_text('time_added', `+${Math.floor(extra_amount/1)}`)
-	// await $this.titles.timer.toggle_text('time_added', true)
-	// await $this.titles.timer.toggle_img('extra_time_bg', true)
-	// await $this.titles.timer.toggle_text('extra_ticker', true)
-}
-
-$this.extra_timer_callback = function(tick){
-	const minutes = Math.floor(tick.global / 60)
-	const seconds = tick.global - (60*minutes)
-
-	const text = `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`;
-
-	$this.titles.timer.set_text('extra_ticker', text)
-	$('#timer_feedback_extra').text(text)
-}
-
-$this.extra_time_vis = async function(state){
-	if (state == true){
-		await $this.titles.timer.toggle_text('time_added', true)
-		await $this.titles.timer.toggle_text('extra_ticker', true)
-		await $this.titles.timer.toggle_img('extra_time_bg', true)
-	}
-	if (state == false){
-		await $this.titles.timer.toggle_text('time_added', false)
-		await $this.titles.timer.toggle_text('extra_ticker', false)
-		await $this.titles.timer.toggle_img('extra_time_bg', false)
-	}
-}
-
+// ----------------
+//      Shared
+// ----------------
 $this.update_extra_time_amount = async function(){
-	const amount = $('#timer_ctrl_additional input').val()
+	const amount = $('#timer_ctrl_additional input').val().trim();
 	await $this.titles.timer.set_text(
 		'time_added',
 		amount ? `+${amount}` : '',
 	)
 }
 
+// Built-in / AT-AT switch
+// todo: some CSS styling,
+// such as hiding status indicator when the featureset is builtin
+$this.update_selected_timer_system = async function(tgt_sys){
+	if (!tgt_sys){
+		ksys.info_msg.send_msg(
+			`Fatal: tried changing timer feature set to ${tgt_sys}, but can only change to [builtin, at_at]`,
+			'err',
+			11000
+		);
+		return
+	}
+	print('Changing timer system to', tgt_sys);
 
+	// First, kill AT-AT watcher
+	await $this.stop_atat_service();
 
-$this.stop_extra_time = function(){
-	$this?.extra_counter?.force_kill()
+	// Then, kill all timers
+
+	// AT-AT Base
+	await $this.timer_fset.at_at?.base_counter?.terminate?.();
+	// await $this.timer_fset.at_at.base_counter.terminate();
+	$this.timer_fset.at_at.base_counter = null;
+	// AT-AT Extra
+	await $this.timer_fset.at_at?.extra_counter?.terminate?.();
+	$this.timer_fset.at_at.extra_counter = null;
+
+	// Builtin Base
+	$this?.base_counter?.force_kill?.();
+	$this.base_counter = null;
+	// Builtin Extra
+	$this?.extra_counter?.force_kill?.();
 	$this.extra_counter = null;
-}
 
+	// Restart AT-AT system
+	// await ksys.ticker.kb_at.sys_restart();
+
+	// Set feature set reference
+	$this.timer_ctrl = $this.timer_fset[tgt_sys];
+
+	if (tgt_sys == 'at_at'){
+		// Restart the watchdog, because reasons
+		// todo: what reasons?
+		$this.restart_atat_service();
+
+		// todo: is the commented garbage below still needed ?
+
+		// The kickboxer was created with an idea in mind,
+		// that it's possible to toggle between controllers/modules
+		// without loosing any data.
+		// So, if the timer exists already - use it.
+		// if ($this.timer_fset.at_at.base_counter){
+
+		// }
+
+		$this.toggle_atat_status_indicator(true);
+	}
+
+	if (tgt_sys == 'builtin'){
+		// It's important to completely get rid of the AT-AT
+		// When switching to the built-in system
+		$this.stop_atat_service();
+
+		$this.timer_fset.at_at.base_counter = null;
+
+		$this.toggle_atat_status_indicator(false);
+
+		ksys.btns.toggle({
+			'launch_main_timer_r1': true,
+			'launch_main_timer_r2': true,
+			'continue_from_time':   true,
+			'stop_extra_timer':     true,
+		})
+	}
+}
 
 // base = global or 1
 // extra = extra or 1
@@ -4286,7 +4193,8 @@ $this.stop_extra_time = function(){
 // todo: unfortunately, a score on 45:00 + 2 would result into 46 + 2
 // There's a stupid hack for now, but later this issue should be addressed
 // systematically
-$this.get_current_time = function(minutes=false, tsum=false){
+// todo: fix this function to work with the new timer system
+$this._get_current_time = function(minutes=false, tsum=false){
 	const divider = (minutes ? 60 : 1);
 
 	if (tsum){
@@ -4331,8 +4239,744 @@ $this.get_current_time = function(minutes=false, tsum=false){
 			),
 		}
 	}
-
 }
+
+// important todo: make everything use minutes:seconds schema
+$this.get_current_time = function(minutes=false, tsum=false){
+	const divider = (minutes ? 60 : 1);
+
+	if (tsum){
+		const calc_sum = 
+		Math.ceil(
+			(
+				(
+					(
+						($this.ticker_time.base.minutes * 60) +
+						($this.ticker_time.base.seconds)
+					)
+					|| 1
+				)
+				+
+				(
+					(
+						($this.ticker_time.extra.minutes * 60) +
+						($this.ticker_time.extra.seconds)
+					)
+					|| 1
+				)
+			)
+			/
+			divider
+		)
+
+		// todo: is this still needed ?
+		if (minutes && calc_sum == 46){
+			return 45
+		}else{
+			return calc_sum
+		}
+
+	}else{
+		// important todo: is this retarded ?
+		const extra_t = (
+			($this.ticker_time.extra.minutes * 60) +
+			($this.ticker_time.extra.seconds)
+		)
+
+		let base_t =
+		Math.ceil(
+			(
+				($this.ticker_time.base.minutes * 60) +
+				($this.ticker_time.base.seconds || 1)
+			)
+			/
+			divider
+		)
+
+		if (minutes && base_t == 46 && extra_t > 1){
+			base_t = 45;
+		}
+		if (minutes && base_t == 91 && extra_t > 1){
+			base_t = 90;
+		}
+
+		return {
+			'base': base_t,
+			'extra': Math.ceil(
+				(extra_t || 0) / divider
+			),
+		}
+	}
+}
+
+$this.main_timer_vis = async function(state){
+	const title = $this.titles.timer;
+
+	if (state == true){
+
+		if (!$this.resource_index?.side?.home?.club || !$this.resource_index?.side?.guest?.club){
+			ksys.info_msg.send_msg(
+				`This action requires both clubs present`,
+				'warn',
+				3000
+			);
+			return
+		}
+
+		await title.set_text(
+			'command_l',
+			str($this.resource_index.side.home.club.club_name_shorthand).upper()
+		)
+		await title.set_text(
+			'command_r',
+			str($this.resource_index.side.guest.club.club_name_shorthand).upper()
+		)
+
+		// push current score to the title
+		$this.resource_index.score_manager.resync_score_on_title()
+
+		title.overlay_in()
+	}
+	if (state == false){
+		title.overlay_out()
+	}
+}
+
+$this.extra_time_vis = async function(state){
+	if (state == true){
+		await $this.titles.timer.toggle_text('time_added', true)
+		await $this.titles.timer.toggle_text('extra_ticker', true)
+		await $this.titles.timer.toggle_img('extra_time_bg', true)
+	}
+	if (state == false){
+		await $this.titles.timer.toggle_text('time_added', false)
+		await $this.titles.timer.toggle_text('extra_ticker', false)
+		await $this.titles.timer.toggle_img('extra_time_bg', false)
+	}
+}
+
+$this.zero_timer_time = function(){
+	$this.ticker_time.base.minutes = 0;
+	$this.ticker_time.base.seconds = 0;
+
+	$this.ticker_time.extra.minutes = 0;
+	$this.ticker_time.extra.seconds = 0;
+}
+
+
+// ----------------
+//      AT-AT
+// ----------------
+
+// 
+// Status watcher stuff
+// 
+$this.update_atat_status = function(status){
+	const status_dom = document.querySelector('#ticker_service_status');
+
+	if (status.ok){
+		status_dom.classList.remove('ticker_status_fatal_fail');
+		status_dom.classList.add('ticker_status_good');
+		if (!$this.at_at.btns_enable_lock){
+			ksys.btns.toggle({
+				'launch_main_timer_r1': true,
+				'launch_main_timer_r2': true,
+				'continue_from_time':   true,
+				'stop_extra_timer':     true,
+			})
+		}
+	}else{
+		console.warn('Football unable to reach timer:', status.error);
+		status_dom.classList.remove('ticker_status_good');
+		status_dom.classList.add('ticker_status_fatal_fail');
+			ksys.btns.toggle({
+				'launch_main_timer_r1': false,
+				'launch_main_timer_r2': false,
+				'continue_from_time':   false,
+				'stop_extra_timer':     false,
+			})
+	}
+}
+
+$this.update_atat_port = function(evt){
+	if (!evt.altKey){
+		// todo: is this message really needed here ?
+		ksys.info_msg.send_msg(
+			`Hold ALT`,
+			'warn',
+			1000
+		);
+		return
+	};
+
+	const tgt_int = int(document.querySelector('#atat_port_input').value);
+	const int_valid = (
+		!!tgt_int &&
+		tgt_int <= 65535 &&
+		tgt_int > 0
+	)
+
+	if (!int_valid){
+		ksys.info_msg.send_msg(
+			`Invalid AT-AT port: ${tgt_int}`,
+			'warn',
+			4000
+		);
+		return
+	}
+
+	ksys.context.global.prm('atat_port', tgt_int, true)
+
+	ksys.info_msg.send_msg(
+		`Updated AT-AT port to: ${tgt_int}. Restarting service...`,
+		'ok',
+		4000
+	);
+
+	$this.restart_atat_service();
+}
+
+$this.restart_atat_service = async function(){
+	// Kill previous AT-AT status watcher
+	$this.stop_atat_service();
+
+	const atat_port = ksys.context.global.cache.atat_port;
+
+	if (!atat_port){
+		ksys.info_msg.send_msg(
+			`Unable to restart AT-AT service: no port present: ${atat_port}`,
+			'err',
+			4000
+		);
+	}
+	// Toggle buttons off
+	ksys.btns.toggle({
+		'launch_main_timer_r1': false,
+		'launch_main_timer_r2': false,
+		'continue_from_time':   false,
+		'stop_extra_timer':     false,
+	})
+
+	$this.at_at.service_ping = ksys.ticker.kb_at.StatusWatcher(
+		ksys.context.global.cache.vmix_ip,
+		atat_port,
+		$this.update_atat_status
+	)
+}
+
+$this.stop_atat_service = async function(){
+	await $this.at_at?.service_ping?.terminate?.();
+}
+
+$this.toggle_atat_status_indicator = function(state){
+	if (state == true){
+		$('#ticker_service_status').css('display', null);
+	}else{
+		$('#ticker_service_status').css('display', 'none');
+	}
+}
+
+
+// 
+// Util
+// 
+$this.timeout_atat_btns = async function(timeout_ms=1000){
+	$this.at_at.btns_enable_lock = true;
+	ksys.btns.toggle({
+		'launch_main_timer_r1': false,
+		'launch_main_timer_r2': false,
+		'continue_from_time':   false,
+		'stop_extra_timer':     false,
+	})
+
+	await ksys.util.sleep(timeout_ms);
+
+	$this.at_at.btns_enable_lock = false;
+	ksys.btns.toggle({
+		'launch_main_timer_r1': true,
+		'launch_main_timer_r2': true,
+		'continue_from_time':   true,
+		'stop_extra_timer':     true,
+	})
+}
+
+$this.toggle_atat_btns = function(state=true){
+	if (state == true){
+		$this.at_at.btns_enable_lock = false;
+		ksys.btns.toggle({
+			'launch_main_timer_r1': true,
+			'launch_main_timer_r2': true,
+			'continue_from_time':   true,
+			'stop_extra_timer':     true,
+		})
+	}
+	if (state == false){
+		$this.at_at.btns_enable_lock = true;
+		ksys.btns.toggle({
+			'launch_main_timer_r1': false,
+			'launch_main_timer_r2': false,
+			'continue_from_time':   false,
+			'stop_extra_timer':     false,
+		})
+	}
+}
+
+$this.restore_atat_line = async function(){
+	// 
+	// Main timer
+	// 
+	$this.timer_fset.at_at.create_base_timer();
+	const base_timer_time = await $this.timer_fset.at_at.base_counter.get_curtime();
+	console.error(base_timer_time);
+
+	if (!base_timer_time.ok || !base_timer_time.reply_data){return};
+	// If timer exists and well - reattach everything to it
+	await $this.timer_fset.at_at.base_counter.resub_to_echo();
+	await $this.timer_fset.at_at.base_counter.resub_to_end();
+
+	// 
+	// Extra timer
+	// 
+	$this.timer_fset.at_at.create_extra_time()
+	const extra_timer_time = await $this.timer_fset.at_at.extra_counter.get_curtime();
+	console.error(extra_timer_time);
+
+	if (!extra_timer_time.ok || !extra_timer_time.reply_data){return};
+	// If timer exists and well - reattach everything to it
+	await $this.timer_fset.at_at.extra_counter.resub_to_echo();
+	await $this.timer_fset.at_at.extra_counter.resub_to_end();
+}
+
+
+// 
+// Base Timer
+// 
+$this.timer_fset.at_at.create_base_timer = function(rnum){
+	$this.timer_fset.at_at.base_counter = new ksys.ticker.kb_at.AtAtTicker({
+		'id':   2,
+		'ip':   ksys.context.global.cache.vmix_ip,
+		'port': ksys.context.global.cache.atat_port,
+		// todo: Better url construction
+		'url_params': `/API/?Function=SetText&Input=${$this.titles.timer.title_name}&SelectedName=base_ticker.Text&Value=\0`,
+		'timings': {
+			'start': [
+				(rnum == 1) ? 0 : 45,
+				0,
+			],
+			'end': [
+				(rnum == 1) ? 45 : 90,
+				0,
+			],
+		},
+		'end_callback': async function(){
+			console.error('End callback?');
+			if (ksys.context.module.cache.round_num){
+				await $this.timer_fset.at_at.launch_extra_time();
+				$this.extra_time_vis(true);
+			}
+		},
+		'echo_callback': $this.timer_fset.at_at.timer_callback,
+	})
+}
+
+$this.timer_fset.at_at.wipe_timers = async function(rnum=1){
+	// Kill base timer
+	await $this.timer_fset.at_at?.base_counter?.terminate?.();
+	$this.timer_fset.at_at.base_counter = null;
+
+	// Kill extra timer
+	await $this.timer_fset.at_at?.extra_counter?.terminate?.();
+	$this.timer_fset.at_at.extra_counter = null;
+
+	$this.zero_timer_time();
+
+	// todo: It's speculated, that each time a new main timer starts - 
+	// the extra time should be cleared.
+	$this.titles.timer.set_text('time_added', '');
+	await $this.titles.timer.set_text('extra_ticker', '00:00');
+	await $this.extra_time_vis(false);
+
+	// Clear the base ticker text field
+	await $this.titles.timer.set_text(
+		'base_ticker', (rnum == 1) ? '00:00' : '45:00'
+	);
+}
+
+$this.timer_fset.at_at.start_base_timer = async function(rnum){
+	$this.toggle_atat_btns(false);
+
+	// Save the target round number to context
+	ksys.context.module.prm('round_num', rnum);
+
+	// Todo: kill previous timers or simply overwrite with new data?
+	// Commit murder for now
+
+	// todo: shouldn't timer controls be stored in $this.at_at ?
+
+	// todo: It's speculated, that each time a new main timer starts - 
+	// the extra time should be cleared.
+	// The function below does wipe the extra timer.
+	await $this.timer_fset.at_at.wipe_timers(rnum);
+
+	// Instantiate AT-AT ticker class
+	$this.timer_fset.at_at.create_base_timer(rnum);
+
+	// Launch the AT-AT ticker
+	print(
+		'Start response:',
+		await $this.timer_fset.at_at.base_counter.start()
+	);
+
+	$this.timeout_atat_btns();
+}
+
+$this.timer_fset.at_at.timer_callback = function(msg){
+	if (msg.data_buf[0] != 2){
+		console.warn(
+			'Received timer №', msg.data_buf[1] ,' echo with no payload:',
+			msg.data_buf,
+		)
+		return
+	}
+
+	$this.ticker_time.base.minutes = msg.data_buf[2];
+	$this.ticker_time.base.seconds = msg.data_buf[3];
+
+	const text = `${str(msg.data_buf[2]).zfill(2)}:${str(msg.data_buf[3]).zfill(2)}`;
+	// const text = `${msg.data_buf[2]}:${msg.data_buf[3]}`;
+
+	// $this.titles.timer.set_text('base_ticker', text);
+	$('#timer_feedback_main').text(text);
+}
+
+$this.timer_fset.at_at.resume_main_timer_from_offset = async function(){
+	if (!$this.timer_fset.at_at.base_counter){
+		console.warn('Tried resuming non-existent main AT-AT timer');
+		return
+	}
+
+	$this.toggle_atat_btns(false);
+
+	const minutes = int(document.querySelector('#base_timer_resume_input .minutes').value);
+	const seconds = int(document.querySelector('#base_timer_resume_input .seconds').value);
+
+	// Seconds can be avoided, but minutes not.
+	if (!minutes){
+		ksys.info_msg.send_msg(
+			`Malformed minutes: ${minutes}`,
+			'warn',
+			4000
+		);
+		$this.toggle_atat_btns(true);
+		return
+	}
+
+	print('Resuming main timer from offset:', minutes, seconds)
+
+	// Todo: more speculation...
+	$this.titles.timer.set_text('time_added', '');
+
+	// todo: implement this improvement in built-in ticker?
+	// Calculate the round number from input.
+	// Is this actually useless?
+	const rnum = minutes < 45 ? 1 : 2;
+	// Save the calculated offset to context
+	ksys.context.module.prm('round_num', rnum);
+
+	await $this.timer_fset.at_at.base_counter.resume_from_offset({
+		'start': [minutes, seconds,],
+		'end': [
+			(rnum == 1) ? 45 : 90,
+			0,
+		],
+	})
+
+	// important todo: it's speculated, that AT-AT's weak point is
+	// timer restarts before the previous time ticked at least once
+	$this.timeout_atat_btns();
+}
+
+
+// 
+// Extra Timer
+// 
+$this.timer_fset.at_at.create_extra_time = function(){
+	$this.timer_fset.at_at.extra_counter = new ksys.ticker.kb_at.AtAtTicker({
+		'id':   3,
+		'ip':   ksys.context.global.cache.vmix_ip,
+		'port': ksys.context.global.cache.atat_port,
+		// todo: Better url construction
+		'url_params': `/API/?Function=SetText&Input=${$this.titles.timer.title_name}&SelectedName=extra_ticker.Text&Value=\0`,
+		'timings': {
+			'start': [0, 0],
+			'end': [60, 0],
+		},
+		'end_callback': null,
+		'echo_callback': $this.timer_fset.at_at.extra_timer_callback,
+	})
+}
+
+$this.timer_fset.at_at.launch_extra_time = async function(){
+	// Todo: kill previous timers or simply overwrite with new data?
+	// Commit murder for now
+
+	// Kill extra timer
+	// todo: there's a function for this
+	await $this.timer_fset.at_at?.extra_counter?.terminate?.();
+	$this.timer_fset.at_at.extra_counter = null;
+	await $this.titles.timer.set_text('extra_ticker', '00:00');
+
+	// Instantiate AT-AT ticker class
+	$this.timer_fset.at_at.create_extra_time()
+
+	// Launch the AT-AT ticker
+	print(
+		'Extra timer start response:',
+		await $this.timer_fset.at_at.extra_counter.start()
+	);
+}
+
+$this.timer_fset.at_at.extra_timer_callback = function(msg){
+	// todo: separate this check into a function
+	if (msg.data_buf[0] != 2){
+		console.warn(
+			'Received timer №', msg.data_buf[1] ,' echo with no payload:',
+			msg.data_buf,
+		)
+		return
+	}
+
+	$this.ticker_time.extra.minutes = msg.data_buf[2];
+	$this.ticker_time.extra.seconds = msg.data_buf[3];
+
+	const text = `${str(msg.data_buf[2]).zfill(2)}:${str(msg.data_buf[3]).zfill(2)}`;
+	// const text = `${msg.data_buf[2]}:${msg.data_buf[3]}`;
+
+	$this.titles.timer.set_text('extra_ticker', text);
+	$('#timer_feedback_extra').text(text);
+}
+
+$this.timer_fset.at_at.stop_extra_time = async function(){
+	$this.timeout_atat_btns();
+	await $this.timer_fset.at_at?.extra_counter?.terminate?.();
+	$this.timer_fset.at_at.extra_counter = null;
+}
+
+
+
+
+
+// ---------------- 
+//     Builtin
+// ----------------
+
+// 
+// Base timer
+// 
+
+// important todo: because of the "... == '45:01'" check in the timer callback - 
+// second round basically starts from 45:02
+// This is a relatively easy fix (hack on top of a hack):
+// Simply port the round number saving mechanism from AT-AT,
+// Save the round numbers and only execute the "... == '45:01'" hack
+// according to round numbers
+$this.timer_fset.builtin.start_base_timer = async function(rnum){
+
+	$this?.base_counter?.force_kill?.()
+	$this.base_counter = null;
+
+	$this?.extra_counter?.force_kill?.()
+	$this.extra_counter = null;
+
+	$this.titles.timer.set_text('time_added', '')
+
+	await $this.titles.timer.set_text('extra_ticker', '00:00');
+	await $this.extra_time_vis(false)
+
+	ksys.context.module.prm('round_num', rnum)
+
+	const dur = 45;
+
+	await $this.titles.timer.set_text('base_ticker', (rnum == 1) ? '00:00' : '45:00');
+
+	$this.base_counter = ksys.ticker.spawn({
+		// 'duration': (rnum == 2) ? (((dur*60)*1)+1) : ((dur*60)+1),
+		'duration': ((dur*60)+1),
+		'name': `giga_timer${rnum}`,
+		'offset': (rnum == 2) ? (dur*60) : 0,
+		'infinite': false,
+		'reversed': false,
+		'callback': $this.timer_fset.builtin.timer_callback,
+		'wait': true,
+	})
+
+	$this.base_counter.fire()
+	.then(function(_ticker) {
+		// turn off automatically
+		const pre_killed = _ticker.killed;
+		if (_ticker){
+			_ticker.force_kill()
+			/*
+			if (document.querySelector('#timer_ctrl_additional input').value.trim() && !pre_killed){
+			// if (document.querySelector('#timer_ctrl_additional input').value.trim()){
+				$this.timer_fset.builtin.launch_extra_time()
+			}
+			*/
+			if (!pre_killed){
+				$this.timer_fset.builtin.launch_extra_time()
+			}
+		}
+	})
+
+	// print($this.base_counter)
+}
+
+$this.timer_fset.builtin.timer_callback = function(tick){
+	const minutes = Math.floor(tick.global / 60);
+	const seconds = tick.global - (60*minutes);
+
+	$this.ticker_time.base.minutes = minutes;
+	$this.ticker_time.base.seconds = seconds;
+
+	let text = `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`;
+
+	// important todo: this is a retarded hack
+	if (text == '45:01'){
+		text = '45:00';
+		$this.ticker_time.base.minutes = 45;
+		$this.ticker_time.base.seconds = 0;
+	}
+
+	if (text == '90:01'){
+		text = '90:00';
+		$this.ticker_time.base.minutes = 90;
+		$this.ticker_time.base.seconds = 0;
+	}
+
+	$this.titles.timer.set_text('base_ticker', text);
+	$('#timer_feedback_main').text(text);
+}
+
+// todo: make this function work with the new time input schema
+$this.timer_fset.builtin.resume_main_timer_from_offset = function(event){
+
+	$this?.extra_counter?.force_kill?.()
+	$this.extra_counter = null;
+
+	$this?.base_counter?.force_kill?.()
+	$this.base_counter = null;
+
+	$this.titles.timer.set_text('time_added', '')
+
+
+	const rnum = int(ksys.context.module.prm('round_num')) || 1;
+
+	const offs_minutes = int(document.querySelector('#base_timer_resume_input .minutes').value);
+	const offs_seconds = int(document.querySelector('#base_timer_resume_input .seconds').value);
+
+	const offs = (offs_minutes * 60) + offs_seconds;
+
+	const dur = (45*60);
+
+	$this.base_counter = ksys.ticker.spawn({
+		// 'duration': (rnum == 2) ? ((dur*2)+1) : (dur+1),
+		'duration': (dur-(offs%dur))+1,
+		'name': `giga_timer_offs${rnum}`,
+		// 'offset': (rnum == 2) ? (dur+offs) : (0+offs),
+		'offset': offs,
+		'infinite': false,
+		'reversed': false,
+		'callback': $this.timer_fset.builtin.timer_callback,
+		'wait': true,
+	})
+
+	$this.base_counter.fire()
+	.then(function(_ticker) {
+		// turn off automatically
+		const pre_killed = _ticker.killed;
+		if (_ticker){
+			_ticker.force_kill()
+			// if (document.querySelector('#timer_ctrl_additional input').value.trim()){
+			// 	$this.timer_fset.builtin.launch_extra_time()
+			// }
+			if (!pre_killed){
+				$this.timer_fset.builtin.launch_extra_time()
+			}
+		}
+	})
+
+	// print($this.base_counter)
+}
+
+
+
+// 
+// Extra timer
+// 
+$this.timer_fset.builtin.launch_extra_time = async function(){
+	$this?.extra_counter?.force_kill?.()
+	$this.extra_counter = null;
+
+	await $this.update_extra_time_amount()
+
+	/*
+	let extra_amount = $('#timer_ctrl_additional input').val()
+	if (!extra_amount){
+		return
+	}
+	extra_amount = eval(_extra_amount);
+	if (!extra_amount){
+		return
+	}
+	*/
+	const extra_amount = 60;
+
+	$this.extra_counter = ksys.ticker.spawn({
+		'duration': extra_amount*60,
+		'name': `gigas_timer${1}`,
+		'infinite': true,
+		'reversed': false,
+		'callback': $this.timer_fset.builtin.extra_timer_callback,
+		'wait': true,
+	})
+
+	$this.extra_counter.fire()
+	.then(function(_ticker) {
+		// turn off automatically
+		if (_ticker){
+			_ticker.force_kill()
+		}
+	})
+
+	print('EXTRA AMOUNT?!', extra_amount)
+	await $this.titles.timer.set_text('extra_ticker', '00:00');
+	// await $this.titles.timer.set_text('time_added', `+${Math.floor(extra_amount/1)}`)
+	// await $this.titles.timer.toggle_text('time_added', true)
+	// await $this.titles.timer.toggle_img('extra_time_bg', true)
+	// await $this.titles.timer.toggle_text('extra_ticker', true)
+}
+
+$this.timer_fset.builtin.extra_timer_callback = function(tick){
+	const minutes = Math.floor(tick.global / 60)
+	const seconds = tick.global - (60*minutes)
+
+	$this.ticker_time.extra.minutes = minutes;
+	$this.ticker_time.extra.seconds = seconds;
+
+	const text = `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`;
+
+	$this.titles.timer.set_text('extra_ticker', text)
+	$('#timer_feedback_extra').text(text)
+}
+
+$this.timer_fset.builtin.stop_extra_time = function(){
+	$this?.extra_counter?.force_kill?.()
+	$this.extra_counter = null;
+}
+
+
+
+
 
 
 
@@ -5372,7 +6016,7 @@ $this.init_new_match = function(evt){
 	]
 
 	for (const fname of del_entries){
-		ksys.db.module.delete(fname)
+		ksys.db.module.delete(fname);
 	}
 
 	// why bother...
@@ -5381,7 +6025,7 @@ $this.init_new_match = function(evt){
 		`Please press CTRL + R (there's nothing else you can do)`
 	)
 
-	$('body').css({'pointer-events': 'none'})
+	$('body').css({'pointer-events': 'none'});
 }
 
 

@@ -26,13 +26,19 @@ img[vis_feedback]
 
 #timer_feedback
 {
+	padding: 9px;
 	display: flex;
 	position: fixed;
 	top: 0px;
 	right: 0px;
 	margin-top: 60px;
 	margin-right: 20px;
-	font-size: 20px;
+	font-size: 21px;
+	/*font-family: 'ibm_plex';*/
+	font-weight: bold;
+}
+
+#timer_feedback *{
 	font-family: monospace;
 }
 
@@ -43,6 +49,69 @@ img[vis_feedback]
 	border-left: 2px solid gray;
 	padding-left: 5px;
 }
+
+
+
+#ticker_service_status
+{
+	display: flex;
+	position: fixed;
+	top: 0px;
+	right: 0px;
+	margin-top: 60px;
+	margin-right: 180px;
+}
+
+#ticker_service_status #ticker_service_status_indicator{
+	border-radius: 99999px;
+	width: 20px;
+	height: 20px;
+}
+
+
+
+/*
+!~~ #ticker_service_status.ticker_status_good
+*/
+#ticker_service_status.ticker_status_good #ticker_service_status_indicator{
+	background: green;
+}
+
+
+
+
+/*
+!~~ #ticker_service_status.ticker_status_fatal_fail
+*/
+
+@keyframes blink-animation {
+	to {
+		visibility: hidden;
+	}
+}
+
+#ticker_service_status.ticker_status_fatal_fail{
+	background: black !important;
+	z-index: 999999 !important;
+}
+
+#ticker_service_status.ticker_status_fatal_fail #ticker_service_status_indicator{
+	/*filter: drop-shadow(0px 0px 5px #ff0000);*/
+	/*box-shadow: 0px 0px 32px 8px #ff0000;*/
+	box-shadow: 0px 0px 28px 14px #ff0000;
+	z-index: 9999999 !important;
+	background: red;
+	animation: blink-animation 0.2s steps(2, start) infinite;
+}
+
+
+
+
+
+
+
+
+
 
 
 /*
@@ -2622,6 +2691,10 @@ tab.tab_hidden
 }
 
 
+/*
+!~~ #timer_ctrl_base_resume
+*/
+
 #timer_ctrl_base_resume
 {
 	display: flex;
@@ -2630,9 +2703,16 @@ tab.tab_hidden
 	justify-content: center;
 }
 
-#timer_ctrl_base_resume input
+#timer_ctrl_base_resume #base_timer_resume_input{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+
+#timer_ctrl_base_resume #base_timer_resume_input input
 {
-	width: 90%;
+	width: 60px;
 	font-size: 20px;
 	text-align: center;
 }
@@ -2838,3 +2918,53 @@ tab.tab_hidden
 	font-size: 25px;
 	width: 70px;
 }
+
+
+
+
+
+
+
+
+
+
+/*
+===============================================
+            General Config Box
+===============================================
+
+!~~ [tabid="team_lineup"] > general-cfg
+*/
+
+[tabid="team_lineup"] > general-cfg {
+	display: flex;
+	flex-direction: column;
+	margin-left: 20px;
+	margin-bottom: 20px;
+	padding: 7px 0px 10px 20px;
+	width: 600px;
+}
+
+[tabid="team_lineup"] > general-cfg general-cfg-entry general-cfg-label{
+	margin: 0px 15px 0px 1px;
+}
+
+[tabid="team_lineup"] > general-cfg general-cfg-entry{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-top: 10px;
+}
+
+[tabid="team_lineup"] > general-cfg sysbtn[btname="update_atat_port"]{
+	margin-left: 15px;
+}
+
+
+
+
+
+
+
+
+

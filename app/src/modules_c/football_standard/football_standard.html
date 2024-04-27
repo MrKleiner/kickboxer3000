@@ -1,6 +1,7 @@
 <div id="football_standard">
 
 	<tabsys>
+		<sys-tab match_id="fucking_docs" default>Docs</sys-tab>
 		<sys-tab match_id="club_def" default>Clubs</sys-tab>
 		<sys-tab match_id="team_lineup">Config/Lists</sys-tab>
 		<sys-tab match_id="teams_layouts">Layout</sys-tab>
@@ -16,6 +17,30 @@
 		<div id="timer_feedback_main">--:--</div>
 		<div id="timer_feedback_extra">--:--</div>
 	</div>
+
+	<div regular_box class="ticker_status_fatal_fail" id="ticker_service_status">
+		<div id="ticker_service_status_indicator"></div>
+	</div>
+
+	<tab class="tab_hidden" tabid="fucking_docs">
+		<h1>It's very stupid this had to be done...</h1>
+		<p>Next step would be attaching robotic arms to the PC to point people's heads in the right direction...</p>
+
+		<h1>General idea</h1>
+		<div regular_box class="doc_box">
+			The general idea is that there's a collection of clubs, <br>
+			out of which a lineup for a specific match is constructed. <br><br>
+
+			Each club (obviously) has:
+			<ul style="padding: auto;">
+				<li style="padding: auto;">A logo (a bitmap image)</li>
+				<li>Official Title</li>
+				<li>Official Title abbreviation (Title shortened to 3 letters)</li>
+				<li>Players</li>
+				<li>And the main coach</li>
+			</ul>
+		</div>
+	</tab>
 
 	<tab class="tab_hidden" tabid="club_def">
 		<div id="club_definition">
@@ -57,6 +82,36 @@
 			<f-param display_name="Players" fpid="players" translit_default="0" format_default="all_upper"></f-param>
 			<f-param display_name="Full club name" fpid="club_name" translit_default="0" format_default="all_upper"></f-param>
 		</string-formatting>
+
+		<general-cfg subtle_box>
+			<general-cfg-entry kbhint="Hold CTRL. This will terminate and re-create all timers">
+				<general-cfg-label>Timer system</general-cfg-label>
+				<kb-radio-switch
+					kb_style="default"
+					kb_layout="horizontal"
+					kb_default="builtin"
+					display_name="Timer System"
+					mod_key="ctrlKey"
+					kb_switch_id="timer_system"
+					onchange="kbmodules.football_standard.update_selected_timer_system(event)"
+				>
+					<kb-radio-switch-entry kb_param_id="builtin">Built-in</kb-radio-switch-entry>
+					<kb-radio-switch-entry kb_param_id="at_at">AT-AT</kb-radio-switch-entry>
+				</kb-radio-switch>
+			</general-cfg-entry>
+
+			<general-cfg-entry>
+				<general-cfg-label>AT-AT Port</general-cfg-label>
+				<input id="atat_port_input" noctrl type="number" min="1" max="65535">
+				<sysbtn
+					btname="update_atat_port"
+					kbhint="Hold ALT. This is a very serious action. The KB AT-AT service will be restarted"
+					onclick="kbmodules.football_standard.update_atat_port(event)"
+					click_timeout="700"
+				>Update AT-AT port</sysbtn>
+			</general-cfg-entry>
+
+		</general-cfg>
 
 		<lineup-global-control subtle_box>
 			<sysbtn
@@ -331,19 +386,46 @@
 			<div id="timer_ctrl">
 				<div regular_box id="timer_ctrl_base">
 					<div id="timer_ctrl_base_launchers">
-						<vmixbtn seq_info="update+play" btname="launch_main_timer_r1" onclick="kbmodules.football_standard.start_base_timer(1)">Start Time 1</vmixbtn>
-						<!-- <vmixbtn btname="launch_main_timer_r2" onclick="kbmodules.football_standard.start_base_timer(2)">Arm Round 2</vmixbtn> -->
-						<vmixbtn seq_info="update+play" btname="launch_main_timer_r2" onclick="kbmodules.football_standard.start_base_timer(2)">Start Time 2</vmixbtn>
+						<vmixbtn
+							seq_info="update+play"
+							btname="launch_main_timer_r1"
+							onclick="kbmodules.football_standard.timer_ctrl.start_base_timer(1)"
+							off
+						>Start Time 1</vmixbtn>
+						<vmixbtn
+							seq_info="update+play"
+							btname="launch_main_timer_r2"
+							onclick="kbmodules.football_standard.timer_ctrl.start_base_timer(2)"
+							off
+						>Start Time 2</vmixbtn>
 					</div>
 
 					<div id="timer_ctrl_base_visibility">
-						<vmixbtn seq_info="vis_show" btname="show_main_timer" onclick="kbmodules.football_standard.main_timer_vis(true)">Show Main Timer</vmixbtn>
-						<vmixbtn seq_info="vis_hide" btname="hide_main_timer" onclick="kbmodules.football_standard.main_timer_vis(false)">Hide Main Timer</vmixbtn>
+						<vmixbtn
+							seq_info="vis_show"
+							btname="show_main_timer"
+							onclick="kbmodules.football_standard.main_timer_vis(true)"
+						>Show Main Timer</vmixbtn>
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_main_timer"
+							onclick="kbmodules.football_standard.main_timer_vis(false)"
+						>Hide Main Timer</vmixbtn>
 					</div>
 
 					<div id="timer_ctrl_base_resume">
-						<input placeholder="SECONDS (EXPR)" type="text">
-						<vmixbtn seq_info="update+play" btname="continue_from_time" onclick="kbmodules.football_standard.resume_main_timer_from_offset()">Start From</vmixbtn>
+						<div id="base_timer_resume_input" kbhint="Seconds can be left unfilled">
+							<input class="minutes" noctrl type="number" placeholder="MM">
+							:
+							<input class="seconds" noctrl type="number" placeholder="SS">
+						</div>
+						<!-- <input placeholder="SECONDS (EXPR)" type="text"> -->
+						<vmixbtn
+							seq_info="update+play"
+							btname="continue_from_time"
+							onclick="kbmodules.football_standard.timer_ctrl.resume_main_timer_from_offset()"
+							off
+						>Start From</vmixbtn>
 					</div>
 				</div>
 
@@ -351,7 +433,13 @@
 					<div id="timer_ctrl_additional">
 						<input onchange="kbmodules.football_standard.update_extra_time_amount()" type="text" placeholder="MINUTES">
 						<!-- <vmixbtn seq_info="update+play+vis_show" btname="launch_extra_timer" onclick="kbmodules.football_standard.launch_extra_time()">Launch Extra Time</vmixbtn> -->
-						<vmixbtn halfsize seq_info="stop" btname="stop_extra_timer" onclick="kbmodules.football_standard.stop_extra_time()">Stop Extra Time</vmixbtn>
+						<vmixbtn
+							halfsize
+							seq_info="stop"
+							btname="stop_extra_timer"
+							onclick="kbmodules.football_standard.timer_ctrl.stop_extra_time()"
+							off
+						>Stop Extra Time</vmixbtn>
 					</div>
 
 					<vmixbtn seq_info="vis_show" btname="show_extra_time" onclick="kbmodules.football_standard.extra_time_vis(true)">Show Extra Time</vmixbtn>
@@ -422,6 +510,7 @@
 			<vmixbtn seq_info="update+vis_show" btname="show_team_stats" onclick="kbmodules.football_standard.show_team_stats()">Show stats</vmixbtn>
 			<vmixbtn seq_info="vis_hide" btname="hide_team_stats" onclick="kbmodules.football_standard.hide_team_stats()">Hide stats</vmixbtn>
 		</div>
+
 	</tab>
 
 
@@ -464,8 +553,6 @@
 
 
 	<!-- TEMPLATES -->
-
-
 
 	<!-- Club control, like coach, playerbase ... -->
 	<template id="club_def_template">
