@@ -473,6 +473,9 @@ Set.prototype.at = function(index) {
 // ------------------------------------------------------------
 // ============================================================
 
+// important todo: Would it be possible to make this function async?
+// Without breaking everything up the call stack?
+// AT-AT ticker is the first candidate to want this to be async.
 const sys_load = function(nm, save_state=true)
 {
 	print('Trying to load', nm, save_state)
@@ -494,6 +497,9 @@ const sys_load = function(nm, save_state=true)
 	// refresh context cache
 	ksys.context.module.pull()
 
+	// refresh global context
+	ksys.context.global.pull()
+
 	// resync buttons
 	ksys.btns.resync()
 
@@ -503,6 +509,9 @@ const sys_load = function(nm, save_state=true)
 	// resync tabs
 	ksys.tabsys.resync()
 
+	// Restart KB AT-AT
+	ksys.ticker.kb_at.sys_restart()
+
 	// resync switches
 	ksys.switches.resync()
 
@@ -510,6 +519,7 @@ const sys_load = function(nm, save_state=true)
 	ksys.binds = {};
 
 	// images are not draggable by default
+	// Todo: there's a chromium-only CSS property, that does this.
 	$('img:not(img[candrag])').attr('draggable', false);
 
 	// If requested module has a "load" function - execute it
@@ -581,6 +591,7 @@ async function app_init()
 	const reach = await vmix.talker.ping()
 
 	// modkey hints
+	// todo: this is obsolete
 	ksys.hintsys.reg_modkey_hint('Control', 'CTRL + R - Reload controller', false)
 	ksys.hintsys.reg_modkey_hint('Alt', 'ALT + W - Back to homepage', false)
 
