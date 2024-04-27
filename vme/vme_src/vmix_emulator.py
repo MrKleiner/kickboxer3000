@@ -1,4 +1,5 @@
 import socket, threading, os, sys
+import urllib
 from urllib.parse import unquote
 from pathlib import Path
 
@@ -11,7 +12,7 @@ OK_MSG = 'Function completed successfully.'
 
 
 def request_processor(cl_con):
-	print('Processing...')
+	# print('Processing...')
 
 	skt_file = cl_con.makefile('rb', newline=b'\r\n', buffering=0)
 
@@ -27,6 +28,19 @@ def request_processor(cl_con):
 	skt_file.close()
 
 	method, rpath, protocol = lines[0].split(' ')
+
+	parsed_url = urllib.parse.urlparse(rpath)
+	query_params = (
+		{k:(''.join(v)) for (k,v) in urllib.parse.parse_qs(parsed_url.query, True).items()}
+	)
+	print_string = []
+	for k, v in query_params.items():
+		print_string.append(
+			f"""{k.ljust(20, ' ')} {v.ljust(10, ' ')}"""
+		)
+
+	print('\n'.join(print_string) + '\n')
+
 
 	cl_con.sendall(
 		f'HTTP/1.1 200 OK\r\n'.encode()
