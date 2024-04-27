@@ -22,6 +22,7 @@
     
     To make it work it's required to download the bootlegger repository anywhere
     and execute bootlegger.py with one single parameter: Path to the compile config.
+    https://github.com/MrKleiner/bootlegger
 
     The config is located at "app/src/compiler_conf.json".
     It's also required to change the "project" key in the config
