@@ -1,6 +1,7 @@
 
-const ops = {};
-
+const ops = {
+	'join': {},
+};
 
 // Data from official .gov website
 const translit_rules = [
@@ -125,8 +126,11 @@ ops.validate = function(st, msg='empty string'){
 // 1 - Capital
 // 2 - ALL UPPER
 // 3 - all lower
-ops.format = function(_txt, _to_case, transliteration=false, overwrite_prev_format=true){
-	const txt = transliteration ? ops.translit(str(_txt).lower()) : str(_txt).lower()
+ops.format = function(_txt, _to_case, transliteration=false, trim=true){
+	let txt = transliteration ? ops.translit(str(_txt).lower()) : str(_txt).lower()
+	if (trim){
+		txt = txt.trim();
+	}
 	const to_case = str(_to_case).lower()
 	// print('Input params:', _txt, _to_case, transliteration)
 	if (to_case == '1'){
@@ -148,11 +152,55 @@ ops.format = function(_txt, _to_case, transliteration=false, overwrite_prev_form
 	}
 }
 
+//- Format_cfg is almost the same as for ops.format.
+//  Except it can also accept a str_cfg gui parameter.
+//  Defaults are the same.
+// - frmt_delimeter is any string to join entries with.
+// - entries is an Array of target strings
+ops.join.formatted = function(format_cfg, frmt_delimeter, entries){
+	const tgt_strings = [];
+	for (const _tgt_str of entries){
+		let formatted_entry = null;
 
+		// todo: is str() expensive in this case ?
+		const tgt_str = str(_tgt_str);
 
+		// Detect a string format GUI class
+		if (format_cfg.__is_frmt_gui){
+			formatted_entry = format_cfg.format(tgt_str);
+		}else{
+			// Todo: somehow avoid re-declaring defaults?
+			const f_cfg = Object.assign(
+				{
+					'trim': false,
+					'case': 2,
+					'translit': false,
+				},
+				format_cfg,
+			)
+			// const trimmed = f_cfg['trim'] ? tgt_str.trim() : tgt_str;
+			formatted_entry = ops.format(
+				f_cfg['trim'] ? tgt_str.trim() : tgt_str,
+				f_cfg['case'],
+				f_cfg['translit']
+			)
+		}
 
+		tgt_strings.push(formatted_entry)
+	}
 
+	return tgt_strings.join(str(frmt_delimeter))
+}
 
+ops.join.simple = function(){
+	const input_args = [...arguments];
+	const separator = input_args[0];
+	return input_args.splice(1).join(separator)
+}
+
+ops.join.space_delimited = function(){
+	return [...arguments].join(' ')
+}
 
 
 

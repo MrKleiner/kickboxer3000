@@ -7,12 +7,19 @@ const strf_gui = {
 
 const _format_option = class{
 	constructor(strf_p, input_cfg=null){
+		this.__is_frmt_gui = true;
+
 		const prm_id = strf_p.getAttribute('fpid')
 		const display_name = strf_p.getAttribute('display_name')
-		const translit_default = 
-			({'1': true, 'true': true, '0': false, 'false': false})[strf_p.getAttribute('translit_default')]
-			||
-			false;
+		// const translit_default = 
+		// 	({'1': true, 'true': true, '0': false, 'false': false})[strf_p.getAttribute('translit_default')]
+		// 	||
+		// 	false;
+		// const trim_default = 
+		// 	({'1': true, 'true': true, '0': false, 'false': false})[strf_p.getAttribute('trim_default')]
+		// 	||
+		// 	true;
+		const trim_cfg_attr = strf_p.getAttribute('trim_default');
 		const format_default = strf_p.getAttribute('format_default') || 'all_upper';
 
 		this.param_elem = $(`
@@ -24,6 +31,10 @@ const _format_option = class{
 						<strf-opt strf-opt-type="translit">
 							<label for="strf-opt-id-${prm_id}-translit">Translit</label>
 							<input id="strf-opt-id-${prm_id}-translit" name="strf-opt-cboxg-${prm_id}" type="checkbox">
+						</strf-opt>
+						<strf-opt strf-opt-type="trim">
+							<label for="strf-opt-id-${prm_id}-trim">Trim</label>
+							<input id="strf-opt-id-${prm_id}-trim" name="strf-opt-cboxg-${prm_id}" type="checkbox">
 						</strf-opt>
 					</strf-opt-group>
 
@@ -59,6 +70,7 @@ const _format_option = class{
 			this.param_elem,
 			{
 				'translit':  '[strf-opt-type="translit"] input',
+				'trim':      '[strf-opt-type="trim"] input',
 				'capital':   '[strf-opt-type="capital"] input',
 				'all_upper': '[strf-opt-type="all_upper"] input',
 				'all_lower': '[strf-opt-type="all_lower"] input',
@@ -66,6 +78,7 @@ const _format_option = class{
 		)
 
 		param_index.index.translit.onchange = strf_gui.save;
+		param_index.index.trim.onchange = strf_gui.save;
 		param_index.index.capital.onchange = strf_gui.save;
 		param_index.index.all_upper.onchange = strf_gui.save;
 		param_index.index.all_lower.onchange = strf_gui.save;
@@ -77,6 +90,22 @@ const _format_option = class{
 
 		// update config if it was provided
 		if (input_cfg){
+			// By default - trim is true
+			let do_trim = true;
+			// Try overriding trim state with attribute config
+			if (trim_cfg_attr != null){
+				const trim_state_attr = ({'1': true, 'true': true, '0': false, 'false': false})[trim_cfg_attr];
+				do_trim = trim_state_attr != undefined ? trim_state_attr : true;
+			}
+			// Then try overriding trim state with stuff provided in the config
+			// todo: there's a smarter way of detecting whether a key is present
+			// in the object or not
+			if ('trim' in input_cfg){
+				do_trim = input_cfg.trim;
+			}
+
+			input_cfg['trim'] = do_trim;
+
 			this.cfg = input_cfg;
 		}
 	}
@@ -84,6 +113,7 @@ const _format_option = class{
 	get cfg(){
 		return {
 			'translit': this.param_elem.querySelector('[strf-opt-type="translit"] input').checked,
+			'trim': this.param_elem.querySelector('[strf-opt-type="trim"] input').checked,
 			'formatting': this.param_elem.querySelector('strf-opt-group[strf-group-type="case"] input:checked').value,
 		}
 	}
@@ -92,16 +122,24 @@ const _format_option = class{
 		if (state.translit){
 			this.param_elem.querySelector('[strf-opt-type="translit"] input').checked = state.translit;
 		}
+		if (state.trim){
+			this.param_elem.querySelector('[strf-opt-type="trim"] input').checked = state.trim;
+		}
 		if (state.formatting){
 			this.param_elem.querySelector(`strf-opt-group[strf-group-type="case"] input[value="${state.formatting}"]`).checked = true;
 		}
 	}
 
-	format(txt, fuck=null){
+	format(_txt, fuck=null){
+		const fuck_js = this || fuck;
+
+		// todo: move trimming to the format function itself
+		const txt = fuck_js.param_elem.querySelector('[strf-opt-type="trim"] input').checked ? str(_txt).trim() : _txt;
+
 		return ksys.util.str_ops.format(
 			txt,
-			(this || fuck).param_elem.querySelector('strf-opt-group[strf-group-type="case"] input:checked').value,
-			(this || fuck).param_elem.querySelector('[strf-opt-type="translit"] input').checked,
+			fuck_js.param_elem.querySelector('strf-opt-group[strf-group-type="case"] input:checked').value,
+			fuck_js.param_elem.querySelector('[strf-opt-type="translit"] input').checked,
 		)
 	}
 }
@@ -125,7 +163,7 @@ strf_gui.resync = function(){
 
 strf_gui.save = function(){
 	// const format_cfg = ksys.db.module.read('_strf_cfg.kbcfg');
-	console.time('Saved String Formatting In')
+	console.time('Saved String Formatting In');
 	const dump = {};
 	for (const param_name in strf_gui.params){
 		dump[param_name] = strf_gui.params[param_name].cfg;

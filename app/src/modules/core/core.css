@@ -420,7 +420,7 @@ fbr
 
 /*
 =========================================
-                   Buttons
+                Buttons
 =========================================
 */
 
@@ -1018,10 +1018,6 @@ tab
 
 
 
-
-
-
-
 /*
 =========================================
           Easy radio switches
@@ -1041,6 +1037,7 @@ tab
 	display: flex;
 	flex-direction: row;
 	align-items: center;
+	justify-content: center;
 	background: rgba(0, 0, 0, 0.3);
 	position: relative;
 	padding: 5px 10px 5px 10px;

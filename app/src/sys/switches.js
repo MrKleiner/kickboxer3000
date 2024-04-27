@@ -44,6 +44,7 @@ const KBRadioSwitch = class{
 				'kb_default',
 				'display_name',
 				'kb_switch_id',
+				'mod_key',
 			]
 		)
 
@@ -51,18 +52,24 @@ const KBRadioSwitch = class{
 
 		self.switch_id = cfg.kb_switch_id.trim().lower();
 
+		self.mod_key = cfg.mod_key;
+
 		// Index params
 		self.param_dom_index = {};
 
 		let fallback_default = null;
 
+		self.active_entry_id = null;
+
 		for (const switch_entry of tgt_dom.querySelectorAll('kb-radio-switch-entry')){
 			const param_id = switch_entry.getAttribute('kb_param_id');
 			fallback_default = param_id;
 			self.param_dom_index[param_id] = switch_entry;
-			switch_entry.onclick = function(){
+			switch_entry.onclick = function(evt){
+				if ( (self.mod_key && !evt[self.mod_key]) || (self.active_entry_id == param_id) ){return};
+				self.active_entry_id = param_id;
 				self.set_active(self, param_id, true);
-				callback?.();
+				callback?.(param_id);
 			}
 		}
 

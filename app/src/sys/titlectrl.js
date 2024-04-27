@@ -49,7 +49,6 @@ class vmix_title
 		}
 	}
 
-
 	async set_text(field_name, newval){
 		await vmix.talker.talk({
 			'Function': 'SetText',

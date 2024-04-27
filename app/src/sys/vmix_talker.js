@@ -97,14 +97,15 @@ vtalker.talk = async function(rparams=null){
 			},
 			'method': 'GET',
 			'mode': 'cors',
-			'credentials': 'omit'
+			'credentials': 'omit',
+			'cache': 'no-store',
 		}
 	).catch(function(err){
 		error_data = err;
 	})
 
 	// If there was an error while executing a response - there's nothing else
-	// todo except stopping the function execution
+	// to do except stopping the function execution
 	if (error_data){
 		console.warn('vmix_talk', 'Error occured while executing a request:');
 		console.error(error_data);

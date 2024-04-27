@@ -1,4 +1,6 @@
 
+// todo: this system needs to be rewritten
+
 // Die
 Element.prototype.vmixbtn = function(state=false) {
 	if (this.closest('vmixbtn')){
@@ -175,7 +177,8 @@ _vb.resync = function(){
 
 	// turn off buttons that should be off by default
 	for (const btn of document.querySelectorAll('vmixbtn[off]')){
-		btn.vmixbtn(false)
+		btn.vmixbtn(false);
+		btn.removeAttribute('off');
 	}
 }
 

@@ -420,7 +420,7 @@ fbr
 
 /*
 =========================================
-                   Buttons
+                Buttons
 =========================================
 */
 
@@ -1014,6 +1014,63 @@ hintsys-bar #hintsys_bar_msgs .kbmsg[err]{
 
 
 
+
+
+
+
+/*
+=========================================
+          Easy radio switches
+=========================================
+!~~ kb-radio-switch[kb_style="default"]
+*/
+kb-radio-switch[kb_style="default"]{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	/*background: rgba(0, 0, 0, 0.3);*/
+	position: relative;
+	width: fit-content;
+}
+
+kb-radio-switch[kb_style="default"] kb-radio-switch-entry{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.3);
+	position: relative;
+	padding: 5px 10px 5px 10px;
+	min-width: 70px;
+}
+
+kb-radio-switch[kb_style="default"] kb-radio-switch-entry:hover{
+	background: rgba(90, 90, 90, 0.3);
+}
+
+kb-radio-switch[kb_style="default"] kb-radio-switch-entry:active{
+	z-index: 999;
+	outline: 1px solid #3E6AB5;
+}
+
+kb-radio-switch[kb_style="default"] kb-radio-switch-entry:first-child{
+	border-radius: 7px 0px 0px 7px;
+}
+
+kb-radio-switch[kb_style="default"] kb-radio-switch-entry:last-child{
+	border-radius: 0px 7px 7px 0px;
+}
+
+kb-radio-switch[kb_style="default"] kb-radio-switch-entry:last-child:first-child
+{
+	border-radius: 7px;
+}
+
+kb-radio-switch[kb_style="default"] kb-radio-switch-entry.kb_radio_switch_active{
+	outline: 1px solid lime;
+	/*background: #2A323E;*/
+	background: #243526;
+}
 
 
 

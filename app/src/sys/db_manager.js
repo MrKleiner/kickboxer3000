@@ -1,4 +1,15 @@
 
+// Todo: Ensure that no garbage is stored in the DB
+// Such as, garbage files, garbage context keys
+// The planned solution is:
+// Every module should define a context/db schema
+// which has all the file names / key names
+// that should be stored there.
+// This check should be performed on startup.
+
+// The safety measure would be specifying the schema version
+// and only deleting stuff every n schema itration.
+
 //
 // module-level
 //
