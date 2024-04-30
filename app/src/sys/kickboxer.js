@@ -1,6 +1,6 @@
 // Long story short: fuck javascript
 window.self = undefined;
-
+// self = undefined;
 
 
 
@@ -54,7 +54,7 @@ require('./apis/crypto_js/4_1_1/crypto-js.min.js')
 //           Define modules
 // ===================================
 
-const kbmodules = {};
+// const _kbmodules = {};
 
 // ksys = most of the core functions
 const ksys = {
