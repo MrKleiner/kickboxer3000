@@ -26,14 +26,15 @@
 		<img src="assets/xsport.svg">
 		<div id="vmix_ip_address_editor">
 			<input type="text" placeholder="e.g. 192.168.0.1:6969">
-			<sysbtn onclick="kbmodules.welcome.edit_vmix_ip_addr()">Change IP:Port</sysbtn>
+			<sysbtn onclick="window.kbmodules.welcome.edit_vmix_ip_addr()">Change IP:Port</sysbtn>
 		</div>
 		<div id="welcome_screen_title_2">Please select a system from the list below...</div>
-		<!-- <sysbtn onclick="kbmodules.welcome.add_pgview_keybind()">Add keybind</sysbtn> -->
+		<!-- <sysbtn onclick="window.kbmodules.welcome.add_pgview_keybind()">Add keybind</sysbtn> -->
 		<div id="pgview_link_pool"></div>
 	</greetings>
 
 	<div id="system_selector">
+		<sysbtn onclick="sys_load('info')">Info</sysbtn>
 		<sysbtn>Resource Manager</sysbtn>
 		<sysbtn onclick="sys_load('number_name_x2lr_w_url_src')" fpm>Parimatch feed</sysbtn>
 		<sysbtn onclick="sys_load('kickboxing_standard')">Kickboxing standard</sysbtn>

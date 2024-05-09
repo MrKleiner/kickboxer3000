@@ -2956,7 +2956,9 @@ tab.tab_hidden
 	margin-top: 10px;
 }
 
-[tabid="team_lineup"] > general-cfg sysbtn[btname="update_atat_port"]{
+[tabid="team_lineup"] > general-cfg sysbtn[btname="update_atat_port"],
+[tabid="team_lineup"] > general-cfg sysbtn[btname="update_atat_return_addr"]
+{
 	margin-left: 15px;
 }
 

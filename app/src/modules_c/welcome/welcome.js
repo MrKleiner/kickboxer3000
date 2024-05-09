@@ -1,17 +1,16 @@
 
-if(!kbmodules){kbmodules={}};
-
-if(!kbmodules.welcome){kbmodules.welcome={}};
-
+if(!window.kbmodules){window.kbmodules={}};
+if(!window.kbmodules.welcome){window.kbmodules.welcome={}};
 
 
-kbmodules.welcome.load = function(){
+
+window.kbmodules.welcome.load = function(){
 	ksys.pgview.show_pool()
 }
 
 
 
-kbmodules.welcome.add_pgview_keybind = function(){
+window.kbmodules.welcome.add_pgview_keybind = function(){
 	const entry = new ksys.pgview.pgview_entry()
 	print('what??', entry.bind_ctrl)
 	$('#pgview_link_pool').append(entry.bind_ctrl)
@@ -19,7 +18,7 @@ kbmodules.welcome.add_pgview_keybind = function(){
 
 
 
-kbmodules.welcome.edit_vmix_ip_addr = function(){
+window.kbmodules.welcome.edit_vmix_ip_addr = function(){
 	const ip_data = $('#vmix_ip_address_editor > input').val().split(':');
 
 	if (ip_data.length != 2 || !ip_data[0] || !ip_data[1]){

@@ -1,7 +1,6 @@
 
-if(!kbmodules){kbmodules={}};
-
-if(!kbmodules.football_standard){kbmodules.football_standard={}};
+if(!window.kbmodules){window.kbmodules={}};
+if(!window.kbmodules.football_standard){window.kbmodules.football_standard={}};
 
 if(!kbmodules){kbmodules={}};
 

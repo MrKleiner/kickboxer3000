@@ -1,7 +1,8 @@
 <div id="football_standard">
 
 	<tabsys>
-		<sys-tab match_id="fucking_docs" default>Docs</sys-tab>
+		<sys-tab match_id="fucking_docs">Docs</sys-tab>
+		<!-- <sys-tab match_id="stats_db">Stats DB</sys-tab> -->
 		<sys-tab match_id="club_def" default>Clubs</sys-tab>
 		<sys-tab match_id="team_lineup">Config/Lists</sys-tab>
 		<sys-tab match_id="teams_layouts">Layout</sys-tab>
@@ -42,6 +43,8 @@
 		</div>
 	</tab>
 
+	<!-- <tab class="tab_hidden" tabid="stats_db"></tab> -->
+
 	<tab class="tab_hidden" tabid="club_def">
 		<div id="club_definition">
 			<club-control-global subtle_box>
@@ -51,13 +54,13 @@
 
 				<sysbtn
 				 btname="create_new_club"
-				 onclick="kbmodules.football_standard.create_new_club()"
+				 onclick="window.kbmodules.football_standard.create_new_club()"
 				 kbhint="This action automatically saves active club"
 				>New Club</sysbtn>
 				
 				<sysbtn btname="load_club_from_file">Load From File</sysbtn>
 				
-				<sysbtn btname="save_club_to_file" onclick="kbmodules.football_standard.save_club_to_file()">Save to File</sysbtn>
+				<sysbtn btname="save_club_to_file" onclick="window.kbmodules.football_standard.save_club_to_file()">Save to File</sysbtn>
 				
 				<div id="club_ctrl_save_to_file_target">
 					<input class="tgtdir" type="text" placeholder="Target Directory">
@@ -67,7 +70,7 @@
 				<sysbtn
 				 btname="delete_current_club"
 				 kbhint="Hold CTRL"
-				 onclick="kbmodules.football_standard.delete_current_club(event)"
+				 onclick="window.kbmodules.football_standard.delete_current_club(event)"
 				>Delete Current Club</sysbtn>
 
 			</club-control-global>
@@ -93,7 +96,7 @@
 					display_name="Timer System"
 					mod_key="ctrlKey"
 					kb_switch_id="timer_system"
-					onchange="kbmodules.football_standard.update_selected_timer_system(event)"
+					onchange="window.kbmodules.football_standard.update_selected_timer_system(event)"
 				>
 					<kb-radio-switch-entry kb_param_id="builtin">Built-in</kb-radio-switch-entry>
 					<kb-radio-switch-entry kb_param_id="at_at">AT-AT</kb-radio-switch-entry>
@@ -105,10 +108,21 @@
 				<input id="atat_port_input" noctrl type="number" min="1" max="65535">
 				<sysbtn
 					btname="update_atat_port"
-					kbhint="Hold ALT. This is a very serious action. The KB AT-AT service will be restarted"
-					onclick="kbmodules.football_standard.update_atat_port(event)"
+					kbhint="Hold ALT. The KB AT-AT service will be restarted"
+					onclick="window.kbmodules.football_standard.update_atat_port(event)"
 					click_timeout="700"
 				>Update AT-AT port</sysbtn>
+			</general-cfg-entry>
+
+			<general-cfg-entry>
+				<general-cfg-label>AT-AT Return Address</general-cfg-label>
+				<input id="atat_return_addr_input" noctrl type="text">
+				<sysbtn
+					btname="update_atat_return_addr"
+					kbhint="Hold ALT. The KB AT-AT service will be restarted"
+					onclick="window.kbmodules.football_standard.update_atat_return_addr(event)"
+					click_timeout="700"
+				>Update AT-AT Return Address</sysbtn>
 			</general-cfg-entry>
 
 		</general-cfg>
@@ -117,7 +131,7 @@
 			<sysbtn
 				btname="init_new_match"
 				kbhint="Wipe previous match stats: cards, scores, stats, etc. Hold CTRL"
-				onclick="kbmodules.football_standard.init_new_match(event)"
+				onclick="window.kbmodules.football_standard.init_new_match(event)"
 			>New Match</sysbtn>
 			
 			<home-club-selector class="lineup_global_ctrl_param">
@@ -151,7 +165,7 @@
 
 				<div id="commenter_ctrl_head">
 					<div class="layout_buttons_vs_ctrl_head_minititle">Commenter's Name. No post-formatting applied</div>
-					<input onchange="kbmodules.football_standard.save_commenter()" type="text" id="commenter_name_input">
+					<input onchange="window.kbmodules.football_standard.save_commenter()" type="text" id="commenter_name_input">
 				</div>
 
 				<div id="commenter_ctrl_body">
@@ -159,13 +173,13 @@
 					<vmixbtn
 						seq_info="update+vis_show"
 						btname="show_commenter"
-						onclick="kbmodules.football_standard.show_commenter()"
+						onclick="window.kbmodules.football_standard.show_commenter()"
 					>Show Commenter</vmixbtn>
 					
 					<vmixbtn
 						seq_info="vis_hide"
 						btname="hide_commenter"
-						onclick="kbmodules.football_standard.hide_commenter()"
+						onclick="window.kbmodules.football_standard.hide_commenter()"
 					>Hide Commenter</vmixbtn>
 
 				</div>
@@ -176,22 +190,22 @@
 			<div id="layout_buttons_vs_ctrl">
 				<div id="layout_buttons_vs_ctrl_head">
 					<div class="layout_buttons_vs_ctrl_head_minititle">Upper Line</div>
-					<input onchange="kbmodules.football_standard.save_vs_sublines()" type="text" id="vs_text_bottom_upper">
+					<input onchange="window.kbmodules.football_standard.save_vs_sublines()" type="text" id="vs_text_bottom_upper">
 					<div class="layout_buttons_vs_ctrl_head_minititle">Lower Line</div>
-					<input onchange="kbmodules.football_standard.save_vs_sublines()" type="text" id="vs_text_bottom_lower">
+					<input onchange="window.kbmodules.football_standard.save_vs_sublines()" type="text" id="vs_text_bottom_lower">
 				</div>
 
 				<div id="layout_buttons_vs_ctrl_body">
 					<vmixbtn
 						seq_info="update+vis_show"
 						btname="show_splash"
-						onclick="kbmodules.football_standard.show_vs_title()"
+						onclick="window.kbmodules.football_standard.show_vs_title()"
 					>Show VS</vmixbtn>
 					
 					<vmixbtn
 						seq_info="vis_hide"
 						btname="hide_splash"
-						onclick="kbmodules.football_standard.hide_vs_title()"
+						onclick="window.kbmodules.football_standard.hide_vs_title()"
 					>Hide VS</vmixbtn>
 
 				</div>
@@ -208,7 +222,7 @@
 					</div>
 					
 					<vmixbtn
-						onclick="kbmodules.football_standard.forward_field_layout_to_vmix('home')"
+						onclick="window.kbmodules.football_standard.forward_field_layout_to_vmix('home')"
 						seq_info="update"
 						class="prepare_team_layout"
 						btname="prepare_home_team_layout"
@@ -219,13 +233,13 @@
 							off
 							seq_info="update+vis_show"
 							btname="show_home_field_layout"
-							onclick="kbmodules.football_standard.show_field_layout('home')"
+							onclick="window.kbmodules.football_standard.show_field_layout('home')"
 						>Field Layout ONN</vmixbtn>
 						
 						<vmixbtn
 							seq_info="vis_hide"
 							btname="hide_home_field_layout"
-							onclick="kbmodules.football_standard.hide_field_layout()"
+							onclick="window.kbmodules.football_standard.hide_field_layout()"
 						>Field Layout OFF</vmixbtn>
 					</div>
 
@@ -233,13 +247,13 @@
 						<vmixbtn
 							seq_info="update+vis_show"
 							btname="show_coach_home_team"
-							onclick="kbmodules.football_standard.show_coach('home')"
+							onclick="window.kbmodules.football_standard.show_coach('home')"
 						>Coach ONN</vmixbtn>
 						
 						<vmixbtn
 							seq_info="vis_hide"
 							btname="hide_coach_home_team"
-							onclick="kbmodules.football_standard.hide_coach('home')"
+							onclick="window.kbmodules.football_standard.hide_coach('home')"
 						>Coach OFF</vmixbtn>
 					</div>
 
@@ -252,7 +266,7 @@
 					</div>
 
 					<vmixbtn
-						onclick="kbmodules.football_standard.forward_field_layout_to_vmix('guest')"
+						onclick="window.kbmodules.football_standard.forward_field_layout_to_vmix('guest')"
 						seq_info="update"
 						class="prepare_team_layout"
 						btname="prepare_guest_team_layout"
@@ -263,13 +277,13 @@
 							off
 							seq_info="update+vis_show"
 							btname="show_guest_field_layout"
-							onclick="kbmodules.football_standard.show_field_layout('guest')"
+							onclick="window.kbmodules.football_standard.show_field_layout('guest')"
 						>Field Layout ONN</vmixbtn>
 						
 						<vmixbtn
 							seq_info="vis_hide"
 							btname="hide_guest_field_layout"
-							onclick="kbmodules.football_standard.hide_field_layout()"
+							onclick="window.kbmodules.football_standard.hide_field_layout()"
 						>Field Layout OFF</vmixbtn>
 					</div>
 
@@ -277,13 +291,13 @@
 						<vmixbtn
 							seq_info="update+vis_show"
 							btname="show_coach_guest_team"
-							onclick="kbmodules.football_standard.show_coach('guest')"
+							onclick="window.kbmodules.football_standard.show_coach('guest')"
 						>Coach ONN</vmixbtn>
 						
 						<vmixbtn
 							seq_info="vis_hide"
 							btname="hide_coach_guest_team"
-							onclick="kbmodules.football_standard.hide_coach('guest')"
+							onclick="window.kbmodules.football_standard.hide_coach('guest')"
 						>Coach OFF</vmixbtn>
 					</div>
 				</div>
@@ -298,14 +312,19 @@
 		<div id="cards_and_goals">
 			<div id="cg_player_picker"></div>
 
-			<div regular_box nosel id="red_card_counter" kbhint="To manually add/subtract - hover the cards, hold ALT and press LMB/RMB">
+			<div
+				regular_box
+				nosel
+				id="red_card_counter"
+				kbhint="To manually add/subtract - hover the cards, hold ALT and press LMB/RMB. Selected players are not taken into account"
+				>
 				<vmixbtn
 					off
 					titled
 					abs_pos
 					seq_info="auto_tweaks"
 					btname="pardon_yellow_card"
-					onclick="kbmodules.football_standard.pardon_player()"
+					onclick="window.kbmodules.football_standard.pardon_player()"
 				>PARDON</vmixbtn>
 			</div>
 
@@ -313,27 +332,33 @@
 			<div regular_box id="cg_buttons">
 				<div id="cg_buttons_cards">
 					<div id="cg_buttons_turn_onn">
-						<vmixbtn off seq_info="auto_tweaks+auto_seq" titled btname="yellow_card" onclick="kbmodules.football_standard.hand_card('yellow')">
+						<vmixbtn off seq_info="auto_tweaks+auto_seq" titled btname="yellow_card" onclick="window.kbmodules.football_standard.hand_card('yellow')">
 							<img draggable="false" contain class="punish_card_vis" src="./assets/yellow_card.png">
 							<div class="punish_card_title">YELLOW</div>
 						</vmixbtn>
-						<vmixbtn off seq_info="auto_tweaks+auto_seq" titled btname="red_card" onclick="kbmodules.football_standard.hand_card('red')">
+						<vmixbtn off seq_info="auto_tweaks+auto_seq" titled btname="red_card" onclick="window.kbmodules.football_standard.hand_card('red')">
 							<img draggable="false" contain class="punish_card_vis" src="./assets/red_card.png">
 							<div class="punish_card_title">RED</div>
 						</vmixbtn>
 					</div>
 
 					<div id="cg_buttons_turn_off">
-						<vmixbtn seq_info="vis_hide" btname="kill_card" onclick="kbmodules.football_standard.hide_card()">OFF</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="kill_card" onclick="window.kbmodules.football_standard.hide_card()">OFF</vmixbtn>
 					</div>
 				</div>
 
 				<div id="cg_buttons_score">
-					<vmixbtn seq_info="auto_tweaks+auto_seq" titled btname="scored" onclick="kbmodules.football_standard.add_score_from_cards_panel()">
+					<vmixbtn
+						titled
+						seq_info="auto_tweaks+auto_seq"
+						btname="scored"
+						onclick="window.kbmodules.football_standard.add_score_from_cards_panel()"
+						click_timeout="2000"
+						>
 						<img draggable="false" contain class="punish_card_vis" src="./assets/ball.png">
 						<div class="punish_card_title">SCORE!</div>
 					</vmixbtn>
-					<vmixbtn seq_info="vis_hide" btname="scored_off" onclick="kbmodules.football_standard.hide_scored_title()">OFF</vmixbtn>
+					<vmixbtn seq_info="vis_hide" btname="scored_off" onclick="window.kbmodules.football_standard.hide_scored_title()">OFF</vmixbtn>
 				</div>
 
 			</div>
@@ -346,7 +371,7 @@
 				<vmixbtn
 					seq_info="auto_seq"
 					btname="exec_replacement_sequence"
-					onclick="kbmodules.football_standard.exec_substitute()"
+					onclick="window.kbmodules.football_standard.exec_substitute()"
 				>Execute Sequence</vmixbtn>
 				
 				<vmixbtn
@@ -355,7 +380,7 @@
 					seq_info="auto_tweaks"
 					btname="shadow_player_swap"
 				>Shadow swap</vmixbtn>
-				<!-- <vmixbtn btname="exec_replacement_sequences" onclick="kbmodules.football_standard.start_base_timer()">AAA</vmixbtn> -->
+				<!-- <vmixbtn btname="exec_replacement_sequences" onclick="window.kbmodules.football_standard.start_base_timer()">AAA</vmixbtn> -->
 			</div>
 			<div id="replacement_teams">
 				<div home class="replacement_team" id="replacement_team1">
@@ -389,13 +414,13 @@
 						<vmixbtn
 							seq_info="update+play"
 							btname="launch_main_timer_r1"
-							onclick="kbmodules.football_standard.timer_ctrl.start_base_timer(1)"
+							onclick="window.kbmodules.football_standard.timer_ctrl.start_base_timer(1)"
 							off
 						>Start Time 1</vmixbtn>
 						<vmixbtn
 							seq_info="update+play"
 							btname="launch_main_timer_r2"
-							onclick="kbmodules.football_standard.timer_ctrl.start_base_timer(2)"
+							onclick="window.kbmodules.football_standard.timer_ctrl.start_base_timer(2)"
 							off
 						>Start Time 2</vmixbtn>
 					</div>
@@ -404,12 +429,12 @@
 						<vmixbtn
 							seq_info="vis_show"
 							btname="show_main_timer"
-							onclick="kbmodules.football_standard.main_timer_vis(true)"
+							onclick="window.kbmodules.football_standard.main_timer_vis(true)"
 						>Show Main Timer</vmixbtn>
 						<vmixbtn
 							seq_info="vis_hide"
 							btname="hide_main_timer"
-							onclick="kbmodules.football_standard.main_timer_vis(false)"
+							onclick="window.kbmodules.football_standard.main_timer_vis(false)"
 						>Hide Main Timer</vmixbtn>
 					</div>
 
@@ -423,7 +448,7 @@
 						<vmixbtn
 							seq_info="update+play"
 							btname="continue_from_time"
-							onclick="kbmodules.football_standard.timer_ctrl.resume_main_timer_from_offset()"
+							onclick="window.kbmodules.football_standard.timer_ctrl.resume_main_timer_from_offset()"
 							off
 						>Start From</vmixbtn>
 					</div>
@@ -431,19 +456,19 @@
 
 				<box regular_box style="flex-direction: row; display: flex; margin-left: 10px; align-items: center;">
 					<div id="timer_ctrl_additional">
-						<input onchange="kbmodules.football_standard.update_extra_time_amount()" type="text" placeholder="MINUTES">
-						<!-- <vmixbtn seq_info="update+play+vis_show" btname="launch_extra_timer" onclick="kbmodules.football_standard.launch_extra_time()">Launch Extra Time</vmixbtn> -->
+						<input onchange="window.kbmodules.football_standard.update_extra_time_amount()" type="number" noctrl placeholder="MINUTES">
+						<!-- <vmixbtn seq_info="update+play+vis_show" btname="launch_extra_timer" onclick="window.kbmodules.football_standard.launch_extra_time()">Launch Extra Time</vmixbtn> -->
 						<vmixbtn
 							halfsize
 							seq_info="stop"
 							btname="stop_extra_timer"
-							onclick="kbmodules.football_standard.timer_ctrl.stop_extra_time()"
+							onclick="window.kbmodules.football_standard.timer_ctrl.stop_extra_time()"
 							off
 						>Stop Extra Time</vmixbtn>
 					</div>
 
-					<vmixbtn seq_info="vis_show" btname="show_extra_time" onclick="kbmodules.football_standard.extra_time_vis(true)">Show Extra Time</vmixbtn>
-					<vmixbtn seq_info="vis_hide" btname="hide_extra_timer" onclick="kbmodules.football_standard.extra_time_vis(false)">Hide Extra Time</vmixbtn>
+					<vmixbtn seq_info="vis_show" btname="show_extra_time" onclick="window.kbmodules.football_standard.extra_time_vis(true)">Show Extra Time</vmixbtn>
+					<vmixbtn seq_info="vis_hide" btname="hide_extra_timer" onclick="window.kbmodules.football_standard.extra_time_vis(false)">Hide Extra Time</vmixbtn>
 				</box>
 
 			</div>
@@ -467,20 +492,20 @@
 			<vmixbtn
 				seq_info="update+vis_show"
 				btname="show_score_results"
-				onclick="kbmodules.football_standard.show_score_summary()"
+				onclick="window.kbmodules.football_standard.show_score_summary()"
 			>Show scores</vmixbtn>
 
 			<vmixbtn
 				seq_info="vis_hide"
 				btname="hide_score_results"
-				onclick="kbmodules.football_standard.hide_score_summary(false)"
+				onclick="window.kbmodules.football_standard.hide_score_summary(false)"
 			>Hide scores</vmixbtn>
 
 			<vmixbtn
 				kbhint="Hold ALT"
 				seq_info="auto_tweaks"
 				btname="mod_score_author"
-				onclick="kbmodules.football_standard.mod_score_author(event)"
+				onclick="window.kbmodules.football_standard.mod_score_author(event)"
 				style="margin-left: 50px;"
 			>Modify Author</vmixbtn>
 		</div>
@@ -507,8 +532,8 @@
 		</div>
 
 		<div id="stats_ctrl_btns">
-			<vmixbtn seq_info="update+vis_show" btname="show_team_stats" onclick="kbmodules.football_standard.show_team_stats()">Show stats</vmixbtn>
-			<vmixbtn seq_info="vis_hide" btname="hide_team_stats" onclick="kbmodules.football_standard.hide_team_stats()">Hide stats</vmixbtn>
+			<vmixbtn seq_info="update+vis_show" btname="show_team_stats" onclick="window.kbmodules.football_standard.show_team_stats()">Show stats</vmixbtn>
+			<vmixbtn seq_info="vis_hide" btname="hide_team_stats" onclick="window.kbmodules.football_standard.hide_team_stats()">Hide stats</vmixbtn>
 		</div>
 
 	</tab>
@@ -569,7 +594,7 @@
 					<sysbtn
 						btname="save_club_definition"
 						kbhint="Save the club under current club title to the local database. Duplicate name WILL overwrite previous file"
-						onclick="kbmodules.football_standard.save_club_to_local_db(false)"
+						onclick="window.kbmodules.football_standard.save_club_to_local_db(false)"
 					>Save Club Data</sysbtn>
 				</club-def-actions>
 
