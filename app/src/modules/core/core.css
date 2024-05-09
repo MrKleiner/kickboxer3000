@@ -22,11 +22,11 @@
 	/*background: rgb(140, 140, 140);*/
 	background: hsl(0deg 0% 30% / 100%);
 }
- 
+
 *::-webkit-scrollbar-track {
 	/*box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);*/
 }
- 
+
 *::-webkit-scrollbar-thumb {
 	/*background-color: #12141C;*/
 	background-color: #8590A0;
@@ -46,17 +46,28 @@
 	user-select: none;
 }
 
+[selectable]{
+	user-select: text;
+}
+
+[selectable_recursive] *{
+	user-select: text;
+}
+
+
 html
 {
 	/*background: #1E2328;*/
 	background: url('../../assets/bg.png');
 	background-attachment: fixed;
 	/*background-position: center;*/
+	/*height: 100%;*/
 }
 
 body
 {
 	display: flex;
+	/*height: 100%;*/
 }
 
 
@@ -233,6 +244,61 @@ img[contain], video[contain]
 [invert_rgb]{
 	filter: invert(1);
 }
+
+
+
+
+[flex_row]{
+	display: flex;
+	flex-direction: row;
+}
+
+[row_center_v]{
+	align-items: center;
+}
+
+[row_center_h]{
+	justify-content: center;
+}
+
+[row_center_vh]{
+	align-items: center;
+	justify-content: center;
+}
+
+[flex_col]{
+	display: flex;
+	flex-direction: column;
+}
+
+[col_center_h]{
+	justify-content: center;
+}
+
+[col_center_v]{
+	align-items: center;
+}
+
+[col_center_vh]{
+	align-items: center;
+	justify-content: center;
+}
+
+
+
+[align_flex_start]{
+	align-items: flex-start;
+}
+[align_flex_end]{
+	align-items: flex-end;
+}
+[justify_flex_start]{
+	justify-content: flex-start;
+}
+[justify_flex_end]{
+	justify-content: flex-end;
+}
+
 
 
 
@@ -858,7 +924,7 @@ sys buttons
 
 ~~ sys-tab
 {
-	user-select: none;
+	/*user-select: none;*/
 	height: 100%;
 	margin: 0px 10px 0px 10px;
 	padding: 0px 10px 0px 10px;
@@ -898,7 +964,7 @@ sys-tab.tab_hidden
 
 tab.tab_hidden
 {
-	display: none;
+	display: none !important;
 }
 
 tab
