@@ -13,3 +13,11 @@
 	/*font-style: italic;*/
 	src: url('../../assets/fonts/tahomabd.ttf');
 }
+
+@font-face
+{
+	font-family: 'ibm_plex';
+	font-weight: 400;
+	/*font-style: italic;*/
+	src: url('../../assets/fonts/ibm_plex_regular.ttf');
+}
