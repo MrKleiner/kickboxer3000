@@ -311,17 +311,20 @@ const valid_commands_list = [
 
 // Todo: this is a bootleg hack
 const create_promise_lock = function(){
-	let release = null;
+	const lock_data = {
+		'release': null,
+		'lock': null,
+	}
+
 	const p_lock = new Promise(
 		function(resolve, reject){
-			release = resolve;
+			lock_data.release = resolve;
 		}
 	)
 
-	return {
-		'release': release,
-		'lock': p_lock,
-	}
+	lock_data.lock = p_lock;
+
+	return lock_data
 }
 
 const kbat_iff_data = {
@@ -477,7 +480,8 @@ const KbAtCMDGateway = class{
 		// Thus, creating a final payload
 		const payload = Buffer.concat(buffer_array);
 
-		print('send_cmd: CMD constructed payload:', payload)
+		// debug
+		// print('send_cmd: CMD constructed payload:', payload)
 
 		// This is returned by this function
 		// 'error' key will appear, if there's an error
@@ -500,7 +504,8 @@ const KbAtCMDGateway = class{
 					cmd_status.sent = false;
 					cmd_status.error = err;
 				}else{
-					print('send_cmd: CMD Send ok');
+					// debug
+					// print('send_cmd: CMD Send ok');
 					cmd_status.sent = true;
 				}
 
@@ -738,7 +743,8 @@ const KbAtStatusWatcher = class{
 		self.skt.on(
 			'message',
 			function(msg_buf, rinfo){
-				print('KB AT-AT status watcher received message:', msg_buf, rinfo);
+				// debug
+				// print('KB AT-AT status watcher received message:', msg_buf, rinfo);
 				if (!self.returning_msg_callback){
 					console.error(
 						'KB AT-AT status watcher received message,',
@@ -762,6 +768,7 @@ const KbAtStatusWatcher = class{
 
 			// Echo status
 			// 'error' key would appear, if there was an error
+			// todo: pass this to the callback
 			const recv_status = {
 				'received': false,
 				'msg_data': null,
@@ -898,6 +905,8 @@ const KbAtTicker = class{
 		self.paused = false;
 
 		self.running = true;
+
+		// !%~ start,resume,pause,terminate,get_curtime,resub_to_echo,resub_to_end,resume_from_offset
 
 		// todo: Fuck javascript ?
 		{
@@ -1088,13 +1097,20 @@ const KbAtTicker = class{
 		self.echo_sub_skt.on(
 			'message',
 			function(msg_buf, rinfo){
-				const piped_msg_data = KbAtCMDGateway.msg_in_iff_pipe(msg_buf)
-				print('KB AT-AT received timer echo:', msg_buf, piped_msg_data, rinfo);
+				const piped_msg_data = KbAtCMDGateway.msg_in_iff_pipe(msg_buf);
+				// debug
+				// print('KB AT-AT received timer echo:', msg_buf, piped_msg_data, rinfo);
 				if (piped_msg_data == 2){
 					self.time.minutes = piped_msg_data[2];
 					self.time.seconds = piped_msg_data[3];
 				}
-				self?.echo_callback?.(piped_msg_data, rinfo);
+				if (!self.terminated){
+					self?.echo_callback?.(piped_msg_data, rinfo);
+				}else{
+					console.warn(
+						'Tried executing echo callback on a terminated AT-AT ticker'
+					);
+				}
 			}
 		)
 
@@ -1119,7 +1135,7 @@ const KbAtTicker = class{
 
 				// Supply this machine's local IPV4 address to the AT-AT
 				// (true = as integers, not string)
-				ksys.util.get_local_ipv4_addr(true),
+				ksys.context.global.cache.atat_return_addr || ksys.util.get_local_ipv4_addr(true),
 				// [127, 0, 0, 1],
 
 				// Supply the port the UDP receiver is listening on
@@ -1161,7 +1177,13 @@ const KbAtTicker = class{
 					'Received end from AT-AT',
 				)
 				print('KB AT-AT received timer end:', msg_buf, rinfo);
-				self?.finish_callback?.(msg_buf, rinfo);
+				if (!self.terminated){
+					self?.finish_callback?.(msg_buf, rinfo);
+				}else{
+					console.warn(
+						'Tried executing end callback on a terminated AT-AT ticker'
+					);
+				}
 			}
 		)
 
