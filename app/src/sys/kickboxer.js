@@ -43,10 +43,10 @@ const Path = function(){
 }
 
 // lizard's toolbox
-require('./apis/toybox/toolbox.js')
+require('./apis/toybox/toolbox.js');
 
 // Crypto JS
-require('./apis/crypto_js/4_1_1/crypto-js.min.js')
+require('./apis/crypto_js/4_1_1/crypto-js.min.js');
 
 
 
@@ -54,7 +54,7 @@ require('./apis/crypto_js/4_1_1/crypto-js.min.js')
 //           Define modules
 // ===================================
 
-// const _kbmodules = {};
+// const kbmodules = {};
 
 // ksys = most of the core functions
 const ksys = {
@@ -345,7 +345,7 @@ ksys.util.vmix_ok = function(txt){
 // and return the first one to be pushed
 ksys.util.get_key = function(){
 	return new Promise(function(resolve, reject){
-		$('.__kb_shadow_input').remove()
+		$('.__kb_shadow_input').remove();
 		const shadow_input = $(`
 		<input
 			class="__kb_shadow_input"

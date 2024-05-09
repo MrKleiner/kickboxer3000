@@ -1,0 +1,43 @@
+[tabid="asset_list"]{
+	display: flex;
+	flex-direction: column;
+	margin: 0px 20px 0px 20px;
+}
+
+#asset_list{
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+}
+
+#asset_info{
+	margin: 15px;
+	font-size: 20px;
+	color: white;
+	/*user-select: text !important;*/
+}
+
+[tabid="asset_list"] img{
+	width: 100px;
+	height: 100px;
+	/*margin: 10px;*/
+}
+
+[tabid="asset_list"] .list_entry{
+	padding: 10px;
+	border: 1px solid gray;
+}
+
+[tabid="asset_list"] .list_entry:hover{
+	z-index: 500;
+	border-color: rgb(210, 210, 210);
+}
+
+[tabid="asset_list"] .list_entry:active{
+	z-index: 500;
+	outline: 5px solid cyan;
+}
+
+[tabid="asset_list"] .list_entry.light{
+	background: white;
+}
