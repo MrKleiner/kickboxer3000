@@ -1,331 +1,496 @@
 
+html, body{
+	height: 100%;
+}
+
+
+kbstandard{
+	display: flex;
+	flex-direction: column;
+
+	width: 100%;
+	height: 100%;
+
+	overflow: hidden;
+}
+
+/*kbstandard[edit_mode] *:not([edit_visible]){
+	display: none !important;
+}*/
+
+kbstandard:not([edit_mode]) [edit_visible]{
+	display: none !important;
+}
+
+kbstandard[edit_mode] [edit_hidden]{
+	display: none !important;
+}
+
+
+tab[tabid="config"]{
+	display: flex;
+	flex-direction: column;
+}
+
+#param_list{
+	display: flex;
+	flex-direction: column;
+
+	width: 500px;
+
+	margin-left: 20px;
+}
+
+#param_list input[res_path]{
+	width: 100%;
+}
+
+
+#schema_cfg{
+	width: 500px;
+	margin-left: 20px;
+	margin-top: 20px;
+}
+
+#schema_cfg_header{
+	display: flex;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
+}
+
+#schema_cfg_ctrl{
+	display: flex;
+	flex-direction: column;
+	margin-top: 10px;
+}
+
+#schema_cfg_ctrl sysbtn{
+	margin-top: 5px;
+}
+
+#schema_cfg_list{
+	margin-top: 15px;
+}
+
 /*
-!~~ kbstandard
+!~~ #schema_cfg_list .schema_list_entry
 */
 
-kbstandard
-{
+#schema_cfg_list .schema_list_entry{
 	display: flex;
 	flex-direction: row;
-	flex-grow: 1;
-	flex-wrap: nowrap;
+	align-items: center;
+	padding: 4px 0px 4px 4px;
 }
 
-kbstandard vmixbtn
-{
-	flex-shrink: 0;
-	width: 110px;
-	height: 110px;
-	font-size: 17px;
+#schema_cfg_list .schema_list_entry:hover{
+	background: rgba(255, 255, 255, 0.1);
 }
 
-kbstandard box
-{
+#schema_cfg_list .schema_list_entry:not(:first-child){
+	margin-top: 5px;
+}
+
+#schema_cfg_list .schema_list_entry .schema_data_input:not(:first-child){
+	margin-left: 7px;
+}
+
+#schema_cfg_list .schema_list_entry .field_label{
+	width: 90px;
+}
+
+#schema_cfg_list .schema_list_entry .suffix{
+	width: 45px;
+}
+
+#schema_cfg_list .schema_list_entry .is_image{
+	height: 19px;
+	width: 19px;
+	margin-left: 15px !important;
+	margin-right: 5px;
+}
+
+
+tab[tabid="ctrl"]{
 	display: flex;
-	flex-wrap: wrap;
-	margin: 10px;
+	flex-direction: row;
+
+	width: 100%;
+	height: 95%;
+
+	overflow: hidden !important;
+
+	justify-content: space-evenly;
+
+	padding-bottom: 5px;
+	padding-top: 80px;
 }
 
+tab[tabid="ctrl"] vmixbtn{
+	width: 125px;
+	height: 125px;
 
-kbstandard #lside
-{
-	width: 550px;
-}
-
-kbstandard #lside vmixbtn
-{
-	width: 150px;
-	height: 150px;
 	font-size: 20px;
 }
 
-kbstandard #timer_ctrl bxtitle
-{
-	width: 100%;
-	user-select: none;
-	text-align: center;
-	font-size: 25px;
-	font-family: 'tahoma_bold';
-}
-
-kbstandard #timer_ctrl row
-{
+#ctrl_side{
 	display: flex;
-	flex-direction: row;
-	flex-wrap: nowrap;
-}
-
-kbstandard input[newtime]
-{
-	margin-left: 10px;
-	width: 120px;
-}
-
-kbstandard rounds
-{
-	display: flex;
-	padding: 5px;
-	margin: 10px;
-	/*flex-wrap: wrap;*/
 	flex-direction: column;
-	background: #6E7D97;
-	user-select: none;
+
+	padding: 10px;
+	margin-bottom: 12px;
+
+	width: 45%;
+	height: 90%;
+
+	overflow-y: scroll;
+	overflow-x: hidden;
 }
 
-kbstandard rounds pool
-{
+
+
+#title_ctrl{
+	display: flex;
+	flex-direction: column;
+	flex-wrap: wrap;
+
+	width: fit-content;
+}
+
+#title_ctrl [row]{
 	display: flex;
 	flex-direction: row;
-	flex-wrap: wrap;
 }
 
-kbstandard rounds round
-{
-	text-align: center;
-	width: 25px;
-	height: fit-content;
-	flex-grow: 0;
-	font-size: 16px;
-	padding: 3px;
-	margin: 3px;
-	background: rgba(0, 0, 0, 0.2);
+
+
+#timer_ctrl{
+	display: flex;
+	flex-direction: column;
+	width: fit-content;
+
+	margin-top: 20px;
 }
 
-kbstandard rounds round:hover
-{
+#timer_ctrl [row]{
+	display: flex;
+	flex-direction: row;
+}
+
+
+
+
+#player_pool_side{
+	display: flex;
+	flex-direction: column;
+
+	width: 45%;
+}
+
+#player_pool_ctrl sysbtn{
+	margin-top: 10px;
+}
+
+#player_pool{
+	padding: 10px;
+	display: flex;
+	flex-direction: column;
+	height: 90%;
+}
+
+
+/*
+!~~ #player_list
+*/
+
+#player_list{
+	padding: 5px;
+	margin-top: 20px;
+
+	overflow-x: hidden;
+	overflow-y: scroll;
+}
+
+
+/*
+!~~ #player_list .player_pair
+*/
+
+#player_list .player_pair{
+	display: flex;
+	flex-direction: column;
+
+	background: rgb(0, 0, 0, 0.25);
+}
+
+#player_list .player_pair:not(:first-child){
+	margin-top: 15px;
+}
+
+#player_list .player_pair .pair_header{
+	display: flex;
+	flex-direction: row;
+	height: 30px;
+	width: 100%;
+	justify-content: center;
+	align-items: center;
+}
+
+#player_list .player_pair.active_pair .pair_num{
+	color: lime;
+}
+
+#player_list .player_pair .pair_header .pair_num{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	font-size: 20px;
+	font-weight: bold;
+	/*todo: wtf is this ?*/
+	margin: 0px 30px 0px 30px;
+}
+
+#player_list .player_pair .pair_header:hover{
 	background: black;
 }
 
-kbstandard rounds round:active
-{
+#player_list .player_pair .vis_display{
+	padding: 2px 0px 2px 0px;
+	font-size: 18px;
+}
+
+kbstandard:not([edit_mode]) #player_list .player_pair .pair_header:active{
+	outline: 2px solid cyan;
+}
+
+kbstandard:not([edit_mode]) #player_list .player_pair .pair_header:active{
+	outline: 2px solid cyan;
+}
+
+kbstandard:not([edit_mode]) #player_list .player_pair .pair_header:active .pair_num{
+	color: lime;
+}
+
+kbstandard:not([edit_mode]) #player_list .player_pair .kb_player:active{
 	color: lime;
 	outline: 3px solid cyan;
 }
 
-kbstandard input[round_duration]
-{
-	margin-left: 10px;
+kbstandard:not([edit_mode]) #player_list .player_pair .kb_player:active .vis_display{
+	color: lime;
 }
 
-kbstandard rowlabel
-{
-	user-select: none;
-}
-
-kbstandard row[round_dur]
-{
-	margin-top: 30px;
-}
-
-kbstandard sysbtn[btname="set_round_duration"]
-{
-	margin-left: 10px;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-kbstandard #rside
-{
+#player_list .player_pair .pair_header .pair_ctrl{
 	display: flex;
-	/*flex-grow: 1;*/
-	margin: 10px;
-	flex-direction: column;
-	height: 90vh;
-	width: 50%;
-}
-
-
-
-kbstandard #pairs_pool
-{
-	display: flex;
-	flex-direction: column;
-	overflow-y: scroll;
-	background: rgba(0, 0, 0, 0.2);
+	flex-direction: row;
 	height: 100%;
+	align-items: center;
+}
+
+
+
+/*
+!~~ #player_list .player_pair .pair_header .pair_ctrl sysbtn
+*/
+#player_list .player_pair .pair_header .pair_ctrl sysbtn{
+	height: 60%;
+	aspect-ratio: 1/1;
+}
+
+#player_list .player_pair .pair_header .pair_ctrl sysbtn:not(:first-child){
+	margin-left: 5px;
+}
+
+#player_list .player_pair .pair_header .pair_ctrl sysbtn img{
+    width: -webkit-fill-available;
+    height: -webkit-fill-available;
+}
+
+#player_list .player_pair .pair_header .pair_ctrl sysbtn.del_pair{
+	margin-left: 20px;
+}
+
+#player_list .player_pair .pair_header .pair_ctrl sysbtn.move_pair_up img{
+	transform: rotate(90deg) scale(0.8);
+}
+
+#player_list .player_pair .pair_header .pair_ctrl sysbtn.move_pair_down img{
+	transform: rotate(-90deg) scale(0.8);
+}
+
+
+
+
+
+
+/*
+!~~ #player_list .player_pair .pair_players
+*/
+
+#player_list .player_pair .pair_players{
+	display: flex;
+	flex-direction: row;
 	width: 100%;
 }
 
-kbstandard #pairs_pool::-webkit-scrollbar {
-	width: 5px;
-	background: rgba(0, 0, 0, 0.2);
-}
- 
-kbstandard #pairs_pool::-webkit-scrollbar-track {
-	border-radius: 999px;
-	/*box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);*/
-}
- 
-kbstandard #pairs_pool::-webkit-scrollbar-thumb {
-	border-radius: 999px;
-	background-color: rgb(60, 60, 60);
-	/*outline: 1px solid slategrey; */
-	/*border-radius: 10px;*/
-}
-
-kbstandard #pairs_pool sysbtn
-{
-	margin-top: 10px;
-}
-
-kbstandard #pairs_pool pair
-{
-	display: flex;
-	flex-direction: column;
-	background: rgba(0, 0, 0, 0.2);
-	margin-top: 20px;
-}
-kbstandard #pairs_pool pair players
-{
-	display: flex;
-	flex-direction: row;
-	flex-wrap: nowrap;
-	flex-grow: 1;
-	justify-content: space-between;
-	margin-top: 10px;
-}
-
-kbstandard #pairs_pool pair display
-{
-	user-select: none;
-	font-size: 18px;
+#player_list .player_pair .pair_players .kb_player{
 	padding: 5px;
-    white-space: nowrap;
-}
-
-kbstandard #pairs_pool player
-{
-	padding: 0px 5px 0px 5px;
 	display: flex;
 	flex-direction: column;
-	flex-grow: 1;
-}
-
-
-kbstandard #pairs_pool player:hover
-{
-	background: rgba(255, 255, 255, 0.1);
-}
-
-
-kbstandard #pairs_pool player[left]
-{
-	border-left: 5px solid #bd3b3b;
 	width: 50%;
-	align-items: flex-start;
-}
-
-kbstandard #pairs_pool player[right]
-{
-	border-right: 5px solid #5b7a8c;
-	width: 50%;
-	align-items: flex-end;
-}
-
-kbstandard #pairs_pool player p_param
-{
-	display: flex;
-	flex-direction: row;
 	margin-top: 5px;
 }
 
-kbstandard #pairs_pool player p_param input
-{
-	margin-left: 5px;
+#player_list .player_pair .pair_players .kb_player.active_player .vis_display{
+	color: lime;
 }
 
-kbstandard #pairs_pool player descr
-{
+#player_list .player_pair .pair_players .kb_player:hover{
+	background: rgba(255, 255, 255, 0.1);
+}
+
+#player_list .player_pair .pair_players .kb_player .player_data{
 	display: flex;
-	user-select: none;
-	width: 60px !important;
-}
-
-
-kbstandard #pairs_pool pairnum
-{
-	user-select: none;
-	text-align: center;
-	padding: 5px;
-	font-size: 20px;
-}
-
-
-kbstandard #pairs_pool pairnum:hover
-{
-	background: black;
-}
-
-column
-{
-	margin-top: 30px;
-	display: flex;
-	flex-grow: 1;
 	flex-direction: column;
 }
 
-
-/*row[res_loc]
-{
-	margin-top: 30px;
+#player_list .player_pair .pair_players .kb_player .player_data .data_entry{
+	display: flex;
+	flex-direction: row;
 }
 
-row[res_loc] input
-{
-	margin-left: 5px;
-}*/
+#player_list .player_pair .pair_players .kb_player .player_data .data_entry:not(:first-child){
+	margin-top: 5px;
+}
 
-column[res_loc] *
-{
+#player_list .player_pair .pair_players .kb_player .player_data .data_entry .data_entry_label{
+	width: 100px;
+}
+
+#player_list .player_pair .pair_players .player_pair .vis_display{
+	display: flex;
+	flex-direction: row;
+}
+
+#player_list .player_pair .pair_players .kb_player:last-child .vis_display{
+	text-align: right;
+}
+
+
+/*
+!~~ .player_pair .pair_players
+*/
+
+
+#player_list.red_vs_blu .player_pair .pair_players .kb_player:first-child{
+	border-left: 5px solid #bd3b3b;
+}
+#player_list.red_vs_blu .player_pair .pair_players .kb_player:last-child{
+	border-right: 5px solid #5b7a8c;
+}
+
+
+#player_list.blu_vs_red .player_pair .pair_players .kb_player:first-child{
+	border-left: 5px solid #5b7a8c;
+}
+#player_list.blu_vs_red .player_pair .pair_players .kb_player:last-child{
+	border-right: 5px solid #bd3b3b;
+}
+
+
+
+
+
+
+
+
+
+/*todo: replace these useless params with core attributes*/
+#round_config{
+	display: flex;
+	flex-direction: column;
+}
+
+#round_cfg_fields{
+	display: flex;
+	flex-direction: column;
 	margin-top: 10px;
 }
 
+#round_cfg_fields .round_cfg_field{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: 1px 0px 1px 0px;
+}
+
+#round_cfg_fields .round_cfg_field:not(:first-child){
+	margin-top: 5px;
+}
+
+#round_cfg_fields .round_cfg_field .field_label{
+	width: 60px;
+	margin-right: 7px;
+}
+
+#round_cfg_fields .round_cfg_field > sysbtn{
+	margin-left: 7px;
+}
+
+#round_duration_cfg_field > input{
+	width: 40px;
+	text-align: center;
+}
+
+#round_amount_fields input[round_amount]{
+	width: 86px;
+	text-align: center;
+}
 
 
-player.active_player display
-{
+
+#round_selector{
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	background: #6E7D97;
+	padding: 5px;
+	width: 320px;
+}
+
+#round_selector .round_selector_item{
+	aspect-ratio: 1/1;
+	height: 30px;
+	margin: 2px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-weight: bold;
+
+	background: rgba(0, 0, 0, 0.25);
+}
+
+#round_selector .round_selector_item:hover{
+	background: black;
+}
+
+
+#round_selector .round_selector_item:active{
+	color: lime;
+	background: black;
+	outline: 3px solid cyan;
+}
+
+#round_selector .round_selector_item.active_round{
 	color: lime;
 }
 
 
-
-
-tab[tabid="ctrl"]
-{
-	flex-direction: row;
-	width: 100%;
-	justify-content: space-around;
+#set_time_cfg > input{
+	width: 40px;
+	text-align: center;
 }
 
-
-
-
-[tabid="config"]
-{
-	flex-direction: column;
-}
-
-
-
-[tabid="ctrl"]
-{
-	margin-bottom: 100px;
-}
 

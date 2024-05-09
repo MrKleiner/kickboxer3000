@@ -9,160 +9,183 @@
 			<f-param display_name="Players" fpid="players" translit_default="1" format_default="all_upper"></f-param>
 			<f-param display_name="Labels" fpid="labels" translit_default="1" format_default="all_upper"></f-param>
 		</string-formatting>
-		<box regular_box>
-			<column res_loc>
-				<rowlabel>Resources Location</rowlabel>
+
+		<div id="param_list" regular_box>
+			<div param_row res_loc_row>
+				<div row_label>Resources Location</div>
 				<input type="text" res_path placeholder="Absolute path to a folder. Quotation marks allowed">
-				<sysbtn btname="save_res_path" onclick="kbmodules.kickboxing_standard.save_res_path()">Save Path</sysbtn>
-			</column>
-		</box>
-	</tab>
+				<sysbtn btname="save_res_path" onclick="window.kbmodules.kickboxing_standard.save_res_path()">Save Path</sysbtn>
+			</div>
 
-	<tab tabid="ctrl" tabname="Control" default row>
-		<div id="lside">
-			<box regular_box>
-				<vmixbtn seq_info="vis_hide" btname="vs_off" onclick="kbmodules.kickboxing_standard.vs_off()">VS OFF</vmixbtn>
-				<vmixbtn seq_info="vis_show" btname="vs_onn" onclick="kbmodules.kickboxing_standard.vs_onn(this)">VS ON</vmixbtn>
-				<fbr></fbr>
-				<vmixbtn seq_info="vis_hide" btname="player_off" onclick="kbmodules.kickboxing_standard.player_off(this)">Player OFF</vmixbtn>
-				<vmixbtn seq_info="vis_show" btname="player_onn" onclick="kbmodules.kickboxing_standard.player_onn(this)">Player ON</vmixbtn>
-				<div id="category_change">
-					<input type="text" placeholder="RAW NUMBER (KG)">
-					<vmixbtn seq_info="update" btname="category_change" onclick="kbmodules.kickboxing_standard.set_category()">Set Category</vmixbtn>
-				</div>
-			</box>
-
-
-			<box regular_box id="timer_ctrl">
-				<bxtitle>Timer</bxtitle>
-				<vmixbtn
-					bottom
-					seq_align="vertical"
-					btname=""
-					seq_info="alive+<+cond+vis_show+resume+>+<+else+update+play+vis_show+>"
-					onclick="kbmodules.kickboxing_standard.respawn_manager(true)"
-				>
-					<span>ONN, Start</span>
-				</vmixbtn>
-				<vmixbtn btname="" seq_info="vis_hide+pause" onclick="kbmodules.kickboxing_standard.timer_hide(true)">OFF, Pause</vmixbtn>
-				<fbr></fbr>
-				<vmixbtn btname="" seq_info="stop+update" onclick="kbmodules.kickboxing_standard.respawn_timer(false)">Reset</vmixbtn>
-				<vmixbtn btname="" seq_info="pause" onclick="kbmodules.kickboxing_standard.timer_pause(true)">Pause</vmixbtn>
-				<vmixbtn btname="" seq_info="resume" onclick="kbmodules.kickboxing_standard.timer_pause(false)">Resume</vmixbtn>
-				<input type="text" newtime placeholder="Expressions allowed">
-				<fbr></fbr>
-				<row>
-					<vmixbtn btname="" seq_info="update+resume" onclick="kbmodules.kickboxing_standard.timer_set_time(eval($('input[newtime]').val().trim()))">Set Time</vmixbtn>
-					<rounds amount="12">
-						<header>Round Number (+Kill, Update and Reset timer)</header>
-						<pool></pool>
-					</rounds>
-				</row>
-
-				<row round_dur>
-					<rowlabel>Round Duration</rowlabel>
-					<input type="text" round_duration placeholder="Expressions allowed">
-					<sysbtn btname="set_round_duration" onclick="kbmodules.kickboxing_standard.save_timer_duration()">Set Duration</sysbtn>
-				</row>
-
-
-
-
-
-
-				<row null_shit_to_avoid_selection></row>
-			</box>
-
-		</div>
-
-
-		<div id="rside">
-			<div id="pairs_pool" regular_box>
-				<sysbtn onclick="kbmodules.kickboxing_standard.toggle_edit()" btname="toggle_edit_mode">Toggle Edit</sysbtn>
-				<sysbtn style="display: none" onclick="kbmodules.kickboxing_standard.add_pair()" btname="edit_add_pair">Add Pair</sysbtn>
-				<sysbtn style="display: none" onclick="kbmodules.kickboxing_standard.load_pairs_from_file()" btname="load_pairs_from_file">Load Pairs From File</sysbtn>
-				<sysbtn onclick="kbmodules.kickboxing_standard.save_pairs()" style="display: none" btname="save_pairs">Save</sysbtn>
-				<sysbtn onclick="kbmodules.kickboxing_standard.save_pairs_to_file()" style="display: none" btname="save_pairs_to_file">Save To File</sysbtn>
+			<div param_row res_loc_row>
+				<div row_label>Resources Location</div>
+				<input type="text" res_path placeholder="Absolute path to a folder. Quotation marks allowed">
+				<sysbtn btname="save_res_path" onclick="window.kbmodules.kickboxing_standard.save_res_path()">Save Path</sysbtn>
 			</div>
 		</div>
+
+		<div
+			id="schema_cfg"
+			regular_box
+			kbhint="Changes are saved automatically. Hold Alt and click RMB to delete a schema entry"
+			>
+			<div id="schema_cfg_header">Player Data Schema</div>
+			<div id="schema_cfg_ctrl">
+				<sysbtn onclick="window.kbmodules.kickboxing_standard.add_schema_entry()">Add Entry</sysbtn>
+				<sysbtn onclick="window.kbmodules.kickboxing_standard.save_schema()">Save Schema</sysbtn>
+			</div>
+			<div id="schema_cfg_list"></div>
+		</div>
+	</tab>
+
+
+	<tab tabid="ctrl" tabname="Control" default row>
+
+		<div subtle_box id="ctrl_side">
+			<div id="title_ctrl" regular_box>
+				<div row>
+					<vmixbtn seq_info="vis_hide" btname="vs_off" onclick="window.kbmodules.kickboxing_standard.vs_off()">VS OFF</vmixbtn>
+					<vmixbtn seq_info="vis_show" btname="vs_onn" onclick="window.kbmodules.kickboxing_standard.vs_onn(this)">VS ON</vmixbtn>
+				</div>
+
+				<div row>
+					<vmixbtn seq_info="vis_hide" btname="player_off" onclick="window.kbmodules.kickboxing_standard.player_off(this)">Player OFF</vmixbtn>
+					<vmixbtn seq_info="vis_show" btname="player_onn" onclick="window.kbmodules.kickboxing_standard.player_onn(this)">Player ON</vmixbtn>
+				</div>
+			</div>
+
+			<div id="timer_ctrl" regular_box>
+
+				<div row>
+					<vmixbtn
+						bottom
+						seq_align="vertical"
+						btname=""
+						seq_info="alive+<+cond+vis_show+resume+>+<+else+update+play+vis_show+>"
+						onclick="window.kbmodules.kickboxing_standard.respawn_manager(true)"
+						>
+						<span>ONN, Start</span>
+					</vmixbtn>
+					<vmixbtn btname="" seq_info="vis_hide+pause" onclick="window.kbmodules.kickboxing_standard.timer_hide(true)">OFF, Pause</vmixbtn>
+				</div>
+
+				<div row>
+					<vmixbtn btname="" seq_info="stop+update" onclick="window.kbmodules.kickboxing_standard.respawn_timer(false)">Reset</vmixbtn>
+					<vmixbtn btname="" seq_info="pause" onclick="window.kbmodules.kickboxing_standard.timer_pause(true)">Pause</vmixbtn>
+					<vmixbtn btname="" seq_info="resume" onclick="window.kbmodules.kickboxing_standard.timer_pause(false)">Resume</vmixbtn>
+				</div>
+
+				<div row flex_row align_flex_end>
+					<div flex_col row_center_h>
+						<div flex_row row_center_h id="set_time_cfg">
+							<input id="set_time_minutes" noctrl type="number" placeholder="MM">
+							<input id="set_time_seconds" noctrl type="number" placeholder="SS">
+						</div>
+						<vmixbtn btname="" seq_info="update+resume" onclick="window.kbmodules.kickboxing_standard.timer_set_time()">Set Time</vmixbtn>
+					</div>
+					
+					<div id="round_config">
+						<div id="round_selector" kbhint="Round Number (+Kill, Update and Reset timer)"></div>
+
+						<div id="round_cfg_fields">
+							<div id="round_duration_cfg_field" class="round_cfg_field">
+								<div class="field_label">Duration</div>
+								<input minutes noctrl type="number" placeholder="MM">
+								<input seconds noctrl type="number" placeholder="SS">
+								<sysbtn
+									onclick="window.kbmodules.kickboxing_standard.set_round_duration()"
+									btname="set_round_duration"
+									>Set Duration</sysbtn>
+							</div>
+
+							<div id="round_amount_fields" class="round_cfg_field">
+								<div class="field_label">Quantity</div>
+								<input round_amount noctrl type="number">
+								<sysbtn onclick="window.kbmodules.kickboxing_standard.set_round_amount()" btname="set_round_duration">Set Quantity</sysbtn>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+
+		<div id="player_pool_side">
+			<div id="player_pool" subtle_box>
+				<div id="player_pool_ctrl">
+					<sysbtn onclick="window.kbmodules.kickboxing_standard.toggle_edit_mode()">Toggle Edit Mode</sysbtn>
+					<sysbtn edit_visible btname="flip_pair_colors" onclick="window.kbmodules.kickboxing_standard.flip_colors()">Flip Colours</sysbtn>
+					<sysbtn edit_visible btname="flip_pair_sides" onclick="window.kbmodules.kickboxing_standard.flip_sides()">Flip Sides</sysbtn>
+				</div>
+
+				<div id="player_list" subtle_box class="red_vs_blu">
+					<sysbtn edit_visible onclick="window.kbmodules.kickboxing_standard.add_pair()">Add Pair</sysbtn>
+				</div>
+			</div>
+		</div>
+
 	</tab>
 
 
 
 
+	<template id="kb_player_template">
+		<div class="kb_player">
+			<div edit_hidden class="vis_display"></div>
+			<div edit_visible class="player_data"></div>
+		</div>
+	</template>
+
+	<template id="kb_player_data_entry_template">
+		<div class="data_entry">
+			<div class="data_entry_label"></div>
+			<input type="text" class="data_entry_input" placeholder="Text">
+		</div>
+	</template>
+
+	<template id="kb_player_pair_template">
+		<div class="player_pair">
+			<div class="pair_header">
+				<div edit_visible class="pair_ctrl">
+					<sysbtn class="move_pair_up">
+						<img src="./assets/icon_arrow_left.svg">
+					</sysbtn>
+					<sysbtn class="move_pair_down">
+						<img src="./assets/icon_arrow_left.svg">
+					</sysbtn>
+					<sysbtn class="flip_players">
+						<img src="./assets/swap_icon.svg">
+					</sysbtn>
+					<sysbtn class="del_pair" kbhint="Hold Alt">
+						<img src="./assets/trash.svg">
+					</sysbtn>
+				</div>
+				<div class="pair_num"></div>
+			</div>
+			<div class="pair_players"></div>
+		</div>
+	</template>
+
+	<template id="schema_list_entry_template">
+		<div class="schema_list_entry">
+			<input class="schema_data_input field_label" type="text" placeholder="Field Label">
+			<input class="schema_data_input suffix" type="text" placeholder="Suffix">
+			<input class="schema_data_input idname" type="text" placeholder="ID">
+			
+			<label flex_row row_center_v>
+				<input class="schema_data_input is_image" type="checkbox">
+				Is Image
+			</label>
+		</div>
+	</template>
 
 
-
-	<div>
-
-		<template id="pair_asset">
-			<pair>
-				<pairnum click_contrast></pairnum>
-				<players>
-					<player left click_contrast noclick>
-						<display></display>
-						<p_param p_name>
-							<descr>Name</descr>
-							<input type="text" placeholder="Player Name">
-						</p_param>
-						<p_param p_age>
-							<descr>Age</descr>
-							<input type="text" placeholder="Player Age">
-						</p_param>
-						<p_param p_weight>
-							<descr>Weight</descr>
-							<input type="text" placeholder="Player Weight">
-						</p_param>
-						<p_param p_height>
-							<descr>Height</descr>
-							<input type="text" placeholder="Player Height">
-						</p_param>
-						<p_param p_record>
-							<descr>Record</descr>
-							<input type="text" placeholder="Player Record">
-						</p_param>
-						<p_param p_country>
-							<descr>Country</descr>
-							<input type="text" placeholder="Player's Country of Origin">
-						</p_param>
-					</player>
-
-
-					<player right click_contrast noclick>
-						<display></display>
-						<p_param p_name>
-							<descr>Name</descr>
-							<input type="text" placeholder="Player Name">
-						</p_param>
-						<p_param p_age>
-							<descr>Age</descr>
-							<input type="text" placeholder="Player Age">
-						</p_param>
-						<p_param p_weight>
-							<descr>Weight</descr>
-							<input type="text" placeholder="Player Weight">
-						</p_param>
-						<p_param p_height>
-							<descr>Height</descr>
-							<input type="text" placeholder="Player Height">
-						</p_param>
-						<p_param p_record>
-							<descr>Record</descr>
-							<input type="text" placeholder="Player Record">
-						</p_param>
-						<p_param p_country>
-							<descr>Country</descr>
-							<input type="text" placeholder="Player's Country of Origin">
-						</p_param>
-					</player>
-				</players>
-			</pair>
-		</template>
-
-	</div>
-
-
-
-
+	<template id="round_selector_item_template">
+		<div class="round_selector_item"></div>
+	</template>
 
 </kbstandard>
+
+
+
