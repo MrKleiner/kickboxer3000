@@ -530,6 +530,13 @@ $this.load = async function(){
 		// todo: create a core function that does something like pulling
 		// data to inputs from context automatically or something
 		document.querySelector('#atat_port_input').value = int(ksys.context.global.cache.atat_port || '');
+		const return_addr = ksys.context.global.cache.atat_return_addr;
+		if (return_addr){
+			document.querySelector('#atat_return_addr_input').value = return_addr.join('.');
+		}else{
+			document.querySelector('#atat_return_addr_input').value = ksys.util.get_local_ipv4_addr(true).join('.');
+		}
+
 
 		// todo: make use of this
 		$this.at_at = {
@@ -796,6 +803,11 @@ $this.FootballClub = class{
 				return player
 			}
 		}
+
+		// console.warn(
+		// 	'Could not find player with id of',
+		// 	tgt_nameid
+		// )
 
 		return null
 	}
@@ -4029,7 +4041,7 @@ $this.pardon_player = async function(){
 }
 
 $this.hide_card = async function(){
-	await vmix.talker.overlay_out()
+	await vmix.talker.overlay_out(2)
 }
 
 
@@ -4436,6 +4448,52 @@ $this.update_atat_port = function(evt){
 	$this.restart_atat_service();
 }
 
+$this.update_atat_return_addr = function(evt){
+	if (!evt.altKey){
+		// todo: is this message really needed here ?
+		ksys.info_msg.send_msg(
+			`Hold ALT`,
+			'warn',
+			1000
+		);
+		return
+	};
+
+	const octets = document.querySelector('#atat_return_addr_input').value.split('.')
+	.map(function(oct){
+		const oct_int = int(oct.trim());
+		const conditions = [
+			oct_int <= 255,
+			oct_int >= 0,
+			Number.isInteger(oct_int),
+		]
+		if (conditions.includes(false)){
+			return null
+		}else{
+			return oct_int
+		}
+	})
+
+	if ( (octets.length != 4) || octets.includes(null)){
+		ksys.info_msg.send_msg(
+			`Invalid address. Aborting`,
+			'warn',
+			5000
+		);
+		return
+	}
+
+	ksys.context.global.prm('atat_return_addr', octets, true);
+
+	ksys.info_msg.send_msg(
+		`Updated AT-AT return address to: ${octets.join('.')}; Restarting service...`,
+		'ok',
+		9000
+	);
+
+	$this.restart_atat_service();
+}
+
 $this.restart_atat_service = async function(){
 	// Kill previous AT-AT status watcher
 	$this.stop_atat_service();
@@ -4470,7 +4528,7 @@ $this.stop_atat_service = async function(){
 
 $this.toggle_atat_status_indicator = function(state){
 	if (state == true){
-		$('#ticker_service_status').css('display', null);
+		$('#ticker_service_status').css('display', '');
 	}else{
 		$('#ticker_service_status').css('display', 'none');
 	}
@@ -4752,7 +4810,7 @@ $this.timer_fset.at_at.extra_timer_callback = function(msg){
 	const text = `${str(msg.data_buf[2]).zfill(2)}:${str(msg.data_buf[3]).zfill(2)}`;
 	// const text = `${msg.data_buf[2]}:${msg.data_buf[3]}`;
 
-	$this.titles.timer.set_text('extra_ticker', text);
+	// $this.titles.timer.set_text('extra_ticker', text);
 	$('#timer_feedback_extra').text(text);
 }
 

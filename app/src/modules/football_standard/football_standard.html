@@ -1,7 +1,8 @@
 <div id="football_standard">
 
 	<tabsys>
-		<sys-tab match_id="fucking_docs" default>Docs</sys-tab>
+		<sys-tab match_id="fucking_docs">Docs</sys-tab>
+		<!-- <sys-tab match_id="stats_db">Stats DB</sys-tab> -->
 		<sys-tab match_id="club_def" default>Clubs</sys-tab>
 		<sys-tab match_id="team_lineup">Config/Lists</sys-tab>
 		<sys-tab match_id="teams_layouts">Layout</sys-tab>
@@ -41,6 +42,8 @@
 			</ul>
 		</div>
 	</tab>
+
+	<!-- <tab class="tab_hidden" tabid="stats_db"></tab> -->
 
 	<tab class="tab_hidden" tabid="club_def">
 		<div id="club_definition">
@@ -105,10 +108,21 @@
 				<input id="atat_port_input" noctrl type="number" min="1" max="65535">
 				<sysbtn
 					btname="update_atat_port"
-					kbhint="Hold ALT. This is a very serious action. The KB AT-AT service will be restarted"
+					kbhint="Hold ALT. The KB AT-AT service will be restarted"
 					onclick="$this.update_atat_port(event)"
 					click_timeout="700"
 				>Update AT-AT port</sysbtn>
+			</general-cfg-entry>
+
+			<general-cfg-entry>
+				<general-cfg-label>AT-AT Return Address</general-cfg-label>
+				<input id="atat_return_addr_input" noctrl type="text">
+				<sysbtn
+					btname="update_atat_return_addr"
+					kbhint="Hold ALT. The KB AT-AT service will be restarted"
+					onclick="$this.update_atat_return_addr(event)"
+					click_timeout="700"
+				>Update AT-AT Return Address</sysbtn>
 			</general-cfg-entry>
 
 		</general-cfg>
@@ -298,7 +312,12 @@
 		<div id="cards_and_goals">
 			<div id="cg_player_picker"></div>
 
-			<div regular_box nosel id="red_card_counter" kbhint="To manually add/subtract - hover the cards, hold ALT and press LMB/RMB">
+			<div
+				regular_box
+				nosel
+				id="red_card_counter"
+				kbhint="To manually add/subtract - hover the cards, hold ALT and press LMB/RMB. Selected players are not taken into account"
+				>
 				<vmixbtn
 					off
 					titled
@@ -329,7 +348,13 @@
 				</div>
 
 				<div id="cg_buttons_score">
-					<vmixbtn seq_info="auto_tweaks+auto_seq" titled btname="scored" onclick="$this.add_score_from_cards_panel()">
+					<vmixbtn
+						titled
+						seq_info="auto_tweaks+auto_seq"
+						btname="scored"
+						onclick="$this.add_score_from_cards_panel()"
+						click_timeout="2000"
+						>
 						<img draggable="false" contain class="punish_card_vis" src="./assets/ball.png">
 						<div class="punish_card_title">SCORE!</div>
 					</vmixbtn>
@@ -431,7 +456,7 @@
 
 				<box regular_box style="flex-direction: row; display: flex; margin-left: 10px; align-items: center;">
 					<div id="timer_ctrl_additional">
-						<input onchange="$this.update_extra_time_amount()" type="text" placeholder="MINUTES">
+						<input onchange="$this.update_extra_time_amount()" type="number" noctrl placeholder="MINUTES">
 						<!-- <vmixbtn seq_info="update+play+vis_show" btname="launch_extra_timer" onclick="$this.launch_extra_time()">Launch Extra Time</vmixbtn> -->
 						<vmixbtn
 							halfsize

@@ -2956,7 +2956,9 @@ tab.tab_hidden
 	margin-top: 10px;
 }
 
-~~ sysbtn[btname="update_atat_port"]{
+~~ sysbtn[btname="update_atat_port"],
+~~ sysbtn[btname="update_atat_return_addr"]
+{
 	margin-left: 15px;
 }
 
