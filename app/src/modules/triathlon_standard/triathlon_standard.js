@@ -112,30 +112,7 @@ $this.DataSRC = class{
 	*/
 	constructor(input_data=null){
 		const self = this;
-		// Fuck JS
-		{
-			self.cfg_gui = function(){
-				return self.__cfg_gui(self, ...arguments);
-			}
-			self.set_field = function(){
-				return self._set_field(self, ...arguments);
-			}
-			self.get_field = function(){
-				return self._get_field(self, ...arguments);
-			}
-			self.apply_data = function(){
-				return self._apply_data(self, ...arguments);
-			}
-			self.json = function(){
-				return self._json(self, ...arguments);
-			}
-			self.kill = function(){
-				return self._kill(self, ...arguments);
-			}
-			self.redraw = function(){
-				return self._redraw(self, ...arguments);
-			}
-		}
+		ksys.util.cls_pwnage.remap(self);
 
 		self.field_dict = {
 			'data_url':        '.data_url',
@@ -154,7 +131,7 @@ $this.DataSRC = class{
 		self.apply_data(input_data);
 	}
 
-	__cfg_gui(self){
+	cfg_gui(self){
 		if (self._cfg_gui){
 			return self._cfg_gui
 		}
@@ -195,7 +172,7 @@ $this.DataSRC = class{
 		return self._cfg_gui
 	}
 
-	_set_field(self, field_name, val){
+	set_field(self, field_name, val){
 		// self.cfg_gui.querySelector(self.field_dict[field_name]).value = val;
 		const field_dom = self.cfg_gui().querySelector(self.field_dict[field_name]);
 		if (field_dom.getAttribute('type') == 'checkbox'){
@@ -208,7 +185,7 @@ $this.DataSRC = class{
 		return 
 	}
 
-	_get_field(self, field_name){
+	get_field(self, field_name){
 		const field_dom = self.cfg_gui().querySelector(self.field_dict[field_name]);
 		if (field_dom.getAttribute('type') == 'checkbox'){
 			return field_dom.checked
@@ -216,7 +193,7 @@ $this.DataSRC = class{
 		return field_dom.value
 	}
 
-	_apply_data(self, data=null){
+	apply_data(self, data=null){
 		self.cfg = data || {};
 
 		for (const field_name in self.field_dict){
@@ -227,13 +204,13 @@ $this.DataSRC = class{
 		// $this.redraw_tables_gui();
 	}
 
-	_kill(self){
+	kill(self){
 		self.cfg_gui().remove();
 		self.linked_table.ctrl_gui().elem.remove();
 		$this.data_sources.delete(self);
 	}
 
-	_json(self){
+	json(self){
 		const data = {};
 		for (const field_name in self.field_dict){
 			data[field_name] = self.get_field(field_name);
@@ -241,7 +218,7 @@ $this.DataSRC = class{
 		return data
 	}
 
-	_redraw(self){
+	redraw(self){
 		if (!$this.data_src_dom_list.contains(self.cfg_gui())){
 			$this.data_src_dom_list.append(self.cfg_gui());
 		}
@@ -259,32 +236,6 @@ $this.BasicTable = class{
 		print('Creating BasicTable', data_src)
 		const self = this;
 		ksys.util.cls_pwnage.remap(self);
-		// Fuck JS
-		/*
-		{
-			self.link_vmix_title = function(){
-				return self._link_vmix_title(self, ...arguments);
-			}
-			self.ctrl_gui = function(){
-				return self.__ctrl_gui(self, ...arguments);
-			}
-			self.create_table_data = function(){
-				return self._create_table_data(self, ...arguments);
-			}
-			self.update_cache = async function(){
-				return await self._update_cache(self, ...arguments);
-			}
-			self.update_title = async function(){
-				return await self._update_title(self, ...arguments);
-			}
-			self.show_table = async function(){
-				return await self._show_table(self, ...arguments);
-			}
-			self.hide_table = async function(){
-				return await self._hide_table(self, ...arguments);
-			}
-		}
-		*/
 
 		self.data_src = data_src;
 
@@ -489,19 +440,10 @@ $this.BasicTable = class{
 $this.Partnerships = class{
 	constructor(){
 		const self = this;
-
-		// Fuck JS
-		{
-			self.create_partner_ctrl = function(){
-				return self._create_partner_ctrl(self, ...arguments);
-			}
-			self.resync = function(){
-				return self._resync(self, ...arguments);
-			}
-		}
+		ksys.util.cls_pwnage.remap(self);
 	}
 
-	_create_partner_ctrl(self, img_path){
+	create_partner_ctrl(self, img_path){
 		const tplate = ksys.tplates.index_tplate(
 			'#partner_template',
 			{
@@ -529,7 +471,7 @@ $this.Partnerships = class{
 		document.querySelector('#partner_list').append(tplate.elem);
 	}
 
-	_resync(self){
+	resync(self){
 		const src_dir = Path($this.partners_dir_input.value);
 		if (!src_dir.isDirectorySync()){
 			ksys.info_msg.send_msg(
