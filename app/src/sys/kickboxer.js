@@ -59,6 +59,7 @@ require('./apis/crypto_js/4_1_1/crypto-js.min.js');
 // ksys = most of the core functions
 const ksys = {
 	util: {
+		cls_pwnage: require('./sys/class_pwnage.js'),
 		// translit: require('./sys/transliteration.js'),
 		str_ops: require('./sys/string_ops.js'),
 	},
@@ -260,7 +261,6 @@ ksys.util.ask_folder = function(multiple=false)
 // ctype = text|bytes (default to text)
 ksys.util.url_get = async function(url=null, ctype='text'){
 	return new Promise(async function(resolve, reject){
-
 		const response = await
 		fetch(url, {
 			'headers': {
@@ -273,14 +273,32 @@ ksys.util.url_get = async function(url=null, ctype='text'){
 			'credentials': 'omit',
 		})
 		.catch((error) => {
-			console.error(`fetching ${url} resulted in the following errror:`, error);
+			console.error(`Fetching ${url} resulted in the following errror:`, error);
 			resolve({
 				'status': 'fail',
 				'reason': error,
 			})
 		});
 
-		if (!response){return}
+		print(response)
+
+		// if (!response){return}
+		if (!response){
+			resolve({
+				'status': 'fail',
+				'reason': 'unknown',
+			})
+			return
+		}
+		if (!response.ok){
+			resolve({
+				'status': 'fail',
+				'reason': 'unknown',
+				'code': response.status,
+				'details': response,
+			})
+			return
+		}
 
 		const rsp_buff = await response.arrayBuffer();
 
@@ -288,7 +306,7 @@ ksys.util.url_get = async function(url=null, ctype='text'){
 		if (ctype == 'text'){
 			// const dt = lizard.UTF8ArrToStr(new Uint8Array(rsp_buff))
 			resolve({
-				'status': 'success',
+				'status': 'ok',
 				'code': response.status,
 				'payload': lizard.UTF8ArrToStr(new Uint8Array(rsp_buff)),
 			})
@@ -297,7 +315,7 @@ ksys.util.url_get = async function(url=null, ctype='text'){
 		// buffer
 		if (ctype == 'bytes'){
 			resolve({
-				'status': 'success',
+				'status': 'ok',
 				'code': response.status,
 				'payload': new Uint8Array(rsp_buff),
 			})
@@ -383,6 +401,9 @@ ksys.util.get_key = function(){
 // Get local ipv4 address
 // This is so retarded...
 ksys.util.get_local_ipv4_addr = function(octets=true){
+	// important todo: Fix this.
+	return ksys.context.global.cache.atat_return_addr;
+
 	const interfaces = os_em.networkInterfaces();
 	for (const interfaceName in interfaces) {
 		const addresses = interfaces[interfaceName];
@@ -397,6 +418,16 @@ ksys.util.get_local_ipv4_addr = function(octets=true){
 		}
 	}
 	return false
+}
+
+
+ksys.util.resolve_object_path = function(tgt_obj, tgt_path){
+	let last = tgt_obj;
+	for (const p of tgt_path){
+		last = last?.[p.trim()];
+	}
+
+	return last
 }
 
 
