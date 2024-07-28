@@ -1,0 +1,209 @@
+
+
+
+tab[tabid="cfg"], tab[tabid="partner_ctrl"], tab[tabid="other"]{
+	display: flex;
+	flex-direction: column;
+
+	margin-bottom: 100px;
+}
+
+
+/*
+!~~ #main_cfg_box
+*/
+#main_cfg_box{
+	margin-left: 25px;
+	display: flex;
+	flex-direction: column;
+}
+
+#main_cfg_box .global_prm{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+#main_cfg_box .global_prm .global_prm_label{
+	width: 150px;
+}
+
+#main_cfg_box .global_prm .global_prm_val{
+	width: 500px;
+}
+
+#main_cfg_box .global_prm.partners sysbtn{
+	margin-left: 10px;
+	padding-left: 10px;
+	padding-right: 10px;
+}
+
+
+/*
+!~~ #url_sources_box
+*/
+#url_sources_box{
+	margin-left: 25px;
+	margin-top: 20px;
+	min-width: 50vw;
+	display: flex;
+	flex-direction: column;
+}
+
+
+
+/*
+!~~ #url_sources_box
+*/
+
+#url_sources_box{
+	display: flex;
+	flex-direction: column;
+	padding: 2px;
+	margin-top: 10px;
+}
+
+#url_sources_box .data_src_entry{
+	display: flex;
+	flex-direction: column;
+	margin: 10px;
+	outline: 1px solid gray;
+	padding: 0px 0px 10px 10px;
+}
+
+#url_sources_box .data_src_entry:hover{
+	outline-color: white;
+}
+
+#url_sources_box .url_src_param_entry{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-top: 6px;
+	padding: 3px 0px 3px 3px;
+}
+
+#url_sources_box .url_src_param_entry:hover{
+	background: rgba(255, 255, 255, 0.1);
+}
+
+#url_sources_box .prm_label{
+	width: 150px;
+}
+
+#url_sources_box .url_src_param_entry.data_mapping{
+	align-items: flex-start;
+}
+
+#url_sources_box .prm_val{
+	font-family: 'ibm_plex';
+}
+
+#url_sources_box input.prm_val{
+	width: 600px;
+}
+
+#url_sources_box textarea.prm_val{
+	width: 500px;
+	height: 100px;
+}
+
+
+/*
+!~~ #table_list
+*/
+
+#table_ctrl_header{
+	font-size: 30px;
+	margin-left: 50px;
+}
+
+#table_list{
+	display: flex;
+	flex-direction: column;
+	margin-left: 50px;
+	padding: 10px;
+
+	min-width: 500px;
+}
+
+#table_list .table_ctrl{
+	display: flex;
+	flex-direction: column;
+
+	margin-top: 50px;
+}
+
+#table_list .table_ctrl:hover{
+	outline-color: white;
+}
+
+
+#table_list .tctrl_header{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 25px;
+	width: 100%;
+}
+
+#table_list .table_ctrl .tctrl_row{
+	display: flex;
+	flex-direction: row;
+}
+
+
+
+/*
+!~~ #partner_list
+*/
+
+#global_partners_ctrl{
+	margin-left: 25px;
+}
+
+#partner_list{
+	display: flex;
+	flex-direction: column;
+	margin-left: 25px;
+}
+
+#partner_list .partner_ctrl{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-top: 20px;
+}
+
+
+#partner_list .partner_img{
+	height: 100px;
+	width: 750px;
+
+	object-position: bottom;
+	object-fit: cover;
+}
+
+tab[tabid="other"]{
+	width: 100vw;
+	justify-content: center;
+	align-items: center;
+}
+
+#ctrl_other{
+	display: flex;
+	flex-direction: column;
+}
+
+#interview{
+	width: 700px;
+}
+
+#interview_header{
+	font-size: 30px;
+}
+
+#guest_list{
+	height: 150px;
+	margin-top: 10px;
+}

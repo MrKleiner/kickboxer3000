@@ -1,0 +1,135 @@
+<triathlon-standard>
+	<tabsys>
+		<sys-tab match_id="cfg" default>Config</sys-tab>
+		<sys-tab match_id="table_ctrl">Table Control</sys-tab>
+		<sys-tab match_id="partner_ctrl" default>Partners</sys-tab>
+		<sys-tab match_id="other" default>Other</sys-tab>
+	</tabsys>
+
+	<tab tabid="cfg" tabname="Config" default>
+		<!--  
+		<string-formatting>
+			<f-param display_name="Coach" fpid="coach" translit_default="0" format_default="all_upper"></f-param>
+		</string-formatting>
+		-->
+
+		<div regular_box id="main_cfg_box">
+			<div class="global_prm partners">
+				<div class="global_prm_label">Partners</div>
+				<input
+				 type="text"
+				 class="global_prm_val"
+				 id="partner_list_dir"
+				 placeholder="Absolute path to a directory with partnership overlays"
+				 onchange="window.kbmodules.triathlon_standard.save_global_params()"
+				>
+				<sysbtn onclick="window.kbmodules.triathlon_standard.partnerships_ctrl.resync();">Resync</sysbtn>
+			</div>
+		</div>
+
+		<div regular_box id="url_sources_box">
+			<sysbtn
+			 btname="add_data_src_btn"
+			 id="add_data_src_btn"
+			 onclick="window.kbmodules.triathlon_standard.add_data_source(null)"
+			 >Add Data Source</sysbtn>
+		</div>
+	</tab>
+
+
+	<tab tabid="table_ctrl" tabname="Table Control" flex_col>
+		<div flex_col col_center_vh id="table_ctrl_header">
+			<div>Per every datasource</div>
+			<div>a box with buttons will appear</div>
+		</div>
+		<div subtle_box id="table_list"></div>
+	</tab>
+
+	<tab tabid="partner_ctrl" tabname="Partners">
+		<div id="global_partners_ctrl" flex_row regular_box>
+			<vmixbtn seq_info="vis_show" onclick="window.kbmodules.triathlon_standard.partners_sequence(true)">Show all in a sequence</vmixbtn>
+			<vmixbtn seq_info="vis_hide" onclick="window.kbmodules.triathlon_standard.partners_sequence(false)">Hide and stop</vmixbtn>
+		</div>
+		<div id="partner_list"></div>
+	</tab>
+
+
+	<tab tabid="other" tabname="Other">
+		<div id="ctrl_other">
+			<div regular_box flex_col id="interview">
+				<div flex_row row_center_vh id="interview_header">Interview</div>
+				<input
+				 id="interview_name_input"
+				 type="text"
+				 placeholder="Text displayed in the title. No post-formatting applied"
+				 onchange="window.kbmodules.triathlon_standard.save_global_params()"
+				>
+				<textarea
+				 onchange="window.kbmodules.triathlon_standard.save_global_params()"
+				 id="guest_list"
+				 placeholder="Write here any text. It's a little notepad"
+				></textarea>
+				<div flex_row row_center_vh>
+					<vmixbtn seq_info="update+vis_show" onclick="window.kbmodules.triathlon_standard.interview(true)">Show</vmixbtn>
+					<vmixbtn seq_info="vis_hide" onclick="window.kbmodules.triathlon_standard.interview(false)">Hide</vmixbtn>
+				</div>
+			</div>
+		</div>
+	</tab>
+
+
+
+
+
+
+
+	<template id="data_src_entry_template">
+		<div class="data_src_entry">
+			<div class="url_src_param_entry">
+				<div class="prm_label">Data URL</div>
+				<input type="text" class="prm_val data_url" placeholder="Web URL (currently JSON support only)">
+			</div>
+			<div class="url_src_param_entry">
+				<div class="prm_label">VMIX Title Name</div>
+				<input type="text" class="prm_val vmix_title_name" placeholder="VMIX title name, such as table.gtzip. Default to 'table_main.gtzip'">
+			</div>
+			<div class="url_src_param_entry">
+				<div class="prm_label">Description</div>
+				<input type="text" class="prm_val descr" placeholder="Optional, decorative description">
+			</div>
+			<div class="url_src_param_entry">
+				<div class="prm_label">Table Row Count</div>
+				<input type="text" class="prm_val trow_count" placeholder="Number">
+			</div>
+			<div class="url_src_param_entry data_mapping">
+				<div class="prm_label">Data Mapping</div>
+				<textarea type="text" class="prm_val data_map"></textarea>
+			</div>
+		</div>
+	</template>
+
+	<template id="table_ctrl_gui_template">
+		<div regular_box class="table_ctrl">
+			<div class="tctrl_header"></div>
+			<div class="tctrl_row" row_center_vh>
+				<vmixbtn seq_info="update" class="tctrl_btn upd_table_btn">Update</vmixbtn>
+				<vmixbtn seq_info="vis_show" class="tctrl_btn show_table_btn">Show</vmixbtn>
+				<vmixbtn seq_info="vis_hide" class="tctrl_btn hide_table_btn">Hide</vmixbtn>
+			</div>
+		</div>
+	</template>
+
+	<template id="partner_template">
+		<div subtle_box class="partner_ctrl">
+			<img class="partner_img" src="./assets/red_cross.png">
+			<vmixbtn class="partner_apply" seq_info="update">Apply</vmixbtn>
+			<vmixbtn class="partner_show" seq_info="vis_show">Show</vmixbtn>
+			<vmixbtn class="partner_hide" seq_info="vis_hide">Hide</vmixbtn>
+		</div>
+	</template>
+
+
+</triathlon-standard>
+
+
+
