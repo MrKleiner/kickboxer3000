@@ -119,26 +119,10 @@ $this.KBPlayer = class{
 			$this.update_personal_title(self);
 		}
 
-		{
-			self.to_dict = function(){
-				return self._to_dict(self);
-			}
-			self.apply_data = function(data){
-				return self._apply_data(self, data);
-			}
-			self.update_schema = function(){
-				return self._update_schema(self);
-			}
-			self.side = function(){
-				return self._side(self);
-			}
-			self.mark_active = function(){
-				return self._mark_active(self);
-			}
-		}
+		ksys.util.cls_pwnage.remap(self);
 	}
 
-	_to_dict(self){
+	to_dict(self){
 		const data = {
 			'name': self.name,
 			'surname': self.surname,
@@ -151,7 +135,7 @@ $this.KBPlayer = class{
 		return data;
 	}
 
-	_apply_data(self, data){
+	apply_data(self, data){
 		self.name = data.name;
 		self.surname = data.surname;
 
@@ -170,7 +154,7 @@ $this.KBPlayer = class{
 		}
 	}
 
-	_update_schema(self){
+	update_schema(self){
 		// Add data entries according to schema
 		for (const schema_data of $this.player_data_schema){
 			const [label, suffix, data_id, is_image, is_shared] = schema_data;
@@ -196,11 +180,11 @@ $this.KBPlayer = class{
 		}
 	}
 
-	_side(self){
+	side(self){
 		return (self.pair.players['red'] == self) ? 'red' : 'blu'
 	}
 
-	_mark_active(self){
+	mark_active(self){
 		ksys.context.module.prm('active_player', self.side());
 		$('#player_list .player_pair .kb_player').removeClass('active_player');
 		self.dom.elem.classList.add('active_player');
@@ -211,6 +195,7 @@ $this.KBPlayer = class{
 $this.KBPlayerPair = class{
 	constructor(){
 		const self = this;
+		ksys.util.cls_pwnage.remap(self);
 
 		self.dom = ksys.tplates.index_tplate(
 			'#kb_player_pair_template',
@@ -288,34 +273,9 @@ $this.KBPlayerPair = class{
 			$this.update_vs_title(self);
 		}
 
-
-		{
-			self.to_dict = function(){
-				return self._to_dict(self);
-			}
-			self.move_up = function(){
-				return self._move_up(self);
-			}
-			self.move_down = function(){
-				return self._move_down(self);
-			}
-			self.flip_sides = function(){
-				return self._flip_sides(self);
-			}
-			self.flip_photos = function(){
-				return self._flip_photos(self);
-			}
-			self.flip_colors = function(){
-				return self._flip_colors(self);
-			}
-			self.mark_active = function(){
-				return self._mark_active(self);
-			}
-		}
-
 	}
 
-	_to_dict(self){
+	to_dict(self){
 		return {
 			'red': self.players.red.to_dict(),
 			'blu': self.players.blu.to_dict(),
@@ -324,14 +284,14 @@ $this.KBPlayerPair = class{
 	}
 
 	// important todo: account for active pairs
-	_move_up(self){
+	move_up(self){
 		const prev_sibling = self.dom.elem.previousSibling;
 		if (!prev_sibling || ['#text', 'sysbtn'].includes(prev_sibling.nodeName.lower())){return};
 		// todo: this assumes that the parent element is the list itself
 		self.dom.elem.parentElement.insertBefore(self.dom.elem, prev_sibling);
 	}
 
-	_move_down(self){
+	move_down(self){
 		const next_sibling = self.dom.elem?.nextSibling?.nextSibling;
 		if (!next_sibling || next_sibling.nodeName.lower() == '#text'){
 			self.dom.elem.parentElement.append(self.dom.elem);
@@ -341,7 +301,7 @@ $this.KBPlayerPair = class{
 	}
 
 	// important todo: account for active players
-	_flip_sides(self){
+	flip_sides(self){
 		const blu = self.players.blu;
 		const red = self.players.red;
 
@@ -352,7 +312,7 @@ $this.KBPlayerPair = class{
 	}
 
 	// important todo: account for active players
-	_flip_photos(self){
+	flip_photos(self){
 		const blu_side = self.players.blu.vs_photo_side;
 		const red_side = self.players.red.vs_photo_side;
 
@@ -360,7 +320,7 @@ $this.KBPlayerPair = class{
 		self.players.red.vs_photo_side = blu_side;
 	}
 
-	_flip_colors(self){
+	flip_colors(self){
 		const blu = self.players.blu;
 		const red = self.players.red;
 
@@ -368,7 +328,7 @@ $this.KBPlayerPair = class{
 		self.players.red = blu;
 	}
 
-	_mark_active(self){
+	mark_active(self){
 		ksys.context.module.prm('active_pair', self.index);
 		$('#player_list .player_pair').removeClass('active_pair');
 		self.dom.elem.classList.add('active_pair');

@@ -114,53 +114,54 @@ _vb.icon_pre_load = async function(){
 
 
 
-_vb.vmixbtn = class
-{
+_vb.vmixbtn = class{
 	constructor(sel=null){
-		this.elem = $(sel)
-		if (!this.elem[0]){
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
+		self.elem = $(sel)
+		if (!self.elem[0]){
 			console.error('Button doesnt exist', sel)
 			return
 		}
-		this.elem = this.elem[0];
-		this.enabled = true;
+		self.elem = self.elem[0];
+		self.enabled = true;
 	}
 
-	timeout(dur=null){
-		const _self = this;
+	timeout(self, dur=null){
 		return new Promise(function(resolve, reject){
-			_self.toggle(false)
-			_self.pause_timeout = setTimeout(function(){
-				_self.toggle(true)
+			self.toggle(false)
+			self.pause_timeout = setTimeout(function(){
+				self.toggle(true)
 				resolve(true)
 			}, (dur || 1000));
 		});
 	}
 
-	cancel_timeout(re_enable=true){
-		clearTimeout(this.pause_timeout)
+	cancel_timeout(self, re_enable=true){
+		clearTimeout(self.pause_timeout)
 		if (re_enable){
-			this.elem.vmixbtn(true)
+			self.elem.vmixbtn(true)
 		}
 	}
 
-	toggle(state=null){
+	toggle(self, state=null){
 		if (state == true){
-			this.elem.vmixbtn(true)
-			this.enabled = true;
+			self.elem.vmixbtn(true)
+			self.enabled = true;
 			return
 		}
 		if (state == false){
-			this.elem.vmixbtn(false)
-			this.enabled = false;
+			self.elem.vmixbtn(false)
+			self.enabled = false;
 			return
 		}
 
 		// toggle
-		if (this.enabled == true){
-			this.elem.vmixbtn(false)
+		if (self.enabled == true){
+			self.elem.vmixbtn(false)
 		}else{
-			this.elem.vmixbtn(true)
+			self.elem.vmixbtn(true)
 		}
 	}
 }
@@ -228,6 +229,9 @@ _vb.toggle = function(cmd){
 
 
 
-console.log('Initialized Buttons System');
+// console.log('Initialized Buttons System');
 // module.exports = new vmix_t_bottuns();
 module.exports = _vb;
+// module.exports = {
+
+// }

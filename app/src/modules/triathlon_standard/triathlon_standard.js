@@ -131,7 +131,7 @@ $this.DataSRC = class{
 		self.apply_data(input_data);
 	}
 
-	cfg_gui(self){
+	$cfg_gui(self){
 		if (self._cfg_gui){
 			return self._cfg_gui
 		}
@@ -174,7 +174,7 @@ $this.DataSRC = class{
 
 	set_field(self, field_name, val){
 		// self.cfg_gui.querySelector(self.field_dict[field_name]).value = val;
-		const field_dom = self.cfg_gui().querySelector(self.field_dict[field_name]);
+		const field_dom = self.cfg_gui.querySelector(self.field_dict[field_name]);
 		if (field_dom.getAttribute('type') == 'checkbox'){
 			field_dom.checked = val
 			return
@@ -186,7 +186,7 @@ $this.DataSRC = class{
 	}
 
 	get_field(self, field_name){
-		const field_dom = self.cfg_gui().querySelector(self.field_dict[field_name]);
+		const field_dom = self.cfg_gui.querySelector(self.field_dict[field_name]);
 		if (field_dom.getAttribute('type') == 'checkbox'){
 			return field_dom.checked
 		}
@@ -205,8 +205,8 @@ $this.DataSRC = class{
 	}
 
 	kill(self){
-		self.cfg_gui().remove();
-		self.linked_table.ctrl_gui().elem.remove();
+		self.cfg_gui.remove();
+		self.linked_table.ctrl_gui.elem.remove();
 		$this.data_sources.delete(self);
 	}
 
@@ -219,14 +219,14 @@ $this.DataSRC = class{
 	}
 
 	redraw(self){
-		if (!$this.data_src_dom_list.contains(self.cfg_gui())){
-			$this.data_src_dom_list.append(self.cfg_gui());
+		if (!$this.data_src_dom_list.contains(self.cfg_gui)){
+			$this.data_src_dom_list.append(self.cfg_gui);
 		}
-		if (!$this.table_list_dom.contains(self.linked_table.ctrl_gui().elem)){
-			$this.table_list_dom.append(self.linked_table.ctrl_gui().elem);
+		if (!$this.table_list_dom.contains(self.linked_table.ctrl_gui.elem)){
+			$this.table_list_dom.append(self.linked_table.ctrl_gui.elem);
 		}
 
-		self.linked_table.ctrl_gui().index.header.innerText = self.get_field('descr') || 'Table';
+		self.linked_table.ctrl_gui.index.header.innerText = self.get_field('descr') || 'Table';
 	}
 }
 
@@ -260,7 +260,7 @@ $this.BasicTable = class{
 		})
 	}
 
-	ctrl_gui(self){
+	$ctrl_gui(self){
 		if (self._ctrl_gui){
 			return self._ctrl_gui
 		}
@@ -422,6 +422,14 @@ $this.BasicTable = class{
 			await self.vmix_title.set_text(
 				vmix_title_key,
 				ksys.util.str_ops.format(text, text_case, translit)
+			);
+		}
+
+		if (cache_updated){
+			ksys.info_msg.send_msg(
+				`Updated title`,
+				'ok',
+				2000
 			);
 		}
 	}

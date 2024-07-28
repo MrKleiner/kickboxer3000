@@ -31,16 +31,19 @@ const describeArc = function(x, y, radius, startAngle, endAngle){
 
 const magic_circle = class{
 	constructor(){
-		this.dom = $(`
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
+		self.dom = $(`
 			<svg viewBox="-100 -100 200 200">
 				<path fill="none" stroke="white" stroke-width="190px" />
 			</svg>
 		`)[0];
 
-		this.tgt_path = this.dom.querySelector('path');
+		self.tgt_path = self.dom.querySelector('path');
 	}
 
-	async launch_anim(dur=500){
+	async launch_anim(self, dur=500){
 		const step_angle = 1;
 		const step_count = 360 / step_angle;
 		// const step_dur = step_count / dur;
@@ -51,7 +54,7 @@ const magic_circle = class{
 		while (true){
 			await ksys.util.sleep(step_dur)
 			current_angle += step_angle;
-			this.tgt_path.setAttribute('d', describeArc(0, 0, 100-10, 0, current_angle.clamp(0, 360)))
+			self.tgt_path.setAttribute('d', describeArc(0, 0, 100-10, 0, current_angle.clamp(0, 360)))
 
 			if (current_angle >= 359){
 				break
@@ -70,14 +73,14 @@ const info_msg = class{
 	constructor(text, msg_type='warn', dur=1000){
 		const self = this;
 
-		this.pie = new magic_circle()
-		this.msg_body = $(`<div ${msg_type} class="kbmsg">${text}</div>`)[0]
-		this.msg_body.prepend(this.pie.dom)
-		$('hintsys-bar #hintsys_bar_msgs').prepend(this.msg_body)
+		self.pie = new magic_circle()
+		self.msg_body = $(`<div ${msg_type} class="kbmsg">${text}</div>`)[0]
+		self.msg_body.prepend(self.pie.dom)
+		$('hintsys-bar #hintsys_bar_msgs').prepend(self.msg_body)
 
-		this.pie.launch_anim(dur)
+		self.pie.launch_anim(dur)
 		.then((value) => {
-			this.msg_body.remove()
+			self.msg_body.remove()
 		});
 	}
 }
