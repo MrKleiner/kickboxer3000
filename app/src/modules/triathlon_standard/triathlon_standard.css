@@ -1,7 +1,7 @@
 
 
 
-tab[tabid="cfg"], tab[tabid="partner_ctrl"], tab[tabid="other"]{
+tab[tabid="cfg"], tab[tabid="partner_ctrl"], tab[tabid="other"], tab[tabid="table_ctrl"]{
 	display: flex;
 	flex-direction: column;
 
