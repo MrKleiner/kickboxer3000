@@ -1135,6 +1135,7 @@ const KbAtTicker = class{
 
 				// Supply this machine's local IPV4 address to the AT-AT
 				// (true = as integers, not string)
+				// important todo: why is this broken
 				ksys.context.global.cache.atat_return_addr || ksys.util.get_local_ipv4_addr(true),
 				// [127, 0, 0, 1],
 
@@ -1208,7 +1209,7 @@ const KbAtTicker = class{
 
 				// Supply this machine's local IPV4 address to the AT-AT
 				// (true = as integers, not strings)
-				ksys.util.get_local_ipv4_addr(true),
+				ksys.context.global.cache.atat_return_addr || ksys.util.get_local_ipv4_addr(true),
 				// [127, 0, 0, 1],
 
 				// Supply the port the UDP receiver is listening on
