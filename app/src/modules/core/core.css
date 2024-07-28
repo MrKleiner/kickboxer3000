@@ -41,8 +41,14 @@
 	background-color: #4578B8;
 }
 
-*:not(input, textarea, [selectable], [selectable_recursive], [selectable_recursive] *, [contenteditable])
-{
+*:not(
+	input,
+	textarea,
+	[selectable],
+	[selectable_recursive],
+	[selectable_recursive] *,
+	[contenteditable]
+){
 	user-select: none;
 }
 
@@ -71,8 +77,11 @@ body
 }
 
 
-input:not(input[type="file"], input[type="checkbox"], input[type="radio"])
-{
+textarea, input:not(
+	input[type="file"],
+	input[type="checkbox"],
+	input[type="radio"]
+){
 	all: unset;
 	color: white;
 	background: #1D1D22;
@@ -81,9 +90,13 @@ input:not(input[type="file"], input[type="checkbox"], input[type="radio"])
 	font-size: 13px;
 }
 
-input:focus
+input:focus, textarea:focus 
 {
 	outline-color: #468058 !important;
+}
+
+textarea{
+	resize: auto;
 }
 
 input[invalid]
@@ -145,6 +158,9 @@ img:not([candrag]){
                Logs/Messages
 =========================================
 */
+
+
+
 #logs_place
 {
 	/*z-index: 2147483640 !important;*/
@@ -1069,6 +1085,21 @@ tab
 }
 
 
+@keyframes hsb-blink-animation {
+	to {
+		box-shadow: 0px 0px 28px 14px #FFDE00;
+		/*filter: drop-shadow(0px 0px 15px #ff0000);*/
+	}
+}
+
+~~[warn]{
+	/*filter: drop-shadow(0px 0px 5px #ff0000);*/
+	/*box-shadow: 0px 0px 32px 8px #ff0000;*/
+	/*box-shadow: 0px 0px 28px 14px rgba(255, 255, 255, 0);*/
+	/*background: red;*/
+	z-index: 9999999 !important;
+	animation: hsb-blink-animation 0.1s steps(2, start) infinite;
+}
 
 
 
