@@ -20,9 +20,27 @@ Element.prototype.vmixbtn = function(state=false) {
 // todo: there are quite a few global document listeners at this point
 
 
+
+const mod_keys = {
+	'alt': 'altKey',
+	'ctrl': 'ctrlKey',
+}
+
 document.addEventListener('click', evt => {
 	const tgt_btn = evt.target.closest('sysbtn, vmixbtn');
 	if (!tgt_btn){return};
+
+	const tgt_mod_key = tgt_btn.getAttribute('mod_key');
+	if (tgt_mod_key){
+		if (!evt[mod_keys[tgt_mod_key.lower().strip()]]){
+			ksys.info_msg.send_msg(
+				`Hold ${tgt_mod_key.upper().strip()}`,
+				'warn',
+				3000
+			);
+			return
+		}
+	}
 
 	const timeout_attr = tgt_btn.getAttribute('click_timeout');
 	if (!timeout_attr){return};
