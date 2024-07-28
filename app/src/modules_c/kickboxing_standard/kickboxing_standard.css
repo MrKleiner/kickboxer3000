@@ -47,7 +47,7 @@ tab[tabid="config"]{
 
 
 #schema_cfg{
-	width: 500px;
+	width: 700px;
 	margin-left: 20px;
 	margin-top: 20px;
 }
@@ -104,7 +104,9 @@ tab[tabid="config"]{
 	width: 45px;
 }
 
-#schema_cfg_list .schema_list_entry .is_image{
+#schema_cfg_list .schema_list_entry .is_image,
+#schema_cfg_list .schema_list_entry .is_shared
+{
 	height: 19px;
 	width: 19px;
 	margin-left: 15px !important;
@@ -191,6 +193,27 @@ tab[tabid="ctrl"] vmixbtn{
 #player_pool_ctrl sysbtn{
 	margin-top: 10px;
 }
+
+#player_pool_ctrl_bind_btns{
+	margin-top: 20px;
+	display: flex;
+	width: 100%;
+	justify-content: space-around;
+	align-items: center;
+}
+
+#player_pool_ctrl_bind_btns sysbtn{
+	margin-top: 0px;
+	width: 40%;
+}
+
+#player_pool_ctrl_bind_btns sysbtn[btname="bind_photo_ids"]{
+	color: #CBFFD2;
+}
+#player_pool_ctrl_bind_btns sysbtn[btname="unbind_photo_ids"]{
+	color: #FFCFCB;
+}
+
 
 #player_pool{
 	padding: 10px;

@@ -17,11 +17,11 @@
 				<sysbtn btname="save_res_path" onclick="window.kbmodules.kickboxing_standard.save_res_path()">Save Path</sysbtn>
 			</div>
 
-			<div param_row res_loc_row>
+<!-- 			<div param_row res_loc_row>
 				<div row_label>Resources Location</div>
 				<input type="text" res_path placeholder="Absolute path to a folder. Quotation marks allowed">
 				<sysbtn btname="save_res_path" onclick="window.kbmodules.kickboxing_standard.save_res_path()">Save Path</sysbtn>
-			</div>
+			</div> -->
 		</div>
 
 		<div
@@ -115,8 +115,42 @@
 			<div id="player_pool" subtle_box>
 				<div id="player_pool_ctrl">
 					<sysbtn onclick="window.kbmodules.kickboxing_standard.toggle_edit_mode()">Toggle Edit Mode</sysbtn>
-					<sysbtn edit_visible btname="flip_pair_colors" onclick="window.kbmodules.kickboxing_standard.flip_colors()">Flip Colours</sysbtn>
-					<sysbtn edit_visible btname="flip_pair_sides" onclick="window.kbmodules.kickboxing_standard.flip_sides()">Flip Sides</sysbtn>
+					<sysbtn
+						edit_visible
+						btname="flip_pair_colors"
+						kbhint="This does ABSOLUTELY NOTHING besides flipping colours that you see in the controller"
+						onclick="window.kbmodules.kickboxing_standard.flip_colors()">
+						Flip Colours (COSMETIC!)
+					</sysbtn>
+					<sysbtn
+						edit_visible
+						btname="flip_pair_sides"
+						kbhint="This will flip all the pairs, including photos"
+						onclick="window.kbmodules.kickboxing_standard.flip_sides()">
+						Flip Sides
+					</sysbtn>
+					<sysbtn
+						edit_visible
+						btname="flip_pair_photos"
+						kbhint="This will ONLY flip photos in the pairs"
+						onclick="window.kbmodules.kickboxing_standard.flip_photos()">
+						Flip Photos
+					</sysbtn>
+					<div id="player_pool_ctrl_bind_btns">
+						<sysbtn
+							edit_visible
+							btname="bind_photo_ids"
+							kbhint="Long story short: This ABSOLUTELY HAS TO BE FUCKING clicked RIGHT AFTER the initial data input (misuse WILL lead to fatal datastructure corruption)"
+							onclick="window.kbmodules.kickboxing_standard.bind_photo_ids()">
+							Bind Photo Indexes
+						</sysbtn>
+						<sysbtn
+							edit_visible
+							btname="unbind_photo_ids"
+							onclick="window.kbmodules.kickboxing_standard.unbind_photo_ids()">
+							Unbind Photo Indexes
+						</sysbtn>
+					</div>
 				</div>
 
 				<div id="player_list" subtle_box class="red_vs_blu">
@@ -133,11 +167,19 @@
 	<template id="kb_player_template">
 		<div class="kb_player">
 			<div edit_hidden class="vis_display"></div>
+			<div edit_visible class="player_data_shared"></div>
 			<div edit_visible class="player_data"></div>
 		</div>
 	</template>
 
 	<template id="kb_player_data_entry_template">
+		<div class="data_entry">
+			<div class="data_entry_label"></div>
+			<input type="text" class="data_entry_input" placeholder="Text">
+		</div>
+	</template>
+
+	<template id="kb_player_shared_data_entry_template">
 		<div class="data_entry">
 			<div class="data_entry_label"></div>
 			<input type="text" class="data_entry_input" placeholder="Text">
@@ -157,6 +199,9 @@
 					<sysbtn class="flip_players">
 						<img src="./assets/swap_icon.svg">
 					</sysbtn>
+					<sysbtn class="flip_photos">
+						<img src="./assets/t-shirt.png">
+					</sysbtn>
 					<sysbtn class="del_pair" kbhint="Hold Alt">
 						<img src="./assets/trash.svg">
 					</sysbtn>
@@ -172,10 +217,15 @@
 			<input class="schema_data_input field_label" type="text" placeholder="Field Label">
 			<input class="schema_data_input suffix" type="text" placeholder="Suffix">
 			<input class="schema_data_input idname" type="text" placeholder="ID">
-			
+
 			<label flex_row row_center_v>
 				<input class="schema_data_input is_image" type="checkbox">
 				Is Image
+			</label>
+
+			<label flex_row row_center_v>
+				<input class="schema_data_input is_shared" type="checkbox">
+				Shared
 			</label>
 		</div>
 	</template>

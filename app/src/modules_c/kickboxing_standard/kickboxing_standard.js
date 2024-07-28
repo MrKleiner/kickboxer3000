@@ -68,6 +68,8 @@ window.kbmodules.kickboxing_standard.KBPlayer = class{
 			}
 		);
 
+		self.vs_photo_side = 'l';
+
 		self.attr_list = {};
 
 		self.name = '';
@@ -143,6 +145,7 @@ window.kbmodules.kickboxing_standard.KBPlayer = class{
 		const data = {
 			'name': self.name,
 			'surname': self.surname,
+			'vs_photo_side': self.vs_photo_side,
 		};
 		for (const data_id in self.attr_list){
 			data[data_id] = self.attr_list[data_id].value;
@@ -154,6 +157,8 @@ window.kbmodules.kickboxing_standard.KBPlayer = class{
 	_apply_data(self, data){
 		self.name = data.name;
 		self.surname = data.surname;
+
+		self.vs_photo_side = data.vs_photo_side || 'l';
 
 		self.attr_list.name.value = data.name;
 		self.attr_list.surname.value = data.surname;
@@ -171,6 +176,8 @@ window.kbmodules.kickboxing_standard.KBPlayer = class{
 	_update_schema(self){
 		// Add data entries according to schema
 		for (const schema_data of window.kbmodules.kickboxing_standard.player_data_schema){
+			const [label, suffix, data_id, is_image, is_shared] = schema_data;
+
 			const attr_dom = ksys.tplates.index_tplate(
 				'#kb_player_data_entry_template',
 				{
@@ -178,8 +185,6 @@ window.kbmodules.kickboxing_standard.KBPlayer = class{
 					'input':  '.data_entry_input',
 				}
 			);
-
-			const [label, suffix, data_id] = schema_data;
 
 			if (data_id in self.attr_list){continue};
 
@@ -217,6 +222,7 @@ window.kbmodules.kickboxing_standard.KBPlayerPair = class{
 
 				'pair_num':      '.pair_num',
 				'flip_players':  '.flip_players',
+				'flip_photos':   '.flip_photos',
 				'del_pair':      '.del_pair',
 
 				'move_up':       '.move_pair_up',
@@ -234,6 +240,12 @@ window.kbmodules.kickboxing_standard.KBPlayerPair = class{
 			'red': new window.kbmodules.kickboxing_standard.KBPlayer(self),
 			'blu': new window.kbmodules.kickboxing_standard.KBPlayer(self),
 		}
+
+		// todo: this is basically a hack
+		self.players.red.vs_photo_side = 'l';
+		self.players.blu.vs_photo_side = 'r';
+
+		self.dom.index.pair_num.textContent = self.index;
 
 		self.dom.index.pair_players.append(
 			self.players.red.dom.elem
@@ -268,6 +280,10 @@ window.kbmodules.kickboxing_standard.KBPlayerPair = class{
 			self.flip_sides();
 			window.kbmodules.kickboxing_standard.save_pairs();
 		}
+		self.dom.index.flip_photos.onclick = function(evt){
+			self.flip_photos();
+			window.kbmodules.kickboxing_standard.save_pairs();
+		}
 
 		self.dom.index.header.onclick = function(evt){
 			if (window.kbmodules.kickboxing_standard.edit_mode_active){return};
@@ -289,6 +305,9 @@ window.kbmodules.kickboxing_standard.KBPlayerPair = class{
 			self.flip_sides = function(){
 				return self._flip_sides(self);
 			}
+			self.flip_photos = function(){
+				return self._flip_photos(self);
+			}
 			self.flip_colors = function(){
 				return self._flip_colors(self);
 			}
@@ -303,6 +322,7 @@ window.kbmodules.kickboxing_standard.KBPlayerPair = class{
 		return {
 			'red': self.players.red.to_dict(),
 			'blu': self.players.blu.to_dict(),
+			'index': self.index,
 		}
 	}
 
@@ -332,6 +352,15 @@ window.kbmodules.kickboxing_standard.KBPlayerPair = class{
 
 		self.players.blu = red;
 		self.players.red = blu;
+	}
+
+	// important todo: account for active players
+	_flip_photos(self){
+		const blu_side = self.players.blu.vs_photo_side;
+		const red_side = self.players.red.vs_photo_side;
+
+		self.players.blu.vs_photo_side = red_side;
+		self.players.red.vs_photo_side = blu_side;
 	}
 
 	_flip_colors(self){
@@ -379,6 +408,14 @@ window.kbmodules.kickboxing_standard.flip_sides = function(){
 	for (const pair of window.kbmodules.kickboxing_standard.pair_list.values()){
 		pair.flip_sides();
 	}
+	window.kbmodules.kickboxing_standard.save_pairs();
+}
+
+window.kbmodules.kickboxing_standard.flip_photos = function(){
+	for (const pair of window.kbmodules.kickboxing_standard.pair_list.values()){
+		pair.flip_photos();
+	}
+	window.kbmodules.kickboxing_standard.save_pairs();
 }
 
 window.kbmodules.kickboxing_standard.flip_colors = function(){
@@ -406,6 +443,8 @@ window.kbmodules.kickboxing_standard.flip_colors = function(){
 
 
 window.kbmodules.kickboxing_standard.update_pair_index = function(){
+	if (ksys.context.module.cache.pair_ids_frozen){return};
+
 	let pair_index = 0;
 	for (const dom of document.querySelectorAll('#player_list > .player_pair')){
 		const pair = window.kbmodules.kickboxing_standard.pair_list.get(dom);
@@ -430,7 +469,9 @@ window.kbmodules.kickboxing_standard.set_color_order = function(order){
 window.kbmodules.kickboxing_standard.save_schema = function(event){
 	ksys.db.module.write(
 		'player_data_schema.kbdata',
-		JSON.stringify(Array.from(window.kbmodules.kickboxing_standard.player_data_schema))
+		JSON.stringify(
+			Array.from(window.kbmodules.kickboxing_standard.player_data_schema)
+		)
 	)
 
 	window.kbmodules.kickboxing_standard.fwd_update_schema();
@@ -459,7 +500,7 @@ window.kbmodules.kickboxing_standard.add_schema_entry = function(data){
 	print('Kys pls', data)
 
 	// todo: this || might backfire horrendously
-	const schema_data = data || ['', '', '', false];
+	const schema_data = data || ['', '', '', false, false];
 
 	const schema_dom = ksys.tplates.index_tplate(
 		'#schema_list_entry_template',
@@ -467,6 +508,7 @@ window.kbmodules.kickboxing_standard.add_schema_entry = function(data){
 			'field_label':  '.field_label',
 			'suffix':       '.suffix',
 			'is_image':     '.is_image',
+			'is_shared':    '.is_shared',
 			'idname':       '.idname',
 
 			// 'save':         '.save_schema',
@@ -477,6 +519,7 @@ window.kbmodules.kickboxing_standard.add_schema_entry = function(data){
 	schema_dom.index.suffix.value =      schema_data[1];
 	schema_dom.index.idname.value =      schema_data[2];
 	schema_dom.index.is_image.checked =  schema_data[3];
+	schema_dom.index.is_shared.checked = schema_data[4];
 
 	schema_dom.index.field_label.onchange = function(){
 		schema_data[0] = schema_dom.index.field_label.value.trim();
@@ -489,6 +532,10 @@ window.kbmodules.kickboxing_standard.add_schema_entry = function(data){
 	}
 	schema_dom.index.is_image.onchange = function(){
 		schema_data[3] = schema_dom.index.is_image.checked;
+	}
+	schema_dom.index.is_shared.onchange = function(){
+		print('SHARED CHANGED?')
+		schema_data[4] = schema_dom.index.is_shared.checked;
 	}
 
 	schema_dom.elem.oncontextmenu = function(evt){
@@ -544,12 +591,14 @@ window.kbmodules.kickboxing_standard.load_pairs = function(){
 	window.kbmodules.kickboxing_standard.set_color_order(pair_list.color_order)
 
 	for (const pair_data of pair_list.pairs){
-		const pair = window.kbmodules.kickboxing_standard.add_pair();
+		const pair = window.kbmodules.kickboxing_standard.add_pair(true);
 
 		// todo: Add "apply" data to the pair class?
 		print('Applying data', )
 		pair.players.red.apply_data(pair_data.red);
 		pair.players.blu.apply_data(pair_data.blu);
+		pair.index = pair_data.index;
+		pair.dom.index.pair_num.textContent = pair_data.index;
 	}
 	window.kbmodules.kickboxing_standard.update_pair_index();
 
@@ -562,7 +611,15 @@ window.kbmodules.kickboxing_standard.load_pairs = function(){
 }
 
 
-window.kbmodules.kickboxing_standard.add_pair = function(){
+window.kbmodules.kickboxing_standard.add_pair = function(force_add=false){
+	if (ksys.context.module.cache.pair_ids_frozen && !force_add){
+		ksys.info_msg.send_msg(
+			'Cannot add pair: Photo indexes are bound. Unbind them first',
+			'warn',
+			6000
+		);
+		return
+	}
 	const player = new window.kbmodules.kickboxing_standard.KBPlayerPair();
 	$('#player_list').append(player.dom.elem);
 	window.kbmodules.kickboxing_standard.update_pair_index();
@@ -589,7 +646,18 @@ window.kbmodules.kickboxing_standard.update_vs_title = async function(tgt_pair){
 	for (const schema_data of window.kbmodules.kickboxing_standard.player_data_schema){
 		// Set label
 		label_idx += 1;
-		const [label, suffix, data_id, is_image] = schema_data;
+		const [label, suffix, data_id, is_image, is_shared] = schema_data;
+
+		// todo: YET ANOTHER BOOTLEG HACK...
+		if (is_shared){
+			await window.kbmodules.kickboxing_standard.titles.vs.set_text(
+				`shared_attr_val`,
+				`${label} ${tgt_pair.players['red'].attr_list[data_id].value.trim()} ${suffix}`,
+			)
+			label_idx -= 1;
+			continue
+		}
+
 		await window.kbmodules.kickboxing_standard.titles.vs.set_text(
 			`ifb_title_lb_${label_idx}`,
 			label,
@@ -598,6 +666,21 @@ window.kbmodules.kickboxing_standard.update_vs_title = async function(tgt_pair){
 		// Set data
 		for (const side of [['l', 'red'], ['r', 'blu']]){
 			const [side_vmix, side_kb] = side;
+
+			if (is_image && data_id == 'flag'){
+				const tgt_player = tgt_pair.players[side_kb];
+
+				// TODO: BAD TEMP HACK
+				await window.kbmodules.kickboxing_standard.titles.vs.set_img_src(
+					`country_${side_vmix}`,
+					str(
+						Path(ksys.context.module.cache.resource_path)
+						.join(tgt_player.attr_list[data_id].value.trim())
+					)
+					.replaceAll('/', '\\')
+				)
+				continue
+			}
 
 			// Set name/surname
 			await window.kbmodules.kickboxing_standard.titles.vs.set_text(
@@ -610,18 +693,53 @@ window.kbmodules.kickboxing_standard.update_vs_title = async function(tgt_pair){
 			// Set other data
 			await window.kbmodules.kickboxing_standard.titles.vs.set_text(
 				`ifb_text_${side_vmix}_${label_idx}`,
-				frmt.format(tgt_pair.players[side_kb].attr_list[data_id].value.trim()) + suffix
+				frmt.format(tgt_pair.players[side_kb].attr_list[data_id].value.trim()) + ' ' + suffix
 			)
 		}
 	}
 
 	// Set vs image
-	window.kbmodules.kickboxing_standard.titles.vs.set_img_src(
-		'Image1',
-		str((Path(ksys.context.module.cache.resource_path))
-		.join('pair_pool', `${tgt_pair.index}.png`))
-		.replaceAll('/', '\\')
-	)
+	// window.kbmodules.kickboxing_standard.titles.vs.set_img_src(
+	// 	'Image1',
+	// 	str((Path(ksys.context.module.cache.resource_path))
+	// 	.join('pair_pool', `${tgt_pair.index}.png`))
+	// 	.replaceAll('/', '\\')
+	// )
+
+	for (const side of [['l', 'red'], ['r', 'blu']]){
+		const [side_vmix, side_kb] = side;
+		const tgt_player = tgt_pair.players[side_kb];
+
+		await window.kbmodules.kickboxing_standard.titles.vs.set_img_src(
+			`player_photo_${side_vmix}`,
+			str(
+				Path(ksys.context.module.cache.resource_path)
+				.join('pair_pool', `${tgt_pair.index}_${tgt_player.vs_photo_side}.png`)
+			)
+			.replaceAll('/', '\\')
+		)
+	}
+
+	/*
+	for (const side of ['l', 'r']){
+		for (const player_col in tgt_pair.players){
+			const tgt_player = tgt_pair.players[player_col];
+			if (tgt_player.vs_photo_side == side){
+				print('kys????', tgt_player, side)
+				await window.kbmodules.kickboxing_standard.titles.vs.set_img_src(
+					`player_photo_${side}`,
+					str(
+						Path(ksys.context.module.cache.resource_path)
+						.join('pair_pool', `${tgt_pair.index}_${side}.png`)
+					)
+					.replaceAll('/', '\\')
+				)
+			}
+		}
+	}
+	*/
+
+
 }
 
 window.kbmodules.kickboxing_standard.update_personal_title = async function(tgt_player){
@@ -651,11 +769,24 @@ window.kbmodules.kickboxing_standard.update_personal_title = async function(tgt_
 		label_idx += 1;
 		const [label, suffix, data_id, is_image] = schema_data;
 
-		await title.set_text(`attr_${label_idx}_label`, label)
-		await title.set_text(
-			`attr_${label_idx}_val`,
-			tgt_player.attr_list[data_id].value.trim() + suffix,
-		)
+		await title.set_text(`attr_${label_idx}_label`, label);
+
+		if (is_image){
+			await title.set_img_src(
+				`attr_${label_idx}_val`,
+				str(
+					Path(ksys.context.module.cache.resource_path)
+					.join(tgt_player.attr_list[data_id].value.trim())
+				)
+				.replaceAll('/', '\\')
+			)
+		}else{
+			await title.set_text(
+				`attr_${label_idx}_val`,
+				tgt_player.attr_list[data_id].value.trim() + suffix,
+			)
+		}
+
 	}
 
 }
@@ -890,4 +1021,10 @@ window.kbmodules.kickboxing_standard.redraw_round_switches = function(){
 
 
 
+window.kbmodules.kickboxing_standard.bind_photo_ids = function(){
+	ksys.context.module.prm('pair_ids_frozen', true);
+}
 
+window.kbmodules.kickboxing_standard.unbind_photo_ids = function(){
+	ksys.context.module.prm('pair_ids_frozen', false);
+}
