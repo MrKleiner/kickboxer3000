@@ -126,6 +126,7 @@ ops.validate = function(st, msg='empty string'){
 // 1 - Capital
 // 2 - ALL UPPER
 // 3 - all lower
+// 4 - no formatting
 ops.format = function(_txt, _to_case, transliteration=false, trim=true){
 	let txt = transliteration ? ops.translit(str(_txt).lower()) : str(_txt).lower()
 	if (trim){
