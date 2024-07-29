@@ -8,58 +8,6 @@ const valid_overlay_numbers = [
 	'1', '2', '3', '4', '5', '6', '7', '8',
 ];
 
-vtalker._talk = async function(rparams=null){
-
-	const ctx_cache = ksys.context.global.cache;
-
-	return new Promise(async function(resolve, reject){
-		const prms = new URLSearchParams(rparams || {})
-
-		var has_error = false;
-
-		// get random colour and id for this request
-		const rnd_colour = `color: hsl(${356 % window.crypto.getRandomValues(new Uint32Array(1))[0]}deg, 52%, 47%);`;
-		const rnd_id = window.crypto.getRandomValues(new Uint16Array(1))[0];
-
-		if (!tmute){log('vmix_talk', rnd_id, 'Talking to', ctx_cache.vmix_ip, ':', ctx_cache.vmix_port, rparams, prms.toString())}
-
-		const response = await fetch(`http://${ctx_cache.vmix_ip}:${ctx_cache.vmix_port}/API/?${prms.toString()}`, {
-		    'headers': {
-		        'accept': '*/*',
-		        'cache-control': 'no-cache',
-		        'pragma': 'no-cache',
-		        'Access-Control-Allow-Origin': '*',
-		        // 'Access-Control-Allow-Methods': 'DELETE, POST, GET, OPTIONS',
-		        // 'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Requested-With'
-		    },
-		    'method': 'GET',
-		    'mode': 'cors',
-		    'credentials': 'omit'
-		})
-		.catch((error) => {
-			print(log('vmix_talk', rnd_id, 'Error occured while performing a request:', error))
-			has_error = true;
-			resolve(false)
-			return
-		});
-
-		if (has_error){return}
-
-		if (!tmute){log('vmix_talk', rnd_id, 'Status:', response.status)}
-
-		if (response.status != 200){
-			resolve(false)
-			return
-		}
-
-		const reseponse_data = await response.arrayBuffer();
-		const dt = lizard.UTF8ArrToStr(new Uint8Array(reseponse_data))
-		if (!tmute){log('vmix_talk', rnd_id, 'Data:', dt)}
-		resolve(dt)
-		return
-	});
-}
-
 
 vtalker.create_url = function(rparams=null, with_scheme=false){
 	const ctx_cache = ksys.context.global.cache;
