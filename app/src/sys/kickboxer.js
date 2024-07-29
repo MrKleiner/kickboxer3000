@@ -204,7 +204,7 @@ ksys.util.eval_xml = function(xml){
 // -------------------------
 //      sleep for n ms
 // -------------------------
-ksys.util.sleep = function jsleep(amt=500, ref='a') {
+ksys.util.sleep = function(amt=500, ref='a') {
 
 	return new Promise(function(resolve, reject){
 	    // window.mein_sleep[ref] = setTimeout(function () {

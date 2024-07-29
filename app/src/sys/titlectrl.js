@@ -8,20 +8,21 @@
 // 	'margin': 3,
 // }
 
-class vmix_title
-{
+const VMIXTitle = class{
 	constructor(title_name, gt_format=true){
-		this.last_overlay = null;
-		this.timings = null;
-		this.default_overlay = null;
+		const self = ksys.util.cls_pwnage.remap(this);
 
-		this.xml_cache = null;
+		self.last_overlay = null;
+		self.timings = null;
+		self.default_overlay = null;
+
+		self.xml_cache = null;
 
 		// if the first parameter is a string - create a title with no timings
 		// if the first parameter is an object, then ignore the second one and derive everything from the provided object
 		if (typeof title_name == 'string'){
-			this.title_name = title_name;
-			this.gtformat = gt_format;
+			self.title_name = title_name;
+			self.gtformat = gt_format;
 		}
 
 		if (typeof title_name != 'string'){
@@ -40,81 +41,81 @@ class vmix_title
 				)
 			}
 
-			this.title_name =      cfg.title_name;
-			this.gtformat =        cfg.gtformat;
-			this.timings =         cfg.timings;
-			this.default_overlay = cfg.default_overlay;
+			self.title_name =      cfg.title_name;
+			self.gtformat =        cfg.gtformat;
+			self.timings =         cfg.timings;
+			self.default_overlay = cfg.default_overlay;
 
-			// print('MERGE RESULT', merge, this.gtformat)
+			// print('MERGE RESULT', merge, self.gtformat)
 		}
 	}
 
-	async set_text(field_name, newval){
+	async set_text(self, field_name, newval){
 		await vmix.talker.talk({
 			'Function': 'SetText',
 			'Value': newval,
-			'Input': this.title_name,
-			'SelectedName': field_name + (this.gtformat ? '.Text' : ''),
+			'Input': self.title_name,
+			'SelectedName': field_name + (self.gtformat ? '.Text' : ''),
 		})
 	}
 
-	async toggle_text(field_name, state=null){
+	async toggle_text(self, field_name, state=null){
 		await vmix.talker.talk({
 			'Function': (state == null) ? 'SetTextVisible' : `SetTextVisible${state ? 'On' : 'Off'}`,
-			'Input': this.title_name,
-			'SelectedName': field_name + (this.gtformat ? '.Text' : ''),
+			'Input': self.title_name,
+			'SelectedName': field_name + (self.gtformat ? '.Text' : ''),
 		})
 	}
 
 
-	async set_img_src(img_name, newsrc){
+	async set_img_src(self, img_name, newsrc){
 		await vmix.talker.talk({
 			'Function': 'SetImage',
 			'Value': str(newsrc),
-			'Input': this.title_name,
-			'SelectedName': img_name + (this.gtformat ? '.Source' : ''),
+			'Input': self.title_name,
+			'SelectedName': img_name + (self.gtformat ? '.Source' : ''),
 		})
 	}
 
-	async toggle_img(field_name, state=null){
+	async toggle_img(self, field_name, state=null){
 		await vmix.talker.talk({
 			'Function': (state == null) ? 'SetImageVisible' : `SetImageVisible${state ? 'On' : 'Off'}`,
-			'Input': this.title_name,
-			'SelectedName': field_name + (this.gtformat ? '.Source' : ''),
+			'Input': self.title_name,
+			'SelectedName': field_name + (self.gtformat ? '.Source' : ''),
 		})
 	}
 
 
 	// todo: add check to prevent exceeding 4 overlays
 	// todo: check for valid overlay numbers ?
-	async overlay_in(overlay_num=null, wait=true){
+	async overlay_in(self, overlay_num=null, wait=true){
 
-		const target_overlay = overlay_num || this.default_overlay || 1;
-		this.last_overlay = target_overlay;
+		const target_overlay = overlay_num || self.default_overlay || 1;
+		self.last_overlay = target_overlay;
 
 		await vmix.talker.talk({
 			'Function': `OverlayInput${target_overlay}In`,
-			'Input': this.title_name,
+			'Input': self.title_name,
 		})
 
-		if (this.timings && wait){
-			const margin = (this.timings.margin || 0) + 500;
-			await ksys.util.sleep(((this.timings.frames_in / this.timings.fps)*1000) + margin)
+		if (self.timings && wait){
+			const margin = (self.timings.margin || 0) + 500;
+			await ksys.util.sleep(((self.timings.frames_in / self.timings.fps)*1000) + margin)
 		}
 	}
 
-	async overlay_out(overlay_num=null, wait=true){
-		const target_overlay = overlay_num || this.last_overlay || this.default_overlay || 1;
+	async overlay_out(self, overlay_num=null, wait=true){
+		const target_overlay = overlay_num || self.last_overlay || self.default_overlay || 1;
 
 		await vmix.talker.talk({
 			'Function': `OverlayInput${target_overlay}Out`,
-			'Input': this.title_name,
+			'Input': self.title_name,
 		})
 
-		if (this.timings && wait){
-			const margin = (this.timings.margin || 0) + 500
-			const frames_out = this.timings.frames_out || this.timings.frames_in
-			await ksys.util.sleep(((frames_out / this.timings.fps)*1000) + margin)
+		if (self.timings && wait){
+			const margin = (self.timings.margin || 0) + 500
+			const frames_out = self.timings.frames_out || self.timings.frames_in
+			await ksys.util.sleep(((frames_out / self.timings.fps)*1000) + margin)
 		}
 	}
 
@@ -124,17 +125,17 @@ class vmix_title
 	// otherwise retarded artifacts occur
 
 	// Pause title rendering while making multiple updates
-	async pause_render(){
+	async pause_render(self){
 		await vmix.talker.talk({
 			'Function': `PauseRender`,
-			'Input': this.title_name,
+			'Input': self.title_name,
 		})
 	}
 	// Resume render
-	async resume_render(){
+	async resume_render(self){
 		await vmix.talker.talk({
 			'Function': `ResumeRender`,
-			'Input': this.title_name,
+			'Input': self.title_name,
 		})
 	}
 
@@ -143,6 +144,6 @@ class vmix_title
 
 }
 
-module.exports = vmix_title;
+module.exports = VMIXTitle;
 
 

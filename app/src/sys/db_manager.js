@@ -1,6 +1,6 @@
 
-// Todo: Ensure that no garbage is stored in the DB
-// Such as, garbage files, garbage context keys
+// Todo: Ensure that no garbage is stored in the DB.
+// Such as, garbage files, garbage context keys.
 // The planned solution is:
 // Every module should define a context/db schema
 // which has all the file names / key names
@@ -8,13 +8,17 @@
 // This check should be performed on startup.
 
 // The safety measure would be specifying the schema version
-// and only deleting stuff every n schema itration.
+// and only deleting stuff every n schema iteration.
 
-//
-// module-level
-//
 
-// read file
+// todo: add json writers and readers
+
+
+// =======================
+//         Module
+// =======================
+
+// Read file
 // Load as: 'text' | 'buffer' | 'json' (deafult to 'text')
 const db_module_read_file = function(fname=null, load_as='text'){
 
@@ -37,7 +41,7 @@ const db_module_read_file = function(fname=null, load_as='text'){
 	return target_file.readFileSync('utf-8')
 }
 
-// write file
+// Write file
 const db_module_write_file = function(fname=null, data=null){
 	// obviously, both filename and data should be present and valid
 	if (!fname || !data){
@@ -51,7 +55,7 @@ const db_module_write_file = function(fname=null, data=null){
 	tgt_file.writeSync(data)
 }
 
-// delete file
+// Delete file
 const db_module_delete_file = function(fname=null){
 	// obviously, both filename and data should be present and valid
 	if (!fname){
@@ -69,7 +73,12 @@ const db_module_delete_file = function(fname=null){
 	return false
 }
 
-// read file
+
+// =======================
+//         Global
+// =======================
+
+// Read file
 // Load as: 'text' | 'buffer' | 'json' (deafult to 'text')
 const db_global_read_file = function(fname=null, load_as='text'){
 
@@ -92,7 +101,7 @@ const db_global_read_file = function(fname=null, load_as='text'){
 	return target_file.readFileSync('utf-8')
 }
 
-// write file
+// Write file
 const db_global_write_file = function(fname=null, data=null){
 	const global_folder = app_root.join('db', 'global')
 	// obviously, both filename and data should be present and valid
@@ -106,12 +115,12 @@ const db_global_write_file = function(fname=null, data=null){
 	global_folder.join(fname).writeSync(data)
 }
 
-// return path to the current module folder
+// Return path to the current module folder
 const db_path_to_module_dir = function(){
 	return app_root.join('db', 'module', ksys.context.module_name)
 }
 
-// todo: add json writers and readers
+
 
 module.exports = {
 	module: {

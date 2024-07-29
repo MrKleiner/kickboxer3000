@@ -9,6 +9,8 @@ const valid_overlay_numbers = [
 ];
 
 
+// Create a VMIX API request URL.
+// IP:Port is pulled from the context cache.
 vtalker.create_url = function(rparams=null, with_scheme=false){
 	const ctx_cache = ksys.context.global.cache;
 	const prms = new URLSearchParams(rparams || {});
@@ -72,10 +74,9 @@ vtalker.talk = async function(rparams=null){
 }
 
 
-// Try retreiving the project currently opened in VMIX
-// by sending empty Function to the API.
-// This action should return the project as XML.
-// If not - ping is failed.
+// Simply try connecting to vmix.
+// Returns true if connection went through.
+// Otherwise returns false
 vtalker.ping = async function(){
 	const response = await vtalker.talk({'Function': ''})
 	if (response != false){
