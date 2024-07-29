@@ -24,16 +24,11 @@ vtalker.create_url = function(rparams=null, with_scheme=false){
 
 // Send a command to VMIX API
 vtalker.talk = async function(rparams=null){
-	const ctx_cache = ksys.context.global.cache;
-
-	// URL params constructor
-	const prms = new URLSearchParams(rparams || {});
-
 	let error_data = null;
 
 	// Construct and execute the request
 	const response = await fetch(
-		`http://${ctx_cache.vmix_ip}:${ctx_cache.vmix_port}/API/?${prms.toString()}`,
+		vtalker.create_url(rparams),
 		{
 			'headers': {
 				'accept': '*/*',
@@ -55,7 +50,7 @@ vtalker.talk = async function(rparams=null){
 	// If there was an error while executing a response - there's nothing else
 	// to do except stopping the function execution
 	if (error_data){
-		console.warn('vmix_talk', 'Error occured while executing a request:');
+		console.warn('Vmix Talk:', 'Error occured while executing a request:');
 		console.error(error_data);
 		return false
 	}
@@ -63,7 +58,7 @@ vtalker.talk = async function(rparams=null){
 	// todo: can vmix send back 304 (cached content) (or any other garbage code) ?
 	// Theoretically, any response from VMIX that is not 200 is an error
 	if (response.status != 200){
-		console.warn('vmix_talk', 'Response status is not 200:', response);
+		console.warn('Vmix Talk:', 'Response status is not 200:', response);
 		return false
 	}
 
@@ -82,8 +77,8 @@ vtalker.talk = async function(rparams=null){
 // This action should return the project as XML.
 // If not - ping is failed.
 vtalker.ping = async function(){
-	const pinger = await vtalker.talk({'Function': ''})
-	if (pinger != false){
+	const response = await vtalker.talk({'Function': ''})
+	if (response != false){
 		return true
 	}else{
 		return false
@@ -112,7 +107,7 @@ vtalker.overlay_out = async function(ov_num){
 		return null
 	}
 
-	await vmix.talker.talk({
+	await vtalker.talk({
 		'Function': `OverlayInput${ov_num}Out`,
 	})
 }
