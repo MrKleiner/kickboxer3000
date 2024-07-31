@@ -33,6 +33,8 @@ const KBRadioSwitch = class{
 	// tgt_active is the id of the switch param
 	constructor(switch_dom, _tgt_active=null, callback=null){
 		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
 		const tgt_dom = $(switch_dom)[0];
 
 		// Get switch config
@@ -68,7 +70,7 @@ const KBRadioSwitch = class{
 			switch_entry.onclick = function(evt){
 				if ( (self.mod_key && !evt[self.mod_key]) || (self.active_entry_id == param_id) ){return};
 				self.active_entry_id = param_id;
-				self.set_active(self, param_id, true);
+				self.set_active(param_id, true);
 				callback?.(param_id);
 			}
 		}
@@ -78,7 +80,7 @@ const KBRadioSwitch = class{
 		if (!tgt_active){
 			throw new Error('Radio Switch with id', cfg.kb_switch_id, 'has no entries');
 		}
-		self.set_active(self, tgt_active, false);
+		self.set_active(tgt_active, false);
 	}
 
 	set_active(self, tgt_id, trigger_save=true){

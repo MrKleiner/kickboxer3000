@@ -2,7 +2,7 @@
 window.self = undefined;
 // self = undefined;
 
-
+window.print = console.log;
 
 // todo:
 
@@ -584,7 +584,7 @@ const sys_load = function(nm, save_state=true)
 async function app_init()
 {
 	// load global context
-	const ctx_cache = ksys.context.global.pull()
+	const ctx_cache = ksys.context.global.pull();
 
 	// patch-based system: The base is empty by default.
 	// Patch has to be aplied immediately after installation
@@ -592,7 +592,7 @@ async function app_init()
 	if (app_root.join('raw_base_is.bad').isFileSync()){
 		document.body.style.pointerEvents = 'none';
 		ksys.fbi.warn_critical(
-			'The current installation is a raw base. Patch has to be applied. Close the controller and apply the patch.'
+			'The current installation is a raw base. Patch has to be applied. Close the controller and apply a patch.'
 		)
 		return
 	}

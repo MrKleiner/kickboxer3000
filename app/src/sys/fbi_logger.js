@@ -4,7 +4,7 @@ class _fbi_logger
 {
 	// constructor(height, width) {
 	constructor() {
-		window.print = console.log.bind(window.console);
+		// window.print = console.log.bind(window.console);
 		window.log = this.module_log
 		console.log('Initialized Fbi Logger');
 	};

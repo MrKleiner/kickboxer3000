@@ -30,7 +30,7 @@ vtalker.talk = async function(rparams=null){
 
 	// Construct and execute the request
 	const response = await fetch(
-		vtalker.create_url(rparams),
+		vtalker.create_url(rparams, true),
 		{
 			'headers': {
 				'accept': '*/*',
