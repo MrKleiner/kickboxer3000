@@ -71,6 +71,7 @@
 				 btname="delete_current_club"
 				 kbhint="Hold CTRL"
 				 onclick="$this.delete_current_club(event)"
+				 mod_key="ctrl"
 				>Delete Current Club</sysbtn>
 
 			</club-control-global>
@@ -111,6 +112,7 @@
 					kbhint="Hold ALT. The KB AT-AT service will be restarted"
 					onclick="$this.update_atat_port(event)"
 					click_timeout="700"
+					mod_key="alt"
 				>Update AT-AT port</sysbtn>
 			</general-cfg-entry>
 
@@ -122,6 +124,7 @@
 					kbhint="Hold ALT. The KB AT-AT service will be restarted"
 					onclick="$this.update_atat_return_addr(event)"
 					click_timeout="700"
+					mod_key="alt"
 				>Update AT-AT Return Address</sysbtn>
 			</general-cfg-entry>
 
@@ -132,6 +135,7 @@
 				btname="init_new_match"
 				kbhint="Wipe previous match stats: cards, scores, stats, etc. Hold CTRL"
 				onclick="$this.init_new_match(event)"
+				mod_key="ctrl"
 			>New Match</sysbtn>
 			
 			<home-club-selector class="lineup_global_ctrl_param">
@@ -507,6 +511,7 @@
 				btname="mod_score_author"
 				onclick="$this.mod_score_author(event)"
 				style="margin-left: 50px;"
+				mod_key="alt"
 			>Modify Author</vmixbtn>
 		</div>
 
@@ -534,6 +539,21 @@
 		<div id="stats_ctrl_btns">
 			<vmixbtn seq_info="update+vis_show" btname="show_team_stats" onclick="$this.show_team_stats()">Show stats</vmixbtn>
 			<vmixbtn seq_info="vis_hide" btname="hide_team_stats" onclick="$this.hide_team_stats()">Hide stats</vmixbtn>
+		</div>
+
+		<div id="penalty_panel">
+			<div id="penalty_panel_header">Penalties</div>
+			<div id="penalty_pools"></div>
+
+			<vmixbtn
+			 onclick="$this.show_penalty_title()"
+			 seq_info="update+vis_show"
+			 >Show Penalties</vmixbtn>
+
+			<vmixbtn
+			 onclick="$this.hide_penalty_title()"
+			 seq_info="vis_hide"
+			 >Hide Penalties</vmixbtn>
 		</div>
 
 	</tab>
@@ -617,6 +637,12 @@
 				<club-param prmname="main_coach">
 					<div class="club_base_param_label">Main Coach</div>
 					<input type="text">
+				</club-param>
+
+				<club-param prmname="init_from_url">
+					<div class="club_base_param_label">URL</div>
+					<input type="text">
+					<sysbtn>Init From URL</sysbtn>
 				</club-param>
 
 			</club-base-params>
@@ -809,6 +835,29 @@
 			</score-record-flags>
 
 		</club-score-record>
+	</template>
+
+	<!-- Penalty pool template -->
+	<template id="penalty_pool_template">
+		<div class="penalty_pool">
+			<div regular_box class="pool_header"></div>
+			<div regular_box class="pool_table"></div>
+		</div>
+	</template>
+
+	<template id="penalty_list_row_template">
+		<div class="penalty_list_row">
+			<div class="penalty_idx"></div>
+			<label class="penalty_cbox">
+				<input class="penalty_yes" type="checkbox">
+				YES
+			</label>
+
+			<label class="penalty_cbox">
+				<input class="penalty_no" type="checkbox">
+				NO
+			</label>
+		</div>
 	</template>
 
 </div>

@@ -199,7 +199,16 @@ window.kbmodules.football_standard.load = async function(){
 		card_manager: null,
 
 		score_manager: null,
+
+		penalty_manager: new window.kbmodules.football_standard.PenaltyManager(5),
 	};
+
+	window.kbmodules.football_standard.time_lenghts_dict = {
+		1: (0, 45),
+		2: (45, 90),
+		3: (90, 105),
+		4: (105, 120),
+	}
 
 	// --------------------------
 	// Index titles
@@ -348,6 +357,18 @@ window.kbmodules.football_standard.load = async function(){
 			// Statistics
 			'stats': new vmix.title({
 				'title_name': 'stats.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 30,
+					'frames_out': 10,
+					'margin': 100,
+				}
+			}),
+
+			// Statistics
+			'penalties': new vmix.title({
+				'title_name': 'penalties.gtzip',
 				'default_overlay': 2,
 				'timings': {
 					'fps': 10,
@@ -566,6 +587,17 @@ window.kbmodules.football_standard.load = async function(){
 
 		// window.kbmodules.football_standard.update_selected_timer_system(tgt_timer_fset);
 	}
+
+	// --------------------------
+	//         Penalties
+	// --------------------------
+	{
+		window.kbmodules.football_standard.resource_index.penalty_manager.resync(
+			ksys.db.module.read('penalty_data.kbsave', 'json')
+		);
+
+		window.kbmodules.football_standard.resource_index.penalty_manager.resync_vmix();
+	}
 }
 
 
@@ -723,6 +755,11 @@ window.kbmodules.football_standard.FootballClub = class{
 				// Playerbase
 				'reg_player_btn':  'club-playerbase sysbtn[btname="register_player_in_club"]',
 				'player_pool':     'club-playerbase playerbase-pool',
+
+				// Init from URL
+				// todo: inplement properly
+				'init_from_url_input': 'club-base-params club-param[prmname="init_from_url"] input',
+				'init_from_url_btn':   'club-base-params club-param[prmname="init_from_url"] sysbtn',
 			}
 		);
 
@@ -763,6 +800,29 @@ window.kbmodules.football_standard.FootballClub = class{
 		// bind coach change
 		tplate.index.main_coach.onchange = function(evt){
 			self.main_coach = evt.target.value.lower();
+		}
+
+		// todo: implement properly
+		// bind coach change
+		tplate.index.init_from_url_btn.onclick = async function(evt){
+			const html_d = (new DOMParser).parseFromString(
+				(await ksys.util.url_get(tplate.index.init_from_url_input.value, 'text')).payload, 'text/html'
+			);
+			console.log('get players');
+			html_d.querySelectorAll('#ex1-tabs-1 .my-1').forEach(function(el) {
+				const pfio = el.querySelectorAll('.m-0');
+				const pnum = el.querySelector('.col-auto');
+				self.register_player({
+					'name': pfio[1].innerHTML.split(/(\s+)/)[0],
+					'surname': pfio[0].innerHTML,
+					'num': pnum.innerHTML.trim(),
+				})
+				// let plr = {};
+				// plr.name = pfio[1].innerHTML.split(/(\s+)/)[0];
+				// plr.surname = pfio[0].innerHTML;
+				// plr.num = pnum.innerHTML;
+				
+			});
 		}
 
 		return tplate
@@ -2713,10 +2773,27 @@ window.kbmodules.football_standard.ClubGoals = class {
 		this.tplate.index.add_score_anon_btn.onclick = function(evt){
 			self.add_score(self, null)
 		}
+
+		self.delete_record = function(record){
+			return self._delete_record(self, record);
+		}
+
+		self._add_score = function(){
+			return self.add_score(self, ...arguments);
+		}
 	}
 
 	// Add a score
-	add_score(self, player=null, flags=null, timestamp_override=null, dosave=true, ignore_timer=false){
+	add_score(
+		self,
+		player=null,
+		flags=null,
+		timestamp_override=null,
+		dosave=true,
+		ignore_timer=false,
+		override_id=null,
+		locked=false)
+	{
 		const input_flags = flags || {};
 		// create a dom template
 		const tplate = ksys.tplates.index_tplate(
@@ -2733,6 +2810,12 @@ window.kbmodules.football_standard.ClubGoals = class {
 				'penalty_hitbox':   'score-record-flags record-flag[flag_name="penalty"]',
 			}
 		);
+
+		if (locked){
+			// important todo: proper links ?
+			// This is simply retarded.
+			tplate.elem.classList.add('score_locked');
+		}
 
 		// sanity check
 		// if (!window.kbmodules.football_standard?.base_counter?.tick && !ignore_timer){
@@ -2752,6 +2835,12 @@ window.kbmodules.football_standard.ClubGoals = class {
 		// create a registry record
 		// todo: protection from garbage in input_flags.autogoal & input_flags.penalty
 		const record = {
+			// important todo: id pram was added as a last-minute
+			// hack for penalties
+			'id': override_id || lizard.rndwave(),
+			'locked': locked,
+
+
 			'author': player,
 			'flags': {
 				'autogoal': input_flags.autogoal || false,
@@ -2897,15 +2986,7 @@ window.kbmodules.football_standard.ClubGoals = class {
 		// Deletion
 		tplate.elem.oncontextmenu = function(evt){
 			if (evt.altKey){
-				// if deleted record is also the one currently selected - deselect
-				if (record == self.selected_record){
-					self.selected_record = null;
-				}
-				self.score_stack.delete(record);
-				tplate.elem.remove()
-				window.kbmodules.football_standard.resource_index.score_manager.resync_score_on_title()
-
-				window.kbmodules.football_standard.global_save({'scores': true})
+				self.delete_record(record);
 			}
 		}
 
@@ -2934,7 +3015,9 @@ window.kbmodules.football_standard.ClubGoals = class {
 
 		// todo: what about async methods in here?
 		// this function is also used to load scores from the previous save...
-		window.kbmodules.football_standard.resource_index.score_manager.resync_score_on_title()
+		window.kbmodules.football_standard.resource_index.score_manager.resync_score_on_title();
+
+		return record;
 	}
 
 	// modify the author of the selected score record
@@ -2980,6 +3063,20 @@ window.kbmodules.football_standard.ClubGoals = class {
 		self.selected_record = record;
 		$(self.dom).find('.selected_score_record').removeClass('selected_score_record');
 		record.dom_struct.elem.classList.add('selected_score_record');
+	}
+
+	_delete_record(self, record=null){
+		if (!record){return};
+
+		// if deleted record is also the one currently selected - deselect
+		if (record == self.selected_record){
+			self.selected_record = null;
+		}
+		self.score_stack.delete(record);
+		record.dom_struct.elem.remove()
+		window.kbmodules.football_standard.resource_index.score_manager.resync_score_on_title()
+
+		window.kbmodules.football_standard.global_save({'scores': true})
 	}
 }
 
@@ -3079,9 +3176,11 @@ window.kbmodules.football_standard.ScoreManager = class {
 
 			for (const score of this.sides[side].score_list.score_stack){
 				dump[side].score_list.push({
+					'id': score.id,
 					'author': score?.author?.name_id || null,
 					'flags': score.flags,
 					'timestamp': score.time,
+					'locked': score.locked,
 				})
 			}
 		}
@@ -3113,6 +3212,8 @@ window.kbmodules.football_standard.ScoreManager = class {
 					score.timestamp,
 					false,
 					true,
+					score.id,
+					score.locked
 				)
 			}
 		}
@@ -3150,9 +3251,329 @@ window.kbmodules.football_standard.ScoreManager = class {
 
 
 
+// Penalty manager. Persistent.
+window.kbmodules.football_standard.PenaltyManager = class{
+	constructor(pcount=5){
+		const self = this;
+
+		self.pcount = pcount;
+
+		self.dom_data = ksys.tplates.index_tplate(
+			'#penalty_pool_template',
+			{
+				'header': '.pool_header',
+				'table':  '.pool_table',
+			}
+		);
+
+		self.sides = {
+			'home': null,
+			'guest': null,
+		};
+
+
+		// todo: fuck javascript
+		self.resync = function(input_data){
+			return self._resync(self, input_data);
+		}
+
+		self.resync_vmix = function(){
+			return self._resync_vmix(self);
+		}
+	}
+
+	// Resync with relevant data, such as active clubs
+	// Even if a single club changes - everything is wiped,
+	// because otherwise it'd be a stupid mess.
+	_resync(self, input_data=null){
+		// Wipe previous data
+		self.sides?.home?.wipe();
+		self.sides?.guest?.wipe();
+
+		$('#penalty_pools').empty();
+
+		// Create 2 penalty pools
+		self.sides = {
+			'home': new window.kbmodules.football_standard.TeamPenaltyPool(
+				self,
+				window.kbmodules.football_standard.resource_index.score_manager.sides['home'],
+				window.kbmodules.football_standard.resource_index.side.home.club,
+				input_data?.['home']
+			),
+			'guest': new window.kbmodules.football_standard.TeamPenaltyPool(
+				self,
+				window.kbmodules.football_standard.resource_index.score_manager.sides['guest'],
+				window.kbmodules.football_standard.resource_index.side.guest.club,
+				input_data?.['guest']
+			),
+		}
+
+		// Append pools' DOM to the page
+		$('#penalty_pools').append(self.sides.home.dom_data.elem);
+		$('#penalty_pools').append(self.sides.guest.dom_data.elem);
+	}
+
+	_resync_vmix(self){
+		for (const side in self.sides){
+			for (const row_idx in self.sides[side].ctrl_elems){
+				self.sides[side].ctrl_elems[row_idx].push_to_vmix()
+			}
+		}
+	}
+}
 
 
 
+
+window.kbmodules.football_standard.TeamPenaltyPool = class{
+	constructor(parent_manager, score_manager, tgt_team, input_data=null){
+		const self = this;
+
+		self.parent_manager = parent_manager;
+		self.score_manager = score_manager;
+		self.tgt_team = tgt_team;
+		self.side = tgt_team?.is_enemy ? 'r' : 'l'
+
+		self.dom_data = ksys.tplates.index_tplate(
+			'#penalty_pool_template',
+			{
+				'header': '.pool_header',
+				'table':  '.pool_table',
+			}
+		);
+
+		// Create visual header
+		if (self.tgt_team){
+			self.dom_data.index.header.append(
+				self.tgt_team.vis_header_elem()
+			)
+		}
+
+		self.ctrl_elems = {};
+
+		// Create control elements
+		for (const idx of range(self.parent_manager.pcount)){
+			const ctrl_elem = new window.kbmodules.football_standard.PenaltyTableEntry(
+				self,
+				idx,
+				input_data?.[str(idx)]
+			);
+			self.ctrl_elems[idx] = ctrl_elem;
+			self.dom_data.index.table.append(ctrl_elem.dom_data.elem);
+		}
+
+		self.to_json = function(){
+			return self._to_json(self);
+		}
+
+		self.wipe = function(){
+			return self._wipe(self)
+		}
+	}
+
+	_to_json(self){
+		const data = {};
+		for (const penalty_idx in self.ctrl_elems){
+			const penalty = self.ctrl_elems[penalty_idx];
+			// print('Saving penalty:', penalty)
+			data[penalty.idx] = {
+				'id_bind': penalty?.associated_record?.id,
+				'state': penalty.get_state(),
+			}
+		}
+
+		return data
+	}
+
+	_wipe(self){
+		for (const pn_idx in self.ctrl_elems){
+			self.ctrl_elems[pn_idx].unreg();
+		}
+	}
+}
+
+
+
+window.kbmodules.football_standard.PenaltyTableEntry = class{
+	constructor(parent_pool, penalty_idx, input_data=null){
+		const self = this;
+
+		self.parent_pool = parent_pool;
+		self.idx = penalty_idx;
+		self.side = parent_pool.side;
+
+		// Whether this penalty should count towards
+		// the global scores
+		self.counts = false;
+		// Score record associated with this table entry
+		self.associated_record = null;
+
+		self.dom_data = ksys.tplates.index_tplate(
+			'#penalty_list_row_template',
+			{
+				'idx':      '.penalty_idx',
+				'cbox_yes': '.penalty_cbox .penalty_yes',
+				'cbox_no':  '.penalty_cbox .penalty_no',
+			}
+		);
+
+		self.dom_data.index.idx.innerText = self.idx + 1;
+
+		self.dom_data.index.cbox_yes.onchange = function(){
+			self.dom_data.index.cbox_no.checked = false;
+			self.push_to_vmix(true);
+		}
+		self.dom_data.index.cbox_no.onchange = function(){
+			self.dom_data.index.cbox_yes.checked = false;
+			self.push_to_vmix(true);
+		}
+
+		// todo: fuck javascript
+		self.push_to_vmix = function(){
+			self._push_to_vmix(self, ...arguments);
+		}
+
+
+		if (input_data){
+			// todo: this is stupid
+			if (input_data.state == 'yes'){
+				// If it's yes, then there must be an associated record
+				// important todo: this is incredibly retarded
+				let stop = false;
+				for (const score_record of self.parent_pool.score_manager.score_list.score_stack){
+					stop = true;
+					if (score_record.id == input_data.id_bind){
+						self.associated_record = score_record;
+						stop = false;
+						break
+					}
+				}
+				if(stop){
+					console.error(
+						`Couldn't bind penalty record to a score record`,
+						input_data,
+					)
+					return
+				}
+
+				self.dom_data.index.cbox_yes.checked = true;
+				self.push_to_vmix();
+			}
+			if (input_data.state == 'no'){
+				self.dom_data.index.cbox_no.checked = true;
+				self.push_to_vmix();
+			}
+			if (input_data.state != 'no' && input_data.state != 'yes'){
+				self.push_to_vmix();
+			}
+		}
+
+		self.get_state = function(){
+			return self._get_state(self);
+		}
+		self.unreg = function(){
+			return self._unreg(self);
+		}
+	}
+
+	// Push data to vmix
+	_push_to_vmix(self, dosave=false){
+		const tgt_title = window.kbmodules.football_standard.titles.penalties;
+		const score_manager = self.parent_pool.score_manager.score_list;
+
+		const tgt_idx = (self.parent_pool.parent_manager.pcount - 1) - self.idx;
+
+		// todo: this is copypaste from old implementation
+		tgt_title.toggle_img(
+			`pn_${self.side}_t_${tgt_idx}`,
+			self.dom_data.index.cbox_yes.checked,
+		)
+
+		tgt_title.toggle_img(
+			`pn_${self.side}_f_${tgt_idx}`,
+			self.dom_data.index.cbox_no.checked,
+		)
+
+		if (self.dom_data.index.cbox_no.checked || self.dom_data.index.cbox_yes.checked){
+			tgt_title.toggle_img(
+				`pn_${self.side}_n_${tgt_idx}`,
+				false,
+			)
+		}else{
+			tgt_title.toggle_img(
+				`pn_${self.side}_n_${tgt_idx}`,
+				true,
+			)
+		}
+
+		if (self.dom_data.index.cbox_yes.checked){
+			self.counts = true;
+
+			if (!self.associated_record){
+				print('Score manager is:', score_manager)
+				self.associated_record = score_manager._add_score(
+					null,
+					null,
+					null,
+					true,
+					false,
+					null,
+					true
+				)
+			}
+		}else{
+			self.counts = false;
+
+			if (self.associated_record){
+				score_manager.delete_record(self.associated_record);
+				self.associated_record = null;
+			}
+		}
+
+		tgt_title.set_text(
+			`team_score_${self.side}`,
+			score_manager.score_stack.size
+		)
+
+		if (dosave){
+			window.kbmodules.football_standard.save_penalties();
+		}
+		
+
+		/*
+		let additive = 0
+		for (const elem of window.kbmodules.football_standard.penalty_registry){
+			if (elem.side != self.side){continue};
+			if (elem.dom_data.index.cbox_yes.checked){
+				additive += 1
+			}
+		}
+		tgt_title.set_text(
+			`team_score_${self.side}`,
+			window.kbmodules.football_standard.resource_index.score_manager.sides[self.side == 'l' ? 'home' : 'guest'].score_list.score_stack.size + additive
+		)
+		*/
+	}
+
+	_get_state(self){
+		if (self.dom_data.index.cbox_yes.checked){
+			return 'yes'
+		}
+		if (self.dom_data.index.cbox_no.checked){
+			return 'no'
+		}
+
+		return '?'
+	}
+
+	// Unreg the penalty, deleting associated scores and so on
+	_unreg(self){
+		if (self.associated_record){
+			const score_manager = self.parent_pool.score_manager.score_list;
+			score_manager.delete_record(self.associated_record);
+		}
+	}
+}
 
 
 
@@ -3436,6 +3857,9 @@ window.kbmodules.football_standard.create_club_lineup = function(side, clubname,
 	// resync card manager
 	window.kbmodules.football_standard.resource_index.card_manager.resync(window.kbmodules.football_standard.resource_index.card_manager)
 
+	// resync penalty manager
+	window.kbmodules.football_standard.resource_index.penalty_manager.resync();
+
 	// resync old system stats headers
 	// todo: finally make old stat system use new stuff
 	{
@@ -3454,19 +3878,19 @@ window.kbmodules.football_standard.create_club_lineup = function(side, clubname,
 
 
 // forward team colours to vmix timer + score title
-window.kbmodules.football_standard.update_team_colors = function(){
+window.kbmodules.football_standard.update_team_colors = async function(){
 	const base_path = Path('C:/custom/vmix_assets/t_shirts/overlay');
 	const home = window.kbmodules.football_standard.resource_index.home_lineup;
 	const guest = window.kbmodules.football_standard.resource_index.guest_lineup;
 
 	if (home){
 		// tshirt home
-		window.kbmodules.football_standard.titles.timer.set_img_src(
+		await window.kbmodules.football_standard.titles.timer.set_img_src(
 			'team_col_l_top',
 			base_path.join(`l_top_${home.colors.tshirt}.png`),
 		)
 		// shorts home
-		window.kbmodules.football_standard.titles.timer.set_img_src(
+		await window.kbmodules.football_standard.titles.timer.set_img_src(
 			'team_col_l_bot',
 			base_path.join(`l_bot_${home.colors.shorts}.png`),
 		)
@@ -3474,12 +3898,12 @@ window.kbmodules.football_standard.update_team_colors = function(){
 
 	if (guest){
 		// tshirt guest
-		window.kbmodules.football_standard.titles.timer.set_img_src(
+		await window.kbmodules.football_standard.titles.timer.set_img_src(
 			'team_col_r_top',
 			base_path.join(`r_top_${guest.colors.tshirt}.png`),
 		)
 		// shorts guest
-		window.kbmodules.football_standard.titles.timer.set_img_src(
+		await window.kbmodules.football_standard.titles.timer.set_img_src(
 			'team_col_r_bot',
 			base_path.join(`r_bot_${guest.colors.shorts}.png`),
 		)
@@ -4328,15 +4752,17 @@ window.kbmodules.football_standard.main_timer_vis = async function(state){
 	const title = window.kbmodules.football_standard.titles.timer;
 
 	if (state == true){
-
 		if (!window.kbmodules.football_standard.resource_index?.side?.home?.club || !window.kbmodules.football_standard.resource_index?.side?.guest?.club){
 			ksys.info_msg.send_msg(
-				`This action requires both clubs present`,
+				`This action requires both clubs to be present`,
 				'warn',
 				3000
 			);
 			return
 		}
+
+		// Update team colours
+		await window.kbmodules.football_standard.update_team_colors()
 
 		await title.set_text(
 			'command_l',
@@ -4414,15 +4840,7 @@ window.kbmodules.football_standard.update_atat_status = function(status){
 }
 
 window.kbmodules.football_standard.update_atat_port = function(evt){
-	if (!evt.altKey){
-		// todo: is this message really needed here ?
-		ksys.info_msg.send_msg(
-			`Hold ALT`,
-			'warn',
-			1000
-		);
-		return
-	};
+	if (!evt.altKey){return};
 
 	const tgt_int = int(document.querySelector('#atat_port_input').value);
 	const int_valid = (
@@ -4452,15 +4870,7 @@ window.kbmodules.football_standard.update_atat_port = function(evt){
 }
 
 window.kbmodules.football_standard.update_atat_return_addr = function(evt){
-	if (!evt.altKey){
-		// todo: is this message really needed here ?
-		ksys.info_msg.send_msg(
-			`Hold ALT`,
-			'warn',
-			1000
-		);
-		return
-	};
+	if (!evt.altKey){return};
 
 	const octets = document.querySelector('#atat_return_addr_input').value.split('.')
 	.map(function(oct){
@@ -4653,7 +5063,7 @@ window.kbmodules.football_standard.timer_fset.at_at.wipe_timers = async function
 
 	// todo: It's speculated, that each time a new main timer starts - 
 	// the extra time should be cleared.
-	window.kbmodules.football_standard.titles.timer.set_text('time_added', '');
+	await window.kbmodules.football_standard.titles.timer.set_text('time_added', '');
 	await window.kbmodules.football_standard.titles.timer.set_text('extra_ticker', '00:00');
 	await window.kbmodules.football_standard.extra_time_vis(false);
 
@@ -4678,6 +5088,8 @@ window.kbmodules.football_standard.timer_fset.at_at.start_base_timer = async fun
 	// the extra time should be cleared.
 	// The function below does wipe the extra timer.
 	await window.kbmodules.football_standard.timer_fset.at_at.wipe_timers(rnum);
+	$('#timer_ctrl_additional input')[0].value = '';
+
 
 	// Instantiate AT-AT ticker class
 	window.kbmodules.football_standard.timer_fset.at_at.create_base_timer(rnum);
@@ -4703,7 +5115,15 @@ window.kbmodules.football_standard.timer_fset.at_at.timer_callback = function(ms
 	window.kbmodules.football_standard.ticker_time.base.minutes = msg.data_buf[2];
 	window.kbmodules.football_standard.ticker_time.base.seconds = msg.data_buf[3];
 
-	const text = `${str(msg.data_buf[2]).zfill(2)}:${str(msg.data_buf[3]).zfill(2)}`;
+	let minutes = str(msg.data_buf[2])
+
+	if (minutes.length < 3){
+		minutes = minutes.zfill(2);
+	}
+
+	const text = `${minutes}:${str(msg.data_buf[3]).zfill(2)}`;
+	
+
 	// const text = `${msg.data_buf[2]}:${msg.data_buf[3]}`;
 
 	// window.kbmodules.football_standard.titles.timer.set_text('base_ticker', text);
@@ -4735,7 +5155,9 @@ window.kbmodules.football_standard.timer_fset.at_at.resume_main_timer_from_offse
 	print('Resuming main timer from offset:', minutes, seconds)
 
 	// Todo: more speculation...
-	window.kbmodules.football_standard.titles.timer.set_text('time_added', '');
+	// update: Resolved
+	await window.kbmodules.football_standard.titles.timer.set_text('time_added', '');
+	await window.kbmodules.football_standard.extra_time_vis(false);
 
 	// todo: implement this improvement in built-in ticker?
 	// Calculate the round number from input.
@@ -4850,6 +5272,7 @@ window.kbmodules.football_standard.timer_fset.builtin.start_base_timer = async f
 	window.kbmodules.football_standard.extra_counter = null;
 
 	window.kbmodules.football_standard.titles.timer.set_text('time_added', '')
+	$('#timer_ctrl_additional input')[0].value = '';
 
 	await window.kbmodules.football_standard.titles.timer.set_text('extra_ticker', '00:00');
 	await window.kbmodules.football_standard.extra_time_vis(false)
@@ -4914,6 +5337,10 @@ window.kbmodules.football_standard.timer_fset.builtin.timer_callback = function(
 		window.kbmodules.football_standard.ticker_time.base.seconds = 0;
 	}
 
+	if (str(minutes).length > 2){
+		text = `${str(minutes)}:${str(seconds).zfill(2)}`
+	}
+
 	window.kbmodules.football_standard.titles.timer.set_text('base_ticker', text);
 	$('#timer_feedback_main').text(text);
 }
@@ -4927,8 +5354,8 @@ window.kbmodules.football_standard.timer_fset.builtin.resume_main_timer_from_off
 	window.kbmodules.football_standard?.base_counter?.force_kill?.()
 	window.kbmodules.football_standard.base_counter = null;
 
-	window.kbmodules.football_standard.titles.timer.set_text('time_added', '')
-
+	window.kbmodules.football_standard.titles.timer.set_text('time_added', '');
+	window.kbmodules.football_standard.extra_time_vis(false);
 
 	const rnum = int(ksys.context.module.prm('round_num')) || 1;
 
@@ -5099,7 +5526,7 @@ window.kbmodules.football_standard.mod_score_author = function(evt){
 		ksys.info_msg.send_msg(
 			`No player selected`,
 			'warn',
-			2000
+			3000
 		);
 		return
 	}
@@ -5107,7 +5534,7 @@ window.kbmodules.football_standard.mod_score_author = function(evt){
 		ksys.info_msg.send_msg(
 			`No score record selected`,
 			'warn',
-			2000
+			3000
 		);
 		return
 	}
@@ -6046,15 +6473,70 @@ window.kbmodules.football_standard.global_save = function(save_targets=null){
 	if (what_to_save.scores || save_targets == null){
 		window.kbmodules.football_standard.save_score_data()
 	}
+
+	// Save score data
+	if (what_to_save.penalties || save_targets == null){
+		window.kbmodules.football_standard.save_penalties()
+	}
 }
 
 
 
+// ---------------
+//    Penalties
+// ---------------
+window.kbmodules.football_standard.save_penalties = function(){
+	const penalty_manager = window.kbmodules.football_standard.resource_index.penalty_manager;
 
+	const penalty_data = {
+		'home': penalty_manager?.sides?.home?.to_json?.(),
+		'guest': penalty_manager?.sides?.guest?.to_json?.(),
+	}
 
+	ksys.db.module.write(
+		'penalty_data.kbsave',
+		JSON.stringify(penalty_data, null, '\t')
+	)
+}
 
+window.kbmodules.football_standard.show_penalty_title = async function(){
+	const tgt_title = window.kbmodules.football_standard.titles.penalties;
 
+	await tgt_title.set_img_src(
+		'club_logo_l',
+		window.kbmodules.football_standard.resource_index.side.home.club.logo_path
+	)
+	await tgt_title.set_img_src(
+		'club_logo_r',
+		window.kbmodules.football_standard.resource_index.side.guest.club.logo_path
+	)
+	await tgt_title.set_text(
+		'team_name_r',
+		window.kbmodules.football_standard.resource_index.side.guest.club.club_name.upper()
+	)
+	await tgt_title.set_text(
+		'team_name_l',
+		window.kbmodules.football_standard.resource_index.side.home.club.club_name.upper()
+	)
 
+	await tgt_title.set_text(
+		`team_score_l`,
+		window.kbmodules.football_standard.resource_index.score_manager.sides['home'].score_list.score_stack.size
+	)
+	await tgt_title.set_text(
+		`team_score_r`,
+		window.kbmodules.football_standard.resource_index.score_manager.sides['guest'].score_list.score_stack.size
+	)
+
+	await ksys.util.sleep(500);
+	await tgt_title.overlay_in(2);
+}
+
+window.kbmodules.football_standard.hide_penalty_title = async function(){
+	const tgt_title = window.kbmodules.football_standard.titles.penalties;
+
+	await tgt_title.overlay_out(2);
+}
 
 
 
@@ -6074,6 +6556,7 @@ window.kbmodules.football_standard.init_new_match = function(evt){
 		'card_info.kbsave',
 		'score_data.kbsave',
 		'stats.fball',
+		'penalty_data.kbsave',
 	]
 
 	for (const fname of del_entries){

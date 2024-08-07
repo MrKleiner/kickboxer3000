@@ -1261,6 +1261,17 @@ Records themselves
 	/*padding: 5px;*/
 }
 
+~~.score_locked{
+	/*filter: grayscale(1) !important;*/
+	pointer-events: none !important;
+	/*outline: 1px solid #752828 !important;*/
+	/*outline: 1px solid #AA2929 !important;*/
+	/*outline: 1px solid #DDC645 !important;*/
+	outline: 1px solid #B5A239 !important;
+	/*outline: 1px solid red !important;*/
+	opacity: 0.5;
+}
+
 ~~:hover
 {
 	outline-color: rgb(160, 160, 160);
@@ -2968,5 +2979,117 @@ tab.tab_hidden
 
 
 
+/*
+!~~ #penalty_panel
+*/
+~~{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+
+	width: -webkit-fill-available;
+
+	margin-bottom: 200px;
+}
+
+#penalty_panel_header{
+	font-size: 50px;
+}
+
+#penalty_pools{
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	width: 100%;
+}
+
+/*
+!~~ #penalty_panel .penalty_pool
+*/
+
+~~{
+	padding: 20px;
+	width: 30%;
+}
+
+~~ .pool_table{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+
+	padding: 20px 0px 20px 0px;
+}
 
 
+~~ .penalty_list_row{
+	display: flex;
+	flex-direction: row;
+	font-size: 22px;
+
+	/*margin-top: 2px;*/
+	padding: 0px 0px 0px 0px;
+
+	background: hsl(0deg 0% 15%);
+
+	outline: 1px solid #4F4F4F;
+}
+
+~~ .penalty_list_row:hover{
+	outline-color: #9A9A9A !important;
+	z-index: 99999;
+}
+
+
+~~ .penalty_list_row:nth-child(odd) {
+	background: hsl(0deg 0% 10%);
+}
+
+
+~~ .penalty_list_row .penalty_idx{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	color: #CFCFCF;
+
+	padding: 0px 15px 0px 15px;
+}
+
+~~ .penalty_list_row input{
+	height: 20px;
+	width:  20px;
+
+	margin-right: 7px;
+}
+
+~~ .penalty_list_row .penalty_cbox{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+
+	padding: 6px 20px 6px 20px;
+
+	/*margin-left: 10px;*/
+
+	border-left: 1px solid #818181;
+}
+
+~~ .penalty_list_row .penalty_cbox:hover{
+	/*outline: 1px solid #1DCADA;*/
+	outline: 1px solid white;
+	/*background: #293645;*/
+	background: #242B38;
+	z-index: 999999999;
+}
+
+~~ .penalty_list_row .penalty_cbox:active{
+	color: lime;
+	outline: 1px solid lime;
+	background: #1E402A;
+	/*background: #121F17;*/
+	z-index: 999999999;
+}
