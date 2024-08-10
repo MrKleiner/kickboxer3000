@@ -8,10 +8,18 @@
 
 
 
+const internal = {
+	'last_pwn': null,
+	'pwn_list': new Set(),
+}
+
+
+
 const remap = function(self){
 	const prop_names = Object.getOwnPropertyNames(self.constructor.prototype);
+
 	for (const func_name of prop_names){
-		if (func_name == 'constructor'){continue};
+		if ( (func_name == 'constructor') || func_name.startsWith('$')){continue};
 
 		const original_func = self[func_name];
 
@@ -36,29 +44,49 @@ const remap = function(self){
 
 	// Experimental: getters and setters
 	const gs_dict = {
-		'getters': {},
-		'setters': {},
+		// 'getters': {},
+		// 'setters': {},
 	}
+
 	for (const func_name of prop_names){
-		if (func_name == 'constructor'){continue};
+		if ( (func_name == 'constructor') || !func_name.startsWith('$') ){continue};
 
 		const real_func_name = func_name.replaceAll('$', '');
 
+		if (!(real_func_name in gs_dict)){
+			gs_dict[real_func_name] = {};
+		}
+
+		const func = self[func_name];
+
 		if (func_name.startsWith('$$')){
-			gs_dict.setters[real_func_name] = self[func_name];
+			gs_dict[real_func_name]['set'] = function(){
+				return func(self, ...arguments)
+			}
 			self[func_name] = undefined;
 			continue
 		}
 
 		if (func_name.startsWith('$')){
-			gs_dict.getters[real_func_name] = self[func_name];
+			gs_dict[real_func_name]['get'] = function(){
+				return func(self, ...arguments)
+			}
 			self[func_name] = undefined;
 			continue
 		}
 	}
 
+	for (const real_func_name in gs_dict){
+		Object.defineProperty(
+			self,
+			real_func_name,
+			gs_dict[real_func_name]
+		)
+	}
+
+	/*
 	for (const func_name of prop_names){
-		if (func_name == 'constructor'){continue};
+		if ( (func_name == 'constructor') || !func_name.startsWith('$') ){continue};
 
 		const real_func_name = func_name.replaceAll('$', '');
 		const prop_params = {};
@@ -76,12 +104,17 @@ const remap = function(self){
 
 		Object.defineProperty(self, real_func_name, prop_params)
 	}
+	*/
 
 	return self
 }
 
 
-
+const spawn = function(tgt_cls, ...arguments){
+	const cls_inst = new tgt_cls(...arguments);
+	remap(cls_inst);
+	return cls_inst;
+}
 
 
 
@@ -89,4 +122,5 @@ const remap = function(self){
 
 module.exports = {
 	remap,
+	spawn,
 }
