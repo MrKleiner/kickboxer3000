@@ -637,52 +637,55 @@ Each club has:
 //                into ClubPlayer classes after initialization.
 window.kbmodules.football_standard.FootballClub = class{
 	constructor(input_club_struct=null, is_enemy=false){
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
 		const club_struct = input_club_struct || {};
 
 		// Base info
-		this.logo_path =           club_struct.logo_path || './assets/red_cross.png';
-		this.club_name =           (club_struct.club_name || '').lower();
-		this.club_name_shorthand = club_struct.club_name_shorthand || '';
-		this.main_coach =          (club_struct.main_coach || '').lower();
+		self.logo_path =           club_struct.logo_path || './assets/red_cross.png';
+		self.club_name =           (club_struct.club_name || '').lower();
+		self.club_name_shorthand = club_struct.club_name_shorthand || '';
+		self.main_coach =          (club_struct.main_coach || '').lower();
 
 		// important todo: this is very unreliable
-		this.is_enemy =            is_enemy;
+		self.is_enemy =            is_enemy;
 
 		// An array of ClubPlayer classes
-		this.playerbase =          new Set();
+		self.playerbase =          new Set();
 
 		// populate internal registry with initial data, if any
 		for (const player_info of (club_struct.playerbase || [])){
-			this.playerbase.add(new window.kbmodules.football_standard.ClubPlayer(this, player_info))
+			self.playerbase.add(new window.kbmodules.football_standard.ClubPlayer(this, player_info))
 		}
 
 		// Control panel reference
-		this.control_panel = null;
+		self.control_panel = null;
 
 		// visual headers references
-		this.vis_header_references = new Set();
+		self.vis_header_references = new Set();
 	}
 
 	// forward update logos and club name
-	forward_update(){
+	forward_update(self){
 		// update visual headers
-		for (const vheader of this.vis_header_references){
-			vheader.index.logo.src = this.logo_path;
-			vheader.index.title.textContent = this.club_name.upper();
+		for (const vheader of self.vis_header_references){
+			vheader.index.logo.src = self.logo_path;
+			vheader.index.title.textContent = self.club_name.upper();
 		}
 		// update player items
-		for (const player of this.playerbase){
+		for (const player of self.playerbase){
 			player.forward_update()
 		}
 
 		// update self
-		this.control_panel.index.logo_feedback.src = this.logo_path;
-		this.control_panel.index.logo_feedback.setAttribute('kbhint', this.logo_path);
+		self.control_panel.index.logo_feedback.src = self.logo_path;
+		self.control_panel.index.logo_feedback.setAttribute('kbhint', self.logo_path);
 	}
 
 	// get visual header: an element with club logo + name
 	// this data is expected to be persistent
-	vis_header_elem(){
+	vis_header_elem(self){
 		const tplate = ksys.tplates.index_tplate(
 			'#club_header_template',
 			{
@@ -691,54 +694,51 @@ window.kbmodules.football_standard.FootballClub = class{
 			}
 		);
 
-		tplate.index.logo.src = this.logo_path;
-		tplate.index.title.textContent = this.club_name.upper();
+		tplate.index.logo.src = self.logo_path;
+		tplate.index.title.textContent = self.club_name.upper();
 
-		if (this.is_enemy){
+		if (self.is_enemy){
 			tplate.elem.setAttribute('is_enemy', true)
 		}
 
 		// register reference
-		this.vis_header_references.add(tplate)
+		self.vis_header_references.add(tplate)
 
 		return tplate.elem
 	}
 
 	// Delete all the club's resources from the interface
-	erase(){
+	erase(self){
 		// 1 - delete team lineup
-		if (window.kbmodules.football_standard.resource_index.home_lineup?.club?.club_name?.lower?.() == this.club_name.lower()){
+		if (window.kbmodules.football_standard.resource_index.home_lineup?.club?.club_name?.lower?.() == self.club_name.lower()){
 			$('#team_lineup home-club-lineup').empty()
 		}
-		if (window.kbmodules.football_standard.resource_index.guest_lineup?.club?.club_name?.lower?.() == this.club_name.lower()){
+		if (window.kbmodules.football_standard.resource_index.guest_lineup?.club?.club_name?.lower?.() == self.club_name.lower()){
 			$('#team_lineup guest-club-lineup').empty()
 		}
 
-
 		// Lastly, delete club control panel
-		this.control_panel?.elem?.remove?.()
+		self.control_panel?.elem?.remove?.()
 	}
 
 	// Register a new player in this club
 	// - input_player_info:dict player info as described in FootballClub class
-	register_player(input_player_info=null){
+	register_player(self, input_player_info=null){
 		// create player class
-		const player = new window.kbmodules.football_standard.ClubPlayer(this, input_player_info);
+		const player = new window.kbmodules.football_standard.ClubPlayer(self, input_player_info);
 		// add player to the registry
-		this.playerbase.add(player);
+		self.playerbase.add(player);
 		// add player cfg box to the club pool
-		this.control_panel.index.player_pool.append(player.player_params_elem().elem)
+		self.control_panel.index.player_pool.append(player.player_params_elem().elem)
 		// return the player class
 		return player
 	}
 
 	// Create club control panel
 	// todo: somehow make the file input element look like a file has just been selected
-	control_panel_elem(){
-		const self = this;
-
-		if (this.control_panel){
-			return this.control_panel
+	control_panel_elem(self){
+		if (self.control_panel){
+			return self.control_panel
 		}
 
 		const tplate = ksys.tplates.index_tplate(
@@ -765,19 +765,19 @@ window.kbmodules.football_standard.FootballClub = class{
 
 		// save the template
 		// todo: only one definition panel can exist for now
-		this.control_panel = tplate;
+		self.control_panel = tplate;
 
 		// populate pool with existing players
-		for (const player of this.playerbase){
+		for (const player of self.playerbase){
 			tplate.index.player_pool.append(player.player_params_elem().elem)
 		}
 
 		// write other info
-		tplate.index.club_title.value = this.club_name.upper();
-		tplate.index.title_shorthand.value = this.club_name_shorthand.upper();
-		tplate.index.main_coach.value = this.main_coach.upper();
-		tplate.index.logo_feedback.src = this.logo_path;
-		tplate.index.logo_feedback.setAttribute('kbhint', this.logo_path);
+		tplate.index.club_title.value = self.club_name.upper();
+		tplate.index.title_shorthand.value = self.club_name_shorthand.upper();
+		tplate.index.main_coach.value = self.main_coach.upper();
+		tplate.index.logo_feedback.src = self.logo_path;
+		tplate.index.logo_feedback.setAttribute('kbhint', self.logo_path);
 
 		// bind button for adding new players
 		tplate.index.reg_player_btn.onclick = function(){
@@ -829,26 +829,26 @@ window.kbmodules.football_standard.FootballClub = class{
 	}
 
 	// open club control panel in the club tab
-	open_panel(){
+	open_panel(self){
 		// delete previous control panel
 		$('#club_definition club-def').remove();
 		// Append new club
-		$('#club_definition').append(this.control_panel_elem().elem);
+		$('#club_definition').append(self.control_panel_elem().elem);
 		// set reference to this club in the resource index
-		window.kbmodules.football_standard.resource_index.club_ctrl = this;
+		window.kbmodules.football_standard.resource_index.club_ctrl = self;
 	}
 
 	// return a json representing this club
-	to_json(){
+	to_json(self){
 		const dump = {
-			'logo_path':           this.logo_path,
-			'club_name':           this.club_name,
-			'club_name_shorthand': this.club_name_shorthand,
-			'main_coach':          this.main_coach,
+			'logo_path':           self.logo_path,
+			'club_name':           self.club_name,
+			'club_name_shorthand': self.club_name_shorthand,
+			'main_coach':          self.main_coach,
 			'playerbase':          [],
 		};
 
-		for (const player of this.playerbase){
+		for (const player of self.playerbase){
 			dump.playerbase.push(player.as_dict())
 		}
 
@@ -858,10 +858,10 @@ window.kbmodules.football_standard.FootballClub = class{
 	}
 
 	// Get player class by nameid
-	get_player_by_nameid(tgt_nameid=null){
+	get_player_by_nameid(self, tgt_nameid=null){
 		if (!tgt_nameid){return null};
 
-		for (const player of this.playerbase){
+		for (const player of self.playerbase){
 			if (player.name_id == tgt_nameid){
 				return player
 			}
@@ -883,32 +883,32 @@ window.kbmodules.football_standard.FootballClub = class{
 // This data is persistent, unless killed
 window.kbmodules.football_standard.ClubPlayer = class{
 	constructor(parent_club, input_player_info=null){
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
 		const player_info = input_player_info || {};
 
-		this.club = parent_club;
+		self.club = parent_club;
 
-		this.player_name =    (player_info.name || '').lower();
-		this.player_surname = (player_info.surname || '').lower();
-		this.player_num =     (player_info.num || '').lower();
+		self.player_name =    (player_info.name || '').lower();
+		self.player_surname = (player_info.surname || '').lower();
+		self.player_num =     (player_info.num || '').lower();
 
 		// stats
-		this.yellow_cards = 0;
-		this.red_cards = 0;
+		self.yellow_cards = 0;
+		self.red_cards = 0;
 
-		// todo: is this really a good idea???
-		// treating JS like C ??!?!?!
-		// POINTERS???
-		// CONSPIRACIES?????
-		this.references = new Set();
+		// todo: is this stupid?
+		self.references = new Set();
 	}
 
 	// forward player data (name, surname, number)
 	// to all the related elements
-	forward_update(){
-		for (const generic_list_elem of this.references){
-			generic_list_elem.index.logo.src =          this.club.logo_path;
-			generic_list_elem.index.num.textContent =     this.player_num.upper();
-			generic_list_elem.index.surname.textContent = this.player_surname.upper();
+	forward_update(self){
+		for (const generic_list_elem of self.references){
+			generic_list_elem.index.logo.src =          self.club.logo_path;
+			generic_list_elem.index.num.textContent =     self.player_num.upper();
+			generic_list_elem.index.surname.textContent = self.player_surname.upper();
 		}
 
 		// todo: there used to be
@@ -921,17 +921,17 @@ window.kbmodules.football_standard.ClubPlayer = class{
 	}
 
 	// Remove the player from EVERYWHERE
-	disqualify(){
+	disqualify(self){
 		// Remove DOM elements
-		this.unlist()
+		self.unlist();
 		// Delete self from the club's registry
-		this.club.playerbase.delete(this)
+		self.club.playerbase.delete(self);
 	}
 
 	// Unlist the player ftom the current match
-	unlist(){
+	unlist(self){
 		// Delete all the GUI elements from the page
-		for (const reference of this.references){
+		for (const reference of self.references){
 			reference.elem.remove();
 		}
 	}
@@ -939,18 +939,16 @@ window.kbmodules.football_standard.ClubPlayer = class{
 	// delete obsolete references
 	// todo: this means there are always redundant
 	// elements until this method is called
-	collect_garbage(){
-		for (const rubbish of this.references){
+	collect_garbage(self){
+		for (const rubbish of self.references){
 			if (!document.body.contains(rubbish.elem)){
-				this.references.delete(rubbish)
+				self.references.delete(rubbish)
 			}
 		}
 	}
 
 	// return an indexed template from ksys.tplates.index_tplate
-	generic_list_elem(collect_rubbish=true){
-		const self = this;
-
+	generic_list_elem(self, collect_rubbish=true){
 		const tplate = ksys.tplates.index_tplate(
 			'#generic_player_list_item_template',
 			{
@@ -962,16 +960,16 @@ window.kbmodules.football_standard.ClubPlayer = class{
 
 		// delete redundant references
 		if (collect_rubbish){
-			this.collect_garbage()
+			self.collect_garbage()
 		}
 
 		// Write down data
-		tplate.index.logo.src = this.club.logo_path;
-		tplate.index.num.textContent = this.player_num.upper();
-		tplate.index.surname.textContent = this.player_surname.upper();
+		tplate.index.logo.src = self.club.logo_path;
+		tplate.index.num.textContent = self.player_num.upper();
+		tplate.index.surname.textContent = self.player_surname.upper();
 
 		// Write down reference to this element
-		self.references.add(tplate)
+		self.references.add(tplate);
 
 		// too bad JS doesn't support cool python unpacking
 		// (aka return a, b)
@@ -980,9 +978,7 @@ window.kbmodules.football_standard.ClubPlayer = class{
 
 	// return player config element
 	// (inputs with name, surname, name, ...)
-	player_params_elem(){
-		const self = this;
-
+	player_params_elem(self){
 		const tplate = ksys.tplates.index_tplate(
 			'#generic_player_config_template',
 			{
@@ -993,9 +989,9 @@ window.kbmodules.football_standard.ClubPlayer = class{
 		);
 
 		// Populate params
-		tplate.index.name.value = this.player_name.upper();
-		tplate.index.surname.value = this.player_surname.upper();
-		tplate.index.num.value = this.player_num.upper();
+		tplate.index.name.value = self.player_name.upper();
+		tplate.index.surname.value = self.player_surname.upper();
+		tplate.index.num.value = self.player_num.upper();
 
 		tplate.index.name.onchange = function(evt){
 			self.player_name = evt.target.value.lower();
@@ -1037,12 +1033,12 @@ window.kbmodules.football_standard.ClubPlayer = class{
 		return tplate
 	}
 
-	get name_id(){
-		return `${this.player_name} ${this.player_surname} ${this.player_num}`.lower()
+	$name_id(self){
+		return `${self.player_name} ${self.player_surname} ${self.player_num}`.lower()
 	}
 
-	get side(){
-		if (this.club.is_enemy){
+	$side(self){
+		if (self.club.is_enemy){
 			return 'guest'
 		}else{
 			return 'home'
@@ -1051,9 +1047,9 @@ window.kbmodules.football_standard.ClubPlayer = class{
 
 	// test whether the player is inside another player array
 	// by his name_id
-	is_in(target_array){
+	is_in(self, target_array){
 		for (const player of target_array){
-			if (this.name_id == player.name_id){
+			if (self.name_id == player.name_id){
 				return true
 			}
 		}
@@ -1061,11 +1057,11 @@ window.kbmodules.football_standard.ClubPlayer = class{
 	}
 
 	// return a dictionary representing this player
-	as_dict(){
+	as_dict(self){
 		return {
-			'name':    this.player_name,
-			'surname': this.player_surname,
-			'num':     this.player_num,
+			'name':    self.player_name,
+			'surname': self.player_surname,
+			'num':     self.player_num,
 		}
 	}
 }
@@ -1090,33 +1086,36 @@ Club lineup for the upcoming match.
 */
 window.kbmodules.football_standard.TeamLineup = class{
 	constructor(club, colors=null, input_lineup_info=null){
-		this.club = club;
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
+		self.club = club;
 		const lineup_info = input_lineup_info || {};
 
 		// basic config
-		this.shorts_color = lineup_info.shorts_col || null;
-		this.tshirt_color = lineup_info.tshirt_col || null;
-		this.gk_color =     lineup_info.gk_col || null;
+		self.shorts_color = lineup_info.shorts_col || null;
+		self.tshirt_color = lineup_info.tshirt_col || null;
+		self.gk_color =     lineup_info.gk_col || null;
 
 		// todo: unused as of now
-		this.field_layout = lineup_info.field_layout || {};
+		self.field_layout = lineup_info.field_layout || {};
 
 		// Team colours to pick from (hardcoded list of hex colours)
 		// todo: vmix DOES support shape colour shifting
-		this.available_colors = colors || [];
+		self.available_colors = colors || [];
 
 		// Colour picker classes
-		this.shorts_colpick = null;
-		this.tshirt_colpick = null;
-		this.gk_colpick = null;
+		self.shorts_colpick = null;
+		self.tshirt_colpick = null;
+		self.gk_colpick = null;
 
 		// These sets contain player classes
-		this.main_players = new Set();
-		this.reserve_players = new Set();
+		self.main_players = new Set();
+		self.reserve_players = new Set();
 
 		// todo: There can be only one control panel
 		// why??
-		this.tplate = null;
+		self.tplate = null;
 
 
 		// 
@@ -1124,21 +1123,19 @@ window.kbmodules.football_standard.TeamLineup = class{
 		// 
 
 		// todo: is this stupid ?
-		this.input_lineup_info = lineup_info;
+		self.input_lineup_info = lineup_info;
 
 	}
 
 	// get control panel element for the lineup
-	control_panel_elem(){
-		const self = this;
-
+	control_panel_elem(self){
 		// todo: There can be only one control panel
 		if (self.tplate){
 			return self.tplate.elem
 		}
 
 		// Create the control panel itself
-		this.tplate = ksys.tplates.index_tplate(
+		self.tplate = ksys.tplates.index_tplate(
 			'#club_match_lineup_template',
 			{
 				// Side (home/guest)
@@ -1172,7 +1169,7 @@ window.kbmodules.football_standard.TeamLineup = class{
 		// create player picker
 		// 
 		const player_picker = new window.kbmodules.football_standard.PlayerPicker(
-			[this.club.playerbase],
+			[self.club.playerbase],
 
 			// Filter function to filter out players already in the lists
 			function(target_player){
@@ -1186,25 +1183,40 @@ window.kbmodules.football_standard.TeamLineup = class{
 		);
 
 		// replace the placeholder in the template with a real picker
-		this.tplate.index.player_picker_placeholder.replaceWith(player_picker.box);
+		self.tplate.index.player_picker_placeholder.replaceWith(player_picker.box);
 
 
 		//
 		// create colour pickers
 		// 
-		this.shorts_colpick = new window.kbmodules.football_standard.TeamLineupColorPicker(this.available_colors, window.kbmodules.football_standard.update_team_colors);
-		this.tplate.index.shorts_color_picker.append(this.shorts_colpick.list)
+		self.shorts_colpick = new window.kbmodules.football_standard.TeamLineupColorPicker(self.available_colors, window.kbmodules.football_standard.update_team_colors);
+		// self.shorts_colpick = ksys.util.cls_pwnage.spawn(
+		// 	window.kbmodules.football_standard.TeamLineupColorPicker,
+		// 	self.available_colors,
+		// 	window.kbmodules.football_standard.update_team_colors
+		// )
+		self.tplate.index.shorts_color_picker.append(self.shorts_colpick.list)
 
-		this.tshirt_colpick = new window.kbmodules.football_standard.TeamLineupColorPicker(this.available_colors, window.kbmodules.football_standard.update_team_colors);
-		this.tplate.index.tshirt_color_picker.append(this.tshirt_colpick.list)
+		self.tshirt_colpick = new window.kbmodules.football_standard.TeamLineupColorPicker(self.available_colors, window.kbmodules.football_standard.update_team_colors);
+		// self.tshirt_colpick = ksys.util.cls_pwnage.spawn(
+		// 	window.kbmodules.football_standard.TeamLineupColorPicker,
+		// 	self.available_colors,
+		// 	window.kbmodules.football_standard.update_team_colors
+		// )
+		self.tplate.index.tshirt_color_picker.append(self.tshirt_colpick.list)
 
-		this.gk_colpick = new window.kbmodules.football_standard.TeamLineupColorPicker(this.available_colors, window.kbmodules.football_standard.update_team_colors);
-		this.tplate.index.gk_color_picker.append(this.gk_colpick.list)
+		self.gk_colpick = new window.kbmodules.football_standard.TeamLineupColorPicker(self.available_colors, window.kbmodules.football_standard.update_team_colors);
+		// self.gk_colpick = ksys.util.cls_pwnage.spawn(
+		// 	window.kbmodules.football_standard.TeamLineupColorPicker,
+		// 	self.available_colors,
+		// 	window.kbmodules.football_standard.update_team_colors
+		// )
+		self.tplate.index.gk_color_picker.append(self.gk_colpick.list)
 
 		//
 		// create header (visual identifier)
 		// 
-		this.tplate.elem.append(this.club.vis_header_elem())
+		self.tplate.elem.append(self.club.vis_header_elem())
 
 
 		// 
@@ -1212,7 +1224,7 @@ window.kbmodules.football_standard.TeamLineup = class{
 		// 
 
 		// Append chosen player to the main player list
-		this.tplate.index.append_to_main_list_btn.onclick = function(){
+		self.tplate.index.append_to_main_list_btn.onclick = function(){
 			if (!player_picker.selected_entry){
 				ksys.info_msg.send_msg('No player selected', 'warn', 500);
 				return
@@ -1228,7 +1240,7 @@ window.kbmodules.football_standard.TeamLineup = class{
 			window.kbmodules.football_standard.global_save({'lineup_lists': true})
 		}
 		// Append chosen player to the reserve player list
-		this.tplate.index.append_to_reserve_list_btn.onclick = function(){
+		self.tplate.index.append_to_reserve_list_btn.onclick = function(){
 			if (!player_picker.selected_entry){
 				ksys.info_msg.send_msg('No player selected', 'warn', 500);
 				return
@@ -1244,7 +1256,7 @@ window.kbmodules.football_standard.TeamLineup = class{
 			window.kbmodules.football_standard.global_save({'lineup_lists': true})
 		}
 		// Edit related club in the club panel
-		this.tplate.index.edit_club_btn.onclick = function(){
+		self.tplate.index.edit_club_btn.onclick = function(){
 			self.club.open_panel();
 
 			// Switch to the "Clubs" tab
@@ -1287,21 +1299,19 @@ window.kbmodules.football_standard.TeamLineup = class{
 	// Add a player to either main player list or reserve
 	// - player: ClubPlayer
 	// - which_list: 'main' | 'reserve'
-	add_player_to_list(player, which_list){
-		const self = this;
-
-		const tgt_list = which_list == 'main' ? this.main_players : this.reserve_players;
+	add_player_to_list(self, player, which_list){
+		const tgt_list = which_list == 'main' ? self.main_players : self.reserve_players;
 		if (tgt_list.size >= 11){
 			ksys.info_msg.send_msg(
-				'There are more than 11 players in this list, proceed with caution',
+				`There are more than 11 players in this list, proceed with extreme caution (aka the entire datastructure is getting corrupted)`,
 				'warn',
-				9000
+				15000
 			);
 		}
 
 		// print('Target list:', tgt_list, this.main_players, this.reserve_players)
 		// if the player is already in the list - return
-		if (this.main_players.has(player) || this.reserve_players.has(player)){return};
+		if (self.main_players.has(player) || self.reserve_players.has(player)){return};
 
 		// Create generic list item
 		const list_elem = player.generic_list_elem();
@@ -1323,30 +1333,30 @@ window.kbmodules.football_standard.TeamLineup = class{
 
 		// Append DOM element to the list
 		if (which_list == 'main'){
-			this.tplate.index.main_list.append(list_elem.elem)
+			self.tplate.index.main_list.append(list_elem.elem)
 		}else{
-			this.tplate.index.reserve_list.append(list_elem.elem)
+			self.tplate.index.reserve_list.append(list_elem.elem)
 		}
 
 	}
 
 	// - player: ClubPlayer
 	// - which_list: 'main' | 'reserve'
-	remove_player_from_list(player, which_list){
+	remove_player_from_list(self, player, which_list){
 		// todo: this is stupid
 		let target_list = null;
-		if (which_list == 'main'){target_list = this.main_players};
-		if (which_list == 'reserve'){target_list = this.reserve_players};
+		if (which_list == 'main'){target_list = self.main_players};
+		if (which_list == 'reserve'){target_list = self.reserve_players};
 
 		target_list.delete(player)
 	}
 
 	// get selected lineup colours
-	get colors(){
+	$colors(self){
 		return {
-			'tshirt': this.tshirt_colpick.selected_color,
-			'shorts': this.shorts_colpick.selected_color,
-			'gk': this.gk_colpick.selected_color,
+			'tshirt': self.tshirt_colpick.selected_color,
+			'shorts': self.shorts_colpick.selected_color,
+			'gk': self.gk_colpick.selected_color,
 		}
 	}
 }
@@ -1361,33 +1371,34 @@ Colour picker for the lineup.
 window.kbmodules.football_standard.TeamLineupColorPicker = class{
 	constructor(color_codes, callback=null){
 		const self = this;
+		ksys.util.cls_pwnage.remap(self);
 
-		this.color_codes = color_codes || [];
-		this.callback = callback;
+		self.color_codes = color_codes || [];
+		self.callback = callback;
 
 		// currently active colour by colour code
-		this._selected_color = color_codes[0];
+		self._selected_color = color_codes[0];
 
 		// colour objects (js DOM elements)
-		this.colors = {};
+		self.colors = {};
 
-		this.tplate = ksys.tplates.index_tplate(
+		self.tplate = ksys.tplates.index_tplate(
 			'#team_lineup_color_picker_template',
 			{},
 		);
 
 		// the dom element itself
-		this.list = this.tplate.elem;
+		self.list = self.tplate.elem;
 
-		for (const col of this.color_codes){
+		for (const col of self.color_codes){
 			const clear_hex = str(col).replaceAll('#', '');
 
 			// create colour DOM element
 			const color_elem = $(`<picker-color style="background: #${clear_hex}"></picker-color>`)[0];
 			// write down colour into palette registry
-			this.colors[clear_hex] = color_elem;
+			self.colors[clear_hex] = color_elem;
 			// append the DOM element to the list
-			this.tplate.elem.append(color_elem)
+			self.tplate.elem.append(color_elem)
 			// Bind actions
 			color_elem.onclick = function(){
 				self.selected_color = clear_hex;
@@ -1399,13 +1410,11 @@ window.kbmodules.football_standard.TeamLineupColorPicker = class{
 		}
 	}
 
-	get selected_color(){
-		return this._selected_color
+	$selected_color(self){
+		return self._selected_color
 	}
 
-	set selected_color(newval){
-		const self = this;
-
+	$$selected_color(self, newval){
 		const col_elem = self.colors[str(newval).replaceAll('#', '').trim()];
 		if (!col_elem){
 			console.warn('Cannot find target colour:', newval);
@@ -1451,17 +1460,18 @@ To add custom "onclick" - add "onclick" to the object passed to the post_filter_
 window.kbmodules.football_standard.PlayerPicker = class{
 	constructor(data_sources, filter, post_filter_action=null){
 		const self = this;
+		ksys.util.cls_pwnage.remap(self);
 
-		this.data_source = data_sources;
-		this.filter = filter;
-		this.post_filter_action = post_filter_action;
+		self.data_source = data_sources;
+		self.filter = filter;
+		self.post_filter_action = post_filter_action;
 
-		this.selected_entry = null;
+		self.selected_entry = null;
 
-		this.filtered_entries = [];
+		self.filtered_entries = [];
 
 		// Create the filter box DOM element
-		this.tplate = ksys.tplates.index_tplate(
+		self.tplate = ksys.tplates.index_tplate(
 			'#player_picker_template',
 			{
 				'input':    'input.player_picker_input',
@@ -1470,11 +1480,11 @@ window.kbmodules.football_standard.PlayerPicker = class{
 		);
 
 		// The DOM element itself
-		this.box = this.tplate.elem;
+		self.box = self.tplate.elem;
 
 		// bind events
 		// todo: this can directly point to this.match_query
-		this.tplate.index.input.oninput = function(evt){
+		self.tplate.index.input.oninput = function(evt){
 			// const query = evt.target.value;
 			self.match_query(evt.target.value)
 		}
@@ -1482,23 +1492,21 @@ window.kbmodules.football_standard.PlayerPicker = class{
 
 	// Filter data source according to query and display the results
 	// - query: query string
-	match_query(query){
-		const self = this;
-
+	match_query(self, query){
 		// clear previous selection
-		this.selected_entry = null;
+		self.selected_entry = null;
 		// clear pool
-		this.tplate.index.result.innerHTML = '';
-		this.filtered_entries = [];
+		self.tplate.index.result.innerHTML = '';
+		self.filtered_entries = [];
 
 		// look for matches
-		for (const dsource of this.data_source){
+		for (const dsource of self.data_source){
 			for (const player of dsource){
 				// const name_id = `${player.player_name} ${player.player_surname} ${player.player_num}`;
 				const name_id = player.name_id;
 				// todo: str() is very slow
 				if (!name_id.includes(str(query).lower())){continue};
-				if (!this.filter(player)){continue};
+				if (!self.filter(player)){continue};
 
 				// checks passed - append to the list
 				const list_item = player.generic_list_elem()
@@ -1522,14 +1530,14 @@ window.kbmodules.football_standard.PlayerPicker = class{
 				}
 
 				// append the matched result to the lists
-				this.tplate.index.result.append(list_item.elem)
-				this.filtered_entries.push({
+				self.tplate.index.result.append(list_item.elem)
+				self.filtered_entries.push({
 					'player': player,
 					'list_elem': list_item.elem,
 				})
 
 				// apply post-filter actions, if any
-				this?.post_filter_action?.(list_item, player)
+				self?.post_filter_action?.(list_item, player)
 			}
 		}
 
@@ -1537,42 +1545,45 @@ window.kbmodules.football_standard.PlayerPicker = class{
 
 	// remove selection from the filtered list
 	// and deselect
-	pull_out_selection(){
-		if (!this.selected_entry){return};
-		this.selected_entry.list_elem.remove()
-		this.selected_entry = null;
+	pull_out_selection(self){
+		if (!self.selected_entry){return};
+		self.selected_entry.list_elem.remove()
+		self.selected_entry = null;
 	}
 
 	// deselect currently selected item
-	reset_selection(){
-		if (!this.selected_entry){return};
-		this.selected_entry.list_elem.classList.remove('selected_entry')
-		this.selected_entry = null;
+	reset_selection(self){
+		if (!self.selected_entry){return};
+		self.selected_entry.list_elem.classList.remove('selected_entry')
+		self.selected_entry = null;
 	}
 }
 
 
 window.kbmodules.football_standard.ClubSelectorDropdown = class{
 	constructor(){
-		this.registry = new Set();
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
+		self.registry = new Set();
 	}
 
-	dropdown_elem(onchane){
+	dropdown_elem(self, onchane){
 		const tplate = ksys.tplates.index_tplate(
 			'#club_selector_dropdown_template',
 			{}
 		);
 		$(tplate.elem).append('<option value="">--</option>');
 		tplate.elem.onchange = onchane;
-		this.registry.add(tplate.elem);
-		this.resync();
+		self.registry.add(tplate.elem);
+		self.resync();
 		return tplate.elem
 	}
 
-	resync(){
+	resync(self){
 		// Technically, there could be multiple dropdowns
 		// Practically - why ???
-		for (let dropdown of this.registry){
+		for (let dropdown of self.registry){
 			dropdown = $(dropdown);
 			// Delete all previous dropdown entries
 			dropdown.find('option:not([value=""])').remove();
@@ -1590,16 +1601,30 @@ window.kbmodules.football_standard.ClubSelectorDropdown = class{
 window.kbmodules.football_standard.FieldLayout = class{
 	constructor(lineup){
 		const self = this;
+		ksys.util.cls_pwnage.remap(self);
 
-		this.lineup = lineup;
-		this.grid = new Set();
+		if (!lineup){
+			ksys.info_msg.send_msg(
+				`FATAL: No lineup supplied to the FieldLayout class. Nothing will work`,
+				'err',
+				10000
+			);
+			console.error(
+				'FATAL: No lineup supplied to the FieldLayout class. Nothing will work',
+				'lineup',
+				self,
+			);
+		}
+
+		self.lineup = lineup;
+		self.grid = new Set();
 
 		// Map of cell dom:linked cell dict
 		// todo: unused
-		this.cell_map = new Map();
+		self.cell_map = new Map();
 
 		// the player being dragged
-		this.drag_target = {
+		self.drag_target = {
 			// player calss
 			'player': null,
 			// the element itself, NOT index
@@ -1613,7 +1638,7 @@ window.kbmodules.football_standard.FieldLayout = class{
 		// create cells struct
 		for (const row_id of range(9)){
 			const row = new Set();
-			this.grid.add(row)
+			self.grid.add(row);
 
 			for (const cell_id of range(10)){
 				const cell = {
@@ -1630,7 +1655,7 @@ window.kbmodules.football_standard.FieldLayout = class{
 
 						// Get data
 						const new_cell = cell;
-						const old_cell = self.cell_struct_from_dom(self, self.drag_target.list_elem.parentElement);
+						const old_cell = self.cell_struct_from_dom(self.drag_target.list_elem.parentElement);
 
 						print('Old cell:', old_cell, 'New cell:', new_cell)
 
@@ -1701,7 +1726,7 @@ window.kbmodules.football_standard.FieldLayout = class{
 
 				// Absolutely retarded hack.
 				// It has already been forgotten why it's needed,
-				// but eerything breaks without it
+				// but everything breaks without it
 				cell.dom.onmousedown = function(){
 					if (!cell.player){
 						self.drag_target = {
@@ -1713,21 +1738,21 @@ window.kbmodules.football_standard.FieldLayout = class{
 					}
 				}
 
-				row.add(cell)
+				row.add(cell);
 			}
 		}
 
 		// todo: temp: hide some cells
-		for (const row of this.grid){
+		for (const row of self.grid){
 			row.at(0).dom.classList.add('ghost_cell')
 		}
-		for (const cell of this.grid.at(-1)){
+		for (const cell of self.grid.at(-1)){
 			cell.dom.classList.add('ghost_cell')
 		}
-		this.grid.at(-1).at(5).dom.classList.remove('ghost_cell')
+		self.grid.at(-1).at(5).dom.classList.remove('ghost_cell')
 
 		// instantiate grid DOM
-		this.tplate = ksys.tplates.index_tplate(
+		self.tplate = ksys.tplates.index_tplate(
 			'#field_layout_template',
 			{
 				'picker': 'field-layout-picker',
@@ -1737,14 +1762,14 @@ window.kbmodules.football_standard.FieldLayout = class{
 		);
 
 		// append cells to grid DOM
-		for (const cell of this.iter_cells()){
-			this.tplate.index.grid.append(cell.dom)
+		for (const cell of self.iter_cells()){
+			self.tplate.index.grid.append(cell.dom)
 		}
 
 		// create player picker
-		this.picker = new window.kbmodules.football_standard.PlayerPicker(
+		self.picker = new window.kbmodules.football_standard.PlayerPicker(
 			// data source
-			[this.lineup.main_players, this.lineup.reserve_players],
+			[self.lineup.main_players, self.lineup.reserve_players],
 			// filter
 			function(tgt_player){
 				// Only show players that are NOT on the field
@@ -1758,25 +1783,25 @@ window.kbmodules.football_standard.FieldLayout = class{
 			// All the neccessary bindings for dragging and assigning
 			// the target player to the cell
 			function(list_item, tgt_player){
-				self.bind_list_item(self, list_item, tgt_player)
+				self.bind_list_item(list_item, tgt_player)
 			}
 		)
 
 		// append player picker to the template
-		this.tplate.index.picker.append(this.picker.box)
+		self.tplate.index.picker.append(self.picker.box)
 
 		// append cell DOMs to the template
-		for (const cell of this.iter_cells()){
-			this.tplate.index.grid.append(cell.dom)
-			this.cell_map[cell.dom] = cell;
+		for (const cell of self.iter_cells()){
+			self.tplate.index.grid.append(cell.dom)
+			self.cell_map[cell.dom] = cell;
 		}
 
 		// create club header and add it to the template
-		this.tplate.index.header.append(this.lineup.club.vis_header_elem())
+		self.tplate.index.header.append(self.lineup.club.vis_header_elem())
 	}
 
-	* iter_cells(){
-		for (const row of this.grid){
+	* iter_cells(self){
+		for (const row of self.grid){
 			for (const cell of row){
 				yield cell
 			}
@@ -1785,8 +1810,8 @@ window.kbmodules.football_standard.FieldLayout = class{
 
 	// check whether the player is on the field
 	// and return the associated cell if so
-	is_on_field(player){
-		for (const cell of this.iter_cells()){
+	is_on_field(self, player){
+		for (const cell of self.iter_cells()){
 			if (cell.player == player){
 				print(cell.player, player)
 				return cell
@@ -1869,10 +1894,10 @@ window.kbmodules.football_standard.FieldLayout = class{
 		...
 	}
 	*/
-	to_json(){
+	to_json(self){
 		const layout = {};
 
-		for (const cell of this.iter_cells()){
+		for (const cell of self.iter_cells()){
 			if (!cell.player){continue};
 
 			layout[cell.id] = cell.player.name_id;
@@ -1881,33 +1906,33 @@ window.kbmodules.football_standard.FieldLayout = class{
 		return layout;
 	}
 
-	wipe_field(){
-		this.hover_target = null;
-		this.drag_target = {
+	wipe_field(self){
+		self.hover_target = null;
+		self.drag_target = {
 			'player': null,
 			'list_elem': null,
 			'cell': null,
 		};
 
-		for (const cell in this.iter_cells()){
+		for (const cell in self.iter_cells()){
 			cell.player = null;
 			$(cell.dom).empty();
 		}
 	}
 
 	// layout_data is a dict of cell_id:name_id
-	apply_layout(layout_data){
+	apply_layout(self, layout_data){
 		if (!layout_data){
-			console.error('No layout data supplied to apply_layout', layout_data, this.lineup)
+			console.error('No layout data supplied to apply_layout', layout_data, self.lineup)
 			return
 		}
 
 		// First - wipe the field
-		this.wipe_field()
+		self.wipe_field()
 
 		// Now, add players
-		for (const cell of this.iter_cells()){
-			const player = this.lineup.club.get_player_by_nameid(layout_data[cell.id])
+		for (const cell of self.iter_cells()){
+			const player = self.lineup.club.get_player_by_nameid(layout_data[cell.id])
 			if (!player){continue};
 
 			cell.player = player;
@@ -1916,7 +1941,7 @@ window.kbmodules.football_standard.FieldLayout = class{
 			const player_list_item = player.generic_list_elem();
 
 			// create binds
-			this.bind_list_item(this, player_list_item, player);
+			self.bind_list_item(self, player_list_item, player);
 
 			// todo: get rid of jquery
 			$(cell.dom).html(player_list_item.elem);
@@ -2142,13 +2167,16 @@ window.kbmodules.football_standard.FMStatInstance = class{
 // It's totally possible to reduce the load (from 10ms to 9ms)
 window.kbmodules.football_standard.CardManager = class {
 	constructor(init_data=null){
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
 		// time in ms the card title should stay on screen
 		// this.title_hang_time = 7000;
 
-		this.player_picker = window.kbmodules.football_standard.resource_index.card_player_filter;
+		self.player_picker = window.kbmodules.football_standard.resource_index.card_player_filter;
 
 
-		this.sides = {
+		self.sides = {
 			home: {
 				// Persistent
 				// (DOM stuff, such as card images n stuff)
@@ -2201,7 +2229,6 @@ window.kbmodules.football_standard.CardManager = class {
 		}
 
 		// Create the controls
-		const self = this;
 		for (const side of ['home', 'guest']){
 			const tplate = ksys.tplates.index_tplate(
 				'#red_card_control_template',
@@ -2214,21 +2241,21 @@ window.kbmodules.football_standard.CardManager = class {
 					'card_c':  '.rcard3',
 				}
 			);
-			this.sides[side].card_array = [
+			self.sides[side].card_array = [
 				tplate.index['card_a'],
 				tplate.index['card_b'],
 				tplate.index['card_c'],
 			];
-			this.sides[side].dom_index = tplate.index;
+			self.sides[side].dom_index = tplate.index;
 
 			tplate.index.pool.onclick = function(evt){
 				if (evt.altKey){
-					self.reg_red(self, side, null)
+					self.reg_red(side, null)
 				}
 			}
 			tplate.index.pool.oncontextmenu = function(evt){
 				if (evt.altKey){
-					self.cancel_red(self, side)
+					self.cancel_red(side)
 				}
 			}
 
@@ -2239,9 +2266,9 @@ window.kbmodules.football_standard.CardManager = class {
 
 	// Show the relevant amount of cards in the counters
 	// (old implementation)
-	_redraw_counters(){
+	_redraw_counters(self){
 		for (const side of ['home', 'guest']){
-			cmap = this.sides[side].yc_map;
+			cmap = self.sides[side].yc_map;
 
 			// Go through the records and count all the red cards
 			let red_count = 0;
@@ -2256,12 +2283,12 @@ window.kbmodules.football_standard.CardManager = class {
 			// todo: retarded
 
 			// hide all cards
-			for (const card of this.sides[side].card_array){
+			for (const card of self.sides[side].card_array){
 				card.classList.remove('.rcard_shown')
 			}
 			// gradually show cards
 			for (const idx of range(red_count)){
-				const card = this.sides[side].card_array[idx];
+				const card = self.sides[side].card_array[idx];
 				if (!card){break};
 
 				card.classList.add('.rcard_shown');
@@ -2288,7 +2315,7 @@ window.kbmodules.football_standard.CardManager = class {
 
 		// also resync vmix title (tiny red squares above timer)
 		// todo: is this the right place ?
-		self.resync_vmix(self)
+		self.resync_vmix();
 	}
 
 
@@ -2311,7 +2338,7 @@ window.kbmodules.football_standard.CardManager = class {
 			print('Redrawing vis feedback for', list_item);
 
 			const card_container = $('<div class="list_item_card_vis_feedback"></div>');
-			const record = self.get_pside(self, list_item.player).yc_map.get(list_item.player);
+			const record = self.get_pside(list_item.player).yc_map.get(list_item.player);
 			if (!record){continue};
 
 			// if the player was warned - append a yellow card
@@ -2336,7 +2363,7 @@ window.kbmodules.football_standard.CardManager = class {
 	eval_button_states(self){
 		print('evaluating button states')
 		// todo: it's really stupid that it's here
-		self.redraw_card_vis_feedback_in_list_item(self)
+		self.redraw_card_vis_feedback_in_list_item()
 
 		ksys.btns.toggle({
 			'red_card':           false,
@@ -2346,7 +2373,7 @@ window.kbmodules.football_standard.CardManager = class {
 		const player = self.player_picker?.selected_entry?.player;
 		if (!player){return};
 
-		const record = self.get_pside(self, player).yc_map.get(player)
+		const record = self.get_pside(player).yc_map.get(player)
 		// No record means this player may receive any card
 		if (!record){
 			ksys.btns.toggle({
@@ -2389,28 +2416,28 @@ window.kbmodules.football_standard.CardManager = class {
 
 	// Resync dependencies:
 	// If the club changed - purge old player card map and red counter
-	resync(){
+	resync(self){
 		for (const side of ['home', 'guest']){
 			// the club currently loaded for this side in the system
 			const active_club = window.kbmodules.football_standard.resource_index.side[side].club;
 			// the club referenced in the CardManager registry
-			const referenced_club = this.sides[side].club;
+			const referenced_club = self.sides[side].club;
 			// can only proceed if there's a club loaded for this side
 			if (!active_club){continue};
 
 			// if the referenced club does not match the club loaded in the system - resync
 			// It's also intended to work when the referenced club is null
 			if (active_club != referenced_club){
-				this.sides[side].club = active_club;
-				this.sides[side].yc_map = new Map();
-				this.sides[side].red_stack = new Set();
+				self.sides[side].club = active_club;
+				self.sides[side].yc_map = new Map();
+				self.sides[side].red_stack = new Set();
 				// and overwrite the visual header
-				$(this.sides[side].dom_index.header).html(active_club.vis_header_elem())
+				$(self.sides[side].dom_index.header).html(active_club.vis_header_elem())
 			}
 		}
 
 		// Redraw the red card counters for both sides to reflect the current state
-		this.redraw_counters(this)
+		self.redraw_counters()
 	}
 
 	// Get player's side (home/guest)
@@ -2430,7 +2457,7 @@ window.kbmodules.football_standard.CardManager = class {
 		// const tgt_club = player.club;
 		// const pside = tgt_club.is_enemy ? 'guest' : 'home';
 		// const yc_map = self.sides[pside].yc_map;
-		const yc_map = self.get_pside(self, player).yc_map
+		const yc_map = self.get_pside(player).yc_map
 
 		// first check if the player exists in the card registry
 		if (!yc_map.has(player)){
@@ -2446,8 +2473,8 @@ window.kbmodules.football_standard.CardManager = class {
 		return yc_map.get(player)
 	}
 
-	// 1+ code duplications is too much
-	async show_card_title(title, player){
+	// 1+ code duplications is already too much
+	async show_card_title(self, title, player){
 		// Set the player's surname
 		await title.set_text(
 			'player_name',
@@ -2479,7 +2506,7 @@ window.kbmodules.football_standard.CardManager = class {
 		}
 
 		// ensure that the player exists in the registry
-		const pcard_info = self.ensure_player_is_registered(self, player);
+		const pcard_info = self.ensure_player_is_registered(player);
 
 		// All 3 titles (yellow, red, ycbr) have the same fields
 		// So the logic is: Figure out what's going on -> update registry ->
@@ -2491,7 +2518,10 @@ window.kbmodules.football_standard.CardManager = class {
 			pcard_info.red = true;
 			title = window.kbmodules.football_standard.titles.ycbr_card;
 			// register this red card
-			self.reg_red(self, self.get_pside(self, player, false), player)
+			self.reg_red(
+				self.get_pside(player, false),
+				player
+			)
 		}else{
 			// otherwise - it's a first warning
 			pcard_info.warned = true;
@@ -2502,10 +2532,10 @@ window.kbmodules.football_standard.CardManager = class {
 			window.kbmodules.football_standard.global_save({'card_data': true})
 		}
 
-		self.eval_button_states(self)
+		self.eval_button_states()
 
 		// update the corresponding vmix title and show it
-		await this.show_card_title(title, player)
+		await self.show_card_title(title, player)
 
 	}
 
@@ -2524,12 +2554,12 @@ window.kbmodules.football_standard.CardManager = class {
 		}
 
 		// ensure that the player exists in the registry
-		const pcard_info = self.ensure_player_is_registered(self, player);
+		const pcard_info = self.ensure_player_is_registered(player);
 		// todo: also flip warned to false ?
 		pcard_info.red = true;
 		// register this red card
 		const pside = player.club.is_enemy ? 'guest' : 'home';
-		self.reg_red(self, pside, player)
+		self.reg_red(pside, player)
 
 		const title = window.kbmodules.football_standard.titles.red_card;
 		// update the corresponding title and show it
@@ -2550,8 +2580,8 @@ window.kbmodules.football_standard.CardManager = class {
 		self.sides[side].red_stack.add({
 			'player': player,
 		})
-		self.redraw_counters(self)
-		self.eval_button_states(self)
+		self.redraw_counters()
+		self.eval_button_states()
 
 		// todo: is this the right place?
 		// save card data
@@ -2571,7 +2601,7 @@ window.kbmodules.football_standard.CardManager = class {
 		// delete the last card from the stack
 		const last_red_player = self.sides[side].red_stack.at(-1)?.player;
 		if (last_red_player){
-			const record = self.get_pside(self, last_red_player).yc_map.get(last_red_player)
+			const record = self.get_pside(last_red_player).yc_map.get(last_red_player)
 			if (record){
 				record.red = false;
 			}
@@ -2583,13 +2613,13 @@ window.kbmodules.football_standard.CardManager = class {
 		// save card data
 		window.kbmodules.football_standard.global_save({'card_data': true})
 
-		self.redraw_counters(self)
-		self.eval_button_states(self)
+		self.redraw_counters()
+		self.eval_button_states()
 	}
 
 	// pardon a red card by player class
 	named_red_pardon(self, player){
-		const pside = self.get_pside(self, player)
+		const pside = self.get_pside(player);
 		for (const rcard_record of pside.red_stack){
 			if (rcard_record.player == player){
 				pside.red_stack.delete(rcard_record)
@@ -2603,15 +2633,15 @@ window.kbmodules.football_standard.CardManager = class {
 
 	// Pardon the player
 	pardon(self, player){
-		const pcard_info = self.ensure_player_is_registered(self, player);
+		const pcard_info = self.ensure_player_is_registered(player);
 		const pside = player.club.is_enemy ? 'guest' : 'home';
 
 		// Cancel first warning only
 		if (pcard_info.warned && !pcard_info.red){
 			print('Cancelling first warning')
 			pcard_info.warned = false;
-			self.eval_button_states(self)
-			self.redraw_counters(self)
+			self.eval_button_states()
+			self.redraw_counters()
 
 			// todo: is this the right place?
 			// save card data
@@ -2623,10 +2653,10 @@ window.kbmodules.football_standard.CardManager = class {
 		if (pcard_info.warned && pcard_info.red){
 			print('Cancelling ycbr')
 			pcard_info.red = false;
-			// self.cancel_red(self, pside)
-			self.named_red_pardon(self, player)
-			self.eval_button_states(self)
-			self.redraw_counters(self)
+			// self.cancel_red(pside)
+			self.named_red_pardon(player)
+			self.eval_button_states()
+			self.redraw_counters()
 
 			// todo: is this the right place?
 			// save card data
@@ -2638,10 +2668,10 @@ window.kbmodules.football_standard.CardManager = class {
 		if (!pcard_info.warned && pcard_info.red){
 			print('Immediate red')
 			pcard_info.red = false;
-			// self.cancel_red(self, pside)
-			self.named_red_pardon(self, player)
-			self.eval_button_states(self)
-			self.redraw_counters(self)
+			// self.cancel_red(pside)
+			self.named_red_pardon(player)
+			self.eval_button_states()
+			self.redraw_counters()
 
 			// todo: is this the right place?
 			// save card data
@@ -2667,7 +2697,7 @@ window.kbmodules.football_standard.CardManager = class {
 	}
 
 	// todo: check whether club names match
-	apply_data(input_data){
+	apply_data(self, input_data){
 		if (!input_data){
 			console.warn('Tried loading invalid card data:', input_data);
 			return
@@ -2675,12 +2705,12 @@ window.kbmodules.football_standard.CardManager = class {
 
 		for (const side of ['home', 'guest']){
 			// todo: is it fine to get club by side ?
-			const club = this.sides[side].club;
+			const club = self.sides[side].club;
 
 			if (!input_data[side] || !club){continue};
 
-			this.sides[side].yc_map = new Map();
-			this.sides[side].red_stack = new Set();
+			self.sides[side].yc_map = new Map();
+			self.sides[side].red_stack = new Set();
 
 			// reconstruct yc map
 			for (const player_nameid in input_data[side].yc_map){
@@ -2688,7 +2718,7 @@ window.kbmodules.football_standard.CardManager = class {
 				const record_data = input_data[side].yc_map[player_nameid];
 				if (!player){continue};
 
-				this.sides[side].yc_map.set(player, record_data);
+				self.sides[side].yc_map.set(player, record_data);
 			}
 
 			// reconstruct red stack
@@ -2696,16 +2726,16 @@ window.kbmodules.football_standard.CardManager = class {
 				const player = club.get_player_by_nameid(player_nameid);
 				if (!player && player_nameid !== false){continue};
 
-				this.sides[side].red_stack.add({
+				self.sides[side].red_stack.add({
 					'player': player || null,
 				})
 			}
 		}
 
 		// redraw/resync stuff
-		this.redraw_counters(this)
-		this.redraw_card_vis_feedback_in_list_item(this)
-		this.eval_button_states(this)
+		self.redraw_counters();
+		self.redraw_card_vis_feedback_in_list_item();
+		self.eval_button_states();
 	}
 }
 
@@ -2717,9 +2747,12 @@ window.kbmodules.football_standard.CardManager = class {
 
 window.kbmodules.football_standard.ClubGoals = class {
 	constructor(parent_club, init_data=null){
-		this.parent_club = parent_club;
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
 
-		this.tplate = ksys.tplates.index_tplate(
+		self.parent_club = parent_club;
+
+		self.tplate = ksys.tplates.index_tplate(
 			'#club_score_list_template',
 			{
 				'header':              'club-score club-score-header',
@@ -2730,7 +2763,7 @@ window.kbmodules.football_standard.ClubGoals = class {
 		);
 
 		// The dom element of the control panel
-		this.dom = this.tplate.elem;
+		self.dom = self.tplate.elem;
 
 		// The score stack. Last element = latest score
 		// it's an array of dicts:
@@ -2746,17 +2779,15 @@ window.kbmodules.football_standard.ClubGoals = class {
 				'dom_struct': the dom of the score element,
 			}
 		*/
-		this.score_stack = new Set();
+		self.score_stack = new Set();
 
-		this.selected_record = null;
+		self.selected_record = null;
 
 		// append header
-		this.tplate.index.header.append(parent_club.vis_header_elem())
+		self.tplate.index.header.append(parent_club.vis_header_elem())
 
-		// bind button
-		const self = this;
 
-		this.tplate.index.add_score_named_btn.onclick = function(evt){
+		self.tplate.index.add_score_named_btn.onclick = function(evt){
 			const selected_player = window.kbmodules.football_standard.resource_index.score_manager.player_picker?.selected_entry?.player;
 			if (!selected_player){
 				ksys.info_msg.send_msg(
@@ -2767,19 +2798,11 @@ window.kbmodules.football_standard.ClubGoals = class {
 				return
 			}
 
-			self.add_score(self, selected_player)
+			self.add_score(selected_player)
 		}
 
-		this.tplate.index.add_score_anon_btn.onclick = function(evt){
-			self.add_score(self, null)
-		}
-
-		self.delete_record = function(record){
-			return self._delete_record(self, record);
-		}
-
-		self._add_score = function(){
-			return self.add_score(self, ...arguments);
+		self.tplate.index.add_score_anon_btn.onclick = function(evt){
+			self.add_score(null)
 		}
 	}
 
@@ -2828,7 +2851,7 @@ window.kbmodules.football_standard.ClubGoals = class {
 		}
 
 		// get combined current time in minutes
-		// todo: is it possible for timestamp_override to happen to be random rubbish data
+		// todo: is it possible for timestamp_override to be random rubbish data
 		// therefore corrupting half the data structure ?
 		const calculated_timestamp = timestamp_override || window.kbmodules.football_standard.get_current_time(true);
 
@@ -2852,7 +2875,7 @@ window.kbmodules.football_standard.ClubGoals = class {
 		}
 
 		// push the record to the stack
-		self.score_stack.add(record)
+		self.score_stack.add(record);
 
 
 		// modify the template
@@ -2998,7 +3021,7 @@ window.kbmodules.football_standard.ClubGoals = class {
 
 			window.kbmodules.football_standard.resource_index.score_manager.reset_player_selection();
 
-			self.set_selected_record(self, record)
+			self.set_selected_record(record)
 
 			if (do_toggle){
 				window.kbmodules.football_standard.resource_index.score_manager.reset_player_selection();
@@ -3025,7 +3048,7 @@ window.kbmodules.football_standard.ClubGoals = class {
 		// sanity check
 		if (!self.selected_record){
 			ksys.info_msg.send_msg(
-				`Unable to modify the author, because no record is selected (This message should never appear)`,
+				`FATAL: Unable to modify the author, because no record is selected (This message should never appear)`,
 				'err',
 				9000
 			);
@@ -3065,7 +3088,7 @@ window.kbmodules.football_standard.ClubGoals = class {
 		record.dom_struct.elem.classList.add('selected_score_record');
 	}
 
-	_delete_record(self, record=null){
+	delete_record(self, record=null){
 		if (!record){return};
 
 		// if deleted record is also the one currently selected - deselect
@@ -3085,7 +3108,10 @@ window.kbmodules.football_standard.ClubGoals = class {
 // This class keeps track of both sides' scores
 window.kbmodules.football_standard.ScoreManager = class {
 	constructor(init_data=null){
-		this.sides = {
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
+		self.sides = {
 			'home': {
 				'score_list': null,
 			},
@@ -3095,38 +3121,38 @@ window.kbmodules.football_standard.ScoreManager = class {
 		}
 
 		// create the player picker
-		this.player_picker = new window.kbmodules.football_standard.PlayerPicker(
+		self.player_picker = new window.kbmodules.football_standard.PlayerPicker(
 			[[]],
 			function(){return true}
 		)
 
-		$('#score_ctrl_player_search').append(this.player_picker.box)
+		$('#score_ctrl_player_search').append(self.player_picker.box)
 	}
 
-	resync_picker_sources(){
+	resync_picker_sources(self){
 		const new_source = [];
 		for (const side of ['home', 'guest']){
 			// todo: if not lineup - continue
 			new_source.push(window.kbmodules.football_standard.resource_index.side[side]?.lineup?.main_players || []);
 			new_source.push(window.kbmodules.football_standard.resource_index.side[side]?.lineup?.reserve_players || []);
 		}
-		this.player_picker.data_source = new_source;
+		self.player_picker.data_source = new_source;
 	}
 
 	// resync lineups
-	resync_lineups(){
+	resync_lineups(self){
 		// todo: there are too many 'for side of home, guest' loops
 		for (const side of ['home', 'guest']){
 			const club_data = window.kbmodules.football_standard.resource_index.side[side]
 			if (club_data.lineup){
 				const club_goals = new window.kbmodules.football_standard.ClubGoals(club_data.club);
-				this.sides[side].score_list = club_goals;
+				self.sides[side].score_list = club_goals;
 				$(`#score_ctrl_${side}`).html(club_goals.dom);
 			}
 		}
 	}
 
-	reset_player_selection(){
+	reset_player_selection(self){
 		// important todo: Global level: don't even bother checking
 		// wether both sides have lineups defined.
 		// Simply make such tabs inaccessible.
@@ -3140,7 +3166,7 @@ window.kbmodules.football_standard.ScoreManager = class {
 		
 	}
 
-	async resync_score_on_title(){
+	async resync_score_on_title(self){
 		const title = window.kbmodules.football_standard.titles.timer;
 
 		// important todo: keep doing these stupid checks or simply lock all tabs till both lineups are present ?
@@ -3157,7 +3183,7 @@ window.kbmodules.football_standard.ScoreManager = class {
 	}
 
 	// todo: add as_string param to all to_json() methods
-	to_json(){
+	to_json(self){
 		const dump = {
 			'home': {
 				'club_name': null,
@@ -3170,11 +3196,11 @@ window.kbmodules.football_standard.ScoreManager = class {
 		};
 
 		for (const side of ['home', 'guest']){
-			if (!this.sides[side].score_list){continue};
+			if (!self.sides[side].score_list){continue};
 
-			dump[side].club_name = this.sides[side].score_list.parent_club.club_name.lower();
+			dump[side].club_name = self.sides[side].score_list.parent_club.club_name.lower();
 
-			for (const score of this.sides[side].score_list.score_stack){
+			for (const score of self.sides[side].score_list.score_stack){
 				dump[side].score_list.push({
 					'id': score.id,
 					'author': score?.author?.name_id || null,
@@ -3191,22 +3217,21 @@ window.kbmodules.football_standard.ScoreManager = class {
 	// todo: check club names
 	// todo: make all to_json/apply_data functions be like in this class
 	// (solid data structure and the save function from outside doesn't even create a temp buffer)
-	apply_data(input_data){
+	apply_data(self, input_data){
 		for (const side of ['home', 'guest']){
-			const tgt_score_list = this.sides[side].score_list;
+			const tgt_score_list = self.sides[side].score_list;
 			const src_score_list = input_data[side].score_list;
 			if (!tgt_score_list || !src_score_list){continue};
 
 			for (const score of src_score_list){
-				const player =
-					this.sides.home?.score_list?.parent_club?.get_player_by_nameid?.(score.author)
+				const player = (
+					self.sides.home?.score_list?.parent_club?.get_player_by_nameid?.(score.author)
 					||
-					this.sides.guest?.score_list?.parent_club?.get_player_by_nameid?.(score.author)
+					self.sides.guest?.score_list?.parent_club?.get_player_by_nameid?.(score.author)
 					||
 					null
-
+				);
 				tgt_score_list.add_score(
-					tgt_score_list,
 					player,
 					score.flags,
 					score.timestamp,
@@ -3219,28 +3244,28 @@ window.kbmodules.football_standard.ScoreManager = class {
 		}
 
 		// todo: is this really needed ?
-		this.resync_score_on_title()
+		self.resync_score_on_title()
 	}
 
 	// todo: unused
-	get selected_score_record(){
+	$selected_score_record(self){
 		return (
-			this.sides?.home?.score_list?.selected_record
+			self.sides?.home?.score_list?.selected_record
 			||
-			this.sides?.guest?.score_list?.selected_record
+			self.sides?.guest?.score_list?.selected_record
 			||
 			null
 		)
 	}
 
-	modify_score_author(){
+	modify_score_author(self){
 		// todo: beautify ?
-		if (this.sides?.home?.score_list?.selected_record){
-			this.sides.home.score_list.mod_author(this.sides.home.score_list)
+		if (self.sides?.home?.score_list?.selected_record){
+			self.sides.home.score_list.mod_author(self.sides.home.score_list)
 			return
 		}
-		if (this.sides?.guest?.score_list?.selected_record){
-			this.sides.guest.score_list.mod_author(this.sides.guest.score_list)
+		if (self.sides?.guest?.score_list?.selected_record){
+			self.sides.guest.score_list.mod_author(self.sides.guest.score_list)
 			return
 		}
 	}
@@ -3255,6 +3280,7 @@ window.kbmodules.football_standard.ScoreManager = class {
 window.kbmodules.football_standard.PenaltyManager = class{
 	constructor(pcount=5){
 		const self = this;
+		ksys.util.cls_pwnage.remap(self);
 
 		self.pcount = pcount;
 
@@ -3270,22 +3296,12 @@ window.kbmodules.football_standard.PenaltyManager = class{
 			'home': null,
 			'guest': null,
 		};
-
-
-		// todo: fuck javascript
-		self.resync = function(input_data){
-			return self._resync(self, input_data);
-		}
-
-		self.resync_vmix = function(){
-			return self._resync_vmix(self);
-		}
 	}
 
 	// Resync with relevant data, such as active clubs
 	// Even if a single club changes - everything is wiped,
 	// because otherwise it'd be a stupid mess.
-	_resync(self, input_data=null){
+	resync(self, input_data=null){
 		// Wipe previous data
 		self.sides?.home?.wipe();
 		self.sides?.guest?.wipe();
@@ -3313,7 +3329,7 @@ window.kbmodules.football_standard.PenaltyManager = class{
 		$('#penalty_pools').append(self.sides.guest.dom_data.elem);
 	}
 
-	_resync_vmix(self){
+	resync_vmix(self){
 		for (const side in self.sides){
 			for (const row_idx in self.sides[side].ctrl_elems){
 				self.sides[side].ctrl_elems[row_idx].push_to_vmix()
@@ -3328,6 +3344,7 @@ window.kbmodules.football_standard.PenaltyManager = class{
 window.kbmodules.football_standard.TeamPenaltyPool = class{
 	constructor(parent_manager, score_manager, tgt_team, input_data=null){
 		const self = this;
+		ksys.util.cls_pwnage.remap(self);
 
 		self.parent_manager = parent_manager;
 		self.score_manager = score_manager;
@@ -3361,17 +3378,9 @@ window.kbmodules.football_standard.TeamPenaltyPool = class{
 			self.ctrl_elems[idx] = ctrl_elem;
 			self.dom_data.index.table.append(ctrl_elem.dom_data.elem);
 		}
-
-		self.to_json = function(){
-			return self._to_json(self);
-		}
-
-		self.wipe = function(){
-			return self._wipe(self)
-		}
 	}
 
-	_to_json(self){
+	to_json(self){
 		const data = {};
 		for (const penalty_idx in self.ctrl_elems){
 			const penalty = self.ctrl_elems[penalty_idx];
@@ -3385,7 +3394,7 @@ window.kbmodules.football_standard.TeamPenaltyPool = class{
 		return data
 	}
 
-	_wipe(self){
+	wipe(self){
 		for (const pn_idx in self.ctrl_elems){
 			self.ctrl_elems[pn_idx].unreg();
 		}
@@ -3397,6 +3406,7 @@ window.kbmodules.football_standard.TeamPenaltyPool = class{
 window.kbmodules.football_standard.PenaltyTableEntry = class{
 	constructor(parent_pool, penalty_idx, input_data=null){
 		const self = this;
+		ksys.util.cls_pwnage.remap(self);
 
 		self.parent_pool = parent_pool;
 		self.idx = penalty_idx;
@@ -3427,12 +3437,6 @@ window.kbmodules.football_standard.PenaltyTableEntry = class{
 			self.dom_data.index.cbox_yes.checked = false;
 			self.push_to_vmix(true);
 		}
-
-		// todo: fuck javascript
-		self.push_to_vmix = function(){
-			self._push_to_vmix(self, ...arguments);
-		}
-
 
 		if (input_data){
 			// todo: this is stupid
@@ -3467,17 +3471,10 @@ window.kbmodules.football_standard.PenaltyTableEntry = class{
 				self.push_to_vmix();
 			}
 		}
-
-		self.get_state = function(){
-			return self._get_state(self);
-		}
-		self.unreg = function(){
-			return self._unreg(self);
-		}
 	}
 
 	// Push data to vmix
-	_push_to_vmix(self, dosave=false){
+	push_to_vmix(self, dosave=false){
 		const tgt_title = window.kbmodules.football_standard.titles.penalties;
 		const score_manager = self.parent_pool.score_manager.score_list;
 
@@ -3511,7 +3508,7 @@ window.kbmodules.football_standard.PenaltyTableEntry = class{
 
 			if (!self.associated_record){
 				print('Score manager is:', score_manager)
-				self.associated_record = score_manager._add_score(
+				self.associated_record = score_manager.add_score(
 					null,
 					null,
 					null,
@@ -3555,7 +3552,7 @@ window.kbmodules.football_standard.PenaltyTableEntry = class{
 		*/
 	}
 
-	_get_state(self){
+	get_state(self){
 		if (self.dom_data.index.cbox_yes.checked){
 			return 'yes'
 		}
@@ -3567,7 +3564,7 @@ window.kbmodules.football_standard.PenaltyTableEntry = class{
 	}
 
 	// Unreg the penalty, deleting associated scores and so on
-	_unreg(self){
+	unreg(self){
 		if (self.associated_record){
 			const score_manager = self.parent_pool.score_manager.score_list;
 			score_manager.delete_record(self.associated_record);
