@@ -101,9 +101,179 @@ const KBRadioSwitch = class{
 	get_active(self, tgt_id, trigger_save=true){}
 }
 
+const KBSwitch = class{
+	// - multichoice
+	//     Whether this switch can have multiple items active at once.
+	//     Default to false.
+	// - set_default
+	//     Item to set as default. None by default.
+	//     When "can_be_empty" is false - this gets automatically
+	//     set to the first available item.
+	// - can_be_empty
+	//     Whether nothing can be selected at all or not.
+	//     Default to false.
+	// - highlight_class
+	//     Class to add to active items.
+	//     Default to "kbs_selected".
+	// - dom_array
+	//     Bind to the provided array of DOM elements, in a format of:
+	//         - id: Unique id of this item in the switch.
+	//         - dom: The DOM element itself.
+	// - callback
+	//     Function to execute when the switch changes states.
+	constructor(cfg=null){
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
+		self.cfg = cfg || {};
+
+		self.multichoice = self.cfg.multichoice || false;
+		self.set_default = self.cfg.set_default || null;
+		self.can_be_empty = self.cfg.can_be_empty || false;
+		self.highlight_class = self.cfg.highlight_class || 'kbs_selected';
+
+		self.switch_dict = null;
+
+		if (self.cfg.dom_array){
+			self.bind_dom_array(self.cfg.dom_array);
+		}
+
+		if (self.set_default){
+			self.select(self.set_default)
+		}
+
+		if (!self.can_be_empty && !self.set_default){
+			self.select(
+				Object.keys(self.switch_dict)[0]
+			)
+		}
+	}
+
+	$selected(self){
+		const active_items = [];
+		for (const [id, item_data] of Object.entries(self.switch_dict)){
+			if (item_data.active){
+				active_items.push(id);
+			}
+		}
+
+		if (self.multichoice){
+			return active_items
+		}else{
+			return active_items[0] || null;
+		}
+	}
+
+	$$selected(self, tgt_id=null){
+		if (!tgt_id || (!self.multichoice && !(tgt_id in self.switch_dict))){
+			return
+		}
+
+		for (const item_data of Object.values(self.switch_dict)){
+			item_data.active = false;
+		}
+
+		if (self.multichoice){
+			for (const id of tgt_id){
+				if (id in self.switch_dict){
+					self.switch_dict[id].active = true;
+				}
+			}
+		}else{
+			self.switch_dict[tgt_id].active = true;
+		}
+
+		self.render();
+	}
+
+	render(self){
+		for (const item_data of Object.values(self.switch_dict)){
+			if (item_data.active){
+				item_data.dom.classList.add(self.highlight_class);
+			}else{
+				item_data.dom.classList.remove(self.highlight_class);
+			}
+		}
+	}
+
+	select(self, tgt_id=null){
+		if (!tgt_id){
+			console.error('Fatal: No ID supplied to switch selector', tgt_id, self);
+			return
+		}
+		if (!self.switch_dict[tgt_id]){
+			console.error(
+				`Fatal: Supplied ID doesn't exist in the switch dict`,
+				tgt_id,
+				self
+			);
+			return
+		}
+
+		const tgt_item = self.switch_dict[tgt_id];
+
+		const active_items = self.selected;
+
+		if (self.multichoice){
+			if (self.can_be_empty){
+				tgt_item.active = !tgt_item.active;
+			}else{
+				// print('KYS PLS', active_items)
+
+				if (active_items.length == 1 && active_items[0] == tgt_id){}else{
+					tgt_item.active = !tgt_item.active;
+				}
+
+				// if (active_items.length <= 0){
+				// 	tgt_item.active = !tgt_item.active;
+				// }
+			}
+		}else{
+			if (self.can_be_empty){
+				for (const item_data of Object.values(self.switch_dict)){
+					if (tgt_id != active_items){
+						item_data.active = false;
+					}
+				}
+				tgt_item.active = !tgt_item.active;
+			}else{
+				if (active_items != tgt_id){
+					for (const item_data of Object.values(self.switch_dict)){
+						item_data.active = false;
+					}
+					tgt_item.active = !tgt_item.active;
+				}
+			}
+		}
+
+		self.render();
+	}
+
+	exec_callback(self){
+		return self.cfg?.callback?.(self)
+	}
+
+	bind_dom_array(self, dom_array=null){
+		self.switch_dict = {};
+
+		for (const switch_item of dom_array){
+			self.switch_dict[switch_item.id] = {
+				'dom': switch_item.dom,
+			}
+
+			switch_item.dom.onclick = function(){
+				self.select(switch_item.id);
+				self.exec_callback();
+			}
+		}
+	}
+}
 
 
-_switches.save_switch_states = function(){
+
+
+
+const save_switch_states = function(){
 	console.time('Saved Radio Switch States In');
 
 	ksys.db.module.write(
@@ -114,7 +284,7 @@ _switches.save_switch_states = function(){
 	console.timeEnd('Saved Radio Switch States In');
 }
 
-_switches.resync = function(){
+const resync = function(){
 	print('Resyncing switches')
 	const switches_cfg = ksys.db.module.read('_kb_radio_switches_cfg.kbcfg', 'json');
 	print('Got saved switch config', switches_cfg)
@@ -129,7 +299,12 @@ _switches.resync = function(){
 }
 
 
-module.exports = _switches;
+module.exports = {
+	KBRadioSwitch,
+	save_switch_states,
+	resync,
+	KBSwitch,
+}
 
 
 
