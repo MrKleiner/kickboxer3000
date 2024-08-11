@@ -1,12 +1,11 @@
 #pragma once
 
 #include <string>
+#include <cstdint> /* Clion compile fix */
+#include "regex"
 
 class Stringer
 {
-private:
-    static std::string wsp;
-
 public:
 
     /** @brief Left and Right spaces trimmer.
