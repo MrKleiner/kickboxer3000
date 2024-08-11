@@ -831,7 +831,6 @@ Header
 	margin: 0px;
 	transform: scale(2);
 	padding: 5px;
-
 }
 
 #teams_layouts field-layout field-layout-grid cell player .player_club_logo{
@@ -860,6 +859,7 @@ Header
 #teams_layouts field-layout field-layout-grid cell player .player_surname{
 	padding: 0px;
 	font-size: 12px;
+	width: max-content;
 }
 
 #teams_layouts field-layout field-layout-grid player.is_dragging{
@@ -869,6 +869,7 @@ Header
 	background: #1B1B1B !important;
 	transform: scale(1) !important;
 	font-size: 17px !important;
+	min-width: max-content !important;
 }
 
 #teams_layouts field-layout field-layout-grid player.is_dragging *{

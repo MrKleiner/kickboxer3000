@@ -399,7 +399,6 @@ window.kbmodules.football_standard.load = async function(){
 				}
 
 				card_manager.redraw_card_vis_feedback_in_list_item(
-					card_manager,
 					list_dom.elem,
 					player_class
 				)
@@ -1568,13 +1567,13 @@ window.kbmodules.football_standard.ClubSelectorDropdown = class{
 		self.registry = new Set();
 	}
 
-	dropdown_elem(self, onchane){
+	dropdown_elem(self, onchange){
 		const tplate = ksys.tplates.index_tplate(
 			'#club_selector_dropdown_template',
 			{}
 		);
 		$(tplate.elem).append('<option value="">--</option>');
-		tplate.elem.onchange = onchane;
+		tplate.elem.onchange = onchange;
 		self.registry.add(tplate.elem);
 		self.resync();
 		return tplate.elem
@@ -1941,7 +1940,7 @@ window.kbmodules.football_standard.FieldLayout = class{
 			const player_list_item = player.generic_list_elem();
 
 			// create binds
-			self.bind_list_item(self, player_list_item, player);
+			self.bind_list_item(player_list_item, player);
 
 			// todo: get rid of jquery
 			$(cell.dom).html(player_list_item.elem);
@@ -2443,6 +2442,7 @@ window.kbmodules.football_standard.CardManager = class {
 	// Get player's side (home/guest)
 	// Player doesn't has to be registered for this to work
 	get_pside(self, player, as_index=true){
+		print('Fuckshit', player)
 		const side_id = player.club.is_enemy ? 'guest' : 'home';
 		if (as_index){
 			return self.sides[side_id]
@@ -3477,6 +3477,10 @@ window.kbmodules.football_standard.PenaltyTableEntry = class{
 	push_to_vmix(self, dosave=false){
 		const tgt_title = window.kbmodules.football_standard.titles.penalties;
 		const score_manager = self.parent_pool.score_manager.score_list;
+		if (!score_manager){
+			console.warn('No score manager exist', score_manager);
+			return
+		}
 
 		const tgt_idx = (self.parent_pool.parent_manager.pcount - 1) - self.idx;
 
@@ -3828,11 +3832,17 @@ window.kbmodules.football_standard.create_club_lineup = function(side, clubname,
 	// somewhere in the global index, but that will introduce
 	// completely unneccessary complications
 	window.kbmodules.football_standard.resource_index.card_player_filter.data_source = [
-		(window.kbmodules.football_standard.resource_index.home_lineup ? window.kbmodules.football_standard.resource_index.home_lineup.main_players : []),
-		(window.kbmodules.football_standard.resource_index.home_lineup ? window.kbmodules.football_standard.resource_index.home_lineup.reserve_players : []),
+		// (window.kbmodules.football_standard.resource_index.home_lineup ? window.kbmodules.football_standard.resource_index.home_lineup.main_players : []),
+		// (window.kbmodules.football_standard.resource_index.home_lineup ? window.kbmodules.football_standard.resource_index.home_lineup.reserve_players : []),
 
-		(window.kbmodules.football_standard.resource_index.guest_lineup ? window.kbmodules.football_standard.resource_index.guest_lineup.main_players : []),
-		(window.kbmodules.football_standard.resource_index.guest_lineup ? window.kbmodules.football_standard.resource_index.guest_lineup.reserve_players : []),
+		// (window.kbmodules.football_standard.resource_index.guest_lineup ? window.kbmodules.football_standard.resource_index.guest_lineup.main_players : []),
+		// (window.kbmodules.football_standard.resource_index.guest_lineup ? window.kbmodules.football_standard.resource_index.guest_lineup.reserve_players : []),
+
+		(window.kbmodules.football_standard.resource_index?.home_lineup?.main_players || []),
+		(window.kbmodules.football_standard.resource_index?.home_lineup?.reserve_players || []),
+
+		(window.kbmodules.football_standard.resource_index?.guest_lineup?.main_players || []),
+		(window.kbmodules.football_standard.resource_index?.guest_lineup?.reserve_players || []),
 	]
 
 	// update sources for substitutes
@@ -3852,7 +3862,7 @@ window.kbmodules.football_standard.create_club_lineup = function(side, clubname,
 	window.kbmodules.football_standard.resource_index.score_manager.resync_lineups()
 
 	// resync card manager
-	window.kbmodules.football_standard.resource_index.card_manager.resync(window.kbmodules.football_standard.resource_index.card_manager)
+	window.kbmodules.football_standard.resource_index.card_manager.resync()
 
 	// resync penalty manager
 	window.kbmodules.football_standard.resource_index.penalty_manager.resync();
@@ -4430,14 +4440,12 @@ window.kbmodules.football_standard.hand_card = async function(card_type){
 
 	if (card_type == 'yellow'){
 		await card_manager.hand_yellow(
-			card_manager,
 			sel_entry.player,
 		)
 	}
 
 	if (card_type == 'red'){
 		await card_manager.hand_red(
-			card_manager,
 			sel_entry.player,
 		)
 	}
@@ -4459,7 +4467,6 @@ window.kbmodules.football_standard.pardon_player = async function(){
 	}
 
 	card_manager.pardon(
-		card_manager,
 		sel_entry.player,
 	)
 }
@@ -5487,7 +5494,6 @@ window.kbmodules.football_standard.add_score_from_cards_panel = async function()
 	const side = player.club.is_enemy ? 'guest' : 'home';
 	const score_list = window.kbmodules.football_standard.resource_index.score_manager.sides[side].score_list
 	score_list.add_score(
-		score_list,
 		player
 	)
 

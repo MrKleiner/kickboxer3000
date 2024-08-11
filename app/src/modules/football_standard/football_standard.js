@@ -396,7 +396,6 @@ $this.load = async function(){
 				}
 
 				card_manager.redraw_card_vis_feedback_in_list_item(
-					card_manager,
 					list_dom.elem,
 					player_class
 				)
@@ -1565,13 +1564,13 @@ $this.ClubSelectorDropdown = class{
 		self.registry = new Set();
 	}
 
-	dropdown_elem(self, onchane){
+	dropdown_elem(self, onchange){
 		const tplate = ksys.tplates.index_tplate(
 			'#club_selector_dropdown_template',
 			{}
 		);
 		$(tplate.elem).append('<option value="">--</option>');
-		tplate.elem.onchange = onchane;
+		tplate.elem.onchange = onchange;
 		self.registry.add(tplate.elem);
 		self.resync();
 		return tplate.elem
@@ -1938,7 +1937,7 @@ $this.FieldLayout = class{
 			const player_list_item = player.generic_list_elem();
 
 			// create binds
-			self.bind_list_item(self, player_list_item, player);
+			self.bind_list_item(player_list_item, player);
 
 			// todo: get rid of jquery
 			$(cell.dom).html(player_list_item.elem);
@@ -2440,6 +2439,7 @@ $this.CardManager = class {
 	// Get player's side (home/guest)
 	// Player doesn't has to be registered for this to work
 	get_pside(self, player, as_index=true){
+		print('Fuckshit', player)
 		const side_id = player.club.is_enemy ? 'guest' : 'home';
 		if (as_index){
 			return self.sides[side_id]
@@ -3474,6 +3474,10 @@ $this.PenaltyTableEntry = class{
 	push_to_vmix(self, dosave=false){
 		const tgt_title = $this.titles.penalties;
 		const score_manager = self.parent_pool.score_manager.score_list;
+		if (!score_manager){
+			console.warn('No score manager exist', score_manager);
+			return
+		}
 
 		const tgt_idx = (self.parent_pool.parent_manager.pcount - 1) - self.idx;
 
@@ -3825,11 +3829,17 @@ $this.create_club_lineup = function(side, clubname, input_lineup_info=null){
 	// somewhere in the global index, but that will introduce
 	// completely unneccessary complications
 	$this.resource_index.card_player_filter.data_source = [
-		($this.resource_index.home_lineup ? $this.resource_index.home_lineup.main_players : []),
-		($this.resource_index.home_lineup ? $this.resource_index.home_lineup.reserve_players : []),
+		// ($this.resource_index.home_lineup ? $this.resource_index.home_lineup.main_players : []),
+		// ($this.resource_index.home_lineup ? $this.resource_index.home_lineup.reserve_players : []),
 
-		($this.resource_index.guest_lineup ? $this.resource_index.guest_lineup.main_players : []),
-		($this.resource_index.guest_lineup ? $this.resource_index.guest_lineup.reserve_players : []),
+		// ($this.resource_index.guest_lineup ? $this.resource_index.guest_lineup.main_players : []),
+		// ($this.resource_index.guest_lineup ? $this.resource_index.guest_lineup.reserve_players : []),
+
+		($this.resource_index?.home_lineup?.main_players || []),
+		($this.resource_index?.home_lineup?.reserve_players || []),
+
+		($this.resource_index?.guest_lineup?.main_players || []),
+		($this.resource_index?.guest_lineup?.reserve_players || []),
 	]
 
 	// update sources for substitutes
@@ -3849,7 +3859,7 @@ $this.create_club_lineup = function(side, clubname, input_lineup_info=null){
 	$this.resource_index.score_manager.resync_lineups()
 
 	// resync card manager
-	$this.resource_index.card_manager.resync($this.resource_index.card_manager)
+	$this.resource_index.card_manager.resync()
 
 	// resync penalty manager
 	$this.resource_index.penalty_manager.resync();
@@ -4427,14 +4437,12 @@ $this.hand_card = async function(card_type){
 
 	if (card_type == 'yellow'){
 		await card_manager.hand_yellow(
-			card_manager,
 			sel_entry.player,
 		)
 	}
 
 	if (card_type == 'red'){
 		await card_manager.hand_red(
-			card_manager,
 			sel_entry.player,
 		)
 	}
@@ -4456,7 +4464,6 @@ $this.pardon_player = async function(){
 	}
 
 	card_manager.pardon(
-		card_manager,
 		sel_entry.player,
 	)
 }
@@ -5484,7 +5491,6 @@ $this.add_score_from_cards_panel = async function(){
 	const side = player.club.is_enemy ? 'guest' : 'home';
 	const score_list = $this.resource_index.score_manager.sides[side].score_list
 	score_list.add_score(
-		score_list,
 		player
 	)
 

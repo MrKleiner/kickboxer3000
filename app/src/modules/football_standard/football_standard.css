@@ -831,7 +831,6 @@ Header
 	margin: 0px;
 	transform: scale(2);
 	padding: 5px;
-
 }
 
 ~~ cell player .player_club_logo{
@@ -860,6 +859,7 @@ Header
 ~~ cell player .player_surname{
 	padding: 0px;
 	font-size: 12px;
+	width: max-content;
 }
 
 ~~ player.is_dragging{
@@ -869,6 +869,7 @@ Header
 	background: #1B1B1B !important;
 	transform: scale(1) !important;
 	font-size: 17px !important;
+	min-width: max-content !important;
 }
 
 ~~ player.is_dragging *{
