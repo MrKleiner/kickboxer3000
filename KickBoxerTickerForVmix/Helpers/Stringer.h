@@ -1,12 +1,11 @@
 #pragma once
 
 #include <string>
+#include "regex"
+#include <sstream>
 
 class Stringer
 {
-private:
-    static std::string wsp;
-
 public:
 
     /** @brief Left and Right spaces trimmer.
