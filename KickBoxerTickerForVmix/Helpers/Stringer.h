@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string>
-#include <cstdint> /* Clion compile fix */
 #include "regex"
+#include <sstream>
 
 class Stringer
 {

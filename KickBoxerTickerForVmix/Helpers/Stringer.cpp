@@ -1,5 +1,4 @@
 #include "Stringer.h"
-#include <format>
 
 using namespace std;
 
@@ -16,8 +15,6 @@ string Stringer::singleWhitespaces(string str) {
 
     return regex_replace(str, ws_pattern, " ");
 }
-
-
 
 string Stringer::charBufToCharCodes(char * charbuf, int charbuf_len, bool nonprintable_only) {
     std::ostringstream s; // reduce unnecessary appends and use stream instead
