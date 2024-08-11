@@ -132,7 +132,7 @@ const KBSwitch = class{
 		self.can_be_empty = self.cfg.can_be_empty || false;
 		self.highlight_class = self.cfg.highlight_class || 'kbs_selected';
 
-		self.switch_dict = null;
+		self.switch_dict = {};
 
 		if (self.cfg.dom_array){
 			self.bind_dom_array(self.cfg.dom_array);
@@ -218,15 +218,9 @@ const KBSwitch = class{
 			if (self.can_be_empty){
 				tgt_item.active = !tgt_item.active;
 			}else{
-				// print('KYS PLS', active_items)
-
 				if (active_items.length == 1 && active_items[0] == tgt_id){}else{
 					tgt_item.active = !tgt_item.active;
 				}
-
-				// if (active_items.length <= 0){
-				// 	tgt_item.active = !tgt_item.active;
-				// }
 			}
 		}else{
 			if (self.can_be_empty){
@@ -249,22 +243,46 @@ const KBSwitch = class{
 		self.render();
 	}
 
+	add_entry(self, entry_data, selected=false){
+		if (!entry_data.id){
+			throw new Error('No ID supplied to the new item:', entry_data);
+		}
+		if (entry_data.id in self.switch_dict){
+			throw new Error('Duplicate IDs cannot be re-added', entry_data);
+		}
+
+		// Binding already existing DOM elements
+		if (entry_data.dom){
+			const id = entry_data.id;
+			const dom = entry_data.dom;
+
+			self.switch_dict[id] = {
+				'dom': dom,
+			}
+			dom.onclick = function(){
+				self.select(id);
+				self.exec_callback(id);
+			}
+			if (selected){
+				self.select(id);
+			}
+		}
+	}
+
 	exec_callback(self){
 		return self.cfg?.callback?.(self)
 	}
 
 	bind_dom_array(self, dom_array=null){
-		self.switch_dict = {};
+		if (!dom_array){
+			throw new Error('Invalid array supplied:', dom_array);
+		}
 
 		for (const switch_item of dom_array){
-			self.switch_dict[switch_item.id] = {
+			self.add_entry({
+				'id': switch_item.id,
 				'dom': switch_item.dom,
-			}
-
-			switch_item.dom.onclick = function(){
-				self.select(switch_item.id);
-				self.exec_callback();
-			}
+			})
 		}
 	}
 }
