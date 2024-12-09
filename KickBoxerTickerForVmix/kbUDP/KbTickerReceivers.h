@@ -69,10 +69,19 @@ public:
             server.sin_port = htons(PORT);
             char ipaddr_buf[99];
             int strlen = snprintf(ipaddr_buf, sizeof(ipaddr_buf), "%d.%d.%d.%d", ipaddr[0], ipaddr[1], ipaddr[2], ipaddr[3]);
-            // ipaddr conversion error processing - not implmented yet if (strlen>0) {} else {       // error   }
-            server.sin_addr.S_un.S_addr = inet_addr(ipaddr_buf); //  TODO: No inet_addr errors processing
+            if (strlen > 0) {
+                server.sin_addr.S_un.S_addr = inet_addr(ipaddr_buf);
+                if (server.sin_addr.S_un.S_addr == INADDR_NONE) {
+                    printf("inet_addr(): invalid IP address format\n");
+                    closesocket(client_socket);
+                    exit(EXIT_FAILURE);
+                }
+            } else {
+                printf("inet_addr(): cannot format IP address\n");
+                closesocket(client_socket);
+                exit(EXIT_FAILURE);
+            }
         }
-    }
 
     void sendPacketMMSS(uint8_t mm, uint8_t ss, uint8_t timer_no = 0) override {
         udp_pkt_buf = { .timer_no = timer_no, .minutes = mm, .seconds = ss };
@@ -148,7 +157,7 @@ public:
 
 /**
  * @brief KbTickerReceivers - container for <vector> with tcp and udp ticker receivers.
- * 
+ *
  */
 class KbTickerReceivers
 {
@@ -165,7 +174,7 @@ public:
     }
 
     void clearAllUDPreceivers() {
-        for (int i = ticker_receivers.size(); i-- > 0; ) 
+        for (int i = ticker_receivers.size(); i-- > 0; )
             if (ticker_receivers[i]->path() == "") ticker_receivers.erase(ticker_receivers.begin()+i);
     }
 
@@ -173,7 +182,7 @@ public:
     /**
      * Input parameters will be checked to see if a receiver with exactly the same parameters exists (ipaddr, port).
      * If exist - new receiver will be silently ignored.
-     * 
+     *
      */
     void addUdpReceiver(uint8_t ipaddr[4], uint16_t PORT) {
         for (const auto& obj : ticker_receivers)
