@@ -9,6 +9,11 @@ OK_MSG = 'Function completed successfully.'
 
 
 
+def send_lines(cl_con, lines):
+	for l in lines:
+		cl_con.sendall(
+			l.encode() + b'\r\n'
+		)
 
 
 def request_processor(cl_con):
@@ -20,7 +25,7 @@ def request_processor(cl_con):
 
 	while True:
 		line = skt_file.readline()
-		if line == b'\r\n':
+		if (line == b'\r\n') or (not line):
 			break
 
 		lines.append(line.decode())
@@ -41,39 +46,28 @@ def request_processor(cl_con):
 
 	print('\n'.join(print_string) + '\n')
 
-
-	cl_con.sendall(
-		f'HTTP/1.1 200 OK\r\n'.encode()
-	)
-	cl_con.sendall(
-		f'Cache-Control: no-cache\r\n'.encode()
-	)
-	cl_con.sendall(
-		f'Access-Control-Allow-Origin: *\r\n'.encode()
-	)
-	cl_con.sendall(
-		f'Server: py_vme\r\n'.encode()
-	)
+	send_lines(cl_con, (
+		'HTTP/1.1 200 OK',
+		'Cache-Control: no-cache',
+		'Access-Control-Allow-Origin: *',
+		'Server: py_vme',
+	))
 
 	# print(method, rpath, protocol)
 	# print(lines[0].lower().split('/api')[-1].strip('/').strip())
 
 	if unquote(rpath.lower().split('/api')[-1].strip('/').strip()) == '?function=':
-		cl_con.sendall(
-			f'Content-Length: {len(SAMPLE_DATA)}\r\n'.encode()
-		)
-		cl_con.sendall(
-			f'Content-Type: text/xml; charset=utf-8\r\n'.encode()
-		)
+		send_lines(cl_con, (
+			f'Content-Length: {len(SAMPLE_DATA)}',
+			f'Content-Type: text/xml; charset=utf-8',
+		))
 		cl_con.sendall(b'\r\n')
 		cl_con.sendall(SAMPLE_DATA)
 	else:
-		cl_con.sendall(
-			f'Content-Type: text/html; charset=utf-8\r\n'.encode()
-		)
-		cl_con.sendall(
-			f'Content-Length: {len(OK_MSG)}\r\n'.encode()
-		)
+		send_lines(cl_con, (
+			f'Content-Type: text/html; charset=utf-8',
+			f'Content-Length: {len(OK_MSG)}',
+		))
 		cl_con.sendall(b'\r\n')
 		cl_con.sendall(OK_MSG.encode())
 
@@ -85,6 +79,8 @@ def listen_server(target_port):
 	skt = socket.socket()
 	skt.bind(('', target_port))
 	skt.listen(0)
+
+	print('Listening...')
 
 	while True:
 		conn, address = skt.accept()
