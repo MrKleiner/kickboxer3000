@@ -76,6 +76,11 @@ body
 	/*height: 100%;*/
 }
 
+body.__cockblocked{
+	pointer-events: none !important;
+	opacity: 0.5 !important;
+}
+
 
 textarea, input:not(
 	input[type="file"],
@@ -89,6 +94,19 @@ textarea, input:not(
 	padding: 3px;
 	font-size: 13px;
 }
+
+input[type="file"]{
+	padding: 2px;
+	background: rgba(0, 0, 0, 0.5);
+	outline: 1px solid rgba(255, 255, 255, 0.25);
+	border-radius: 5px;
+	width: 200px;
+}
+
+input[type="file"]:hover{
+	outline-color: white;
+}
+
 
 input:focus, textarea:focus 
 {
@@ -138,7 +156,9 @@ img:not([candrag]){
 }
 
 
-
+.kbsys_hidden{
+	display: none !important;
+}
 
 
 
@@ -315,9 +335,30 @@ img[contain], video[contain]
 	justify-content: flex-end;
 }
 
+label[basic_cbox]{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: 5px;
+	background: rgba(255, 255, 255, 0.05);
+	/*background: #202020;*/
+	outline: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 5px;
+}
 
+label[basic_cbox] > input[type="checkbox"]{
+    margin-left: 10px;
+    height: 20px;
+    width: 20px;
+}
 
+label[basic_cbox]:hover{
+	outline-color: gray;
+}
 
+label[basic_cbox]:active{
+	outline-color: lime;
+}
 
 
 /*
@@ -1102,6 +1143,23 @@ hintsys-bar #hintsys_bar_msgs .kbmsg[warn]{
 }
 
 
+@keyframes sys_err-blink-animation {
+	to {
+		box-shadow: 0px 0px 28px 14px #E54222;
+		/*filter: drop-shadow(0px 0px 15px #ff0000);*/
+	}
+}
+
+hintsys-bar #hintsys_bar_msgs .kbmsg[err]{
+	/*filter: drop-shadow(0px 0px 5px #ff0000);*/
+	/*box-shadow: 0px 0px 32px 8px #ff0000;*/
+	/*box-shadow: 0px 0px 28px 14px rgba(255, 255, 255, 0);*/
+	/*background: red;*/
+	z-index: 9999999 !important;
+	animation: sys_err-blink-animation 0.1s steps(2, start) infinite;
+}
+
+
 
 
 
@@ -1172,3 +1230,331 @@ kb-radio-switch[kb_style="default"] kb-radio-switch-entry.kb_radio_switch_active
 
 
 
+
+
+
+
+
+
+/*
+=========================================
+          Basic Module Packer
+=========================================
+!~~ md-packer[synced]
+*/
+
+md-packer[synced] {
+	display: flex;
+	flex-direction: column;
+	padding: 10px;
+	padding-left: 40px;
+
+	width: 700px;
+	margin-left: 20px;
+
+	margin-bottom: 30px;
+}
+
+md-packer[synced] .md_packer_cfg{
+	display: flex;
+	flex-direction: column;
+	width: -webkit-fill-available;
+
+	border-left: 2px solid rgba(255, 255, 255, 0.9);
+	padding: 5px 5px 5px 10px;
+
+	margin-top: 20px;
+}
+
+md-packer[synced] .md_packer_cfg:hover{
+	background: rgba(255, 255, 255, 0.05);
+}
+
+md-packer[synced] .input_file_picker{
+	padding: 5px;
+	background: rgba(0, 0, 0, 0.5);
+	outline: 1px solid rgba(255, 255, 255, 0.25);
+	border-radius: 7px;
+	width: 200px;
+}
+
+md-packer[synced] .input_file_picker:hover{
+	outline-color: white;
+}
+
+md-packer[synced] .param{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: 2px 0px 2px 0px;
+	margin-top: 5px;
+	width: -webkit-fill-available;
+}
+
+md-packer[synced] .param .param_label{
+	width: 150px;
+}
+
+md-packer[synced] .param .param_val{
+	width: -webkit-fill-available;
+}
+
+md-packer[synced] .param input.input_dir,
+md-packer[synced] .param input.output_dir
+{
+	width: -webkit-fill-available;
+}
+
+md-packer[synced] .param input.input_filename,
+md-packer[synced] .param input.output_filename
+{
+	width: 300px;
+}
+
+md-packer[synced] .action_btn{
+	margin-top: 10px;
+	width: 100px;
+}
+
+
+
+
+
+/*
+=========================================
+          Overlay Preview mode
+=========================================
+!~~ md-packer[synced]
+*/
+#overlay_preview_mode{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-around;
+	position: fixed;
+	z-index: 999999;
+	top: 10px;
+	right: 10px;
+	width: 250px;
+	height: 50px;
+	background: #6D5700;
+	outline: 1px solid #FFE400;
+	border-radius: 15px;
+}
+
+#overlay_preview_mode.oprm_hidden{
+	display: none !important;
+}
+
+#overlay_preview_mode_symbol{
+	width: 30px;
+	height: 30px;
+	background: yellow;
+	border-radius: 9999px;
+}
+
+
+
+
+
+
+/*
+=========================================
+          Onchange Visual Feedback
+=========================================
+*/
+
+@keyframes ksys_onchange_vis_feedback_anim {
+	0% {
+		box-shadow: 0px 0px 0px 4px rgba(0, 255, 32, 1);
+	}
+	99.99%{
+		box-shadow: 0px 0px 0px 4px rgba(0, 255, 32, 0);
+	}
+	100% {
+		all: initial;
+	}
+}
+
+
+.ksys_onchange_vis_feedback_cls{
+	animation: ksys_onchange_vis_feedback_anim 0.4s ease-out 0s 1 normal both !important;
+}
+
+
+
+
+/*
+=========================================
+              Scrollbars
+=========================================
+*/
+[kb_thin_scrollbar]::-webkit-scrollbar{
+	width: 5px;
+	height: 5px;
+	background: rgb(20, 20, 20);
+}
+[kb_thin_scrollbar]::-webkit-scrollbar-thumb{
+	border-radius: 999px;
+	background-color: rgb(80, 80, 80);
+}
+[kb_thin_scrollbar]::-webkit-scrollbar-thumb:hover{
+	background-color: rgb(95, 95, 95);
+}
+[kb_thin_scrollbar]::-webkit-scrollbar-thumb:active{
+	background-color: rgb(150, 150, 150);
+}
+
+
+
+
+
+
+
+
+/*
+=========================================
+          Modern KB switches
+=========================================
+!~~ [kbswitch_style="default"]
+*/
+
+[kbswitch_style="default"]{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	/*background: rgba(0, 0, 0, 0.3);*/
+	position: relative;
+	width: fit-content;
+	outline: 1px solid gray;
+	border-radius: 7px;
+}
+
+[kbswitch_style="default"] [kbswitch_item]{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.3);
+	position: relative;
+	padding: 5px 10px 5px 10px;
+	min-width: 70px;
+}
+
+[kbswitch_style="default"] [kbswitch_item]:hover{
+	background: rgba(90, 90, 90, 0.3);
+}
+
+[kbswitch_style="default"] [kbswitch_item]:active{
+	z-index: 999;
+	outline: 1px solid #3E6AB5;
+}
+
+[kbswitch_style="default"] [kbswitch_item]:first-child{
+	border-radius: 7px 0px 0px 7px;
+}
+
+[kbswitch_style="default"] [kbswitch_item]:last-child{
+	border-radius: 0px 7px 7px 0px;
+}
+
+[kbswitch_style="default"] [kbswitch_item]:last-child:first-child
+{
+	border-radius: 7px;
+}
+
+[kbswitch_style="default"] [kbswitch_item].kbs_selected{
+	outline: 1px solid lime;
+	/*background: #2A323E;*/
+	background: #243526;
+}
+
+
+
+
+
+/*
+=========================================
+          Resource Proxy
+=========================================
+!~~ resource-proxy-ctrl
+*/
+
+resource-proxy-ctrl{
+	display: flex;
+	flex-direction: column;
+	width: 550px;
+	margin-left: 50px;
+}
+
+resource-proxy-ctrl header{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	padding: 5px 0px 5px 0px;
+	font-size: 21px;
+	margin-bottom: 15px;
+}
+
+resource-proxy-ctrl .enabled_cbox{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+}
+
+resource-proxy-ctrl .param_row{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: 5px 0px 5px 0px;
+	margin-top: 15px;
+	border-left: 1px solid white;
+}
+
+resource-proxy-ctrl .param_row:hover{
+	background: rgba(255, 255, 255, 0.1);
+}
+
+resource-proxy-ctrl .param_row_label{
+	width: 100px;
+	padding-left: 10px;
+}
+
+resource-proxy-ctrl .param_row_val{
+	display: flex;
+	flex-direction: row;
+	/*align-items: center;*/
+	justify-content: center;
+}
+
+resource-proxy-ctrl .param_row_val select{
+	font-family: monospace;
+	margin-left: 10px;
+}
+
+resource-proxy-ctrl input.pong_ip_input{
+	width: 125px;
+	font-family: monospace;
+	margin-right: 10px;
+}
+
+resource-proxy-ctrl .pong_ip_auto_btn{
+	width: 90px;
+}
+
+resource-proxy-ctrl .security_method_ctrl{
+	margin-top: 20px;
+}
+
+resource-proxy-ctrl .whitelist_ctrl{
+	display: flex;
+	flex-direction: column;
+}
+
+resource-proxy-ctrl .whitelist_ctrl textarea{
+	width: 100%;
+	height: 150px;
+	resize: vertical;
+}

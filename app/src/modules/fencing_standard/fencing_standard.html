@@ -13,6 +13,12 @@
 				translit_default="0"
 				format_default="all_upper"
 			></f-param>
+			<f-param
+				display_name="Team Aliases"
+				fpid="team_alias"
+				translit_default="0"
+				format_default="all_upper"
+			></f-param>
 		</string-formatting>
 	</tab>
 
@@ -57,7 +63,12 @@
 		<div class="pair_entry">
 			<div class="pair_entry_vis_feedback">
 				<div class="vis_feed_pname_left">-</div>
-				<div class="vis_feed_vs_sign">VS</div>
+				<div class="vis_feed_vs_sign">
+					<div class="vs_word">VS</div>
+					<sysbtn>
+						<img class="swap_button" src="./assets/swap_icon.svg">
+					</sysbtn>
+				</div>
 				<div class="vis_feed_pname_right">-</div>
 			</div>
 			<div class="pair_entry_config"></div>
@@ -85,6 +96,12 @@
 				class="player_data_input"
 				placeholder="Surname"
 			>
+			<input
+				type="text"
+				data_link="team_alias"
+				class="player_data_input"
+				placeholder="Team alias"
+			>
 		</div>
 	</template>
 
@@ -94,6 +111,7 @@
 			<div class="fight_vis_feed">
 				<div class="fight_vis_feed_player_name">-</div>
 				<div class="fight_vis_feed_player_score">-</div>
+				<input noctrl type="number" class="player_team_score_input">
 			</div>
 			<div class="fight_ctrl_btns">
 				<div class="score_math add_score"></div>

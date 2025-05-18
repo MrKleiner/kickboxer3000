@@ -1,7 +1,7 @@
 <div id="football_standard">
 
 	<tabsys>
-		<sys-tab match_id="fucking_docs">Docs</sys-tab>
+		<sys-tab match_id="fucking_docs">Other</sys-tab>
 		<!-- <sys-tab match_id="stats_db">Stats DB</sys-tab> -->
 		<sys-tab match_id="club_def" default>Clubs</sys-tab>
 		<sys-tab match_id="team_lineup">Config/Lists</sys-tab>
@@ -24,23 +24,8 @@
 	</div>
 
 	<tab class="tab_hidden" tabid="fucking_docs">
-		<h1>It's very stupid this had to be done...</h1>
-		<p>Next step would be attaching robotic arms to the PC to point people's heads in the right direction...</p>
-
-		<h1>General idea</h1>
-		<div regular_box class="doc_box">
-			The general idea is that there's a collection of clubs, <br>
-			out of which a lineup for a specific match is constructed. <br><br>
-
-			Each club (obviously) has:
-			<ul style="padding: auto;">
-				<li style="padding: auto;">A logo (a bitmap image)</li>
-				<li>Official Title</li>
-				<li>Official Title abbreviation (Title shortened to 3 letters)</li>
-				<li>Players</li>
-				<li>And the main coach</li>
-			</ul>
-		</div>
+		<md-packer></md-packer>
+		<http-resource-proxy-control></http-resource-proxy-control>
 	</tab>
 
 	<!-- <tab class="tab_hidden" tabid="stats_db"></tab> -->
@@ -88,7 +73,7 @@
 		</string-formatting>
 
 		<general-cfg subtle_box>
-			<general-cfg-entry kbhint="Hold CTRL. This will terminate and re-create all timers">
+			<general-cfg-entry id="timersys_switch" kbhint="Hold CTRL. This will terminate and re-create all timers">
 				<general-cfg-label>Timer system</general-cfg-label>
 				<kb-radio-switch
 					kb_style="default"
@@ -125,7 +110,19 @@
 					onclick="window.kbmodules.football_standard.update_atat_return_addr(event)"
 					click_timeout="700"
 					mod_key="alt"
-				>Update AT-AT Return Address</sysbtn>
+				>Update</sysbtn>
+				<sysbtn
+					btname="atat_auto_addr"
+					kbhint="Try determining the right value automatically"
+					onclick="window.kbmodules.football_standard.atat_auto_return_addr(event)"
+				>Auto</sysbtn>
+				<!-- >Update AT-AT Return Address</sysbtn> -->
+				<div id="atat_ip_addr_picker"></div>
+			</general-cfg-entry>
+
+			<general-cfg-entry>
+				<general-cfg-label>Round Duration</general-cfg-label>
+				<input id="round_duration" noctrl type="number" onchange_vis_feed>
 			</general-cfg-entry>
 
 		</general-cfg>

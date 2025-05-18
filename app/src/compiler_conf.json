@@ -70,6 +70,12 @@
 	// into a single file named after module's name
 	"collapse_modules": false,
 
+	"md_collapse": {
+		"use_main": false,
+		"collapse": false,
+		"indexed_order": false
+	},
+
 	// Easy font management.
 	"fonts": {
 		// Whether to execute this or not

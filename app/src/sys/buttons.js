@@ -87,7 +87,7 @@ const icon_registry = {
 
 
 // pre-load all the icons
-_vb.icon_pre_load = async function(){
+_vb.preload_icons = async function(){
 	for (const idx in icon_registry){
 		const icon_path = icon_registry[idx];
 
@@ -111,6 +111,10 @@ _vb.icon_pre_load = async function(){
 	}
 }
 
+// _vb.icon_pre_load
+_vb.icon_pre_load = async function(){
+	return await _vb.preload_icons()
+}
 
 
 

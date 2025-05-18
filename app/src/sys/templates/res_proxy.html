@@ -1,0 +1,96 @@
+
+
+
+<template id="root">
+	<resource-proxy-ctrl regular_box>
+		<header>Resource Proxy</header>
+		<label class="enabled_cbox" basic_cbox>
+			Enabled
+			<input type="checkbox">
+		</label>
+
+		<div class="param_row">
+			<div class="param_row_label">Pong IP:</div>
+			<div class="param_row_val">
+				<input
+					type="text"
+					class="pong_ip_input"
+					placeholder="192.168.0.1"
+					kbhint="IPV4 of the network adapter this PC communicates with VMIX through. Changing this doesn't restart the resource proxy"
+					onchange_vis_feed
+				>
+				<sysbtn
+					class="pong_ip_auto_btn"
+					kbhint="Determine the right IP address automatically. Pro Tip: Should always work. Reliably"
+				>Auto</sysbtn>
+				<div class="pong_ip_picker"></div>
+			</div>
+		</div>
+
+		<div class="param_row">
+			<div class="param_row_label">Сесюрiтi:</div>
+			<div class="param_row_val">
+				<div class="security_method_switch" kbswitch_style="default">
+					<div
+						class="security_method_item"
+						kbhint="Advantages: Very reliable, persistent (Doesn't invalidate previously generated links after <CTRL + R>). Disadvantages: Must be tweaked by hand"
+						kbswitch_item
+						whitelist
+					>Whitelist</div>
+					<div
+						class="security_method_item"
+						kbhint="Advantages: Automatically whitelists required files. Disadvantages: <CTRL + R> Invalidates previously whitelisted items. Accidentally specifying nuclear codes .pdf file instead of an image would still whitelist the .pdf"
+						kbswitch_item
+						dynamic
+					>Dynamic</div>
+					<div
+						class="security_method_item"
+						kbhint="Advantages: Persistent (Doesn't invalidate previously generated links after <CTRL + R>), no need for manual tweaks. Disadvantages: Stolen token = stolen nuclear codes .pdf file"
+						kbswitch_item
+						token
+					>Token</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="security_method_ctrl"></div>
+
+	</resource-proxy-ctrl>
+</template>
+
+
+<template id="whitelist_ctrl">
+	<resource-proxy-ctrl-security>
+		<div class="whitelist_ctrl">
+			<header>Whitelisted dirs:</header>
+			<textarea
+				placeholder="Line break separated list of directories. Forward slashes allowed"
+				kbhint="Line break separated list of directories. Forward slashes allowed. * to allow everything from everywhere"
+			></textarea>
+		</div>
+	</resource-proxy-ctrl-security>
+</template>
+
+
+<template id="dynamic_ctrl">
+	<resource-proxy-ctrl-security>
+		<div class="dynamic_ctrl">
+			<sysbtn
+				kbhint="Clear the list of automatically whitelisted files"
+			>Flush</sysbtn>
+		</div>
+	</resource-proxy-ctrl-security>
+</template>
+
+
+<template id="token_ctrl">
+	<resource-proxy-ctrl-security>
+		<div class="token_ctrl">
+			<sysbtn
+				kbhint="This will ivalidate all previously generated links"
+			>Generate New Token</sysbtn>
+		</div>
+	</resource-proxy-ctrl-security>
+</template>
+
+

@@ -1,0 +1,120 @@
+<gtzip-wrangler>
+	<tabsys>
+		<sys-tab match_id="cfg">Config</sys-tab>
+		<sys-tab match_id="wrangler">Wrangler</sys-tab>
+		<sys-tab match_id="databanks">Databanks</sys-tab>
+	</tabsys>
+
+	<tab tabid="cfg" tabname="Config">
+		<input
+			type="text"
+			id="db_path_input"
+			placeholder="Title DB path"
+			value="C:\custom\vmix\title_db"
+			onchange_vis_feed
+		>
+		<input
+			type="text"
+			id="gt_editor_path"
+			placeholder="vMix GT Title Designer .exe path"
+			value="C:/Program Files (x86)/vMix/GT/GTDesigner.exe"
+			onchange_vis_feed
+		>
+	</tab>
+
+
+	<tab tabid="wrangler" tabname="Wrangler">
+		<div id="wrangler_columns">
+			<div
+				class="editor_column"
+				id="db_listing"
+				subtle_box
+				drag_hint="Add file(s) to database"
+				dragfx
+				kb_thin_scrollbar
+			>
+				<div class="column_header">
+					<div id="editor_type_switch" kbswitch_style="default">
+						<div kbswitch_item switch_item="editor">Editor</div>
+						<div kbswitch_item switch_item="db_lookup">DB</div>
+					</div>
+				</div>
+				<div class="column_content" kb_thin_scrollbar></div>
+			</div>
+
+			<div
+				class="editor_column"
+				id="db_lookup"
+				subtle_box
+				dragfx
+				kb_thin_scrollbar
+			>
+				<div id="tag_lookup_fields">
+					<div class="tag_lookup_col">
+						<div class="tag_lookup_col_header">Including all of:</div>
+						<textarea
+							id="db_lookup_tags_include"
+							placeholder="All of these tags must be present"
+							oninput="window.kbmodules.gtzip_wrangler.filter_db()"
+							oncontextmenu="window.kbmodules.gtzip_wrangler.insert_searched_tag(this)"
+						></textarea>
+					</div>
+					<div class="tag_lookup_col">
+						<div class="tag_lookup_col_header">Excluding any of:</div>
+						<textarea
+							id="db_lookup_tags_exclude"
+							placeholder="None of these tags must be present"
+							oninput="window.kbmodules.gtzip_wrangler.filter_db()"
+							oncontextmenu="window.kbmodules.gtzip_wrangler.insert_searched_tag(this)"
+						></textarea>
+					</div>
+				</div>
+
+				<div id="tag_explorer">
+					<input list="existing_tags" placeholder="Search existing tags" id="existing_tags_search">
+					<datalist id="existing_tags">
+						<option value="pootis">
+						<option value="dispenser">
+						<option value="medic">
+					</datalist>
+				</div>
+				<sysbtn id="rescan_db_btn" onclick="window.kbmodules.gtzip_wrangler.rescan_db()">Rescan</sysbtn>
+				<div ></div>
+				<input id="db_files_input" type="file" multiple>
+				<sysbtn id="add_files_to_db_btn" onclick="window.kbmodules.gtzip_wrangler.add_selected_files_to_db()">Add</sysbtn>
+			</div>
+
+			<div
+				class="editor_column"
+				id="file_meta"
+				subtle_box
+				drag_hint="Edit a file directly"
+				dragfx
+				kb_thin_scrollbar
+			>
+				
+			</div>
+
+
+			<div
+				class="editor_column"
+				id="phantom_editor"
+				subtle_box
+				drag_hint="Add phantom files to a gtzip OR import another phantom group into it"
+				dragfx
+				kb_thin_scrollbar
+			>
+				
+			</div>
+		</div>
+	</tab>
+
+
+	<tab tabid="databanks" tabname="Databanks">
+	</tab>
+
+
+</gtzip-wrangler>
+
+
+

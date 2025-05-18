@@ -1,618 +1,975 @@
 
-if(!kbmodules){kbmodules={}};
-
-if(!kbmodules.sambo_standard){kbmodules.sambo_standard={}};
-
+if(!window.kbmodules){window.kbmodules={}};
+if(!window.kbmodules.sambo_standard){window.kbmodules.sambo_standard={}};
 
 
+window.kbmodules.sambo_standard.counter = {};
 
-
-kbmodules.sambo_standard.edit_mode_active = false;
-kbmodules.sambo_standard.counter = {};
-
-kbmodules.sambo_standard.load = function()
-{
-	// spawn rounds
-	print('kickboxing init')
-	// const roundspool = document.querySelector('rounds pool');
-	const fresh_context = ksys.context.module.pull();
-
-	// for (let rnd of range(int(document.querySelector('rounds').getAttribute('amount')))){
-	// 	roundspool.append($(`<round round_index=${rnd+1} onclick="kbmodules.sambo_standard.set_round(${rnd+1}, true)">${rnd+1}</round>`)[0])
-	// }
-
-	// load pairs
-	kbmodules.sambo_standard.load_paris()
-	// this just has to be here... Dont fucking question it you mongrel
-	kbmodules.sambo_standard.toggle_edit(false)
-
-	// context.module.pull()
-
-	// context stuff
-	$('input[round_duration]').val(fresh_context.round_duration_exp)
-	$('input[res_path]').val(fresh_context.resource_path)
-
-	// round
-	$(`round[round_index="${fresh_context.current_round}"]`).css('color', 'lime')
-
-	// pair
-	$(`#pairs_pool pairnum[pair_index="${fresh_context.active_pair_index}"]`).css('color', 'lime')
-
-	if (fresh_context.current_player){
-		$('player.active_player').removeClass('active_player');
-		const selected_player = fresh_context.current_player.split('-');
-		$(`pairnum[pair_index="${selected_player[0]}"]`).closest('pair').find(`player[${selected_player[1]}]`).addClass('active_player')
-	}
-
-	kbmodules.sambo_standard.titles = {
+window.kbmodules.sambo_standard.load = function(){
+	window.kbmodules.sambo_standard.titles = {
 		'personal': new vmix.title({
-			'title_name': 'lower_title.gtzip',
+			'title_name': 'personal.gtzip',
 		}),
 
 		'vs': new vmix.title({
 			'title_name': 'vs_main.gtzip',
 		}),
 
-		'main_title': new vmix.title({
-			'title_name': 'main_title.gtzip',
+		'timer': new vmix.title({
+			'title_name': 'timer.gtzip',
+		}),
+
+		'lower': new vmix.title({
+			'title_name': 'midfight_lower.gtzip',
 		}),
 	}
 
-	kbmodules.sambo_standard.label_index = [
-		{
-			'label':    'RECORD',
-			'param_sel': 'p_param[p_record] input',
-		},
-	]
+	window.kbmodules.sambo_standard.player_data_schema = new Set();
+	window.kbmodules.sambo_standard.pair_list = new Map();
 
-	kbmodules.sambo_standard.personal_label_index = [
-		{
-			'label':    'RECORD',
-			'param_sel': 'p_param[p_record] input',
-			// 'suffix': 'cm',
-		},
-		// {
-		// 	'label':    'WEIGHT',
-		// 	'param_sel': 'p_param[p_weight] input',
-		// 	'suffix': 'kg',
-		// },
-	]
+	window.kbmodules.sambo_standard.edit_mode_active = false;
 
-}
+	window.kbmodules.sambo_standard.load_schema();
 
+	// window.kbmodules.sambo_standard.add_pair();
+	window.kbmodules.sambo_standard.load_pairs();
 
+	window.kbmodules.sambo_standard.color_order = ksys.context.module.cache.color_order;
 
+	// important todo: wtf does colour flip even do ????
+	window.kbmodules.sambo_standard.set_color_order(window.kbmodules.sambo_standard.color_order);
 
-kbmodules.sambo_standard.add_pair = function()
-{
-	// oncontextmenu="kbmodules.sambo_standard.del_pair(this)"
-	// onclick="kbmodules.sambo_standard.upd_vs_title(this.getAttribute("pair_index"))"
-	const pair = ksys.tplates.index_tplate(
-		'#pair_asset',
-		{
-			'root':    'pair',
-			'pairnum': 'pairnum',
-		}
-	)
-	pair.index.root.oncontextmenu = function(_self){
-		kbmodules.sambo_standard.del_pair(_self.target.closest('pair'))
-	}
-	pair.index.pairnum.onclick = function(_self){
-		kbmodules.sambo_standard.upd_vs_title(_self.target.getAttribute('pair_index'))
+	window.kbmodules.sambo_standard.redraw_round_switches();
+
+	document.querySelector('#param_list input[res_path]').value = ksys.context.module.cache.resource_path || '';
+
+	document.querySelector('#round_duration_cfg_field input[minutes]').value =
+		ksys.context.module.cache?.round_duration?.minutes || '';
+	document.querySelector('#round_duration_cfg_field input[seconds]').value =
+		ksys.context.module.cache?.round_duration?.seconds || '';
+
+	document.querySelector('#round_amount_fields input[round_amount]').value = 
+		ksys.context.module.cache.round_amount || '';
+
+	const timer_has_vs = document.querySelector('#param_list input[timer_has_vs]');
+	timer_has_vs.checked = ksys.context.module.cache.timer_has_vs || false;
+	timer_has_vs.onchange = function(){
+		ksys.context.module.prm('timer_has_vs', timer_has_vs.checked);
 	}
 
-	document.querySelector('#pairs_pool').append(pair.elem)
+	document.querySelector('#image_proxies').checked = !!ksys.context.module.cache.img_proxies_enabled;
+	document.querySelector('#image_proxies_addr').value = ksys.context.module.cache.img_proxy_addr;
+	document.querySelector('#img_proxy_whitelist').value = ksys.db.module.read('proxy_whitelist.kbdata') || '';
 
+	window.kbmodules.sambo_standard.toggle_image_proxies();
 
-	// enumarate pairs
-	kbmodules.sambo_standard.enumerate_pairs()
-}
+	const score_values = [1, 2, 3];
 
-kbmodules.sambo_standard.enumerate_pairs = function()
-{
-	const p_pool = [...document.querySelectorAll('#pairs_pool pairnum')]
-	for (let enm in p_pool){
-		// print('fuckoff', p_pool[enm])
-		p_pool[enm].textContent = str(int(enm) + 1);
-		p_pool[enm].setAttribute('pair_index', str(int(enm) + 1));
-	}
-}
-
-
-kbmodules.sambo_standard.del_pair = function(pr)
-{
-	if (pr && (kbmodules.sambo_standard.edit_mode_active == true)){
-		pr.remove()
-		kbmodules.sambo_standard.enumerate_pairs()
-	}
-}
-
-
-
-kbmodules.sambo_standard.toggle_edit = function(state=null)
-{
-	// Sometimes I stagger even myself with my genius
-	if (state == false || state == true){
-		kbmodules.sambo_standard.edit_mode_active = !state
-	}
-
-
-	if (kbmodules.sambo_standard.edit_mode_active == false){
-		kbmodules.sambo_standard.edit_mode_active = true;
-
-		kbmodules.sambo_standard.enumerate_pairs()
-
-		// unlimit height
-		// $('kbstandard #pairs_pool').css('height', 'auto')
-
-		// hide display
-		$('kbstandard #pairs_pool display').css('display', 'none');
-
-
-		// beauty clicks
-		$('kbstandard #pairs_pool player').attr('noclick', true);
-
-		// unhide editors
-		$('#pairs_pool > sysbtn, players player p_param').css('display', '')
-		return
-	}
-
-	if (kbmodules.sambo_standard.edit_mode_active == true){
-		kbmodules.sambo_standard.edit_mode_active = false;
-
-		// unhide display
-		$('kbstandard #pairs_pool display').css('display', '');
-
-
-		// evalueate displays
-		for (var evl of document.querySelectorAll('#pairs_pool players player')){
-			evl.querySelector('display').textContent = evl.querySelector('p_param[p_name] input').value
-		}
-
-		kbmodules.sambo_standard.enumerate_pairs()
-
-		// limit height
-		// $('kbstandard #pairs_pool').css('height', '600px');
-
-		// block beauty clicks
-		$('kbstandard #pairs_pool player').removeAttr('noclick');
-
-		// hide editors
-		$('#pairs_pool > sysbtn:not(sysbtn[btname="toggle_edit_mode"]), players player p_param').css('display', 'none')
-		return
-	}
-}
-
-
-kbmodules.sambo_standard.save_pairs = function(tofile=false)
-{
-	var collected = []
-	for (let pair of document.querySelectorAll('#pairs_pool pair')){
-		collected.push({
-			'left':{
-				'name':    pair.querySelector('player[left] p_param[p_name] input').value,
-				'age':     pair.querySelector('player[left] p_param[p_age] input').value,
-				'height':  pair.querySelector('player[left] p_param[p_height] input').value,
-				'weight':  pair.querySelector('player[left] p_param[p_weight] input').value,
-				'country': pair.querySelector('player[left] p_param[p_country] input').value,
-				'record':  pair.querySelector('player[left] p_param[p_record] input').value,
-			},
-			'right':{
-				'name':    pair.querySelector('player[right] p_param[p_name] input').value,
-				'age':     pair.querySelector('player[right] p_param[p_age] input').value,
-				'height':  pair.querySelector('player[right] p_param[p_height] input').value,
-				'weight':  pair.querySelector('player[right] p_param[p_weight] input').value,
-				'country': pair.querySelector('player[right] p_param[p_country] input').value,
-				'record':  pair.querySelector('player[right] p_param[p_record] input').value,
+	for (const side of ['l', 'r']){
+		for (const score_val of score_values){
+			for (const sign_data of [[1, 'add'], [-1, 'sub']]){
+				const [sign, dom_selector] = sign_data;
+				const btn_dom = ksys.tplates.index_tplate(
+					'#score_mod_btn_template', {}
+				);
+				btn_dom.root.textContent = str((sign > 0) ? '+' : '-') + str(score_val);
+				document.querySelector(`.score_ctrl_${side} .score_btns.score_${dom_selector}`).append(btn_dom.root);
+				const tgt_input = document.querySelector(`#score_input_${side}`);
+				btn_dom.root.onclick = function(){
+					const new_val = int(tgt_input.value || 0) + (score_val * sign);
+					tgt_input.value = (new_val > 0) ? new_val : 0;
+					tgt_input?.onchange?.();
+					window.kbmodules.sambo_standard.save_pairs();
+				}
 			}
-		})
+		}
 	}
-
-	if (tofile == true){
-		return JSON.stringify(collected, null, 4)
-	}else{
-		ksys.db.module.write('pairs_dict.pootis', JSON.stringify(collected, null, 4))
-	}
-	
 }
 
+window.kbmodules.sambo_standard.KBPlayer = class{
+	constructor(parent_pair){
+		const self = this;
 
-// overwrite takes a JOn object/json containing pairs
-kbmodules.sambo_standard.load_paris = function(overwrite=null)
-{
-	// wipe existing
-	$('#pairs_pool pair').remove();
+		self.pair = parent_pair;
 
-	// load saved, if any
-	var pairs_dict = ksys.db.module.read('pairs_dict.pootis') || overwrite;
-	// only if they exist in the first palce...
-	if (!pairs_dict){return}
+		self.dom = ksys.tplates.index_tplate(
+			'#kb_player_template',
+			{
+				'vis_display':  '.vis_display',
+				'pair_num':     '.pair_num',
+				'player_data':  '.player_data',
+			}
+		);
 
-	// make JSON out of it
-	pairs_dict = JSON.parse(pairs_dict)
+		self.vs_photo_side = 'l';
 
-	// spawn pairs one by one
-	for (let pair of pairs_dict){
-		document.querySelector('#pairs_pool').append(lizard.ehtml(`
-			<pair oncontextmenu="kbmodules.sambo_standard.del_pair(this)">
-				<pairnum click_contrast onclick="kbmodules.sambo_standard.upd_vs_title(this.getAttribute('pair_index'))"></pairnum>
-				<players>
-					<player right click_contrast noclick onclick="kbmodules.sambo_standard.upd_personal_title(this)">
-						<display></display>
-						<p_param p_name>
-							<descr>Name</descr>
-							<input type="text" placeholder="Player Name" value="${pair.right.name}">
-						</p_param>
-						<p_param p_age>
-							<descr>Age</descr>
-							<input type="text" placeholder="Player Age" value="${pair.right.age}">
-						</p_param>
-						<p_param p_weight>
-							<descr>Weight</descr>
-							<input type="text" placeholder="Player Weight" value="${pair.right.weight}">
-						</p_param>
-						<p_param p_height>
-							<descr>Height</descr>
-							<input type="text" placeholder="Player Height" value="${pair.right.height}">
-						</p_param>
-						<p_param p_record>
-							<descr>Record</descr>
-							<input type="text" placeholder="Player Record" value="${pair.right.record}">
-						</p_param>
-						<p_param p_country>
-							<descr>Country</descr>
-							<input type="text" placeholder="Player's Country of Origin" value="${pair.right.country}">
-						</p_param>
-					</player>
-					<player left click_contrast noclick onclick="kbmodules.sambo_standard.upd_personal_title(this)">
-						<display></display>
-						<p_param p_name>
-							<descr>Name</descr>
-							<input type="text" placeholder="Player Name" value="${pair.left.name}">
-						</p_param>
-						<p_param p_age>
-							<descr>Age</descr>
-							<input type="text" placeholder="Player Age" value="${pair.left.age}">
-						</p_param>
-						<p_param p_weight>
-							<descr>Weight</descr>
-							<input type="text" placeholder="Player Weight" value="${pair.left.weight}">
-						</p_param>
-						<p_param p_height>
-							<descr>Height</descr>
-							<input type="text" placeholder="Player Height" value="${pair.left.height}">
-						</p_param>
-						<p_param p_record>
-							<descr>Record</descr>
-							<input type="text" placeholder="Player Record" value="${pair.left.record}">
-						</p_param>
-						<p_param p_country>
-							<descr>Country</descr>
-							<input type="text" placeholder="Player's Country of Origin" value="${pair.left.country}">
-						</p_param>
-					</player>
-				</players>
-			</pair>
-		`))
-	}
+		self.attr_list = {};
 
-	// and enumerate pair indexes
-	kbmodules.sambo_standard.enumerate_pairs()
-}
+		self.name = '';
+		self.surname = '';
+		self.score = 0;
 
+		// Add name/surname
+		{
+			const dom = ksys.tplates.index_tplate(
+				'#kb_player_data_entry_template',
+				{
+					'label':  '.data_entry_label',
+					'input':  '.data_entry_input',
+				}
+			);
+			dom.index.label.textContent = 'Name';
+			dom.index.input.onchange = function(){
+				self.name = dom.index.input.value;
+				self.dom.index.vis_display.textContent = `${self.name} ${self.surname}`;
+				window.kbmodules.sambo_standard.save_pairs();
+			}
+			self.dom.index.player_data.append(dom.elem);
 
-
-
-
-kbmodules.sambo_standard.save_res_path = function()
-{
-	ksys.context.module.prm('resource_path', document.querySelector('input[res_path]').value)
-}
-
-
-kbmodules.sambo_standard.save_timer_duration = function()
-{
-	ksys.context.module.prm('round_duration', eval(document.querySelector('input[round_duration]').value) * 1000, false);
-	ksys.context.module.prm('round_duration_exp', document.querySelector('input[round_duration]').value)
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// process VS screen
-// todo: this could be done easier by splitting the save function into ripper and saver itself...
-kbmodules.sambo_standard.upd_vs_title = async function(p_index=null)
-{
-	// if (!pindex){return}
-	// do NOT do this in edit mode!
-	if (kbmodules.sambo_standard.edit_mode_active == true){return}
-
-	$('#pairs_pool pairnum').css('color', '');
-	$(`#pairs_pool pairnum[pair_index="${p_index}"]`).css('color', 'lime')
-
-
-	// save selected pair index
-	ksys.context.module.prm('active_pair_index', p_index)
-
-	// return
-
-	// select the corresponding pair in the gui
-	var pair_elem = $(`#pairs_pool pairnum[pair_index="${p_index}"]`).closest('pair');
-	print('PAIR ITEM', pair_elem)
-	// correspondance dictionary
-	var c_dict = {
-		// Left
-		'name_l': {
-			'gui': 'player[left] p_param[p_name] input',
-			'vmix': 'name_L.Text'
-		},
-		'age_l': {
-			'gui': 'player[left] p_param[p_age] input',
-			'vmix': 'age_L.Text'
-		},
-		'height_l': {
-			'gui': 'player[left] p_param[p_height] input',
-			'vmix': 'height_L.Text'
-		},
-		'weight_l': {
-			'gui': 'player[left] p_param[p_weight] input',
-			'vmix': 'weight_L.Text'
-		},
-		'country_l': {
-			'gui': 'player[left] p_param[p_country] input',
-			'vmix': 'flag_L.Source'
-		},
-		'record_l': {
-			'gui': 'player[left] p_param[p_record] input',
-			'vmix': 'height_L.Text'
-		},
-
-
-		// Right
-		'name_r': {
-			'gui': 'player[right] p_param[p_name] input',
-			'vmix': 'name_R.Text'
-		},
-		'age_r': {
-			'gui': 'player[right] p_param[p_age] input',
-			'vmix': 'age_R.Text'
-		},
-		'height_r': {
-			'gui': 'player[right] p_param[p_height] input',
-			'vmix': 'height_R.Text'
-		},
-		'weight_r': {
-			'gui': 'player[right] p_param[p_weight] input',
-			'vmix': 'weight_R.Text'
-		},
-		'country_r': {
-			'gui': 'player[right] p_param[p_country] input',
-			'vmix': 'flag_R.Source'
-		},
-		'record_r': {
-			'gui': 'player[right] p_param[p_record] input',
-			'vmix': 'height_R.Text'
+			self.attr_list['name'] = dom.index.input;
 		}
 
+		{
+			const dom = ksys.tplates.index_tplate(
+				'#kb_player_data_entry_template',
+				{
+					'label':  '.data_entry_label',
+					'input':  '.data_entry_input',
+				}
+			);
+			dom.index.label.textContent = 'Surname';
+			dom.index.input.onchange = function(){
+				self.surname = dom.index.input.value;
+				self.dom.index.vis_display.textContent = `${self.name} ${self.surname}`;
+				window.kbmodules.sambo_standard.save_pairs();
+			}
+			self.dom.index.player_data.append(dom.elem);
+			self.attr_list['surname'] = dom.index.input;
+		}
+
+
+		self.update_schema(self);
+
+		self.dom.elem.onclick = function(){
+			if (window.kbmodules.sambo_standard.edit_mode_active){return};
+			self.mark_active();
+			window.kbmodules.sambo_standard.update_personal_title(self);
+		}
+
+		ksys.util.cls_pwnage.remap(self);
 	}
-	const frmt = ksys.strf.params.players
 
-	// set boxes
-	for (const _box_idx in kbmodules.sambo_standard.label_index){
-		const prm_info = kbmodules.sambo_standard.label_index[_box_idx];
-		
-		const box_idx = int(_box_idx) + 1
+	to_dict(self){
+		const data = {
+			'name': self.name,
+			'surname': self.surname,
+			'vs_photo_side': self.vs_photo_side,
+			'score': self.score || 0,
+		};
+		for (const data_id in self.attr_list){
+			data[data_id] = self.attr_list[data_id].value;
+		}
 
-		// Set label
-		await kbmodules.sambo_standard.titles.vs.set_text(
-			`ifb_title_lb_${box_idx}`,
-			prm_info.label,
+		return data;
+	}
+
+	apply_data(self, data){
+		self.name = data.name;
+		self.surname = data.surname;
+		self.score = data.score || 0;
+
+		self.vs_photo_side = data.vs_photo_side || 'l';
+
+		self.attr_list.name.value = data.name;
+		self.attr_list.surname.value = data.surname;
+
+		self.dom.index.vis_display.textContent = `${self.name} ${self.surname}`;
+
+		for (const schema_data of window.kbmodules.sambo_standard.player_data_schema){
+			const [label, suffix, data_id] = schema_data;
+			if (!self.attr_list[data_id]){continue};
+
+			self.attr_list[data_id].value = data[data_id] || '';
+		}
+	}
+
+	update_schema(self){
+		// Add data entries according to schema
+		for (const schema_data of window.kbmodules.sambo_standard.player_data_schema){
+			const [label, suffix, data_id, is_image, is_shared] = schema_data;
+
+			const attr_dom = ksys.tplates.index_tplate(
+				'#kb_player_data_entry_template',
+				{
+					'label':  '.data_entry_label',
+					'input':  '.data_entry_input',
+				}
+			);
+
+			if (data_id in self.attr_list){continue};
+
+			attr_dom.index.label.textContent = ksys.util.str_ops.format(label, 1);
+			self.dom.index.player_data.append(attr_dom.elem);
+
+			self.attr_list[data_id] = attr_dom.index.input;
+
+			attr_dom.index.input.onchange = function(){
+				window.kbmodules.sambo_standard.save_pairs();
+			}
+		}
+	}
+
+	side(self){
+		return (self.pair.players['red'] == self) ? 'red' : 'blu'
+	}
+
+	mark_active(self){
+		ksys.context.module.prm('active_player', self.side());
+		$('#player_list .player_pair .kb_player').removeClass('active_player');
+		self.dom.elem.classList.add('active_player');
+	}
+}
+
+
+window.kbmodules.sambo_standard.KBPlayerPair = class{
+	constructor(){
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
+		self.dom = ksys.tplates.index_tplate(
+			'#kb_player_pair_template',
+			{
+				'header':        '.pair_header',
+
+				'pair_num':      '.pair_num',
+				'flip_players':  '.flip_players',
+				'flip_photos':   '.flip_photos',
+				'del_pair':      '.del_pair',
+
+				'move_up':       '.move_pair_up',
+				'move_down':     '.move_pair_down',
+
+				'pair_players':  '.pair_players',
+			}
+		);
+
+		self.index = null;
+
+		window.kbmodules.sambo_standard.pair_list.set(self.dom.elem, self);
+
+		self.players = {
+			'red': new window.kbmodules.sambo_standard.KBPlayer(self),
+			'blu': new window.kbmodules.sambo_standard.KBPlayer(self),
+		}
+
+		// todo: this is basically a hack
+		self.players.red.vs_photo_side = 'l';
+		self.players.blu.vs_photo_side = 'r';
+
+		self.dom.index.pair_num.textContent = self.index;
+
+		self.dom.index.pair_players.append(
+			self.players.red.dom.elem
+		)
+		self.dom.index.pair_players.append(
+			self.players.blu.dom.elem
 		)
 
-		for (const side of [['r', 'left'], ['l', 'right']]){
-			await kbmodules.sambo_standard.titles.vs.set_text(
-				`ifb_text_${side[0]}_${box_idx}`,
+		self.dom.index.del_pair.onclick = function(evt){
+			if (!evt.altKey){
+				window.kbmodules.sambo_standard.msg_warn_need_alt();
+				return
+			}
+
+			window.kbmodules.sambo_standard.pair_list.delete(self.dom.elem);
+			self.dom.elem.remove();
+			window.kbmodules.sambo_standard.update_pair_index();
+			window.kbmodules.sambo_standard.save_pairs();
+		}
+
+		self.dom.index.move_up.onclick = function(evt){
+			self.move_up();
+			window.kbmodules.sambo_standard.update_pair_index();
+			window.kbmodules.sambo_standard.save_pairs();
+		}
+		self.dom.index.move_down.onclick = function(evt){
+			self.move_down();
+			window.kbmodules.sambo_standard.update_pair_index();
+			window.kbmodules.sambo_standard.save_pairs();
+		}
+		self.dom.index.flip_players.onclick = function(evt){
+			self.flip_sides();
+			if (self.dom.elem.classList.contains('active_pair')){
+				self.fwd_score_vis();
+			}
+			window.kbmodules.sambo_standard.save_pairs();
+		}
+		self.dom.index.flip_photos.onclick = function(evt){
+			self.flip_photos();
+			window.kbmodules.sambo_standard.save_pairs();
+		}
+
+		self.dom.index.header.onclick = function(evt){
+			if (window.kbmodules.sambo_standard.edit_mode_active){return};
+			self.mark_active();
+			self.fwd_score_vis();
+			window.kbmodules.sambo_standard.update_vs_title(self);
+		}
+
+	}
+
+	to_dict(self){
+		return {
+			'red': self.players.red.to_dict(),
+			'blu': self.players.blu.to_dict(),
+			'index': self.index,
+		}
+	}
+
+	// important todo: account for active pairs
+	move_up(self){
+		const prev_sibling = self.dom.elem.previousSibling;
+		if (!prev_sibling || ['#text', 'sysbtn'].includes(prev_sibling.nodeName.lower())){return};
+		// todo: this assumes that the parent element is the list itself
+		self.dom.elem.parentElement.insertBefore(self.dom.elem, prev_sibling);
+	}
+
+	move_down(self){
+		const next_sibling = self.dom.elem?.nextSibling?.nextSibling;
+		if (!next_sibling || next_sibling.nodeName.lower() == '#text'){
+			self.dom.elem.parentElement.append(self.dom.elem);
+		};
+		// todo: this assumes that the parent element is the list itself
+		self.dom.elem.parentElement.insertBefore(self.dom.elem, next_sibling);
+	}
+
+	// important todo: account for active players
+	flip_sides(self){
+		const blu = self.players.blu;
+		const red = self.players.red;
+
+		blu.dom.elem.swapWith(red.dom.elem);
+
+		self.players.blu = red;
+		self.players.red = blu;
+	}
+
+	// important todo: account for active players
+	flip_photos(self){
+		const blu_side = self.players.blu.vs_photo_side;
+		const red_side = self.players.red.vs_photo_side;
+
+		self.players.blu.vs_photo_side = red_side;
+		self.players.red.vs_photo_side = blu_side;
+	}
+
+	flip_colors(self){
+		const blu = self.players.blu;
+		const red = self.players.red;
+
+		self.players.blu = red;
+		self.players.red = blu;
+	}
+
+	mark_active(self){
+		ksys.context.module.prm('active_pair', self.index);
+		$('#player_list .player_pair').removeClass('active_pair');
+		self.dom.elem.classList.add('active_pair');
+	}
+
+	fwd_score_vis(self, include_input=true){
+		const red_score = document.querySelector('#score_input_l');
+		const blu_score = document.querySelector('#score_input_r');
+
+		if (include_input){
+			red_score.value = int(self.players.red.score);
+			blu_score.value = int(self.players.blu.score);
+		}
+
+		red_score.onchange = function(){
+			print('Onchange trigger')
+			self.players.red.score = int(red_score.value || 0);
+			self.push_scores_to_vmix();
+			window.kbmodules.sambo_standard.save_pairs();
+		}
+		blu_score.onchange = function(){
+			print('Onchange trigger')
+			self.players.blu.score = int(blu_score.value || 0);
+			self.push_scores_to_vmix();
+			window.kbmodules.sambo_standard.save_pairs();
+		}
+
+		self.push_scores_to_vmix();
+	}
+
+	push_scores_to_vmix(self){
+		window.kbmodules.sambo_standard.titles.timer.set_text('score_l', self.players.red.score);
+		window.kbmodules.sambo_standard.titles.timer.set_text('score_r', self.players.blu.score);
+	}
+}
+
+
+window.kbmodules.sambo_standard.msg_warn_need_alt = function(){
+	ksys.info_msg.send_msg(
+		'Hold ALT',
+		'warn',
+		3000
+	);
+}
+
+
+
+
+
+
+window.kbmodules.sambo_standard.toggle_edit_mode = function(){
+	const dom = document.querySelector('kbstandard');
+	if (dom.hasAttribute('edit_mode')){
+		dom.removeAttribute('edit_mode');
+		window.kbmodules.sambo_standard.edit_mode_active = false;
+	}else{
+		dom.setAttribute('edit_mode', true);
+		window.kbmodules.sambo_standard.edit_mode_active = true;
+	}
+}
+
+
+window.kbmodules.sambo_standard.flip_sides = function(){
+	for (const pair of window.kbmodules.sambo_standard.pair_list.values()){
+		pair.flip_sides();
+	}
+	window.kbmodules.sambo_standard.save_pairs();
+}
+
+window.kbmodules.sambo_standard.flip_photos = function(){
+	for (const pair of window.kbmodules.sambo_standard.pair_list.values()){
+		pair.flip_photos();
+	}
+	window.kbmodules.sambo_standard.save_pairs();
+}
+
+window.kbmodules.sambo_standard.flip_colors = function(){
+	// print('Kys pls?')
+	for (const pair of window.kbmodules.sambo_standard.pair_list.values()){
+		pair.flip_colors();
+	}
+
+	if (document.querySelector('#timer_ctrl_score').classList.contains('red_vs_blu')){
+		$('#timer_ctrl_score').removeClass('red_vs_blu');
+		$('#timer_ctrl_score').addClass('blu_vs_red');
+
+		// ksys.context.module.prm('color_order', 'blu_vs_red');
+		// return
+	}else{
+		$('#timer_ctrl_score').removeClass('blu_vs_red');
+		$('#timer_ctrl_score').addClass('red_vs_blu');
+
+		// ksys.context.module.prm('color_order', 'red_vs_blu');
+	}
+
+
+	if (document.querySelector('#player_list').classList.contains('red_vs_blu')){
+		$('#player_list').removeClass('red_vs_blu');
+		$('#player_list').addClass('blu_vs_red');
+
+		ksys.context.module.prm('color_order', 'blu_vs_red');
+		return
+	}
+
+	if (document.querySelector('#player_list').classList.contains('blu_vs_red')){
+		$('#player_list').removeClass('blu_vs_red');
+		$('#player_list').addClass('red_vs_blu');
+
+		ksys.context.module.prm('color_order', 'red_vs_blu');
+		return
+	}
+}
+
+
+window.kbmodules.sambo_standard.update_pair_index = function(){
+	if (ksys.context.module.cache.pair_ids_frozen){return};
+
+	let pair_index = 0;
+	for (const dom of document.querySelectorAll('#player_list > .player_pair')){
+		const pair = window.kbmodules.sambo_standard.pair_list.get(dom);
+		pair_index += 1;
+		pair.index = pair_index;
+		pair.dom.index.pair_num.textContent = pair_index;
+	}
+}
+
+
+window.kbmodules.sambo_standard.set_color_order = function(order){
+	if (order == 'red_vs_blu'){
+		$('#player_list').removeClass('blu_vs_red');
+		$('#player_list').addClass('red_vs_blu');
+
+		$('#timer_ctrl_score').removeClass('blu_vs_red');
+		$('#timer_ctrl_score').addClass('red_vs_blu');
+	}else{
+		$('#player_list').removeClass('red_vs_blu');
+		$('#player_list').addClass('blu_vs_red');
+
+		$('#timer_ctrl_score').removeClass('red_vs_blu');
+		$('#timer_ctrl_score').addClass('blu_vs_red');
+	}
+}
+
+
+window.kbmodules.sambo_standard.save_schema = function(event){
+	ksys.db.module.write(
+		'player_data_schema.kbdata',
+		JSON.stringify(
+			Array.from(window.kbmodules.sambo_standard.player_data_schema)
+		)
+	)
+
+	window.kbmodules.sambo_standard.fwd_update_schema();
+
+	ksys.info_msg.send_msg(`Save OK`, 'ok', 500);
+}
+
+window.kbmodules.sambo_standard.load_schema = function(){
+	$('#schema_cfg_list').empty();
+	let schema_data = ksys.db.module.read('player_data_schema.kbdata');
+
+	if (!schema_data){
+		print('No schema save present. Not loading');
+		return
+	}
+
+	schema_data = JSON.parse(schema_data);
+
+	for (const schema_entry of schema_data){
+		window.kbmodules.sambo_standard.add_schema_entry(schema_entry)
+	}
+}
+
+
+window.kbmodules.sambo_standard.add_schema_entry = function(data){
+	print('Kys pls', data)
+
+	// todo: this || might backfire horrendously
+	const schema_data = data || ['', '', '', false, false];
+
+	const schema_dom = ksys.tplates.index_tplate(
+		'#schema_list_entry_template',
+		{
+			'field_label':  '.field_label',
+			'suffix':       '.suffix',
+			'is_image':     '.is_image',
+			'is_shared':    '.is_shared',
+			'idname':       '.idname',
+
+			// 'save':         '.save_schema',
+		}
+	);
+
+	schema_dom.index.field_label.value = schema_data[0];
+	schema_dom.index.suffix.value =      schema_data[1];
+	schema_dom.index.idname.value =      schema_data[2];
+	schema_dom.index.is_image.checked =  schema_data[3];
+	schema_dom.index.is_shared.checked = schema_data[4];
+
+	schema_dom.index.field_label.onchange = function(){
+		schema_data[0] = schema_dom.index.field_label.value.trim();
+	}
+	schema_dom.index.suffix.onchange = function(){
+		schema_data[1] = schema_dom.index.suffix.value.trim();
+	}
+	schema_dom.index.idname.onchange = function(){
+		schema_data[2] = schema_dom.index.idname.value;
+	}
+	schema_dom.index.is_image.onchange = function(){
+		schema_data[3] = schema_dom.index.is_image.checked;
+	}
+	schema_dom.index.is_shared.onchange = function(){
+		print('SHARED CHANGED?')
+		schema_data[4] = schema_dom.index.is_shared.checked;
+	}
+
+	schema_dom.elem.oncontextmenu = function(evt){
+		if (!evt.altKey){
+			window.kbmodules.sambo_standard.msg_warn_need_alt();
+			return
+		}
+
+		window.kbmodules.sambo_standard.player_data_schema.delete(schema_data);
+		schema_dom.elem.remove();
+	}
+
+	window.kbmodules.sambo_standard.player_data_schema.add(schema_data);
+
+	$('#schema_cfg_list').append(schema_dom.elem);
+}
+
+
+window.kbmodules.sambo_standard.fwd_update_schema = function(){
+	for (const pair of window.kbmodules.sambo_standard.pair_list.values()){
+		// todo: move this to player pair class
+		pair.players.blu.update_schema();
+		pair.players.red.update_schema();
+	}
+}
+
+
+window.kbmodules.sambo_standard.save_pairs = function(){
+	const save_data = {
+		'color_order': window.kbmodules.sambo_standard.color_order,
+		'pairs': [],
+	};
+
+	for (const dom of document.querySelectorAll('#player_list > .player_pair')){
+		const pair_data = window.kbmodules.sambo_standard.pair_list.get(dom);
+		save_data.pairs.push(
+			pair_data.to_dict()
+		)
+	}
+
+	ksys.db.module.write(
+		'pairs.kbdata',
+		JSON.stringify(save_data)
+	)
+}
+
+window.kbmodules.sambo_standard.load_pairs = function(){
+	let pair_list = ksys.db.module.read('pairs.kbdata');
+	if (!pair_list){return};
+
+	pair_list = JSON.parse(pair_list);
+
+	window.kbmodules.sambo_standard.set_color_order(pair_list.color_order)
+
+	for (const pair_data of pair_list.pairs){
+		const pair = window.kbmodules.sambo_standard.add_pair(true);
+
+		// todo: Add "apply" data to the pair class?
+		print('Applying data', )
+		pair.players.red.apply_data(pair_data.red);
+		pair.players.blu.apply_data(pair_data.blu);
+		pair.index = pair_data.index;
+		pair.dom.index.pair_num.textContent = pair_data.index;
+	}
+	window.kbmodules.sambo_standard.update_pair_index();
+
+	for (const pair of window.kbmodules.sambo_standard.pair_list.values()){
+		if (pair.index == ksys.context.module.cache.active_pair){
+			pair.mark_active();
+			pair.fwd_score_vis();
+			break
+		}
+	}
+}
+
+
+window.kbmodules.sambo_standard.add_pair = function(force_add=false){
+	if (ksys.context.module.cache.pair_ids_frozen && !force_add){
+		ksys.info_msg.send_msg(
+			'Cannot add pair: Photo indexes are bound. Unbind them first',
+			'warn',
+			6000
+		);
+		return
+	}
+	const player = new window.kbmodules.sambo_standard.KBPlayerPair();
+	$('#player_list').append(player.dom.elem);
+	window.kbmodules.sambo_standard.update_pair_index();
+	return player;
+}
+
+
+
+window.kbmodules.sambo_standard.save_res_path = function(){
+	ksys.context.module.prm(
+		'resource_path',
+		document.querySelector('#param_list input[res_path]').value
+	)
+}
+
+
+
+window.kbmodules.sambo_standard.update_vs_title = async function(tgt_pair){
+	if (window.kbmodules.sambo_standard.edit_mode_active){return};
+
+	const frmt = ksys.strf.params.players;
+
+	let label_idx = 0;
+	for (const schema_data of window.kbmodules.sambo_standard.player_data_schema){
+		// Set label
+		label_idx += 1;
+		const [label, suffix, data_id, is_image, is_shared] = schema_data;
+
+		// todo: YET ANOTHER BOOTLEG HACK...
+		if (is_shared){
+			await window.kbmodules.sambo_standard.titles.vs.set_text(
+				`shared_attr_val`,
+				`${label} ${tgt_pair.players['red'].attr_list[data_id].value.trim()} ${suffix}`,
+			)
+			label_idx -= 1;
+			// continue
+		}
+
+		await window.kbmodules.sambo_standard.titles.vs.set_text(
+			`ifb_title_lb_${label_idx}`,
+			label,
+		)
+
+		// Set data
+		for (const side of [['l', 'red'], ['r', 'blu']]){
+			const [side_vmix, side_kb] = side;
+
+			if (is_image && data_id == 'flag'){
+				const tgt_player = tgt_pair.players[side_kb];
+
+				// TODO: BAD TEMP HACK
+				await window.kbmodules.sambo_standard.titles.vs.set_img_src(
+					`country_${side_vmix}`,
+					str(
+						Path(ksys.context.module.cache.resource_path)
+						.join(tgt_player.attr_list[data_id].value.trim())
+					)
+					.replaceAll('/', '\\')
+				)
+				// continue
+			}
+
+			// Set name/surname
+			await window.kbmodules.sambo_standard.titles.vs.set_text(
+				`pname_text_${side_vmix}`,
 				frmt.format(
-					$(pair_elem).find(`player[${side[1]}] ${prm_info.param_sel}`).val().trim()
-				)  + ' ' + (prm_info.suffix || ' '),
+					`${tgt_pair.players[side_kb].name} ${tgt_pair.players[side_kb].surname}`
+				),
+			)
+
+			// todo: this is a temp solution
+			if (ksys.context.module.cache.timer_has_vs){
+				print('??????')
+				await window.kbmodules.sambo_standard.titles.timer.set_text(
+					`player_${side_vmix}`,
+					frmt.format(
+						// `${tgt_pair.players[side_kb].name} ${tgt_pair.players[side_kb].surname}`
+						str(tgt_pair.players[side_kb].surname)
+					),
+				)
+			}
+
+			// Set other data
+			await window.kbmodules.sambo_standard.titles.vs.set_text(
+				`ifb_text_${side_vmix}_${label_idx}`,
+				frmt.format(tgt_pair.players[side_kb].attr_list[data_id].value.trim()) + ' ' + suffix
 			)
 		}
 	}
 
-	let p_name = new Set($(pair_elem).find(`player[left] p_param[p_name] input`).val().trim().split(' '))
-	let psurname = frmt.format(p_name.at(-1));
-	p_name.del_idx(-1)
-	let pname = frmt.format(p_name.join(' '));
+	// Set vs image
+	// window.kbmodules.sambo_standard.titles.vs.set_img_src(
+	// 	'Image1',
+	// 	str((Path(ksys.context.module.cache.resource_path))
+	// 	.join('pair_pool', `${tgt_pair.index}.png`))
+	// 	.replaceAll('/', '\\')
+	// )
 
-	// set names
-	await kbmodules.sambo_standard.titles.main_title.set_text(
-		`red_name`,
-		frmt.format(
-			psurname
-		),
-	)
+	for (const side of [['l', 'red'], ['r', 'blu']]){
+		const [side_vmix, side_kb] = side;
+		const tgt_player = tgt_pair.players[side_kb];
 
-	p_name = new Set($(pair_elem).find(`player[right] p_param[p_name] input`).val().trim().split(' '))
-	psurname = frmt.format(p_name.at(-1));
-	p_name.del_idx(-1)
-	pname = frmt.format(p_name.join(' '));
+		await window.kbmodules.sambo_standard.titles.vs.set_img_src(
+			`player_photo_${side_vmix}`,
+			str(
+				Path(ksys.context.module.cache.resource_path)
+				.join('pair_pool', `${tgt_pair.index}_${tgt_player.vs_photo_side}.png`)
+			)
+			.replaceAll('/', '\\')
+		)
+	}
 
-	await kbmodules.sambo_standard.titles.main_title.set_text(
-		`blue_name`,
-		frmt.format(
-			psurname
-		),
-	)
+
+	/*
+	for (const side of ['l', 'r']){
+		for (const player_col in tgt_pair.players){
+			const tgt_player = tgt_pair.players[player_col];
+			if (tgt_player.vs_photo_side == side){
+				print('kys????', tgt_player, side)
+				await window.kbmodules.sambo_standard.titles.vs.set_img_src(
+					`player_photo_${side}`,
+					str(
+						Path(ksys.context.module.cache.resource_path)
+						.join('pair_pool', `${tgt_pair.index}_${side}.png`)
+					)
+					.replaceAll('/', '\\')
+				)
+			}
+		}
+	}
+	*/
 
 }
 
-
-
-kbmodules.sambo_standard.upd_personal_title = async function(player)
-{
-	if (kbmodules.sambo_standard.edit_mode_active == true){return};
-
-	const player_elem = $(player).closest('player');
-
-	$('player.active_player').removeClass('active_player');
-	player_elem.addClass('active_player');
+window.kbmodules.sambo_standard.update_personal_title = async function(tgt_player){
+	if (window.kbmodules.sambo_standard.edit_mode_active){return};
 
 	ksys.context.module.prm(
-		'current_player',
-		`${player_elem.closest('pair').find('pairnum').attr('pair_index')}-${(player_elem.attr('left') == '') ? 'left' : 'right'}`,
+		'active_player',
+		tgt_player.side(),
 	)
 
-	// $('#category_change input').val($(player).find('p_param[p_weight] input').val().trim())
-
-	const player_info = ksys.tplates.index_elem(
-		player_elem,
-		{
-			'name':    'p_param[p_name] input',
-			'age':     'p_param[p_age] input',
-			'height':  'p_param[p_height] input',
-			'weight':  'p_param[p_weight] input',
-			'country': 'p_param[p_country] input',
-			'record':  'p_param[p_record] input',
-		}
-	).index
-
-	const title = kbmodules.sambo_standard.titles.personal
-
-	const p_name = new Set(player_info.name.value.trim().split(' '))
 	const frmt = ksys.strf.params.players;
+	const title = window.kbmodules.sambo_standard.titles.personal;
 
-	const psurname = frmt.format(p_name.at(-1));
-	p_name.del_idx(-1)
-	// const pname = frmt.format(
-	// 	Array.from(p_name).join(' ')
-	// );
-	const pname = frmt.format(p_name.join(' '));
+	// Set name/surname
+	await title.set_text(
+		'name',
+		frmt.format(tgt_player.name)
+	);
+	await title.set_text(
+		'surname',
+		frmt.format(tgt_player.surname)
+	);
+
+	// Set other data
+	let label_idx = 0;
+	for (const schema_data of window.kbmodules.sambo_standard.player_data_schema){
+		label_idx += 1;
+		const [label, suffix, data_id, is_image] = schema_data;
+
+		await title.set_text(`attr_${label_idx}_label`, label);
+
+		if (is_image){
+			await title.set_img_src(
+				`attr_${label_idx}_val`,
+				str(
+					Path(ksys.context.module.cache.resource_path)
+					.join(tgt_player.attr_list[data_id].value.trim())
+				)
+				.replaceAll('/', '\\')
+			)
+		}else{
+			await title.set_text(
+				`attr_${label_idx}_val`,
+				tgt_player.attr_list[data_id].value.trim() + suffix,
+			)
+		}
+
+	}
+
+}
 
 
-	await title.set_text('name',    pname)
-	await title.set_text('surname', psurname)
-	await title.set_text('category', player_info.weight.value.trim())
+
+window.kbmodules.sambo_standard.vs_onn = async function(){
+	window.kbmodules.sambo_standard.titles.vs.overlay_in(1);
+}
+
+window.kbmodules.sambo_standard.vs_off = async function(){
+	window.kbmodules.sambo_standard.titles.vs.overlay_out(1);
+}
+
+
+
+window.kbmodules.sambo_standard.player_onn = async function(){
+	window.kbmodules.sambo_standard.titles.personal.overlay_in(1);
+}
+
+window.kbmodules.sambo_standard.player_off = async function(){
+	window.kbmodules.sambo_standard.titles.personal.overlay_out(1);
 }
 
 
 
 
 
-kbmodules.sambo_standard.set_round = function(r, resetround=false)
-{
+
+
+
+
+
+
+
+window.kbmodules.sambo_standard.set_round = async function(r, resetround=false){
 	// store current round number
-	ksys.context.module.prm('current_round', r)
+	ksys.context.module.prm('current_round', r);
 
-	$('round').css('color', '')
-	$(`round[round_index="${r}"]`).css('color', 'lime')
-
-	vmix.talker.talk({
-		'Function': 'SetText',
-		'Value': `ROUND ${str(r).trim()}`,
-		'Input': 'timer.gtzip',
-		'SelectedName': 'round.Text'
-	})
+	await window.kbmodules.sambo_standard.titles.timer.set_text('round', `ROUND ${str(r).trim()}`);
 
 	// reset round if asked
 	if (resetround == true){
-		kbmodules.sambo_standard.respawn_timer(false, false)
+		window.kbmodules.sambo_standard.respawn_timer(false, false);
 	}
-	
 }
 
 
+window.kbmodules.sambo_standard.timer_callback = async function(ticks){
+	const minutes = Math.floor(ticks.global / 60);
+	const seconds = ticks.global - (60*minutes);
 
-
-
-
-kbmodules.sambo_standard.timer_callback = async function(ticks)
-{
-
-	const minutes = Math.floor(ticks.global / 60)
-	const seconds = ticks.global - (60*minutes)
-	// print('minutes:', minutes, 'seconds', seconds)
-	// print('global:', ticks.global)
-
-	if (ticks.global <= -5){
-		await kbmodules.sambo_standard.timer_hide(true)
-		kbmodules.sambo_standard.counter.force_kill()
+	if (ticks.global <= 10){
+		await window.kbmodules.sambo_standard.timer_hide(true);
+		window.kbmodules.sambo_standard.counter.force_kill();
 	}
 
-	// update
-	await vmix.talker.talk({
-		'Function': 'SetText',
-		'Value': `${minutes}:${str(seconds).zfill(2)}`,
-		'Input': 'main_title.gtzip',
-		'SelectedName': 'timer.Text'
-	})
+	const timer_text = `${minutes}:${str(seconds).zfill(2)}`;
+
+	await window.kbmodules.sambo_standard.titles.timer.set_text(
+		'clock',
+		timer_text,
+	)
+
+	$('#timer_feedback').text(timer_text);
 }
 
-kbmodules.sambo_standard.respawn_manager = function(act)
-{
-
+window.kbmodules.sambo_standard.respawn_manager = function(act){
 	// onn = the big button onn
 	// if there's no timer OR the prev one is dead - create one and start and then show
 	// if there's timer and it's alive - unpase and show
-	if (!kbmodules.sambo_standard.counter.alive){
-		kbmodules.sambo_standard.respawn_timer(true, true)
+	if (!window.kbmodules.sambo_standard.counter.alive){
+		window.kbmodules.sambo_standard.respawn_timer(true, true)
 	}else{
-		if (kbmodules.sambo_standard.counter.alive == true){
+		if (window.kbmodules.sambo_standard.counter.alive == true){
 			// clear pause
-			// kbmodules.sambo_standard.timer_pause(false)
-			kbmodules.sambo_standard.timer_show()
+			// window.kbmodules.sambo_standard.timer_pause(false)
+			window.kbmodules.sambo_standard.timer_show()
 		} 
 	}
 }
 
-kbmodules.sambo_standard.respawn_timer = async function(show=false, st=false)
-{
-	var minutes = Math.floor((ksys.context.module.pull().round_duration / 1000) / 60)
-	var seconds = (ksys.context.module.pull().round_duration / 1000) - (60*minutes)
+window.kbmodules.sambo_standard.respawn_timer = async function(show=false, st=false){
+	const ctx = ksys.context.module.cache;
 
-	// clear previous timer
-	await vmix.talker.talk({
-		'Function': 'SetText',
-		'Value': `${minutes}:${str(seconds).zfill(2)}`,
-		'Input': 'timer.gtzip',
-		'SelectedName': 'timer_time.Text'
-	})
+	const round_dur = ctx.round_duration;
+
+	// const minutes = Math.floor(
+	// 	(ctx.round_duration / 1000) / 60
+	// )
+	// const seconds = (ctx.round_duration / 1000) - (60*minutes);
+
+	window.kbmodules.sambo_standard.titles.timer.set_text(
+		'clock',
+		`${round_dur.minutes}:${str(round_dur.seconds).zfill(2)}`
+	);
+	$('#timer_feedback').text(
+		`${round_dur.minutes}:${str(round_dur.seconds).zfill(2)}`
+	);
 
 	// kill previous timer
 	try{
-		kbmodules.sambo_standard.counter.force_kill()
+		window.kbmodules.sambo_standard.counter.force_kill();
 	}catch (error){
-		console.log(error)
+		print(error);
 	}
 
 	// spawn a timer
-	kbmodules.sambo_standard.counter = ksys.ticker.spawn({
-		'duration': ksys.context.module.pull().round_duration / 1000,
+	window.kbmodules.sambo_standard.counter = ksys.ticker.spawn({
+		'duration': (round_dur.minutes * 60) + round_dur.seconds,
 		'name': 'giga_timer',
 		'infinite': false,
 		'reversed': true,
-		'callback': kbmodules.sambo_standard.timer_callback,
+		'callback': window.kbmodules.sambo_standard.timer_callback,
 		'wait': true
 	})
 	// init and show, if asked
 	if (st == true){
 		// init
-		kbmodules.sambo_standard.counter.fire()
+		window.kbmodules.sambo_standard.counter.fire()
 		.then(function(_ticker) {
 			_ticker.force_kill()
 		})
@@ -620,94 +977,126 @@ kbmodules.sambo_standard.respawn_timer = async function(show=false, st=false)
 
 	if (show == true){
 		// await ksys.util.sleep(2000)
-		await kbmodules.sambo_standard.timer_show()
+		await window.kbmodules.sambo_standard.timer_show()
 	}
 }
 
-
-kbmodules.sambo_standard.timer_hide = async function(dopause=false)
-{
-	kbmodules.sambo_standard.timer_pause(dopause)
-	// off
-	// await vmix.talker.talk({
-	// 	'Function': 'OverlayInput1Out',
-	// 	'Input': 'timer.gtzip',
-	// })
+window.kbmodules.sambo_standard.timer_hide = async function(dopause=false){
+	window.kbmodules.sambo_standard.timer_pause(dopause);
+	await window.kbmodules.sambo_standard.titles.timer.overlay_out(1);
 }
 
-kbmodules.sambo_standard.timer_show = async function(unpause=true)
-{
-	kbmodules.sambo_standard.timer_pause(!unpause)
-	// off
-	await vmix.talker.talk({
-		'Function': 'OverlayInput1In',
-		'Input': 'timer.gtzip',
-	})
+window.kbmodules.sambo_standard.timer_show = async function(unpause=true){
+	window.kbmodules.sambo_standard.timer_pause(!unpause)
+	await window.kbmodules.sambo_standard.titles.timer.set_text(
+		'info_text',
+		`${ksys.context.module.cache.active_round || 1} OF ${ksys.context.module.cache.round_amount}`
+	)
+	await window.kbmodules.sambo_standard.titles.timer.overlay_in(1)
 }
 
-
-kbmodules.sambo_standard.timer_pause = function(state=true)
-{
-	if (kbmodules.sambo_standard.counter){
-		// do pause
-		kbmodules.sambo_standard.counter.pause = state;
+window.kbmodules.sambo_standard.timer_pause = function(state=true){
+	if (window.kbmodules.sambo_standard.counter){
+		window.kbmodules.sambo_standard.counter.pause = state;
 	}
 }
 
+window.kbmodules.sambo_standard.timer_set_time = function(){
+	const round_dur_data = ksys.context.module.cache.round_duration;
 
+	const offset_seconds = (
+		(int(document.querySelector('#set_time_minutes').value) * 60) +
+		int(document.querySelector('#set_time_seconds').value)
+	)
 
-kbmodules.sambo_standard.timer_set_time = function(tm=null)
-{
-	if (kbmodules.sambo_standard.counter && tm){
-		// set time
-		// kbmodules.sambo_standard.counter.set_global_tick(tm, true)
+	const round_dur = (round_dur_data.minutes * 60) + round_dur_data.seconds;
 
-		// kill previous timer
+	if (window.kbmodules.sambo_standard.counter){
 		try{
-			kbmodules.sambo_standard.counter.force_kill()
+			window.kbmodules.sambo_standard.counter.force_kill()
 		}catch (error){}
 
-		const total_dur = (ksys.context.module.pull().round_duration / 1000)
-
 		// spawn a timer
-		kbmodules.sambo_standard.counter = ksys.ticker.spawn({
-			'duration': total_dur - (total_dur - tm),
+		window.kbmodules.sambo_standard.counter = ksys.ticker.spawn({
+			'duration': offset_seconds,
 			// 'offset': tm,
 			'name': 'giga_timer',
 			'infinite': false,
 			'reversed': true,
-			'callback': kbmodules.sambo_standard.timer_callback,
+			'callback': window.kbmodules.sambo_standard.timer_callback,
 			'wait': true
 		})
 		// init
-		kbmodules.sambo_standard.counter.fire()
+		window.kbmodules.sambo_standard.counter.fire()
 		.then(function(_ticker) {
 			_ticker.force_kill()
 		})
+	}
+}
 
+
+
+window.kbmodules.sambo_standard.set_round_duration = function(){
+	ksys.context.module.prm(
+		'round_duration',
+		{
+			'minutes': int(document.querySelector('#round_duration_cfg_field [minutes]').value) || 1,
+			'seconds': int(document.querySelector('#round_duration_cfg_field [seconds]').value) || 0,
+		}
+	)
+}
+
+
+window.kbmodules.sambo_standard.set_round_amount = function(){
+	ksys.context.module.prm(
+		'round_amount',
+		int(document.querySelector('#round_amount_fields input[round_amount]').value) || 8
+	)
+	window.kbmodules.sambo_standard.redraw_round_switches();
+}
+
+
+
+
+
+
+
+window.kbmodules.sambo_standard.redraw_round_switches = function(){
+	$('#round_selector').empty();
+
+	for (const rnum of range(1, (ksys.context.module.cache.round_amount + 1) || 8)){
+		const dom = ksys.tplates.index_tplate(
+			'#round_selector_item_template',
+			{}
+		);
+
+		dom.elem.textContent = rnum;
+
+		dom.elem.onclick = function(){
+			window.kbmodules.sambo_standard.set_round(rnum, true);
+			$('#round_selector .round_selector_item').removeClass('active_round');
+			dom.elem.classList.add('active_round');
+			ksys.context.module.prm('active_round', rnum);
+		}
+
+		if (ksys.context.module.cache.active_round == rnum){
+			$('#round_selector .round_selector_item').removeClass('active_round');
+			dom.elem.classList.add('active_round');
+		}
+
+		$('#round_selector').append(dom.elem);
 	}
 }
 
 
 
 
-
-
-
-kbmodules.sambo_standard.vs_onn = function()
-{
-	vmix.talker.talk({
-		'Function': 'OverlayInput1In',
-		'Input': 'main_title.gtzip',
-	})
+window.kbmodules.sambo_standard.bind_photo_ids = function(){
+	ksys.context.module.prm('pair_ids_frozen', true);
 }
 
-kbmodules.sambo_standard.vs_off = function()
-{
-	vmix.talker.talk({
-		'Function': 'OverlayInput1Out',
-		'Input': 'main_title.gtzip',
-	})
+window.kbmodules.sambo_standard.unbind_photo_ids = function(){
+	ksys.context.module.prm('pair_ids_frozen', false);
 }
 
 
@@ -717,102 +1106,49 @@ kbmodules.sambo_standard.vs_off = function()
 
 
 
-kbmodules.sambo_standard.player_onn = function()
-{
-	kbmodules.sambo_standard.titles.personal.overlay_in(1)
+
+
+window.kbmodules.sambo_standard.update_img_proxy_addr = function(){
+	const addr = document.querySelector('#image_proxies_addr').value;
+
+	ksys.context.module.prm(
+		'img_proxy_addr',
+		addr
+	)
+
+	if (vmix.util.global_params.proxy){
+		vmix.util.global_params.proxy.own_addr = addr;
+	}
 }
 
-kbmodules.sambo_standard.player_off = function()
-{
-	kbmodules.sambo_standard.titles.personal.overlay_out(1)
-}
+window.kbmodules.sambo_standard.update_img_proxy_whitelist = function(){
+	const whitelist = document.querySelector('#img_proxy_whitelist').value;
 
+	ksys.db.module.write(
+		'proxy_whitelist.kbdata',
+		whitelist
+	)
 
-
-kbmodules.sambo_standard.load_pairs_from_file = async function()
-{
-	const file = await ksys.util.ask_file();
-
-	try{
-		kbmodules.sambo_standard.load_paris(
-			JSON.parse(
-				fs.readFileSync(
-					file.path,
-					{encoding:'utf8', flag:'r'}
-				)
-			)
-		)
-	}catch (error){
-		console.error(error)
-		print('Failed to load pairs from file. Most probable problem: invalid file.')
+	if (vmix.util.global_params.proxy){
+		vmix.util.global_params.proxy.whitelist = whitelist.split('\n');
 	}
 }
 
 
+window.kbmodules.sambo_standard.toggle_image_proxies = function(){
+	const state = document.querySelector('#image_proxies').checked;
 
-kbmodules.sambo_standard.save_pairs_to_file = function()
-{
-	lizard.textdl('boxing_pairs.preset', kbmodules.sambo_standard.save_pairs(true))
-}
+	ksys.context.module.prm('img_proxies_enabled', state);
 
-
-
-kbmodules.sambo_standard.set_category = async function()
-{
-	const v = $('#category_change input').val().trim();
-	if (!v){return};
-
-	await vmix.talker.talk({
-		'Function': 'SetText',
-		'Value': v + ' КГ',
-		'Input': 'category.gtzip',
-		'SelectedName': 'txt.Text'
-	})
-}
-
-
-
-
-kbmodules.sambo_standard.forward_scores = async function(from_input=false)
-{
-	const ctx = ksys.context.module.pull();
-
-	if (!from_input){
-		await kbmodules.sambo_standard.titles.main_title.set_text('red_score', ctx?.red_score || 0);
-		await kbmodules.sambo_standard.titles.main_title.set_text('blue_score', ctx?.blue_score || 0);
+	if (state){
+		vmix.util.enable_image_proxy(
+			document.querySelector('#image_proxies_addr').value,
+			document.querySelector('#img_proxy_whitelist').value.split('\n'),
+		);
 	}else{
-		await kbmodules.sambo_standard.titles.main_title.set_text(
-			'red_score',
-			$(`#score_ctrl_red input`).val() || 0
-		);
-		await kbmodules.sambo_standard.titles.main_title.set_text(
-			'blue_score',
-			$(`#score_ctrl_blue input`).val() || 0
-		);
+		vmix.util.disable_image_proxy();
 	}
 }
-
-
-
-kbmodules.sambo_standard.score_add = function(side)
-{
-	const tgt_input = $(`#score_ctrl_${side} input`)
-	tgt_input.val(int(tgt_input.val() || 0) + 1)
-
-	ksys.context.module.prm(`${side}_score`, tgt_input.val())
-	kbmodules.sambo_standard.forward_scores()
-}
-
-
-kbmodules.sambo_standard.score_subtract = function(side)
-{
-	const tgt_input = $(`#score_ctrl_${side} input`)
-	tgt_input.val(Math.max(int(tgt_input.val() || 0) - 1, 0))
-
-	ksys.context.module.prm(`${side}_score`, tgt_input.val())
-	kbmodules.sambo_standard.forward_scores()
-}
-
 
 
 

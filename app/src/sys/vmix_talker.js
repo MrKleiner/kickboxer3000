@@ -49,6 +49,7 @@ vtalker.talk = async function(rparams=null){
 		error_data = err;
 	})
 
+
 	// If there was an error while executing a response - there's nothing else
 	// to do except stopping the function execution
 	if (error_data){

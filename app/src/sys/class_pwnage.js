@@ -7,14 +7,6 @@
 // unless they're an object, so technically null is an object
 
 
-
-const internal = {
-	'last_pwn': null,
-	'pwn_list': new Set(),
-}
-
-
-
 const remap = function(self){
 	const prop_names = Object.getOwnPropertyNames(self.constructor.prototype);
 

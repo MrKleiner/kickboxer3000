@@ -1,0 +1,68 @@
+<div id="football_standard">
+
+	<tabsys>
+		<sys-tab match_id="sys_cfg">Config</sys-tab>
+	</tabsys>
+
+	<tab class="tab_hidden" tabid="sys_cfg">
+		<string-formatting>
+			<f-param display_name="Players" fpid="players" translit_default="0" format_default="all_upper"></f-param>
+		</string-formatting>
+
+		<general-cfg subtle_box>
+			<general-cfg-entry id="timersys_switch" kbhint="Hold CTRL. This will terminate and re-create all timers">
+				<general-cfg-label>Timer system</general-cfg-label>
+				<kb-radio-switch
+					kb_style="default"
+					kb_layout="horizontal"
+					kb_default="builtin"
+					display_name="Timer System"
+					mod_key="ctrlKey"
+					kb_switch_id="timer_system"
+					onchange="$this.update_selected_timer_system(event)"
+				>
+					<kb-radio-switch-entry kb_param_id="builtin">Built-in</kb-radio-switch-entry>
+					<kb-radio-switch-entry kb_param_id="at_at">AT-AT</kb-radio-switch-entry>
+				</kb-radio-switch>
+			</general-cfg-entry>
+
+			<general-cfg-entry>
+				<general-cfg-label>AT-AT Port</general-cfg-label>
+				<input id="atat_port_input" noctrl type="number" min="1" max="65535">
+				<sysbtn
+					btname="update_atat_port"
+					kbhint="Hold ALT. The KB AT-AT service will be restarted"
+					onclick="$this.update_atat_port(event)"
+					click_timeout="700"
+					mod_key="alt"
+				>Update AT-AT port</sysbtn>
+			</general-cfg-entry>
+
+			<general-cfg-entry>
+				<general-cfg-label>AT-AT Return Address</general-cfg-label>
+				<input id="atat_return_addr_input" noctrl type="text">
+				<sysbtn
+					btname="update_atat_return_addr"
+					kbhint="Hold ALT. The KB AT-AT service will be restarted"
+					onclick="$this.update_atat_return_addr(event)"
+					click_timeout="700"
+					mod_key="alt"
+				>Update</sysbtn>
+				<sysbtn
+					btname="atat_auto_addr"
+					kbhint="Try determining the right value automatically"
+					onclick="$this.atat_auto_return_addr(event)"
+				>Auto</sysbtn>
+				<!-- >Update AT-AT Return Address</sysbtn> -->
+				<div id="atat_ip_addr_picker"></div>
+			</general-cfg-entry>
+
+		</general-cfg>
+	</tab>
+
+	<!-- TEMPLATES -->
+
+	<template id="club_def_template">
+	</template>
+
+</div>

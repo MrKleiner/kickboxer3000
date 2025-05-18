@@ -1,0 +1,43 @@
+
+
+
+
+
+/*
+===============================================
+            General Config Box
+===============================================
+
+!~~ [tabid="team_lineup"] > general-cfg
+*/
+
+[tabid="team_lineup"] > general-cfg {
+	display: flex;
+	flex-direction: column;
+	margin-left: 20px;
+	margin-bottom: 20px;
+	padding: 7px 0px 10px 20px;
+	width: 600px;
+}
+
+[tabid="team_lineup"] > general-cfg general-cfg-entry general-cfg-label{
+	margin: 0px 15px 0px 1px;
+}
+
+[tabid="team_lineup"] > general-cfg general-cfg-entry{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-top: 10px;
+}
+
+[tabid="team_lineup"] > general-cfg sysbtn[btname="update_atat_port"],
+[tabid="team_lineup"] > general-cfg sysbtn[btname="update_atat_return_addr"]
+{
+	margin-left: 15px;
+}
+
+
+
+
+

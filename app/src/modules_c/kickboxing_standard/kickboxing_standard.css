@@ -30,6 +30,8 @@ kbstandard[edit_mode] [edit_hidden]{
 tab[tabid="config"]{
 	display: flex;
 	flex-direction: column;
+	overflow-y: scroll;
+	padding-bottom: 150px;
 }
 
 #param_list{
@@ -43,6 +45,33 @@ tab[tabid="config"]{
 
 #param_list input[res_path]{
 	width: 100%;
+}
+
+#param_list [timer_has_vs_row]{
+	margin-top: 10px;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+#param_list [timer_has_vs_row] [row_label]{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: 5px;
+	background: rgba(255, 255, 255, 0.05);
+	outline: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 5px;
+}
+
+#param_list [timer_has_vs_row] [row_label]:hover{
+	outline-color: gray;
+}
+
+#param_list [timer_has_vs_row] [row_label] input{
+	margin-left: 10px;
+	height: 20px;
+	width: 20px;
 }
 
 
@@ -140,6 +169,8 @@ tab[tabid="ctrl"] vmixbtn{
 	display: flex;
 	flex-direction: column;
 
+	position: relative;
+
 	padding: 10px;
 	margin-bottom: 12px;
 
@@ -150,7 +181,18 @@ tab[tabid="ctrl"] vmixbtn{
 	overflow-x: hidden;
 }
 
-
+#timer_feedback{
+	padding: 9px;
+	display: flex;
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	margin: 10px;
+	font-size: 21px;
+	font-weight: bold;
+	font-family: monospace;
+	font-size: 26px;
+}
 
 #title_ctrl{
 	display: flex;

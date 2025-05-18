@@ -5,7 +5,7 @@ $this.load = async function(){
 	$this.titles = {
 		// Lower title with player stuff
 		'fight_tracker': new vmix.title({
-			'title_name': 'fight_tracker.gtzip',
+			'title_name': 'fight_tracker_team.gtzip',
 			'default_overlay': 1,
 			'timings': {
 				'fps': 50,
@@ -24,6 +24,11 @@ $this.load = async function(){
 	$this.edit_mode_active = false;
 
 	$this.current_pair = null;
+
+	// Load bootleg team index
+	{
+		$this.team_index = ksys.db.module.read('bootleg_team_index.kbsave', 'json') || {};
+	}
 
 	// Load pairs
 	{
@@ -99,6 +104,9 @@ $this.ChaoticPair = class {
 
 				// Player pair
 				'pair_players':  '.pair_entry_config',
+
+				// Swap button
+				'swap_btn':      '.vis_feed_vs_sign sysbtn',
 			}
 		);
 
@@ -112,6 +120,13 @@ $this.ChaoticPair = class {
 			}
 
 			$this.select_pair(self)
+		}
+
+		this.ctrl_base_dom.index.swap_btn.onclick = function(){
+			self.swap(self);
+			self.update_vis_feed(self);
+			$this.select_pair(self);
+			$this.save_player_base();
 		}
 
 		// Left and Right side
@@ -171,6 +186,36 @@ $this.ChaoticPair = class {
 			`${self.players.right.data_inputs.player_surname.value}`
 		)
 	}
+
+	swap(self){
+		print('Swapping')
+		const swap_entries = [
+			'player_name',
+			'player_surname',
+			'team_alias',
+		];
+
+		const opposite = {
+			'left': 'right',
+			'right': 'left',
+		};
+
+		const save_data = {};
+
+		for (const side of ['left', 'right']){
+			save_data[side] = {};
+			for (const data_entry of swap_entries){
+				save_data[side][data_entry] = self.players[side].data_inputs[data_entry].value;
+			}
+		}
+		print('Save data:', save_data)
+		for (const side of ['left', 'right']){
+			for (const data_entry of swap_entries){
+				// print(opposite[side], )
+				self.players[side].data_inputs[data_entry].value = save_data[opposite[side]][data_entry];
+			}
+		}
+	}
 }
 
 $this.ChaoticPlayerFightControl = class{
@@ -189,8 +234,10 @@ $this.ChaoticPlayerFightControl = class{
 
 				'manual_score_input': '.fight_score_manual_input input',
 
-				'add_scores':     '.add_score',
-				'subtract_scores': '.subtract_score',
+				'add_scores':       '.add_score',
+				'subtract_scores':  '.subtract_score',
+
+				'team_score_input': '.player_team_score_input',
 			}
 		)
 
@@ -209,6 +256,10 @@ $this.ChaoticPlayerFightControl = class{
 			const btn_add = $(`<vmixbtn>+${mstep}</vmixbtn>`)[0];
 			btn_add.onclick = function(){
 				tgt_player.score += mstep;
+				$this.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()] += mstep;
+				$this.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()] = (
+					Math.max(0, $this.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()])
+				)
 				if (tgt_player.score < 0){
 					tgt_player.score = 0
 				}
@@ -222,11 +273,15 @@ $this.ChaoticPlayerFightControl = class{
 			const btn_subt = $(`<vmixbtn>-${mstep}</vmixbtn>`)[0];
 			btn_subt.onclick = function(){
 				tgt_player.score -= mstep;
+				$this.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()] -= mstep;
+				$this.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()] = (
+					Math.max(0, $this.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()])
+				)
 				if (tgt_player.score < 0){
 					tgt_player.score = 0
 				}
 				self.update_vis_feedback(self);
-				$this.push_scores_to_vmix()
+				$this.push_scores_to_vmix();
 				$this.save_player_base();
 			}
 			this.tplate.index.subtract_scores.append(btn_subt);
@@ -237,7 +292,17 @@ $this.ChaoticPlayerFightControl = class{
 			tgt_player.score = int(self.tplate.index.manual_score_input.value);
 			self.update_vis_feedback(self);
 			$this.push_scores_to_vmix();
+			$this.save_player_base();
 		}
+
+		this.tplate.index.team_score_input.onchange = function(){
+			$this.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()] = int(self.tplate.index.team_score_input.value);
+			self.update_vis_feedback(self);
+			$this.push_scores_to_vmix();
+			$this.save_player_base();
+		}
+
+		this.tplate.index.team_score_input.value = int($this.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()])
 
 		ksys.btns.resync()
 	}
@@ -246,9 +311,8 @@ $this.ChaoticPlayerFightControl = class{
 	update_vis_feedback(self){
 		self.tplate.index.manual_score_input.value = self.tgt_player.score;
 		self.tplate.index.player_score.textContent = self.tgt_player.score;
+		self.tplate.index.team_score_input.value = $this.team_index[self.tgt_player.data_inputs.team_alias.value.trim().lower()];
 	}
-
-
 }
 
 
@@ -256,6 +320,21 @@ $this.create_chaotic_pair = function(pair_data=null){
 	$this.chaotic_pairs.add(
 		new $this.ChaoticPair(pair_data)
 	)
+}
+
+$this.rebuild_team_index = function(){
+	for (const pair of $this.chaotic_pairs){
+
+		let team_id = pair.players.left.data_inputs.team_alias.value.trim().lower();
+		if (!$this.team_index[team_id]){
+			$this.team_index[team_id] = 0;
+		}
+
+		team_id = pair.players.right.data_inputs.team_alias.value.trim().lower();
+		if (!$this.team_index[team_id]){
+			$this.team_index[team_id] = 0;
+		}
+	}
 }
 
 $this.save_player_base = function(){
@@ -271,11 +350,13 @@ $this.save_player_base = function(){
 			'left': {
 				'player_name': pair.players.left.data_inputs.player_name.value,
 				'player_surname': pair.players.left.data_inputs.player_surname.value,
+				'team_alias': pair.players.left.data_inputs.team_alias.value,
 				'score': pair.players.left.score,
 			},
 			'right': {
 				'player_name': pair.players.right.data_inputs.player_name.value,
 				'player_surname': pair.players.right.data_inputs.player_surname.value,
+				'team_alias': pair.players.right.data_inputs.team_alias.value,
 				'score': pair.players.right.score,
 			}
 		})
@@ -284,6 +365,13 @@ $this.save_player_base = function(){
 	ksys.db.module.write(
 		'chaotic_pairs_data.kbsave',
 		JSON.stringify(data, null, '\t')
+	)
+
+	// Rebuild team index
+	$this.rebuild_team_index()
+	ksys.db.module.write(
+		'bootleg_team_index.kbsave',
+		JSON.stringify($this.team_index, null, '\t')
 	)
 }
 
@@ -302,6 +390,16 @@ $this.push_scores_to_vmix = async function(){
 	$this.titles.fight_tracker.set_text(
 		'fight_score_r',
 		$this.current_pair.players.right.score
+	)
+
+	$this.titles.fight_tracker.set_text(
+		'team_score_l',
+		$this.team_index[$this.current_pair.players.left.data_inputs.team_alias.value.lower().trim()]
+		
+	)
+	$this.titles.fight_tracker.set_text(
+		'team_score_r',
+		$this.team_index[$this.current_pair.players.right.data_inputs.team_alias.value.lower().trim()]
 	)
 }
 
@@ -329,6 +427,21 @@ $this.push_current_players_to_vmix = async function(){
 	)
 }
 
+$this.push_team_names_to_vmix = function(){
+	$this.titles.fight_tracker.set_text(
+		'team_name_l',
+		ksys.strf.params.team_alias.format(
+			$this.current_pair.players.left.data_inputs.team_alias.value
+		)
+	)
+	$this.titles.fight_tracker.set_text(
+		'team_name_r',
+		ksys.strf.params.team_alias.format(
+			$this.current_pair.players.right.data_inputs.team_alias.value
+		)
+	)
+}
+
 // Activate controls for the target pair
 $this.select_pair = function(tgt_pair=null, upd_vmix=true){
 	$this.current_pair = tgt_pair;
@@ -336,6 +449,8 @@ $this.select_pair = function(tgt_pair=null, upd_vmix=true){
 	// Push data to vmix
 	if (upd_vmix){
 		$this.push_current_players_to_vmix();
+		$this.push_scores_to_vmix();
+		$this.push_team_names_to_vmix();
 	}
 
 	// Save current pair index to context

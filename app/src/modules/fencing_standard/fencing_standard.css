@@ -156,7 +156,7 @@
 
 ~~ .pair_entry{
 	margin-top: 20px;
-	padding: 10px;
+	padding: 5px;
 	outline: 1px solid rgba(255, 255, 255, 0.3);
 }
 
@@ -208,6 +208,20 @@
 	flex-direction: row;
 	justify-content: space-between;
 	padding: 5px 0px 5px 0px;
+	height: 40px;
+}
+
+~~ .pair_entry .pair_entry_vis_feedback .vis_feed_pname_left,
+~~ .pair_entry .pair_entry_vis_feedback .vis_feed_pname_right
+{
+	width: 45%;
+	display: flex;
+	/*height: fit-content;*/
+	height: 20px;
+}
+
+~~ .pair_entry .pair_entry_vis_feedback .vis_feed_pname_right{
+	justify-content: flex-end;
 }
 
 ~~ .pair_entry .pair_entry_config{
@@ -216,3 +230,25 @@
 
 
 
+.fight_vis_feed_player_score{
+	display: none;
+}
+
+.player_team_score_input{
+	width: 60px !important;
+	text-align: center !important;
+	font-size: 23px !important;
+}
+
+
+
+.pair_entry_vis_feedback img.swap_button{
+	width: 15px;
+	height: 15px;
+	/*transform: scale(1.5);*/
+}
+
+
+.pair_entry_vis_feedback .vis_feed_vs_sign sysbtn{
+	transform: scale(1.1);
+}

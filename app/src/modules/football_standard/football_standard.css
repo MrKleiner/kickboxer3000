@@ -3094,3 +3094,11 @@ tab.tab_hidden
 	/*background: #121F17;*/
 	z-index: 999999999;
 }
+
+
+
+
+resource-proxy-ctrl{
+	margin-left: 20px !important;
+	margin-bottom: 25px !important;
+}

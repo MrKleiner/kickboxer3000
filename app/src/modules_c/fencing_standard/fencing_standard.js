@@ -1,15 +1,14 @@
 
-if(!kbmodules){kbmodules={}};
-
-if(!kbmodules.fencing_standard){kbmodules.fencing_standard={}};
-
+if(!window.kbmodules){window.kbmodules={}};
+if(!window.kbmodules.fencing_standard){window.kbmodules.fencing_standard={}};
 
 
-kbmodules.fencing_standard.load = async function(){
-	kbmodules.fencing_standard.titles = {
+
+window.kbmodules.fencing_standard.load = async function(){
+	window.kbmodules.fencing_standard.titles = {
 		// Lower title with player stuff
 		'fight_tracker': new vmix.title({
-			'title_name': 'fight_tracker.gtzip',
+			'title_name': 'fight_tracker_team.gtzip',
 			'default_overlay': 1,
 			'timings': {
 				'fps': 50,
@@ -23,33 +22,38 @@ kbmodules.fencing_standard.load = async function(){
 	const mctx = ksys.context.module;
 
 	// Deathmatch server shit. No teams
-	kbmodules.fencing_standard.chaotic_pairs = new Set();
+	window.kbmodules.fencing_standard.chaotic_pairs = new Set();
 
-	kbmodules.fencing_standard.edit_mode_active = false;
+	window.kbmodules.fencing_standard.edit_mode_active = false;
 
-	kbmodules.fencing_standard.current_pair = null;
+	window.kbmodules.fencing_standard.current_pair = null;
+
+	// Load bootleg team index
+	{
+		window.kbmodules.fencing_standard.team_index = ksys.db.module.read('bootleg_team_index.kbsave', 'json') || {};
+	}
 
 	// Load pairs
 	{
 		// Chaotic deathmatch pair
 		const dm_pairs = ksys.db.module.read('chaotic_pairs_data.kbsave', 'json') || {'pairs': []};
 		for (const pair_data of dm_pairs.pairs){
-			kbmodules.fencing_standard.create_chaotic_pair(pair_data)
+			window.kbmodules.fencing_standard.create_chaotic_pair(pair_data)
 		}
 
 		// Set active pair, if any
 		if (mctx.cache.active_pair >= 0){
-			const tgt_pair = kbmodules.fencing_standard.chaotic_pairs.at(mctx.cache.active_pair);
+			const tgt_pair = window.kbmodules.fencing_standard.chaotic_pairs.at(mctx.cache.active_pair);
 			if (tgt_pair){
-				kbmodules.fencing_standard.select_pair(tgt_pair);
+				window.kbmodules.fencing_standard.select_pair(tgt_pair);
 			}
 		}
 
-		kbmodules.fencing_standard.push_scores_to_vmix();
+		window.kbmodules.fencing_standard.push_scores_to_vmix();
 	}
 }
 
-kbmodules.fencing_standard.ChaoticPlayerInstance = class {
+window.kbmodules.fencing_standard.ChaoticPlayerInstance = class {
 	constructor(_input_data=null, change_callback=null){
 		const self = this;
 		const input_data = _input_data || {};
@@ -84,14 +88,14 @@ kbmodules.fencing_standard.ChaoticPlayerInstance = class {
 }
 
 
-kbmodules.fencing_standard.ChaoticPair = class {
+window.kbmodules.fencing_standard.ChaoticPair = class {
 	constructor(_input_data=null){
 		const self = this;
 		const input_data = _input_data || {};
 
 		print('Pair input data raw:', _input_data)
 
-		kbmodules.fencing_standard.chaotic_pairs.add(self);
+		window.kbmodules.fencing_standard.chaotic_pairs.add(self);
 
 		// Pair control root
 		this.ctrl_base_dom = ksys.tplates.index_tplate(
@@ -103,19 +107,29 @@ kbmodules.fencing_standard.ChaoticPair = class {
 
 				// Player pair
 				'pair_players':  '.pair_entry_config',
+
+				// Swap button
+				'swap_btn':      '.vis_feed_vs_sign sysbtn',
 			}
 		);
 
 		// Handle pair removal
 		this.ctrl_base_dom.elem.oncontextmenu = function(evt){
-			if (evt.altKey && kbmodules.fencing_standard.edit_mode_active){
+			if (evt.altKey && window.kbmodules.fencing_standard.edit_mode_active){
 				// self kill self
 				// javascript moment...
 				self.kill(self)
 				return
 			}
 
-			kbmodules.fencing_standard.select_pair(self)
+			window.kbmodules.fencing_standard.select_pair(self)
+		}
+
+		this.ctrl_base_dom.index.swap_btn.onclick = function(){
+			self.swap(self);
+			self.update_vis_feed(self);
+			window.kbmodules.fencing_standard.select_pair(self);
+			window.kbmodules.fencing_standard.save_player_base();
 		}
 
 		// Left and Right side
@@ -129,11 +143,11 @@ kbmodules.fencing_standard.ChaoticPair = class {
 				)
 				continue
 			}
-			const player_instance = new kbmodules.fencing_standard.ChaoticPlayerInstance(
+			const player_instance = new window.kbmodules.fencing_standard.ChaoticPlayerInstance(
 				input_data[side],
 				function(){
 					self.update_vis_feed(self);
-					kbmodules.fencing_standard.save_player_base();
+					window.kbmodules.fencing_standard.save_player_base();
 				}
 			)
 
@@ -156,11 +170,11 @@ kbmodules.fencing_standard.ChaoticPair = class {
 		// todo: also delete controls from DOM
 
 		// Remove self from the pair pool
-		kbmodules.fencing_standard.chaotic_pairs.delete(self);
+		window.kbmodules.fencing_standard.chaotic_pairs.delete(self);
 		// Remove the corresponding DOM
 		self.ctrl_base_dom.elem.remove()
 		// Trigger a save
-		kbmodules.fencing_standard.save_player_base()
+		window.kbmodules.fencing_standard.save_player_base()
 	}
 
 	update_vis_feed(self){
@@ -175,9 +189,39 @@ kbmodules.fencing_standard.ChaoticPair = class {
 			`${self.players.right.data_inputs.player_surname.value}`
 		)
 	}
+
+	swap(self){
+		print('Swapping')
+		const swap_entries = [
+			'player_name',
+			'player_surname',
+			'team_alias',
+		];
+
+		const opposite = {
+			'left': 'right',
+			'right': 'left',
+		};
+
+		const save_data = {};
+
+		for (const side of ['left', 'right']){
+			save_data[side] = {};
+			for (const data_entry of swap_entries){
+				save_data[side][data_entry] = self.players[side].data_inputs[data_entry].value;
+			}
+		}
+		print('Save data:', save_data)
+		for (const side of ['left', 'right']){
+			for (const data_entry of swap_entries){
+				// print(opposite[side], )
+				self.players[side].data_inputs[data_entry].value = save_data[opposite[side]][data_entry];
+			}
+		}
+	}
 }
 
-kbmodules.fencing_standard.ChaoticPlayerFightControl = class{
+window.kbmodules.fencing_standard.ChaoticPlayerFightControl = class{
 	constructor(tgt_player){
 		const self = this;
 
@@ -193,8 +237,10 @@ kbmodules.fencing_standard.ChaoticPlayerFightControl = class{
 
 				'manual_score_input': '.fight_score_manual_input input',
 
-				'add_scores':     '.add_score',
-				'subtract_scores': '.subtract_score',
+				'add_scores':       '.add_score',
+				'subtract_scores':  '.subtract_score',
+
+				'team_score_input': '.player_team_score_input',
 			}
 		)
 
@@ -213,12 +259,16 @@ kbmodules.fencing_standard.ChaoticPlayerFightControl = class{
 			const btn_add = $(`<vmixbtn>+${mstep}</vmixbtn>`)[0];
 			btn_add.onclick = function(){
 				tgt_player.score += mstep;
+				window.kbmodules.fencing_standard.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()] += mstep;
+				window.kbmodules.fencing_standard.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()] = (
+					Math.max(0, window.kbmodules.fencing_standard.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()])
+				)
 				if (tgt_player.score < 0){
 					tgt_player.score = 0
 				}
 				self.update_vis_feedback(self);
-				kbmodules.fencing_standard.push_scores_to_vmix()
-				kbmodules.fencing_standard.save_player_base();
+				window.kbmodules.fencing_standard.push_scores_to_vmix()
+				window.kbmodules.fencing_standard.save_player_base();
 			}
 			this.tplate.index.add_scores.append(btn_add);
 
@@ -226,12 +276,16 @@ kbmodules.fencing_standard.ChaoticPlayerFightControl = class{
 			const btn_subt = $(`<vmixbtn>-${mstep}</vmixbtn>`)[0];
 			btn_subt.onclick = function(){
 				tgt_player.score -= mstep;
+				window.kbmodules.fencing_standard.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()] -= mstep;
+				window.kbmodules.fencing_standard.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()] = (
+					Math.max(0, window.kbmodules.fencing_standard.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()])
+				)
 				if (tgt_player.score < 0){
 					tgt_player.score = 0
 				}
 				self.update_vis_feedback(self);
-				kbmodules.fencing_standard.push_scores_to_vmix()
-				kbmodules.fencing_standard.save_player_base();
+				window.kbmodules.fencing_standard.push_scores_to_vmix();
+				window.kbmodules.fencing_standard.save_player_base();
 			}
 			this.tplate.index.subtract_scores.append(btn_subt);
 
@@ -240,8 +294,18 @@ kbmodules.fencing_standard.ChaoticPlayerFightControl = class{
 		this.tplate.index.manual_score_input.onchange = function(){
 			tgt_player.score = int(self.tplate.index.manual_score_input.value);
 			self.update_vis_feedback(self);
-			kbmodules.fencing_standard.push_scores_to_vmix();
+			window.kbmodules.fencing_standard.push_scores_to_vmix();
+			window.kbmodules.fencing_standard.save_player_base();
 		}
+
+		this.tplate.index.team_score_input.onchange = function(){
+			window.kbmodules.fencing_standard.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()] = int(self.tplate.index.team_score_input.value);
+			self.update_vis_feedback(self);
+			window.kbmodules.fencing_standard.push_scores_to_vmix();
+			window.kbmodules.fencing_standard.save_player_base();
+		}
+
+		this.tplate.index.team_score_input.value = int(window.kbmodules.fencing_standard.team_index[tgt_player.data_inputs.team_alias.value.trim().lower()])
 
 		ksys.btns.resync()
 	}
@@ -250,36 +314,52 @@ kbmodules.fencing_standard.ChaoticPlayerFightControl = class{
 	update_vis_feedback(self){
 		self.tplate.index.manual_score_input.value = self.tgt_player.score;
 		self.tplate.index.player_score.textContent = self.tgt_player.score;
+		self.tplate.index.team_score_input.value = window.kbmodules.fencing_standard.team_index[self.tgt_player.data_inputs.team_alias.value.trim().lower()];
 	}
-
-
 }
 
 
-kbmodules.fencing_standard.create_chaotic_pair = function(pair_data=null){
-	kbmodules.fencing_standard.chaotic_pairs.add(
-		new kbmodules.fencing_standard.ChaoticPair(pair_data)
+window.kbmodules.fencing_standard.create_chaotic_pair = function(pair_data=null){
+	window.kbmodules.fencing_standard.chaotic_pairs.add(
+		new window.kbmodules.fencing_standard.ChaoticPair(pair_data)
 	)
 }
 
-kbmodules.fencing_standard.save_player_base = function(){
+window.kbmodules.fencing_standard.rebuild_team_index = function(){
+	for (const pair of window.kbmodules.fencing_standard.chaotic_pairs){
+
+		let team_id = pair.players.left.data_inputs.team_alias.value.trim().lower();
+		if (!window.kbmodules.fencing_standard.team_index[team_id]){
+			window.kbmodules.fencing_standard.team_index[team_id] = 0;
+		}
+
+		team_id = pair.players.right.data_inputs.team_alias.value.trim().lower();
+		if (!window.kbmodules.fencing_standard.team_index[team_id]){
+			window.kbmodules.fencing_standard.team_index[team_id] = 0;
+		}
+	}
+}
+
+window.kbmodules.fencing_standard.save_player_base = function(){
 	print('Saving player base');
 	const data = {
 		// todo: active pair. Somehow ????
-		// 'active_pair': kbmodules.fencing_standard.chaotic_pairs.indexof(kbmodules.fencing_standard.active_pair),
+		// 'active_pair': window.kbmodules.fencing_standard.chaotic_pairs.indexof(window.kbmodules.fencing_standard.active_pair),
 		'pairs': [],
 	}
 
-	for (const pair of kbmodules.fencing_standard.chaotic_pairs){
+	for (const pair of window.kbmodules.fencing_standard.chaotic_pairs){
 		data.pairs.push({
 			'left': {
 				'player_name': pair.players.left.data_inputs.player_name.value,
 				'player_surname': pair.players.left.data_inputs.player_surname.value,
+				'team_alias': pair.players.left.data_inputs.team_alias.value,
 				'score': pair.players.left.score,
 			},
 			'right': {
 				'player_name': pair.players.right.data_inputs.player_name.value,
 				'player_surname': pair.players.right.data_inputs.player_surname.value,
+				'team_alias': pair.players.right.data_inputs.team_alias.value,
 				'score': pair.players.right.score,
 			}
 		})
@@ -289,65 +369,99 @@ kbmodules.fencing_standard.save_player_base = function(){
 		'chaotic_pairs_data.kbsave',
 		JSON.stringify(data, null, '\t')
 	)
+
+	// Rebuild team index
+	window.kbmodules.fencing_standard.rebuild_team_index()
+	ksys.db.module.write(
+		'bootleg_team_index.kbsave',
+		JSON.stringify(window.kbmodules.fencing_standard.team_index, null, '\t')
+	)
 }
 
-kbmodules.fencing_standard.toggle_edit_mode = function(){
-	kbmodules.fencing_standard.edit_mode_active = !kbmodules.fencing_standard.edit_mode_active;
-	$('[tabid="ctrl_base"]').attr('edit_mode', kbmodules.fencing_standard.edit_mode_active);
+window.kbmodules.fencing_standard.toggle_edit_mode = function(){
+	window.kbmodules.fencing_standard.edit_mode_active = !window.kbmodules.fencing_standard.edit_mode_active;
+	$('[tabid="ctrl_base"]').attr('edit_mode', window.kbmodules.fencing_standard.edit_mode_active);
 
 }
 
-kbmodules.fencing_standard.push_scores_to_vmix = async function(){
+window.kbmodules.fencing_standard.push_scores_to_vmix = async function(){
 	print('Pushing scores to vmix');
-	kbmodules.fencing_standard.titles.fight_tracker.set_text(
+	window.kbmodules.fencing_standard.titles.fight_tracker.set_text(
 		'fight_score_l',
-		kbmodules.fencing_standard.current_pair.players.left.score
+		window.kbmodules.fencing_standard.current_pair.players.left.score
 	)
-	kbmodules.fencing_standard.titles.fight_tracker.set_text(
+	window.kbmodules.fencing_standard.titles.fight_tracker.set_text(
 		'fight_score_r',
-		kbmodules.fencing_standard.current_pair.players.right.score
+		window.kbmodules.fencing_standard.current_pair.players.right.score
+	)
+
+	window.kbmodules.fencing_standard.titles.fight_tracker.set_text(
+		'team_score_l',
+		window.kbmodules.fencing_standard.team_index[window.kbmodules.fencing_standard.current_pair.players.left.data_inputs.team_alias.value.lower().trim()]
+		
+	)
+	window.kbmodules.fencing_standard.titles.fight_tracker.set_text(
+		'team_score_r',
+		window.kbmodules.fencing_standard.team_index[window.kbmodules.fencing_standard.current_pair.players.right.data_inputs.team_alias.value.lower().trim()]
 	)
 }
 
-kbmodules.fencing_standard.push_current_players_to_vmix = async function(){
+window.kbmodules.fencing_standard.push_current_players_to_vmix = async function(){
 	print('Pushing players to vmix');
-	kbmodules.fencing_standard.titles.fight_tracker.set_text(
+	window.kbmodules.fencing_standard.titles.fight_tracker.set_text(
 		'player_name_l',
 		(
-			ksys.strf.params.player_names.format(kbmodules.fencing_standard.current_pair.players.left.data_inputs.player_name.value)
+			ksys.strf.params.player_names.format(window.kbmodules.fencing_standard.current_pair.players.left.data_inputs.player_name.value)
 			+
 			' '
 			+
-			ksys.strf.params.player_names.format(kbmodules.fencing_standard.current_pair.players.left.data_inputs.player_surname.value)
+			ksys.strf.params.player_names.format(window.kbmodules.fencing_standard.current_pair.players.left.data_inputs.player_surname.value)
 		)
 	)
-	kbmodules.fencing_standard.titles.fight_tracker.set_text(
+	window.kbmodules.fencing_standard.titles.fight_tracker.set_text(
 		'player_name_r',
 		(
-			ksys.strf.params.player_names.format(kbmodules.fencing_standard.current_pair.players.right.data_inputs.player_name.value)
+			ksys.strf.params.player_names.format(window.kbmodules.fencing_standard.current_pair.players.right.data_inputs.player_name.value)
 			+
 			' '
 			+
-			ksys.strf.params.player_names.format(kbmodules.fencing_standard.current_pair.players.right.data_inputs.player_surname.value)
+			ksys.strf.params.player_names.format(window.kbmodules.fencing_standard.current_pair.players.right.data_inputs.player_surname.value)
+		)
+	)
+}
+
+window.kbmodules.fencing_standard.push_team_names_to_vmix = function(){
+	window.kbmodules.fencing_standard.titles.fight_tracker.set_text(
+		'team_name_l',
+		ksys.strf.params.team_alias.format(
+			window.kbmodules.fencing_standard.current_pair.players.left.data_inputs.team_alias.value
+		)
+	)
+	window.kbmodules.fencing_standard.titles.fight_tracker.set_text(
+		'team_name_r',
+		ksys.strf.params.team_alias.format(
+			window.kbmodules.fencing_standard.current_pair.players.right.data_inputs.team_alias.value
 		)
 	)
 }
 
 // Activate controls for the target pair
-kbmodules.fencing_standard.select_pair = function(tgt_pair=null, upd_vmix=true){
-	kbmodules.fencing_standard.current_pair = tgt_pair;
+window.kbmodules.fencing_standard.select_pair = function(tgt_pair=null, upd_vmix=true){
+	window.kbmodules.fencing_standard.current_pair = tgt_pair;
 
 	// Push data to vmix
 	if (upd_vmix){
-		kbmodules.fencing_standard.push_current_players_to_vmix();
+		window.kbmodules.fencing_standard.push_current_players_to_vmix();
+		window.kbmodules.fencing_standard.push_scores_to_vmix();
+		window.kbmodules.fencing_standard.push_team_names_to_vmix();
 	}
 
 	// Save current pair index to context
-	ksys.context.module.prm('active_pair', kbmodules.fencing_standard.chaotic_pairs.indexof(kbmodules.fencing_standard.current_pair))
+	ksys.context.module.prm('active_pair', window.kbmodules.fencing_standard.chaotic_pairs.indexof(window.kbmodules.fencing_standard.current_pair))
 
 	// Create control classes
-	const player_left = new kbmodules.fencing_standard.ChaoticPlayerFightControl(tgt_pair.players.left);
-	const player_right = new kbmodules.fencing_standard.ChaoticPlayerFightControl(tgt_pair.players.right);
+	const player_left = new window.kbmodules.fencing_standard.ChaoticPlayerFightControl(tgt_pair.players.left);
+	const player_right = new window.kbmodules.fencing_standard.ChaoticPlayerFightControl(tgt_pair.players.right);
 
 	// Clear the space
 	$('#player_ctrl_left, #player_ctrl_right').empty();
@@ -362,12 +476,12 @@ kbmodules.fencing_standard.select_pair = function(tgt_pair=null, upd_vmix=true){
 }
 
 
-kbmodules.fencing_standard.fight_tracker_vis_ctrl = function(state){
+window.kbmodules.fencing_standard.fight_tracker_vis_ctrl = function(state){
 	if (state == true){
-		kbmodules.fencing_standard.titles.fight_tracker.overlay_in(1);
+		window.kbmodules.fencing_standard.titles.fight_tracker.overlay_in(1);
 	}
 	if (state == false){
-		kbmodules.fencing_standard.titles.fight_tracker.overlay_out(1);
+		window.kbmodules.fencing_standard.titles.fight_tracker.overlay_out(1);
 	}
 }
 

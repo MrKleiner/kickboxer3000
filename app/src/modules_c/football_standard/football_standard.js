@@ -6,6 +6,8 @@ if(!window.kbmodules.football_standard){window.kbmodules.football_standard={}};
 /*
 Previous system was a total embarrassment and offense for real programming.
 
+So this is even worse.
+
 Long story short, previous system indexed players by a string composed
 of the players' name + surname + number.
 This could totally lead to collisions when creating player lists from
@@ -114,7 +116,6 @@ milliseconds lost due to all the iterations needed for registers.
 
 */
 
-
 // todo: is it fine this is here ?
 window.kbmodules.football_standard.timer_fset = {
 	'at_at': {},
@@ -133,6 +134,8 @@ window.kbmodules.football_standard.ticker_time = {
 		'seconds': 0,
 	},
 };
+
+window.kbmodules.football_standard.round_duration = 45;
 
 window.kbmodules.football_standard.load = async function(){
 	const mctx = ksys.context.module;
@@ -156,7 +159,12 @@ window.kbmodules.football_standard.load = async function(){
 			'ffc938',
 			'ffe100',
 			'ffffff',
+			'000000',
 		],
+
+		color_dict: {
+			'000000': 'ffffff',
+		},
 
 		// Club currently being edited
 		club_ctrl: null,
@@ -208,6 +216,18 @@ window.kbmodules.football_standard.load = async function(){
 		2: (45, 90),
 		3: (90, 105),
 		4: (105, 120),
+	}
+
+	// Round duration
+	{
+		const dur_input = document.querySelector('input#round_duration');
+		dur_input.value = mctx.cache.rdur || 45;
+		window.kbmodules.football_standard.round_duration = mctx.cache.rdur || 45;
+		dur_input.onchange = function(){
+			const dur = int(dur_input.value.trim() || 45)
+			window.kbmodules.football_standard.round_duration = dur;
+			ksys.context.module.prm('rdur', dur);
+		}
 	}
 
 	// --------------------------
@@ -486,10 +506,10 @@ window.kbmodules.football_standard.load = async function(){
 		// Or even better: Make these fields part of the core
 
 		// Load todays commenter
-		$('#commenter_name_input')[0].value = mctx.cache.todays_commenter;
+		$('#commenter_name_input')[0].value = mctx.cache.todays_commenter || '';
 		// Load VS sublines
-		$('#vs_text_bottom_upper')[0].value = mctx.cache.vs_title_bottom_upper_line;
-		$('#vs_text_bottom_lower')[0].value = mctx.cache.vs_title_bottom_lower_line;
+		$('#vs_text_bottom_upper')[0].value = mctx.cache.vs_title_bottom_upper_line || '';
+		$('#vs_text_bottom_lower')[0].value = mctx.cache.vs_title_bottom_lower_line || '';
 
 		window.kbmodules.football_standard.update_team_colors();
 		window.kbmodules.football_standard.resource_index.score_manager.resync_score_on_title()
@@ -550,6 +570,31 @@ window.kbmodules.football_standard.load = async function(){
 	//           AT-AT
 	// --------------------------
 	{
+		// TEMP FIX: Applying the new switch system to the timer switch
+		const timer_sys_switch = new ksys.switches.KBSwitch({
+			'multichoice':     false,
+			'can_be_empty':    false,
+			'set_default':     'builtin',
+			'highlight_class': 'kb_radio_switch_active',
+			'mod_key':         'ctrlKey',
+			'dom_array': [
+				{
+					'id':  'builtin',
+					'dom': document.querySelector('#timersys_switch [kb_param_id="builtin"]'),
+				},
+				{
+					'id':  'at_at',
+					'dom': document.querySelector('#timersys_switch [kb_param_id="at_at"]'),
+				},
+			],
+			// 'callback': window.kbmodules.football_standard.update_selected_timer_system(sw, selected_id, event),
+			'callback': window.kbmodules.football_standard.update_selected_timer_system,
+		})
+
+		window.kbmodules.football_standard.resource_index.timer_sys_switch = timer_sys_switch;
+
+		timer_sys_switch.selected = mctx.cache.timer_sys || 'builtin';
+
 		// todo: create a core function that does something like pulling
 		// data to inputs from context automatically or something
 		document.querySelector('#atat_port_input').value = int(ksys.context.global.cache.atat_port || '');
@@ -557,7 +602,7 @@ window.kbmodules.football_standard.load = async function(){
 		if (return_addr){
 			document.querySelector('#atat_return_addr_input').value = return_addr.join('.');
 		}else{
-			document.querySelector('#atat_return_addr_input').value = ksys.util.get_local_ipv4_addr(true).join('.');
+			document.querySelector('#atat_return_addr_input').value = ksys.util.get_local_ipv4_addr(true)?.join?.('.')
 		}
 
 
@@ -569,9 +614,10 @@ window.kbmodules.football_standard.load = async function(){
 			// comment on this matter.
 			// Long story short: The less spam - the better.
 			'btns_enable_lock': false,
+			timer_sys_switch,
 		}
 
-		const tgt_timer_fset = ksys.switches.entries.timer_system;
+		const tgt_timer_fset = timer_sys_switch.selected;
 
 		window.kbmodules.football_standard.timer_ctrl = window.kbmodules.football_standard.timer_fset[tgt_timer_fset];
 
@@ -585,6 +631,15 @@ window.kbmodules.football_standard.load = async function(){
 		}
 
 		// window.kbmodules.football_standard.update_selected_timer_system(tgt_timer_fset);
+
+		// temp fix: address selector dropdown
+		const addr_selector = new ksys.ticker.kb_at.AddrPicker({
+			'callback': function(_, selected){
+				document.querySelector('#atat_return_addr_input').value = selected || '';
+			}
+		})
+
+		document.querySelector('#atat_ip_addr_picker').append(addr_selector.dom);
 	}
 
 	// --------------------------
@@ -2334,7 +2389,7 @@ window.kbmodules.football_standard.CardManager = class {
 		}
 
 		for (const list_item of items){
-			print('Redrawing vis feedback for', list_item);
+			// print('Redrawing vis feedback for', list_item);
 
 			const card_container = $('<div class="list_item_card_vis_feedback"></div>');
 			const record = self.get_pside(list_item.player).yc_map.get(list_item.player);
@@ -2442,7 +2497,7 @@ window.kbmodules.football_standard.CardManager = class {
 	// Get player's side (home/guest)
 	// Player doesn't has to be registered for this to work
 	get_pside(self, player, as_index=true){
-		print('Fuckshit', player)
+		// print('Fuckshit', player);
 		const side_id = player.club.is_enemy ? 'guest' : 'home';
 		if (as_index){
 			return self.sides[side_id]
@@ -2914,7 +2969,8 @@ window.kbmodules.football_standard.ClubGoals = class {
 			const input_val = evt.target.value;
 
 			// sanity check
-			if (input_val.includes('+') && (!input_val.includes('45') && !input_val.includes('90'))){
+			const dur = window.kbmodules.football_standard.round_duration;
+			if (input_val.includes('+') && (!input_val.includes(str(dur)) && !input_val.includes(str(dur*2)))){
 				ksys.info_msg.send_msg(
 					`Are you sure this is a valid format ?`,
 					'warn',
@@ -4096,6 +4152,14 @@ window.kbmodules.football_standard.forward_field_layout_to_vmix = async function
 			// player name
 			await title.set_text(`plr_name_${cell.id}`, ksys.strf.params.players.format(cell.player.player_surname));
 		}
+
+		// Set text colour
+		const text_color = window.kbmodules.football_standard.resource_index.color_dict[tgt_field.lineup.colors.tshirt];
+		if (text_color){
+			await title.set_text_color(`plr_num_${cell.id}`, text_color);
+		}else{
+			await title.set_text_color(`plr_num_${cell.id}`, '000000');
+		}
 	}
 	// goalkeeper tshirt colour
 	const gk_tshirt_col =
@@ -4103,7 +4167,12 @@ window.kbmodules.football_standard.forward_field_layout_to_vmix = async function
 	.join(`${tgt_field.lineup.colors.gk || 'ffffff'}.png`);
 	await title.set_img_src(`plr_bg_8_5`, str(gk_tshirt_col))
 
-
+	const gk_text_color = window.kbmodules.football_standard.resource_index.color_dict[tgt_field.lineup.colors.gk];
+	if (gk_text_color){
+		await title.set_text_color(`plr_num_8_5`, gk_text_color);
+	}else{
+		await title.set_text_color(`plr_num_8_5`, '000000');
+	}
 
 
 	// -------------------
@@ -4483,14 +4552,14 @@ window.kbmodules.football_standard.hide_card = async function(){
 window.kbmodules.football_standard.exec_substitute = async function(){
 	// todo: is this stupid ?
 	const leaving_player = (
-		window.kbmodules.football_standard.resource_index.side.home.substitute['leaving']?.selected_entry?.player
-		||
-		window.kbmodules.football_standard.resource_index.side.guest.substitute['leaving']?.selected_entry?.player
-	);
-	const incoming_player = (
 		window.kbmodules.football_standard.resource_index.side.home.substitute['inbound']?.selected_entry?.player
 		||
 		window.kbmodules.football_standard.resource_index.side.guest.substitute['inbound']?.selected_entry?.player
+	);
+	const incoming_player = (
+		window.kbmodules.football_standard.resource_index.side.home.substitute['leaving']?.selected_entry?.player
+		||
+		window.kbmodules.football_standard.resource_index.side.guest.substitute['leaving']?.selected_entry?.player
 	);
 
 	if (!leaving_player || !incoming_player){
@@ -4557,7 +4626,7 @@ window.kbmodules.football_standard.update_extra_time_amount = async function(){
 // Built-in / AT-AT switch
 // todo: some CSS styling,
 // such as hiding status indicator when the featureset is builtin
-window.kbmodules.football_standard.update_selected_timer_system = async function(tgt_sys){
+window.kbmodules.football_standard.update_selected_timer_system = async function(_, tgt_sys, event){
 	if (!tgt_sys){
 		ksys.info_msg.send_msg(
 			`Fatal: tried changing timer feature set to ${tgt_sys}, but can only change to [builtin, at_at]`,
@@ -4567,6 +4636,7 @@ window.kbmodules.football_standard.update_selected_timer_system = async function
 		return
 	}
 	print('Changing timer system to', tgt_sys);
+	ksys.context.module.prm('timer_sys', window.kbmodules.football_standard.resource_index.timer_sys_switch.selected);
 
 	// First, kill AT-AT watcher
 	await window.kbmodules.football_standard.stop_atat_service();
@@ -4687,6 +4757,7 @@ window.kbmodules.football_standard._get_current_time = function(minutes=false, t
 // important todo: make everything use minutes:seconds schema
 window.kbmodules.football_standard.get_current_time = function(minutes=false, tsum=false){
 	const divider = (minutes ? 60 : 1);
+	const dur = window.kbmodules.football_standard.round_duration;
 
 	if (tsum){
 		const calc_sum = 
@@ -4697,7 +4768,7 @@ window.kbmodules.football_standard.get_current_time = function(minutes=false, ts
 						(window.kbmodules.football_standard.ticker_time.base.minutes * 60) +
 						(window.kbmodules.football_standard.ticker_time.base.seconds)
 					)
-					|| 1
+					|| 0
 				)
 				+
 				(
@@ -4705,20 +4776,12 @@ window.kbmodules.football_standard.get_current_time = function(minutes=false, ts
 						(window.kbmodules.football_standard.ticker_time.extra.minutes * 60) +
 						(window.kbmodules.football_standard.ticker_time.extra.seconds)
 					)
-					|| 1
+					|| 0
 				)
 			)
 			/
 			divider
 		)
-
-		// todo: is this still needed ?
-		if (minutes && calc_sum == 46){
-			return 45
-		}else{
-			return calc_sum
-		}
-
 	}else{
 		// important todo: is this retarded ?
 		const extra_t = (
@@ -4730,18 +4793,11 @@ window.kbmodules.football_standard.get_current_time = function(minutes=false, ts
 		Math.ceil(
 			(
 				(window.kbmodules.football_standard.ticker_time.base.minutes * 60) +
-				(window.kbmodules.football_standard.ticker_time.base.seconds || 1)
+				(window.kbmodules.football_standard.ticker_time.base.seconds || 0)
 			)
 			/
 			divider
 		)
-
-		if (minutes && base_t == 46 && extra_t > 1){
-			base_t = 45;
-		}
-		if (minutes && base_t == 91 && extra_t > 1){
-			base_t = 90;
-		}
 
 		return {
 			'base': base_t,
@@ -4901,7 +4957,6 @@ window.kbmodules.football_standard.update_atat_return_addr = function(evt){
 	}
 
 	ksys.context.global.prm('atat_return_addr', octets, true);
-
 	ksys.info_msg.send_msg(
 		`Updated AT-AT return address to: ${octets.join('.')}; Restarting service...`,
 		'ok',
@@ -5022,11 +5077,18 @@ window.kbmodules.football_standard.restore_atat_line = async function(){
 	await window.kbmodules.football_standard.timer_fset.at_at.extra_counter.resub_to_end();
 }
 
+window.kbmodules.football_standard.atat_auto_return_addr = async function(){
+	// document.querySelector('#atat_return_addr_input').value = ksys.util.get_local_ipv4_addr(false);
+	document.querySelector('#atat_return_addr_input').value = await ksys.util.resolve_own_ip();
+}
+
 
 // 
 // Base Timer
 // 
 window.kbmodules.football_standard.timer_fset.at_at.create_base_timer = function(rnum){
+	const dur = window.kbmodules.football_standard.round_duration;
+
 	window.kbmodules.football_standard.timer_fset.at_at.base_counter = new ksys.ticker.kb_at.AtAtTicker({
 		'id':   2,
 		'ip':   ksys.context.global.cache.vmix_ip,
@@ -5035,11 +5097,11 @@ window.kbmodules.football_standard.timer_fset.at_at.create_base_timer = function
 		'url_params': `/API/?Function=SetText&Input=${window.kbmodules.football_standard.titles.timer.title_name}&SelectedName=base_ticker.Text&Value=\0`,
 		'timings': {
 			'start': [
-				(rnum == 1) ? 0 : 45,
+				(rnum == 1) ? 0 : dur,
 				0,
 			],
 			'end': [
-				(rnum == 1) ? 45 : 90,
+				(rnum == 1) ? dur : (dur*2),
 				0,
 			],
 		},
@@ -5073,12 +5135,14 @@ window.kbmodules.football_standard.timer_fset.at_at.wipe_timers = async function
 
 	// Clear the base ticker text field
 	await window.kbmodules.football_standard.titles.timer.set_text(
-		'base_ticker', (rnum == 1) ? '00:00' : '45:00'
+		'base_ticker', (rnum == 1) ? '00:00' : `${window.kbmodules.football_standard.round_duration}:00`
 	);
 }
 
 window.kbmodules.football_standard.timer_fset.at_at.start_base_timer = async function(rnum){
 	window.kbmodules.football_standard.toggle_atat_btns(false);
+	window.kbmodules.football_standard.ticker_time.extra.minutes = 0;
+	window.kbmodules.football_standard.ticker_time.extra.seconds = 0;
 
 	// Save the target round number to context
 	ksys.context.module.prm('round_num', rnum);
@@ -5140,10 +5204,12 @@ window.kbmodules.football_standard.timer_fset.at_at.resume_main_timer_from_offse
 		return
 	}
 
+	const dur = window.kbmodules.football_standard.round_duration;
+
 	window.kbmodules.football_standard.toggle_atat_btns(false);
 
-	const minutes = int(document.querySelector('#base_timer_resume_input .minutes').value);
-	const seconds = int(document.querySelector('#base_timer_resume_input .seconds').value);
+	const minutes = int(document.querySelector('#base_timer_resume_input .minutes').value || 0);
+	const seconds = int(document.querySelector('#base_timer_resume_input .seconds').value || 0);
 
 	// Seconds can be avoided, but minutes not.
 	if (!minutes){
@@ -5166,14 +5232,14 @@ window.kbmodules.football_standard.timer_fset.at_at.resume_main_timer_from_offse
 	// todo: implement this improvement in built-in ticker?
 	// Calculate the round number from input.
 	// Is this actually useless?
-	const rnum = minutes < 45 ? 1 : 2;
+	const rnum = minutes < dur ? 1 : 2;
 	// Save the calculated offset to context
 	ksys.context.module.prm('round_num', rnum);
 
 	await window.kbmodules.football_standard.timer_fset.at_at.base_counter.resume_from_offset({
 		'start': [minutes, seconds,],
 		'end': [
-			(rnum == 1) ? 45 : 90,
+			(rnum == 1) ? dur : (dur*2),
 			0,
 		],
 	})
@@ -5275,6 +5341,9 @@ window.kbmodules.football_standard.timer_fset.builtin.start_base_timer = async f
 	window.kbmodules.football_standard?.extra_counter?.force_kill?.()
 	window.kbmodules.football_standard.extra_counter = null;
 
+	window.kbmodules.football_standard.ticker_time.extra.minutes = 0;
+	window.kbmodules.football_standard.ticker_time.extra.seconds = 0;
+
 	window.kbmodules.football_standard.titles.timer.set_text('time_added', '')
 	$('#timer_ctrl_additional input')[0].value = '';
 
@@ -5283,13 +5352,13 @@ window.kbmodules.football_standard.timer_fset.builtin.start_base_timer = async f
 
 	ksys.context.module.prm('round_num', rnum)
 
-	const dur = 45;
+	const dur = window.kbmodules.football_standard.round_duration;
 
-	await window.kbmodules.football_standard.titles.timer.set_text('base_ticker', (rnum == 1) ? '00:00' : '45:00');
+	await window.kbmodules.football_standard.titles.timer.set_text('base_ticker', (rnum == 1) ? '00:00' : `${dur}:00`);
 
 	window.kbmodules.football_standard.base_counter = ksys.ticker.spawn({
 		// 'duration': (rnum == 2) ? (((dur*60)*1)+1) : ((dur*60)+1),
-		'duration': ((dur*60)+1),
+		'duration': ((dur*60)),
 		'name': `giga_timer${rnum}`,
 		'offset': (rnum == 2) ? (dur*60) : 0,
 		'infinite': false,
@@ -5328,16 +5397,18 @@ window.kbmodules.football_standard.timer_fset.builtin.timer_callback = function(
 
 	let text = `${str(minutes).zfill(2)}:${str(seconds).zfill(2)}`;
 
+	const dur = window.kbmodules.football_standard.round_duration;
+
 	// important todo: this is a retarded hack
-	if (text == '45:01'){
-		text = '45:00';
-		window.kbmodules.football_standard.ticker_time.base.minutes = 45;
+	if (text == `${dur}:01`){
+		text = `${dur}:00`;
+		window.kbmodules.football_standard.ticker_time.base.minutes = dur;
 		window.kbmodules.football_standard.ticker_time.base.seconds = 0;
 	}
 
 	if (text == '90:01'){
 		text = '90:00';
-		window.kbmodules.football_standard.ticker_time.base.minutes = 90;
+		window.kbmodules.football_standard.ticker_time.base.minutes = dur * 2;
 		window.kbmodules.football_standard.ticker_time.base.seconds = 0;
 	}
 
@@ -5363,12 +5434,12 @@ window.kbmodules.football_standard.timer_fset.builtin.resume_main_timer_from_off
 
 	const rnum = int(ksys.context.module.prm('round_num')) || 1;
 
-	const offs_minutes = int(document.querySelector('#base_timer_resume_input .minutes').value);
-	const offs_seconds = int(document.querySelector('#base_timer_resume_input .seconds').value);
+	const offs_minutes = int(document.querySelector('#base_timer_resume_input .minutes').value || 0);
+	const offs_seconds = int(document.querySelector('#base_timer_resume_input .seconds').value || 0);
 
 	const offs = (offs_minutes * 60) + offs_seconds;
 
-	const dur = (45*60);
+	const dur = (window.kbmodules.football_standard.round_duration*60);
 
 	window.kbmodules.football_standard.base_counter = ksys.ticker.spawn({
 		// 'duration': (rnum == 2) ? ((dur*2)+1) : (dur+1),
@@ -5440,7 +5511,7 @@ window.kbmodules.football_standard.timer_fset.builtin.launch_extra_time = async 
 		}
 	})
 
-	print('EXTRA AMOUNT?!', extra_amount)
+	// print('EXTRA AMOUNT?!', extra_amount)
 	await window.kbmodules.football_standard.titles.timer.set_text('extra_ticker', '00:00');
 	// await window.kbmodules.football_standard.titles.timer.set_text('time_added', `+${Math.floor(extra_amount/1)}`)
 	// await window.kbmodules.football_standard.titles.timer.toggle_text('time_added', true)
@@ -5556,7 +5627,7 @@ single row/string/call it whatever you want
 
 
 > Loop through every score unit of the team, as 'unit_a'
-    > If 'unit_a' doesn't has an author - skip, continue iteration
+    > If 'unit_a' has no author - skip, continue iteration
 
     > If the author of 'unit_a' should be ignored - skip, continue iteration
 
@@ -5585,18 +5656,13 @@ single row/string/call it whatever you want
       displayed in the VMIX title
 
 
-Yes, here you will see that authorless scores are fucking evil
-PLEASE, don't do this.
+Authorless scores are fucking evil.
 
 > Loop through every score unit of the team yet again, as 'unit_a'
-    > Skip the unit if it DOES has an author
+    > Skip the unit if it DOES have an author
 
     > Append the score unit as text (e.g. `45'+2 (АГ)`)
       to an array of rows that will be displayed in the VMIX title
-
-This is the only logical thing to do in case of authorless scores...
-Sorry...
-(get rekt lmfao, don't care, not sorry)
 
 
 The text block inside of the score summary VMIX title
@@ -5733,8 +5799,8 @@ window.kbmodules.football_standard.show_score_summary = async function(){
 	// ------------------------------
 	// Set bottom score (0:0)
 	// ------------------------------
-	const score_amt_l = window.kbmodules.football_standard.resource_index?.score_manager?.sides.home?.score_list?.score_stack?.size || 0;
-	const score_amt_r = window.kbmodules.football_standard.resource_index?.score_manager?.sides.guest?.score_list?.score_stack?.size || 0;
+	const score_amt_l = window.kbmodules.football_standard.resource_index?.score_manager?.sides?.home?.score_list?.score_stack?.size || 0;
+	const score_amt_r = window.kbmodules.football_standard.resource_index?.score_manager?.sides?.guest?.score_list?.score_stack?.size || 0;
 	await window.kbmodules.football_standard.titles.final_scores.set_text(
 		'score_sum',
 		`${score_amt_l} : ${score_amt_r}`
@@ -6568,11 +6634,12 @@ window.kbmodules.football_standard.init_new_match = function(evt){
 
 	// why bother...
 	// Just reload the controller...
-	ksys.fbi.warn_critical(
-		`Please press CTRL + R (there's nothing else you can do)`
-	)
-
+	// ksys.fbi.warn_critical(
+	// 	`Please press CTRL + R (there's nothing else you can do)`
+	// )
 	$('body').css({'pointer-events': 'none'});
+	ksys.util.reload();
+
 }
 
 

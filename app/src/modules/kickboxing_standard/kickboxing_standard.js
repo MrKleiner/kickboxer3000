@@ -30,6 +30,11 @@ $this.load = function(){
 	document.querySelector('#round_amount_fields input[round_amount]').value = 
 		ksys.context.module.cache.round_amount || '';
 
+	const timer_has_vs = document.querySelector('#param_list input[timer_has_vs]');
+	timer_has_vs.checked = ksys.context.module.cache.timer_has_vs || false;
+	timer_has_vs.onchange = function(){
+		ksys.context.module.prm('timer_has_vs', timer_has_vs.checked);
+	}
 
 	$this.titles = {
 		'personal': new vmix.title({
@@ -48,6 +53,12 @@ $this.load = function(){
 			'title_name': 'midfight_lower.gtzip',
 		}),
 	}
+
+	// document.querySelector('#image_proxies').checked = !!ksys.context.module.cache.img_proxies_enabled;
+	// document.querySelector('#image_proxies_addr').value = ksys.context.module.cache.img_proxy_addr;
+	// document.querySelector('#img_proxy_whitelist').value = ksys.db.module.read('proxy_whitelist.kbdata') || '';
+
+	// $this.toggle_image_proxies();
 }
 
 $this.KBPlayer = class{
@@ -111,7 +122,7 @@ $this.KBPlayer = class{
 		}
 
 
-		self._update_schema(self);
+		self.update_schema(self);
 
 		self.dom.elem.onclick = function(){
 			if ($this.edit_mode_active){return};
@@ -612,7 +623,7 @@ $this.update_vs_title = async function(tgt_pair){
 				`${label} ${tgt_pair.players['red'].attr_list[data_id].value.trim()} ${suffix}`,
 			)
 			label_idx -= 1;
-			continue
+			// continue
 		}
 
 		await $this.titles.vs.set_text(
@@ -646,6 +657,16 @@ $this.update_vs_title = async function(tgt_pair){
 					`${tgt_pair.players[side_kb].name} ${tgt_pair.players[side_kb].surname}`
 				),
 			)
+
+			// todo: this is a temp solution
+			if (ksys.context.module.cache.timer_has_vs){
+				await $this.titles.timer.set_text(
+					`player_${side_vmix}`,
+					frmt.format(
+						`${tgt_pair.players[side_kb].name} ${tgt_pair.players[side_kb].surname}`
+					),
+				)
+			}
 
 			// Set other data
 			await $this.titles.vs.set_text(
@@ -695,7 +716,6 @@ $this.update_vs_title = async function(tgt_pair){
 		}
 	}
 	*/
-
 
 }
 
@@ -801,10 +821,14 @@ $this.timer_callback = async function(ticks){
 		$this.counter.force_kill();
 	}
 
+	const timer_text = `${minutes}:${str(seconds).zfill(2)}`;
+
 	await $this.titles.timer.set_text(
 		'clock',
-		`${minutes}:${str(seconds).zfill(2)}`,
+		timer_text,
 	)
+
+	$('#timer_feedback').text(timer_text);
 }
 
 $this.respawn_manager = function(act){
@@ -834,6 +858,9 @@ $this.respawn_timer = async function(show=false, st=false){
 
 	$this.titles.timer.set_text(
 		'clock',
+		`${round_dur.minutes}:${str(round_dur.seconds).zfill(2)}`
+	);
+	$('#timer_feedback').text(
 		`${round_dur.minutes}:${str(round_dur.seconds).zfill(2)}`
 	);
 
@@ -985,3 +1012,60 @@ $this.bind_photo_ids = function(){
 $this.unbind_photo_ids = function(){
 	ksys.context.module.prm('pair_ids_frozen', false);
 }
+
+
+
+
+
+
+
+
+
+
+$this.update_img_proxy_addr = function(){
+	const addr = document.querySelector('#image_proxies_addr').value;
+
+	ksys.context.module.prm(
+		'img_proxy_addr',
+		addr
+	)
+
+	if (vmix.util.global_params.proxy){
+		vmix.util.global_params.proxy.own_addr = addr;
+	}
+}
+
+$this.update_img_proxy_whitelist = function(){
+	const whitelist = document.querySelector('#img_proxy_whitelist').value;
+
+	ksys.db.module.write(
+		'proxy_whitelist.kbdata',
+		whitelist
+	)
+
+	if (vmix.util.global_params.proxy){
+		vmix.util.global_params.proxy.whitelist = whitelist.split('\n');
+	}
+}
+
+
+$this.toggle_image_proxies = function(){
+	const state = document.querySelector('#image_proxies').checked;
+
+	ksys.context.module.prm('img_proxies_enabled', state);
+
+	if (state){
+		vmix.util.enable_image_proxy(
+			document.querySelector('#image_proxies_addr').value,
+			document.querySelector('#img_proxy_whitelist').value.split('\n'),
+		);
+	}else{
+		vmix.util.disable_image_proxy();
+	}
+}
+
+
+
+
+
+

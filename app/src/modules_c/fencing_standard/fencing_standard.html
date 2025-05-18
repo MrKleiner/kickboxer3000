@@ -13,6 +13,12 @@
 				translit_default="0"
 				format_default="all_upper"
 			></f-param>
+			<f-param
+				display_name="Team Aliases"
+				fpid="team_alias"
+				translit_default="0"
+				format_default="all_upper"
+			></f-param>
 		</string-formatting>
 	</tab>
 
@@ -29,19 +35,19 @@
 			<div id="title_ctrl_btns">
 				<vmixbtn
 					seq_info="vis_show"
-					onclick="kbmodules.fencing_standard.fight_tracker_vis_ctrl(true)"
+					onclick="window.kbmodules.fencing_standard.fight_tracker_vis_ctrl(true)"
 				>Show Fight Title</vmixbtn>
 				<vmixbtn
 					seq_info="vis_hide"
-					onclick="kbmodules.fencing_standard.fight_tracker_vis_ctrl(false)"
+					onclick="window.kbmodules.fencing_standard.fight_tracker_vis_ctrl(false)"
 				>Hide Fight Title</vmixbtn>
 			</div>
 		</div>
 
 		<div regular_box id="pair_pool" kbhint="RMB to select a pair (names are pushed to VMIX automatically). Alt + RMB in edit mode to delete">
 			<div id="pair_pool_ctrl_btns">
-				<sysbtn btname="toggle_edit" onclick="kbmodules.fencing_standard.toggle_edit_mode()">Toggle Edit</sysbtn>
-				<sysbtn btname="add_pair" onclick="kbmodules.fencing_standard.create_chaotic_pair()">Add Pair</sysbtn>
+				<sysbtn btname="toggle_edit" onclick="window.kbmodules.fencing_standard.toggle_edit_mode()">Toggle Edit</sysbtn>
+				<sysbtn btname="add_pair" onclick="window.kbmodules.fencing_standard.create_chaotic_pair()">Add Pair</sysbtn>
 			</div>
 
 			<div id="pair_pool_entries"></div>
@@ -57,7 +63,12 @@
 		<div class="pair_entry">
 			<div class="pair_entry_vis_feedback">
 				<div class="vis_feed_pname_left">-</div>
-				<div class="vis_feed_vs_sign">VS</div>
+				<div class="vis_feed_vs_sign">
+					<div class="vs_word">VS</div>
+					<sysbtn>
+						<img class="swap_button" src="./assets/swap_icon.svg">
+					</sysbtn>
+				</div>
 				<div class="vis_feed_pname_right">-</div>
 			</div>
 			<div class="pair_entry_config"></div>
@@ -85,6 +96,12 @@
 				class="player_data_input"
 				placeholder="Surname"
 			>
+			<input
+				type="text"
+				data_link="team_alias"
+				class="player_data_input"
+				placeholder="Team alias"
+			>
 		</div>
 	</template>
 
@@ -94,6 +111,7 @@
 			<div class="fight_vis_feed">
 				<div class="fight_vis_feed_player_name">-</div>
 				<div class="fight_vis_feed_player_score">-</div>
+				<input noctrl type="number" class="player_team_score_input">
 			</div>
 			<div class="fight_ctrl_btns">
 				<div class="score_math add_score"></div>

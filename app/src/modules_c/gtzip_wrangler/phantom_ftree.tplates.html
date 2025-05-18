@@ -1,0 +1,70 @@
+
+
+
+
+
+
+<template id="root">
+	<phantom-editor-flist>
+		<div class="flist_actions">
+			<sysbtn class="create_group">Create Group</sysbtn>
+			<sysbtn class="delete_selected_files">Delete Selected Files</sysbtn>
+		</div>
+		<div class="flist_array"></div>
+	</phantom-editor-flist>
+</template>
+
+
+<template id="fgroup">
+	<phantom-editor-fgroup class="open">
+		<div class="fgroup_header">
+			<div class="fgroup_name"></div>
+			<div class="fgroup_ctrl">
+				<div class="ctrl_row">
+					<input action="rename"
+						type="text"
+						placeholder="Type the new name for this group here"
+						>
+				</div>
+				<div class="ctrl_row">
+					<sysbtn action="rename"
+						kbhint="Rename this group to what was typed in the text field above"
+						pootis
+						>Rename</sysbtn>
+					<sysbtn action="delete_grp"
+						kbhint="Completely exterminate this group including its contents"
+						pootis
+						>Delete</sysbtn>
+					<sysbtn action="move_here"
+						kbhint="Move selected files into this group (duplicates will be overwritten)"
+						>Move Here</sysbtn>
+				</div>
+				<div class="ctrl_row">
+					<input action="fpicker"
+						type="file"
+						multiple
+						>
+					<sysbtn action="fpicker"
+						kbhint="Add selected files to the phantom buffer and therefore this group"
+						pootis
+						>Add</sysbtn>
+				</div>
+			</div>
+		</div>
+		<div class="fgroup_content"></div>
+	</phantom-editor-fgroup>
+</template>
+
+
+
+<template id="file_instance">
+	<phantom-editor-finstance kbhint="RMB to select/deselect">
+		<div class="fpreview"></div>
+		<div class="fmeta">
+			<input type="text" class="fname" onchange_vis_feed>
+		</div>
+	</phantom-editor-finstance>
+</template>
+
+
+

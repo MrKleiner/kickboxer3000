@@ -18,9 +18,6 @@
 // - Radio behaviour, while also being able to uncheck all buttons.
 // - Configurable switch state autosave and autoload.
 
-// Todo: as of now this is a VERY limited default radio buttons restyle.
-// But the underlying logic allows implementing all the benefits mentioned above.
-
 
 const _switches = {
 	'entries': {},
@@ -121,6 +118,13 @@ const KBSwitch = class{
 	//         - dom: The DOM element itself.
 	// - callback
 	//     Function to execute when the switch changes states.
+	//     Passed params are: (self, switch item's ID, click event)
+
+	MOD_KEY_DICT = {
+		'ctrlKey': 'CTRL',
+		'altKey':  'ALT',
+	}
+
 	constructor(cfg=null){
 		const self = this;
 		ksys.util.cls_pwnage.remap(self);
@@ -259,9 +263,17 @@ const KBSwitch = class{
 			self.switch_dict[id] = {
 				'dom': dom,
 			}
-			dom.onclick = function(){
+			dom.onclick = function(event){
+				if (self.cfg.mod_key && !event[self.cfg.mod_key]){
+					ksys.info_msg.send_msg(
+						`Please hold ${self.MOD_KEY_DICT[self.cfg.mod_key]}`,
+						'warn',
+						4000
+					);
+					return
+				}
 				self.select(id);
-				self.exec_callback(id);
+				self.exec_callback(id, event);
 			}
 			if (selected){
 				self.select(id);
@@ -269,8 +281,8 @@ const KBSwitch = class{
 		}
 	}
 
-	exec_callback(self){
-		return self.cfg?.callback?.(self)
+	exec_callback(self, id, event){
+		return self.cfg?.callback?.(self, id, event)
 	}
 
 	bind_dom_array(self, dom_array=null){

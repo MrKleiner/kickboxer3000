@@ -201,7 +201,11 @@ const _lizard = {
 	}
 
 	// python-like range()
-	window.range = function* (start=0, stop=null, step=1){
+	window.range = function* (_start=0, _stop=null, _step=1){
+		let start = _start;
+		let stop = _stop;
+		let step = _step;
+
 		if (stop == null){
 			stop = start
 			start = 0
@@ -214,9 +218,10 @@ const _lizard = {
 			console.error('Range iterator: Invalid parameters', start, stop, step)
 			return []
 		}
-		
+
 		// var tgt_result = []
 		// var eligible = true
+
 		while (true) {
 			if (start >= stop){
 				return
@@ -227,6 +232,16 @@ const _lizard = {
 			start += step
 		}
 	}
+
+	// Object.prototype.keys = function(){
+	// 	return Object.keys(this)
+	// }
+	// Object.prototype.values = function(){
+	// 	return Object.values(this)
+	// }
+	// Object.prototype.items = function(){
+	// 	return Object.entries(this)
+	// }
 }
 
 // -----------------------
@@ -277,7 +292,7 @@ const _lizard = {
 
 
 
-
+// todo: create .items() python style dict iteration;
 
 
 
@@ -408,7 +423,8 @@ const _buffer_types = [
 		'flac': 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-()=+*#/!&?<>$~',
 		'num': '1234567890',
 		'def': 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-',
-		'custom': '',
+		'letters': 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+		'custom': ' ',
 	}
 
 	_lizard.rndwave = function(len=8, method='def', addchars='', crypto=true) {
@@ -416,18 +432,21 @@ const _buffer_types = [
 
 		const addon_chars = addchars.toString().replaceAll(' ', '');
 
-		const characters = (_methods[method] || _methods.def) + addon_chars;
+		const characters = ((_methods[method] || _methods.def) + addon_chars).strip();
 		const charactersLength = characters.length;
 
-	    if (crypto == true){
-	        var cryptonums = window.crypto.getRandomValues(new Uint32Array(len + 1))
-	    }
+		// if (crypto == true){
+		// 	var cryptonums = window.crypto.getRandomValues(new Uint32Array(len + 1))
+		// }
+
+		const cryptonums = (crypto == true) ? window.crypto.getRandomValues(new Uint32Array(len + 1)) : null;
+
 		for ( let i = 0; i < len; i++ ) {
-	        if (crypto == true){
-	            result += characters.charAt(cryptonums[i] % charactersLength);
-	        }else{
-	            result += characters.charAt(Math.floor(Math.random() * charactersLength));
-	        }
+			if (crypto == true){
+				result += characters.charAt(cryptonums[i] % charactersLength);
+			}else{
+				result += characters.charAt(Math.floor(Math.random() * charactersLength));
+			}
 		}
 		return result;
 	}
@@ -757,8 +776,7 @@ _lizard.textdl = function(filename='lizard.txt', text='iguana') {
 	// takes selector as an input
 	// and a name
 	const _waiters_pool = {};
-	_lizard.await_elem = function(sel=null, identify=null)
-	{
+	_lizard.await_elem = function(sel=null, identify=null){
 		if (!sel){return false}
 		const save_sel = sel;
 		let wname = identify || _lizard.rndwave(32, 'def')
@@ -818,15 +836,16 @@ _lizard.ehtml = function(c){
 // smartass: Works with arrays too
 _lizard.delnthelem = function(st, nth, use=false)
 {
-	if (st.toString() == ''){ return ''}
+	if (st.toString() == ''){ return ''};
 
+	let todel = null;
 	if (Array.isArray(st)){
-		var todel = st;
+		todel = st;
 	}else{
-		var todel = st.toString().split('');
+		todel = st.toString().split('');
 	}
 
-	var nthc = 1
+	let nthc = 1
 	const delres = []
 	for (let count in todel)
 	{
@@ -835,14 +854,14 @@ _lizard.delnthelem = function(st, nth, use=false)
 				nthc += 1
 			}else{
 				delres.push(todel[count])
-				var nthc = 1
+				nthc = 1
 			}
 		}else{
 			if (nthc != nth){
 				delres.push(todel[count])
 				nthc += 1
 			}else{
-				var nthc = 1
+				nthc = 1
 			}
 		}
 	}
@@ -901,7 +920,8 @@ _lizard.delnthchar = _lizard.delnthelem;
 			  if (typeof obj[i] == 'object') {
 				  objects = objects.concat(_lizard.dict_lookup.find_objects(obj[i], key, val));    
 			  } else 
-			  //if key matches and value matches or if key matches and value is not passed (eliminating the case where key matches but passed value does not)
+			  // if key matches and value matches or if key matches and value is not passed
+			  // (eliminating the case where key matches but passed value does not)
 			  if (i == key && obj[i] == val || i == key && val == '') { //
 				  objects.push(obj);
 			  } else if (obj[i] == val && key == ''){
@@ -950,12 +970,17 @@ _lizard.delnthchar = _lizard.delnthelem;
 //         base64 to blob
 // --------------------------------
 // pass true to return the blob itself
-_lizard.b64toblob = function(b64s){
-	if (b64 == ''){return null}
-	const bytes = _lizard.base64DecToArr(b64.split(',').at(-1))
+_lizard.b64toblob = function(b64s, raw_blob=false){
+	if (b64s == ''){return null}
+	const bytes = _lizard.base64DecToArr(b64s.split(',').at(-1))
 	const blob = new Blob([bytes]);
-	const imageUrl = (window.URL || window.webkitURL).createObjectURL(blob);
-	return imageUrl
+	const blobURL = (window.URL || window.webkitURL).createObjectURL(blob);
+
+	if (raw_blob){
+		return blob
+	}else{
+		return blobURL
+	}
 }
 
 

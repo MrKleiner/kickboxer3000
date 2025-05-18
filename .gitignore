@@ -5,9 +5,9 @@ release/KickBoxer3000-win32-x64
 app/src/bins/python
 __pycache__
 install/icon/icon_res/*
-compiler/run.cmd
 /release
 app/src/db
 static_bins/7z
 static_bins/python
 static_bins/rcedit
+app/src/index_autogen.html

@@ -1,10 +1,44 @@
 <kbstandard>
 	<tabsys>
+		<sys-tab match_id="experimental">Experimental</sys-tab>
 		<sys-tab match_id="config">Config</sys-tab>
 		<sys-tab match_id="ctrl" default>Control</sys-tab>
 	</tabsys>
 
+	<tab tabid="experimental" tabname="Experimental" default>
+		<!-- <h2 style="color: red;">Don't fuck with this (yet)</h2> -->
+		<!--
+			<h2 style="color: red;">Don't fuck with this</h2>
+			<div regular_box style="margin-left: 20px; display: flex; flex-direction: column;">
+				<label basic_cbox>
+					Image Proxies
+					<input
+						type="checkbox"
+						id="image_proxies"
+						onchange="window.kbmodules.kickboxing_standard.toggle_image_proxies()"
+					>
+				</label>
+				<div id="image_proxies_addr_picker">
+					<input
+						type="text"
+						id="image_proxies_addr"
+						placeholder="This PC's IPV4"
+						style="margin-top: 10px;"
+						onchange="window.kbmodules.kickboxing_standard.update_img_proxy_addr()"
+					>
+				</div>
+				<textarea style="height: 200px; width: 500px;" placeholder="Whitelist" id="img_proxy_whitelist" onchange="window.kbmodules.kickboxing_standard.update_img_proxy_whitelist()"></textarea>
+			</div>
+		-->
+
+
+		<http-resource-proxy-control></http-resource-proxy-control>
+
+	</tab>
+
 	<tab tabid="config" tabname="Config" default>
+		<md-packer></md-packer>
+
 		<string-formatting>
 			<f-param display_name="Players" fpid="players" translit_default="1" format_default="all_upper"></f-param>
 			<f-param display_name="Labels" fpid="labels" translit_default="1" format_default="all_upper"></f-param>
@@ -15,6 +49,14 @@
 				<div row_label>Resources Location</div>
 				<input type="text" res_path placeholder="Absolute path to a folder. Quotation marks allowed">
 				<sysbtn btname="save_res_path" onclick="window.kbmodules.kickboxing_standard.save_res_path()">Save Path</sysbtn>
+			</div>
+
+			<div param_row timer_has_vs_row>
+				<label row_label>
+					Timer Contains VS
+					<input timer_has_vs type="checkbox">
+				</label>
+				
 			</div>
 
 <!-- 			<div param_row res_loc_row>
@@ -40,8 +82,8 @@
 
 
 	<tab tabid="ctrl" tabname="Control" default row>
-
 		<div subtle_box id="ctrl_side">
+			<div regular_box id="timer_feedback">--:--</div>
 			<div id="title_ctrl" regular_box>
 				<div row>
 					<vmixbtn seq_info="vis_hide" btname="vs_off" onclick="window.kbmodules.kickboxing_standard.vs_off()">VS OFF</vmixbtn>

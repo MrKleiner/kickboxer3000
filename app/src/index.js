@@ -1,4 +1,4 @@
-const { app, BrowserWindow, globalShortcut } = require('electron');
+const { app, BrowserWindow, globalShortcut, ipcMain } = require('electron');
 const path = require('path');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -6,8 +6,31 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 	app.quit();
 }
 
+const update_module_index = function(){
+	const pathlib = require('pathlib-js').default;
+
+	const kb = new pathlib(__dirname);
+	const mdir = kb.join('modules_c');
+
+	const mlinks = [];
+
+	for (const kb_module of mdir.globSync('*')){
+		const tgt_js = kb_module.join(kb_module.basename + '.js');
+		if (!tgt_js.isFileSync() || kb_module.join('ignore').isFileSync()){continue};
+		mlinks.push(
+			`<script src="./modules_c/${tgt_js.stem}/${tgt_js.basename}"></script>`
+		)
+	}
+
+	kb.join('index_autogen.html').writeFileSync(
+		kb.join('index.html').readFileSync().toString().replace('@mscripts', mlinks.join('\n\t\t'))
+	)
+}
+
 const createWindow = () => {
-  // Create the browser window.
+	update_module_index();
+
+	// Create the browser window.
 	const mainWindow = new BrowserWindow({
 		webPreferences: {
 			nodeIntegration: true,
@@ -25,7 +48,7 @@ const createWindow = () => {
 	});
 
 	// and load the index.html of the app.
-	mainWindow.loadFile(path.join(__dirname, 'index.html'));
+	mainWindow.loadFile(path.join(__dirname, 'index_autogen.html'));
 
 	// Open the DevTools.
 	mainWindow.webContents.openDevTools();
@@ -56,6 +79,11 @@ const createWindow = () => {
 	globalShortcut.register('CommandOrControl+Shift+I', function() {
 		mainWindow.webContents.openDevTools();
 	})
+
+	ipcMain.handle('ipc_hard_reload', async (event, args) => {
+		mainWindow.reload();
+		return { success: true };
+	});
 };
 
 // This method will be called when Electron has finished

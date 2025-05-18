@@ -2,7 +2,8 @@ const msgsys = {};
 
 
 // Todo: the magic circle timing is half-broken
-
+// It's not broken. It's simply impossible to trigger a function
+// faster than n-whatever milliseconds.
 
 const polarToCartesian = function(centerX, centerY, radius, angleInDegrees) {
 	const angleInRadians = (angleInDegrees-90) * Math.PI / 180.0;
@@ -13,7 +14,6 @@ const polarToCartesian = function(centerX, centerY, radius, angleInDegrees) {
 }
 
 const describeArc = function(x, y, radius, startAngle, endAngle){
-
 	const start = polarToCartesian(x, y, radius, endAngle);
 	const end = polarToCartesian(x, y, radius, startAngle);
 
@@ -29,7 +29,7 @@ const describeArc = function(x, y, radius, startAngle, endAngle){
 
 
 
-const magic_circle = class{
+const MagicCircle = class{
 	constructor(){
 		const self = this;
 		ksys.util.cls_pwnage.remap(self);
@@ -43,7 +43,7 @@ const magic_circle = class{
 		self.tgt_path = self.dom.querySelector('path');
 	}
 
-	async launch_anim(self, dur=500){
+	async _launch_anim(self, dur=500){
 		const step_angle = 1;
 		const step_count = 360 / step_angle;
 		// const step_dur = step_count / dur;
@@ -61,6 +61,14 @@ const magic_circle = class{
 			}
 		}
 	}
+
+	async launch_anim(self, dur=500){
+		const step = 1;
+		for (const angle of range(360)){
+			self.tgt_path.setAttribute('d', describeArc(0, 0, 100-10, 0, angle.clamp(0, 360)));
+			await ksys.util.sleep(dur / 360);
+		}
+	}
 }
 
 
@@ -69,26 +77,27 @@ const magic_circle = class{
 //     - 'err': Red Error
 //     - 'ok': Green ok
 //     - 'warn': Yellow warning
-const info_msg = class{
+const InfoMessage = class{
 	constructor(text, msg_type='warn', dur=1000){
 		const self = this;
 
-		self.pie = new magic_circle()
-		self.msg_body = $(`<div ${msg_type} class="kbmsg">${text}</div>`)[0]
-		self.msg_body.prepend(self.pie.dom)
-		$('hintsys-bar #hintsys_bar_msgs').prepend(self.msg_body)
+		self.pie = new MagicCircle();
+		self.msg_body = $(`<div ${msg_type} class="kbmsg">${text}</div>`)[0];
+		self.msg_body.prepend(self.pie.dom);
+		$('hintsys-bar #hintsys_bar_msgs').prepend(self.msg_body);
 
 		self.pie.launch_anim(dur)
 		.then((value) => {
-			self.msg_body.remove()
+			self.msg_body.remove();
 		});
+		
 	}
 }
 
 
 // the "new" keyword is stoopid
 const fuck_js = function(text, msg_type='warn', dur=1000){
-	return new info_msg(text, msg_type, dur)
+	return new InfoMessage(text, msg_type, dur)
 }
 
 

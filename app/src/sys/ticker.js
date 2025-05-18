@@ -17,7 +17,7 @@ class _kb_ticker{
 			return
 		}
 
-		const defprms= {
+		const defprms = {
 			'duration':     7,
 			'name':         null,
 			'infinite':     false,
@@ -71,7 +71,6 @@ class _kb_ticker{
 		this.fired = true;
 
 		// the holy hand grenade
-		// important todo: so should it be let or const ?
 		const self = this;
 
 		// The timer has a heartbeat of 250ms between pulses
@@ -139,7 +138,7 @@ class _kb_ticker{
 
 
 	force_kill(){
-		if(!_stfu){print('ROOT OF THE FUCKING PROBLEM', this)};
+		// if(!_stfu){print('ROOT OF THE FUCKING PROBLEM', this)};
 		if(!_stfu){console.trace()};
 		
 		this.alive = false;
@@ -243,6 +242,27 @@ class _kb_ticker{
 }
 
 
+const KBTicker = class {
+	constructor(ticker_prms){
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
+		if (!ticker_prms){
+			console.error('KBTicker: Invalid params', ticker_prms);
+			return
+		}
+
+		
+
+	}
+}
+
+
+
+
+
+
+
 
 _ticker.spawn = function(params)
 {
@@ -274,6 +294,42 @@ _ticker.pool = function()
 	}
 	return pl
 }
+
+
+
+
+
+const AddrPicker = class {
+	constructor(cfg){
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+
+		self.cfg = cfg;
+		self.dom = $(`<select></select>`)[0];
+		$(self.dom).append('<option value="">---------------</option>');
+		self.dom.onchange = function(){
+			self.exec_callback()
+		}
+		self.dom.onfocus = function(){
+			self.resync()
+		}
+	}
+
+	exec_callback(self){
+		return self.cfg?.callback?.(self, self.dom.value)
+	}
+
+	resync(self){
+		// $(tplate.elem).append('<option value="">--</option>');
+		$(self.dom).find('option:not([value=""])').remove();
+		for (const ip of ksys.util.list_ip_interfaces(false)){
+			$(self.dom).append(`
+				<option value="${ip.lower()}">${ip.lower()}</option>
+			`)
+		}
+	}
+}
+
 
 
 
@@ -1242,520 +1298,6 @@ const KbAtTicker = class{
 
 
 
-/*
-
-// --------------------------
-//       Bad garbage
-// --------------------------
-
-const KbAtServerService = class{
-	constructor(listen_port=null){
-		const self = this;
-
-		if (listen_port && !Number.isInteger(listen_port)){
-			throw new Error(
-				'Invalid port suplied to KB AT-AT Server Service:', listen_port
-			);
-		}
-
-		self.port = listen_port;
-
-		self.skt = dgram.createSocket('udp4');
-
-		self.callback = null;
-
-		self.skt.on(
-			'message',
-			function(msg, rinfo){
-				print('KB AT-AT Server Service received message:', msg, rinfo);
-				if (!self.callback){
-					console.warn(
-						'KB AT-AT Server Service receined a message, but no callback was scheduled',
-						self.callback
-					)
-					return
-				}
-				self.callback(msg, rinfo)
-			}
-		)
-	}
-
-	async start_service(self){
-		const service_promise = new Promise(
-			function(resolve, reject){
-				print('KYS PLEASE')
-				// self.skt.bind(
-				// 	self.port || 0,
-				// 	function(){
-				// 		print('Bro???')
-				// 		resolve()
-				// 	}
-				// )
-				resolve()
-			}
-		)
-
-		await service_promise;
-
-		// if no target port was provided - get the one assigned
-		// automatically
-		if (!self.port){
-			self.port = self.skt.address().port;
-		}
-	}
-}
-
-// Persistent receiver is basically a UDP server
-// With callbacks for any received messages
-
-const KbAtPersistentReceiver = class{
-	constructor(callback=null){
-		const self = this;
-
-		if (!callback){
-			throw new Error(
-				'Fatal internal error: Tried creating KB AT-AT Persistent UDP Receiver with invalid callback function', callback
-			);
-		}
-
-		// Store callback function
-		self.callback = callback;
-
-		// Create socket object
-		self.skt = dgram.createSocket('udp4');
-
-		// Process incoming messages
-		self.skt.on(
-			'message',
-			function(msg, rinfo){
-				self.msg_in_processor(self, msg, rinfo)
-			}
-		)
-	}
-
-	msg_in_processor(self, msg, rinfo){
-		print('KB AT-AT Persistent received a message:', msg, rinfo);
-		self.callback(msg, rinfo, self);
-	}
-}
-
-// Kickboxer Advanced Ticker
-// The magic UDP .exe integration
-_ticker.KbAt = class {
-	constructor(ticker_id=null, tgt_ip=null, tgt_port=null){
-		const self = this;
-
-		if (!tgt_port || !tgt_ip){
-			throw new Error(
-				'Invalid port/IP supplied for KB AT-AT:', tgt_port, ':', tgt_ip
-			);
-		}
-
-		if (!ticker_id || !Number.isInteger(ticker_id)){
-			throw new Error(
-				'Invalid ticker ID provided for the KB AT-AT class:', ticker_id
-			);
-		}
-
-		self.tgt_port = tgt_port;
-		self.tgt_addr = tgt_ip;
-		self.cmd_timeout = 500;
-
-		self.skt = null;
-		self.recv_callback = null;
-
-		// Header identificators
-		// Important todo: make sure these buffers are not modified by anything
-		// (solution: use get)
-		self.iff_out = Buffer.from([73, 73]);
-		self.iff_in = Buffer.from([37, 37]);
-
-		// Command schedule, because UDP is retarded.
-		// Place your bets on how fast this would break.
-		// + 20 points to failure probability
-		
-		// Schedule record struct:
-		// {
-		// 	'cmd_id': 0,
-		// 	'callback': function(response_msg, rinfo){},
-		// 	'data_chunks': [],
-		// }
-		self.cmd_sched = [];
-
-		self.respawn_skt(self);
-
-		// A lock implemented through Promises
-		// + 4 points to failure probability
-		self.sched_lock = null;
-		self.sched_lock_release = null;
-
-		// Create initial lock.
-		// ?????
-		// + 1 point to failure probability
-		self.create_sched_lock(self);
-
-
-
-		// Launch the schedule loop
-		self.sched_loop(self);
-	}
-
-	respawn_skt(self){
-		self.skt = dgram.createSocket('udp4');
-
-		// Listen for returning messages
-		self.skt.on(
-			'message',
-			function(msg, rinfo){
-				print('KB AT-AT received a message:', msg, rinfo);
-				if (!self.recv_callback){
-					console.warn(
-						'KB AT-AT receined a message, but no callback was scheduled',
-						self.recv_callback
-					)
-					return
-				}
-				self.recv_callback(msg, rinfo)
-			}
-		)
-	}
-
-	create_sched_lock(self){
-		self.sched_lock = new Promise(
-			function(_resolve, _reject){
-				self.sched_lock_release = _resolve;
-			}
-		)
-	}
-
-	async sched_loop(self){
-		print('Creating schedule loop');
-		// Infinite fail-unsafe while true.
-		// + 40 points to failure probability
-		// Bonus: Global system crash chance
-		while (true){
-			let cmd_data = self.cmd_sched.pop();
-
-			if (!cmd_data){
-				print('Sched Loop: Awaiting next lock release');
-				self.create_sched_lock(self);
-				await self.sched_lock;
-			}
-
-			// Important todo:
-			// Since everything is async af -
-			// THE ORDER OF THESE WARNINGS AND ACTIONS MATTERS A FUCKING LOT
-			if (!cmd_data){
-				cmd_data = self.cmd_sched.pop();
-			}
-
-			if (self.cmd_sched.length <= 0){
-				// console.error(
-				// 	'Fatal Integrity Error: The schedule lock was released,',
-				// 	'but the schedule length remained 0'
-				// )
-			}
-
-			if (!cmd_data){
-				console.error(
-					'Got invalid command from command schedule:', cmd_data
-				)
-				continue
-			}
-
-			// if (!cmd_data || self.cmd_sched.length <= 0){
-			// if (!cmd_data){
-			// 	continue
-			// }
-
-			// Schedule current callback for execution
-			// todo: When would be the best time to check the callback
-			// for validity?
-			const linear_lock = create_promise_lock();
-			self.recv_callback = function(msg, rinfo){
-				// Todo: should the real callback be async or sync?
-				// Also, in which order should things be executed?
-				// Real callback first or lock release first ?
-
-				// Once the command went through - first execute the real callback
-				new Promise(
-					function(){
-						cmd_data.callback(msg, rinfo);
-					}
-				)
-
-				print('Sched recv callback msg:', msg)
-				if (!msg.status_ok && msg.error == 'timed_out'){
-					self.respawn_skt(self);
-				}
-
-				// Now release the lock, thus resuming the schedule
-				linear_lock.release();
-			}
-
-			// SEND the target command to the AT-AT
-			self.send_cmd(
-				self,
-				cmd_data.cmd_id,
-				cmd_data.data_chunks
-			)
-
-			// Await AT-AT response
-			await linear_lock.lock;
-		}
-	}
-
-	// Command execution with timeouts
-	// This ONLY sends commands
-	// todo: is this utterly fucking retarded?
-	// or just javascript moment?
-	async send_cmd(self, cmd_id, data_chunks){
-		// Useful info
-		if (!valid_commands_list.includes(cmd_id)){
-			console.warn(
-				'Command with an ID of',
-				cmd_id,
-				'was not found in the command registry.',
-				'This does not affect the current execution.'
-			)
-		}
-
-		// Command ID is a single byte signed int,
-		// which means it cannot be greater than 255 or less than 0
-		if (cmd_id > 255 || cmd_id < 0){
-			throw new Error(
-				'Fatal Error: Invalid command ID', cmd_id
-			);
-		}
-
-		// First, create the payload
-		const buffer_array = [
-			self.iff_out,
-			Buffer.from([cmd_id]),
-		];
-
-		// Convert input data to Buffer classes
-		for (const chunk of (data_chunks || [])){
-			try{
-				buffer_array.push(
-					Buffer.from(chunk)
-				)
-			}catch(e){
-				buffer_array.push(
-					Buffer.from([chunk])
-				)
-			}
-		}
-
-		// Concat the array of resulting buffers into a single buffer
-		// Thus, creating a final payload
-		const payload = Buffer.concat(buffer_array);
-
-		// Actually execute the command
-		const timeout_promise = new Promise(
-			function(resolve, reject){
-				let payload_sent = false;
-
-				self.skt.send(
-					payload,
-					self.tgt_port,
-					self.tgt_addr,
-					function(err){
-						print('CMD Has Error', err)
-						if (err){
-							resolve({
-								'status_ok': false,
-								'error': err,
-							})
-						}else{
-							payload_sent = true;
-							resolve({
-								'status_ok': true,
-							})
-						}
-					}
-				)
-
-				setTimeout(
-					function(){
-						if (!payload_sent){
-							resolve({
-								'status_ok': false,
-								'error': 'timed_out',
-							})
-						}
-					},
-					self.cmd_timeout
-				)
-			}
-		)
-
-		const tpromise = await timeout_promise;
-		print('CMD Timeout promise:', tpromise);
-
-		return tpromise
-	}
-
-	// Create a schedule record
-	add_sched_record(self, cfg){
-		// Register the command for execution
-		self.cmd_sched.push(cfg);
-		// Release the schedule lock and therefore
-		// resume the schedule execution loop
-		self.sched_lock_release();
-	}
-
-	// A set of actions to properly execute the command
-	// todo: use linear lock ?
-	async exec_cmd(self, cfg){
-		return new Promise(
-			function(resolve, reject){
-				let response_received = false;
-				// todo: for now - direct resolve (testing)
-
-				// 1 - create execution echo callback
-				const exec_echo_callback = function(msg, rinfo){
-					response_received = true;
-					print('exec_cmd -> exec_echo_callback 1');
-					resolve({
-						'status_ok': true,
-						'msg': msg,
-						'rinfo': rinfo,
-					})
-				}
-
-				// 2 - schedule the command for execution
-				self.add_sched_record(
-					self,
-					{
-						'cmd_id': cfg.cmd_id,
-						'data_chunks': cfg.data_chunks,
-						'callback': exec_echo_callback,
-					}
-				)
-
-				setTimeout(
-					function(){
-						if (!response_received){
-							console.error('Ticker response timed out');
-							resolve({
-								'status_ok': false,
-								'error': 'timed_out',
-							})
-						}
-					},
-					self.cmd_timeout
-				)
-			}
-		)
-	}
-
-	// cfg struct is:
-	// {
-	// 	'ticker_id': 1,
-	// 	'start': [255, 59],
-	// 	'end': [255, 59],
-	// }
-	async start_ticker(self, cfg){
-		// todo: Process the response
-		return await self.exec_cmd(
-			self,
-			{
-				'cmd_id': 1,
-				'data_chunks': [
-					cfg.ticker_id,
-					cfg.start,
-					cfg.end || [255, 59],
-				]
-			}
-		)
-	}
-
-
-	async pause_ticker(self, ticker_id){
-		// todo: Process the response
-		return await self.exec_cmd(
-			self,
-			{
-				'cmd_id': 2,
-				'data_chunks': [ticker_id,],
-			}
-		)
-	}
-
-
-	async resume_ticker(self, ticker_id){
-		// todo: Process the response
-		return await self.exec_cmd(
-			self,
-			{
-				'cmd_id': 3,
-				'data_chunks': [ticker_id,],
-			}
-		)
-	}
-
-	async kill_ticker(self, ticker_id){
-		// todo: Process the response
-		return await self.exec_cmd(
-			self,
-			{
-				'cmd_id': 4,
-				'data_chunks': [ticker_id,],
-			}
-		)
-	}
-
-	// cfg struct is:
-	// {
-	// 	'ticker_id': 1,
-	// 	'tgt_ip':    [192, 168, 1, 53],
-	// 	'tgt_port':  65534,
-	// 	'url_str':   '?fuckshit=nen',
-	// }
-	// todo: type cheks and so on
-	async attach_url(self, cfg){
-		// todo: Process the response
-		return await self.exec_cmd(
-			self,
-			{
-				'cmd_id': 5,
-				'data_chunks': [
-					cfg.ticker_id,
-
-					cfg.tgt_ip[0],
-					cfg.tgt_ip[1],
-					cfg.tgt_ip[2],
-					cfg.tgt_ip[3],
-					cfg.tgt_port,
-
-					cfg.url_str,
-					'\0',
-				],
-			}
-		)
-	}
-
-	async reachable(self){
-		const status = await self.exec_cmd(
-			self,
-			{
-				'cmd_id': 9,
-				'data_chunks': [],
-			}
-		)
-
-		try{
-			return status.msg[2] === 0;
-		}catch(e){
-			return false
-		}
-	}
-
-}
-
-*/
-
 const _bury_bodies = function(){
 	for (const status_watcher of kb_atat_listen_pool){
 		if (status_watcher.terminated){
@@ -1810,6 +1352,7 @@ _ticker.kb_at.StatusWatcher = function(){
 
 // _ticker.kb_at.StatusWatcher = KbAtStatusWatcher;
 _ticker.kb_at.AtAtTicker = KbAtTicker;
+_ticker.kb_at.AddrPicker = AddrPicker;
 
 
 

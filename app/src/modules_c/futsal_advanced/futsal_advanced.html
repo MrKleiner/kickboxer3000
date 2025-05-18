@@ -1,0 +1,52 @@
+<futsal-advanced>
+	<tabsys>
+		<sys-tab match_id="cfg" default>Setup</sys-tab>
+		<sys-tab match_id="ctrl" default>Control</sys-tab>
+	</tabsys>
+
+	<tab tabid="cfg" tabname="Setup" default>
+		<div class="basic_cfg_unit" id="global_table_cfg" subtle_box>
+			<div class="basic_cfg_unit_header" id="global_table_cfg_header">Tournament Table CFG</div>
+			<input onchange="window.kbmodules.futsal_advanced.save_global_table_cfg()" type="text" placeholder="Json URL" id="global_table_url">
+		</div>
+
+		<div class="basic_cfg_unit" id="stats_cfg" subtle_box>
+			<div class="basic_cfg_unit_header" id="stats_cfg_header">Statistics</div>
+			<input onchange="window.kbmodules.futsal_advanced.save_stats_data()" type="text" placeholder="Json URL" id="stats_url">
+			<textarea resize="vertical" onchange="window.kbmodules.futsal_advanced.save_stats_data()" id="stats_data_map"></textarea>
+		</div>
+	</tab>
+
+	<tab tabid="ctrl" tabname="Control">
+		<div class="simple_ctrl_box" id="global_table_ctrl" subtle_box>
+			<div class="simple_ctrl_box_header" id="global_table_ctrl_header">Tournament Table</div>
+			<div class="simple_ctrl_box_btns" id="global_table_ctrl_btns">
+				<vmixbtn onclick="window.kbmodules.futsal_advanced.update_global_table()">Update Tournament Table</vmixbtn>
+				<vmixbtn onclick="window.kbmodules.futsal_advanced.global_table_vis(true)">Show Tournament Table</vmixbtn>
+				<vmixbtn onclick="window.kbmodules.futsal_advanced.global_table_vis(false)">Hide Tournament Table</vmixbtn>
+			</div>
+		</div>
+
+		<div class="simple_ctrl_box" id="stats_ctrl" subtle_box>
+			<div class="simple_ctrl_box_header" id="stats_ctrl_header">Statistics</div>
+			<div class="simple_ctrl_box_btns" id="stats_ctrl_btns">
+				<vmixbtn onclick="window.kbmodules.futsal_advanced.update_stats()">Update Statistics</vmixbtn>
+				<vmixbtn onclick="window.kbmodules.futsal_advanced.stats_vis(true)">Show Statistics</vmixbtn>
+				<vmixbtn onclick="window.kbmodules.futsal_advanced.stats_vis(false)">Hide Statistics</vmixbtn>
+			</div>
+			<div id="individual_stats"></div>
+		</div>
+	</tab>
+
+	<template id="individual_stat_tplate">
+		<div class="ind_stat">
+			<div class="ind_stat_name"></div>
+			<vmixbtn class="show_ind_stat">Show</vmixbtn>
+			<vmixbtn class="hide_ind_stat">Hide</vmixbtn>
+		</div>
+	</template>
+
+</futsal-advanced>
+
+
+

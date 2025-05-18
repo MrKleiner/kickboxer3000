@@ -29,17 +29,50 @@ const fsaver = require('./apis/filesaverjs/2_0_4/FileSaver.js');
 // Electron File System Access
 const fs = require('fs');
 
-// Basically, sockets
+// same as python: import socket
 const dgram = require('dgram');
 
-// os module, just like in python
+// same as python: import os
 const os_em = require('os');
+
+// http electron module
+const http_em = require('http');
+
+// Electron's crypto module
+const crypto_em = require('crypto');
+
+// Fuck you
+const { ipcRenderer } = require('electron');
 
 // Python-like pathlib
 // https://mauricepasternak.github.io/pathlib-js/
 const pathlib = require('pathlib-js').default;
+/*
+	const Path = function(){
+		return (new pathlib(...arguments))
+	}
+*/
 const Path = function(){
-	return (new pathlib(...arguments))
+	const cls = new pathlib(...arguments);
+
+	cls.is_relative_to = function(target){
+	    const stack = Path(cls).parts();
+	    print('Stack:', stack)
+	    const parent = str(target);
+
+	    while (stack.length){
+	        const current = str(Path(stack.join('/')));
+	        print('Current:', current, 'Parent:', parent)
+	        if (current == parent){
+	            return true;
+	        }
+	        stack.pop();
+	    }
+
+	    return false;
+	}
+
+	return cls;
 }
 
 // lizard's toolbox
@@ -48,46 +81,84 @@ require('./apis/toybox/toolbox.js');
 // Crypto JS
 require('./apis/crypto_js/4_1_1/crypto-js.min.js');
 
+// Get app root path.
+// This has to be done BEFORE loading modules,
+// because some modules make use of this.
+const app_root = (function(){
+	const stack = Path(__dirname).parts();
+
+	while (stack.length){
+		const tgt = Path(stack.join('/')).join('roothook.lizard');
+		if (tgt.isFileSync()){
+			return tgt.parent()
+		}
+
+		stack.pop();
+	}
+
+	alert(
+		`FATAL: Couldn't launch Kickboxer 3000: Unable to locate the app's root dir.`
+	)
+
+	console.error(
+		`Failed to locate app's root:`,
+		__dirname,
+		Path(__dirname),
+	);
+	throw new Error(`Failed to locate app's root`);
+})()
 
 
 // ===================================
 //           Define modules
 // ===================================
 
-// const kbmodules = {};
+// todo: this is retarded
+const ksys_placeholder = function(placeholder){
+	return new Proxy({}, new class{
+		get(target, prop, receiver){
+			return placeholder()[prop];
+		}
+	})
+}
 
 // ksys = most of the core functions
 const ksys = {
 	util: {
 		cls_pwnage: require('./sys/class_pwnage.js'),
+		str_ops:    require('./sys/string_ops.js'),
 		// translit: require('./sys/transliteration.js'),
-		str_ops: require('./sys/string_ops.js'),
 	},
-	ticker:   require('./sys/ticker.js'),
-	fbi:      require('./sys/fbi_logger.js'),
-	context:  require('./sys/context_manager.js'),
-	db:       require('./sys/db_manager.js'),
-	btns:     require('./sys/buttons.js'),
-	tplates:  require('./sys/template_util.js'),
-	strf:     require('./sys/str_format_gui.js'),
-	pgview:   require('./sys/pgview.js'),
-	tabsys:   require('./sys/tabsys.js'),
-	hintsys:  require('./sys/hintsys.js'),
-	info_msg: require('./sys/info_msg_sys.js'),
-	switches: require('./sys/switches.js'),
+	ticker:         require('./sys/ticker.js'),
+	fbi:            require('./sys/fbi_logger.js'),
+	context:        require('./sys/context_manager.js'),
+	db:             require('./sys/db_manager.js'),
+	btns:           require('./sys/buttons.js'),
+	tplates:        require('./sys/template_util.js'),
+	strf:           require('./sys/str_format_gui.js'),
+	pgview:         require('./sys/pgview.js'),
+	tabsys:         require('./sys/tabsys.js'),
+	hintsys:        require('./sys/hintsys.js'),
+	info_msg:       require('./sys/info_msg_sys.js'),
+	switches:       require('./sys/switches.js'),
+	packer_md:      require('./sys/packer.js'),
+	gtzip_wrangler: require('./sys/gtzip_wrangler.js'),
+
 	// Global events listeners
 	binds:   {},
 };
 
+// todo: this is getting out of hand
+// ksys.gtzip_wrangler = require('./sys/gtzip_wrangler.js');
 
 
-// Vmix bound operations, like talker
+// VMIX-bound operations, like talker
+const _vmix_title_util = require('./sys/titlectrl.js');
+
 const vmix = {
 	talker: require('./sys/vmix_talker.js'),
-	title:  require('./sys/titlectrl.js'),
-	util: {
-		
-	}
+	title:  _vmix_title_util.VMIXTitle,
+	util:   _vmix_title_util,
 };
 
 
@@ -99,24 +170,9 @@ const vmix = {
 //           Basic core stuff
 // ===================================
 
-// Get app root path
-// todo: this can be improved
-function _get_app_root_path(){
-	let got_root = Path(__dirname);
-	while (true) {
-		const exs = got_root.join('roothook.lizard').isFileSync()
-		if (exs == true){
-			break
-		}
-		got_root = got_root.parent()
-	}
-	return got_root
-}
-const app_root = _get_app_root_path();
-
 // set version in the window header
 // document.title = 'KickBoxer3000 - v' + JSON.parse(fs.readFileSync(app_root.parent().join('package.json').toString(), {encoding:'utf8', flag:'r'}))['version_native']
-document.title = 'KickBoxer3000 - v' + JSON.parse(app_root.parent().join('package.json').readFileSync('utf-8'))['version_native']
+document.title = 'KickBoxer3000 - v' + JSON.parse(app_root.parent().join('package.json').readFileSync())['version_native']
 
 
 
@@ -189,13 +245,12 @@ ksys.util.clamp = function(num, min, max) {
 // -------------------------
 //          eval xml
 // -------------------------
-ksys.util.eval_xml = function(xml){
+ksys.util.eval_xml = function(xml_str){
 	try{
 		const parser = new DOMParser();
-		const doc = parser.parseFromString(xml, 'application/xml');
-		return doc
+		return parser.parseFromString(xml_str, 'application/xml');
 	}catch (e){
-		console.error('Tried evaluating invalid xml:', e)
+		console.error('Tried evaluating invalid xml:', e, xml_str);
 		return null
 	}
 }
@@ -221,8 +276,7 @@ ksys.util.sleep = function(amt=500, ref='a') {
 
 // returns a promise which resolves into a path
 // multiple - whether to return an array of files or first file only
-ksys.util.ask_file = function(multiple=false)
-{
+ksys.util.ask_file = function(multiple=false){
 	return new Promise(function(resolve, reject){
 		let input = document.createElement('input');
 		input.type = 'file';
@@ -237,8 +291,7 @@ ksys.util.ask_file = function(multiple=false)
 
 
 // todo: this is broken
-ksys.util.ask_folder = function(multiple=false)
-{
+ksys.util.ask_folder = function(multiple=false){
 	return new Promise(function(resolve, reject){
 		let input = document.createElement('input');
 		input.type = 'file';
@@ -400,9 +453,11 @@ ksys.util.get_key = function(){
 
 // Get local ipv4 address
 // This is so retarded...
-ksys.util.get_local_ipv4_addr = function(octets=true){
+ksys.util.list_ip_interfaces = function(octets=false, include_mask=false){
 	// important todo: Fix this.
-	return ksys.context.global.cache.atat_return_addr;
+	// return ksys.context.global.cache.atat_return_addr;
+
+	const compound_list = [];
 
 	const interfaces = os_em.networkInterfaces();
 	for (const interfaceName in interfaces) {
@@ -410,16 +465,49 @@ ksys.util.get_local_ipv4_addr = function(octets=true){
 		for (const address of addresses) {
 			if (address.family === 'IPv4' && !address.internal) {
 				if (octets){
-					return address.address.split('.').map(function(e){return int(e)});
+					if (include_mask){
+						compound_list.push([
+							address.address.split('.').map(function(e){return int(e)}),
+							address.netmask.split('.').map(function(e){return int(e)}),
+						]);
+					}else{
+						compound_list.push(
+							address.address.split('.').map(function(e){return int(e)})
+						);
+					}
+
 				}else{
-					return address.address
+					if (include_mask){
+						compound_list.push([
+							compound_list.push(address.address),
+							compound_list.push(address.netmask),
+						]);
+					}else{
+						compound_list.push(address.address);
+					}
+					
 				}
 			}
 		}
 	}
-	return false
+	return compound_list
 }
 
+
+// Get local ipv4 address
+// This is so retarded...
+ksys.util.get_local_ipv4_addr = function(octets=false){
+	for (const interface of ksys.util.list_ip_interfaces(true, true)){
+		const [ip, mask] = interface;
+		const masked_addr = ip.map((part, i) => part & mask[i]).join('.');
+		print('masked shite:', masked_addr)
+		if (masked_addr == ksys.context.global.cache.vmix_ip){
+			return masked_addr
+		}
+	}
+
+	return null
+}
 
 ksys.util.resolve_object_path = function(tgt_obj, tgt_path){
 	let last = tgt_obj;
@@ -430,6 +518,190 @@ ksys.util.resolve_object_path = function(tgt_obj, tgt_path){
 	return last
 }
 
+ksys.util.lock_gui = function(state){
+	if (state == true){
+		document.body.classList.add('__cockblocked');
+	}
+	if (state == false){
+		document.body.classList.remove('__cockblocked');
+	}
+}
+
+ksys.util.reload = function(){
+	ipcRenderer.invoke('ipc_hard_reload', { key: 'value' });
+}
+
+ksys.util.nprint = function(cls, color, extras=''){
+	cls.nprint = function(){
+		if (cls.constructor.MUTE_NPRINT){return};
+		console.log(
+			`%c[${cls.constructor.name}]`,
+			`color: ${color};` + extras,
+			...arguments
+		)
+	}
+	cls.nwarn = function(){
+		if (cls.constructor.MUTE_NPRINT){return};
+		console.warn(
+			`%c[${cls.constructor.name}]`,
+			`color: ${color};` + extras,
+			...arguments
+		)
+	}
+	cls.nerr = function(){
+		if (cls.constructor.MUTE_NPRINT){return};
+		console.error(
+			`%c[${cls.constructor.name}]`,
+			`color: ${color};` + extras,
+			...arguments
+		)
+	}
+
+	return cls;
+}
+
+// Bootleg UUID
+// todo: replace with "npm install uuid"
+ksys.util.rnd_uuid = function(joinchar='-'){
+	const bytes = crypto_em.randomBytes(16);
+
+	bytes[6] = (bytes[6] & 0x0f) | 0x40;
+	bytes[8] = (bytes[8] & 0x3f) | 0x80;
+
+	return [
+		bytes.toString('hex', 0, 4),
+		bytes.toString('hex', 4, 6),
+		bytes.toString('hex', 6, 8),
+		bytes.toString('hex', 8, 10),
+		bytes.toString('hex', 10, 16)
+	].join(joinchar || '-');
+}
+
+ksys.util.bind_val_to_dom = function(_params){
+	const params = Object.assign(
+		{
+			'dom':         _params.dom[0],
+			'dom_key':     _params.dom[1] || 'value',
+			'val_path':    _params.val[0],
+			'val_key':     _params.val[1],
+			'bind_method': _params.bind_method || 'onchange',
+			'autofill':    [true, false].includes(_params.autofill) ? _params.autofill : true,
+			'fwd':         _params.fwd || [],
+		},
+		{
+			// 'dom_key': 'value',
+			// 'bind_method': 'onchange',
+			// 'autofill': true,
+		}
+	)
+
+	if (params.autofill){
+		params.dom.value = params.val_path[params.val_key] || '';
+	}
+
+	params.dom[params.bind_method] = function(){
+		params.val_path[params.val_key] = params.dom[params.dom_key];
+	}
+
+	for (const fwd_data of params.fwd){
+
+	}
+}
+
+ksys.util.exit_textareas = function(){
+	for (const tag of document.querySelectorAll('textarea')){
+		tag.blur();
+	}
+}
+
+// Determine the IP assigned to the network adapter from which
+// the controller managed to access VMIX
+ksys.util.resolve_own_ip = function(){
+	const log_prefix = '[ksys.util.resolve_own_ip]';
+
+	return new Promise(function(resolve, reject){
+		const ctx_cache = ksys.context.global.cache;
+
+		const request = http_em.request(
+			{
+				'hostname': ctx_cache.vmix_ip,
+				'port':     ctx_cache.vmix_port,
+				'path':     '/API/?Function=',
+				'method':   'GET',
+				'timeout':  5000,
+			},
+			function(response){
+				print(log_prefix, 'response:', response);
+			}
+		)
+
+		request.on('socket', socket => {
+
+			socket.on('connect', () => {
+				resolve(
+					socket.address().address
+				)
+			})
+
+			socket.on('error', err => {
+				console.warn(log_prefix, 'Socker Error:', err);
+				resolve(false);
+			})
+
+			socket.setTimeout(5000);
+			socket.on('timeout', () => {
+				resolve(false);
+				console.warn(log_prefix, 'Timed Out on waiting for reply');
+				request.abort();
+			})
+
+		})
+
+		request.end()
+	});
+}
+
+ksys.util.validate_ip_format = function(tgt){
+	let int_array = null;
+
+	if (Array.isArray(tgt)){
+		int_array = tgt;
+	}
+
+	if (typeof tgt == 'string'){
+		int_array = tgt.split('.');
+	}
+
+	if (!int_array || (int_array.length != 4)){
+		return false
+	}
+
+	return !int_array.map(function(i){
+		const integer = parseInt(i);
+		return Number.isInteger(integer) && integer >= 0;
+	}).includes(false);
+}
+
+ksys.util.vis_feed_anim = async function(tag){
+	tag.classList.remove('ksys_onchange_vis_feedback_cls');
+	void tag.offsetWidth;
+	tag.classList.add('ksys_onchange_vis_feedback_cls');
+	await ksys.util.sleep(400);
+	tag.classList.remove('ksys_onchange_vis_feedback_cls');
+}
+
+ksys.util.promise = function(){
+	const promise_data = [null, null, null];
+
+	const promise_itself = new Promise(function(resolve, reject){
+		promise_data[1] = resolve;
+		promise_data[2] = reject;
+	});
+
+	promise_data[0] = promise_itself;
+
+	return promise_data;
+}
 
 // swap nodes
 Element.prototype.swapWith = function(tgt_node) {
@@ -470,7 +742,14 @@ Element.prototype.PagePosFromEvent = function(evt, lock_x=false, lock_y=false) {
 	}
 }
 
-// FUCK JAVASCRIPT
+Element.prototype.triggerChange = function(evt='change'){
+	this.dispatchEvent(new Event(evt));
+}
+
+Element.prototype.visFeedAnim = function(){
+	ksys.util.vis_feed_anim(this);
+}
+
 // Pro tip: this is already in the toolbox
 /*
 Set.prototype.at = function(index) {
@@ -509,7 +788,7 @@ Set.prototype.at = function(index) {
 // AT-AT ticker is the first candidate to want this to be async.
 const sys_load = function(nm, save_state=true)
 {
-	print('Trying to load', nm, save_state)
+	print('Trying to load', nm, save_state);
 	// load html layout of the module
 	const page = fs.readFileSync(
 		app_root.join('modules_c', nm, `${nm}.html`).toString(), {encoding:'utf8', flag:'r'}
@@ -524,6 +803,9 @@ const sys_load = function(nm, save_state=true)
 	if (save_state){
 		ksys.context.global.prm('last_module', nm)
 	}
+
+	// Add templates
+	ksys.context.tplates = ksys.tplates.module_templates[nm];
 
 	// refresh context cache
 	ksys.context.module.pull()
@@ -543,8 +825,14 @@ const sys_load = function(nm, save_state=true)
 	// Restart KB AT-AT
 	ksys.ticker.kb_at.sys_restart()
 
+	// Resync Packer
+	ksys.packer_md.resync()
+
 	// resync switches
-	ksys.switches.resync()
+	// ksys.switches.resync()
+
+	// Init resource proxy
+	vmix.util.HTTPResourceProxy.module_init();
 
 	// wipe binds
 	ksys.binds = {};
@@ -560,7 +848,7 @@ const sys_load = function(nm, save_state=true)
 		if (module_loader){
 			module_loader()
 		}else{
-			console.warn('Module', nm, `doesn't has a load function`)
+			console.warn('Module', nm, `has no load function`)
 		}
 	}catch (error){
 		console.error('Error occured while loading a module:', error)
@@ -606,10 +894,10 @@ async function app_init()
 	}
 
 	// pre-index button icons
-	await ksys.btns.icon_pre_load()
+	await ksys.btns.icon_pre_load();
 
 	// Create db folder if it doesnt exist
-	ksys.util.ensure_folder_exists(app_root.join('db'))
+	ksys.util.ensure_folder_exists(app_root.join('db'));
 
 	// starting page is ip:port selector
 	// this page gets overwritten with the homepage if ip:port is valid
@@ -623,8 +911,11 @@ async function app_init()
 
 	// modkey hints
 	// todo: this is obsolete
-	ksys.hintsys.reg_modkey_hint('Control', 'CTRL + R - Reload controller', false)
-	ksys.hintsys.reg_modkey_hint('Alt', 'ALT + W - Back to homepage', false)
+	ksys.hintsys.reg_modkey_hint('Control', 'CTRL + R - Reload controller', false);
+	ksys.hintsys.reg_modkey_hint('Alt', 'ALT + W - Back to homepage', false);
+
+	// Index module templates
+	ksys.tplates.index_module_templates();
 
 
 	// if vmix is not reachable - do not save the IP/port and simply prompt input again
@@ -635,7 +926,7 @@ async function app_init()
 		)
 		$('startpage').append(`
 			<div id="welcome_enter_info">
-				<input style="color: white" type="text" placeholder="IP (absolute)" ip>:<input style="color: white" type="number" placeholder="Port" port>
+				<input style="color: white" type="text" placeholder="IP (absolute)" ip>:<input style="color: white" type="number" value="8088" placeholder="Port" port>
 			</div>
 			<sysbtn style="margin-top: 10px" onclick="kbmodules.starting_page.save_creds()" id="welcome_apply_creds">Apply</sysbtn>
 		`)
@@ -643,6 +934,10 @@ async function app_init()
 	}else{
 		// add ip:port to the window title
 		document.title = `${document.title}  |  ${ctx_cache.vmix_ip}:${ctx_cache.vmix_port}`;
+
+		// init resource proxy
+		await vmix.util.HTTPResourceProxy.sys_init();
+
 		// if vmix is reachable - display a list of available systems
 		// OR load previously active module
 		if (ctx_cache.last_module){
@@ -687,5 +982,28 @@ document.addEventListener('keydown', evt => {
 
 
 
+// ============================================================
+// ------------------------------------------------------------
+//                  Onchange Visual Feedback
+// ------------------------------------------------------------
+// ============================================================
 
+document.addEventListener('keydown', evt => {
+	if (evt.which == 27 && ['INPUT', 'TEXTAREA'].includes(evt.target.tagName)){
+		evt.target.blur();
+	}
+});
 
+document.addEventListener('change', async function(evt){
+	const tag = evt.target;
+	if (['INPUT', 'TEXTAREA'].includes(tag.tagName) && ('onchange_vis_feed' in tag.attributes)){
+		tag.visFeedAnim();
+	}
+})
+
+document.addEventListener('focusin', function(evt){
+	const tag = evt.target;
+	if (['INPUT', 'TEXTAREA'].includes(tag.tagName) && !('spellcheck' in tag.attributes)){
+		tag.setAttribute('spellcheck', 'false');
+	}
+})

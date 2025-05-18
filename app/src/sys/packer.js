@@ -24,7 +24,7 @@ const _pack_dir_to_buffer = function(src_dir){
 	return Buffer.concat(output);
 }
 
-const pack_dir_to_buffer = function (src_dir) {
+const pack_dir_to_buffer = function(src_dir) {
 	return new Promise((resolve, reject) => {
 		const output = [];
 		const archive = archiver('zip', { zlib: { level: 9 } });
@@ -34,7 +34,8 @@ const pack_dir_to_buffer = function (src_dir) {
 		});
 
 		archive.on('end', () => {
-			resolve(Buffer.concat(output)); // Resolve promise when all data has been written
+			// Resolve promise when all data has been written
+			resolve(Buffer.concat(output));
 		});
 
 		archive.on('error', (err) => {
@@ -45,7 +46,7 @@ const pack_dir_to_buffer = function (src_dir) {
 		archive.directory(str(src_dir), false);
 		archive.finalize();
 	});
-};
+}
 
 
 const _unpack_blob_to_dir = function(blob, destinationDir){
@@ -102,51 +103,6 @@ const unpack_buf_to_dir = function(buffer, offset, targetDir){
 
 
 const PackerMd = class{
-	static GUI_HTML = `
-		<div>
-		<md-packer synced subtle_box>
-			<div class="md_packer_cfg input_cfg">
-				<input type="file" class="input_file_picker">
-
-				<div class="param">
-					<div class="param_label">Input Directory</div>
-					<div class="param_val">
-						<input type="text" class="input_dir">
-					</div>
-				</div>
-
-				<div class="param">
-					<div class="param_label">Input Filename</div>
-					<div class="param_val">
-						<input type="text" class="input_filename" placeholder="File extension is added automatically">
-					</div>
-				</div>
-
-				<sysbtn class="action_btn import">Import</sysbtn>
-
-			</div>
-
-			<div class="md_packer_cfg output_cfg">
-				<div class="param">
-					<div class="param_label">Output Directory</div>
-					<div class="param_val">
-						<input type="text" class="output_dir">
-					</div>
-				</div>
-				<div class="param">
-					<div class="param_label">Output Filename</div>
-					<div class="param_val">
-						<input type="text" class="output_filename" placeholder="File extension is added automatically">
-					</div>
-				</div>
-
-				<sysbtn class="action_btn export">Export</sysbtn>
-			</div>
-
-		</md-packer>
-		</div>
-	`;
-
 	constructor(){
 		const self = this;
 		ksys.util.cls_pwnage.remap(self);
@@ -180,20 +136,18 @@ const PackerMd = class{
 	$dom(self){
 		if (self._dom){return self._dom};
 
-		const dom = ksys.tplates.index_elem(
-			PackerMd.GUI_HTML,
-			{
-				'input_picker':     '.input_file_picker',
-				'input_dir':        '.input_dir',
-				'input_filename':   '.input_filename',
+		const dom = ksys.tplates.sys_tplates.packer.main({
+			'input_picker':     '.input_file_picker',
+			'input_dir':        '.input_dir',
+			'input_filename':   '.input_filename',
 
-				'output_dir':       '.output_dir',
-				'output_filename':  '.output_filename',
+			'output_dir':       '.output_dir',
+			'output_filename':  '.output_filename',
 
-				'exec_import':      '.action_btn.import',
-				'exec_export':      '.action_btn.export',
-			}
-		)
+			'exec_import':      '.action_btn.import',
+			'exec_export':      '.action_btn.export',
+		})
+
 		self._dom = dom;
 
 		dom.index.exec_import.onclick = async function(){
@@ -269,7 +223,7 @@ const PackerMd = class{
 			str(app_root.join('db', 'module', ksys.context.module_name))
 		)
 
-		ipcRenderer.invoke('ipc_hard_reload', { key: 'value' });
+		ksys.util.reload();
 
 		return true
 	}

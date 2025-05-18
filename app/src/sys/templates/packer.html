@@ -1,0 +1,46 @@
+
+
+<template id="main">
+	<md-packer synced subtle_box kbhint="Control panel for exporting/importing current module's database to/from a file">
+		<div class="md_packer_cfg input_cfg">
+			<input type="file" class="input_file_picker">
+
+			<div class="param">
+				<div class="param_label">Input Directory</div>
+				<div class="param_val">
+					<input type="text" class="input_dir">
+				</div>
+			</div>
+
+			<div class="param">
+				<div class="param_label">Input Filename</div>
+				<div class="param_val">
+					<input type="text" class="input_filename" placeholder="File extension is added automatically">
+				</div>
+			</div>
+
+			<sysbtn class="action_btn import">Import</sysbtn>
+
+		</div>
+
+		<div class="md_packer_cfg output_cfg">
+			<div class="param">
+				<div class="param_label">Output Directory</div>
+				<div class="param_val">
+					<input type="text" class="output_dir">
+				</div>
+			</div>
+			<div class="param">
+				<div class="param_label">Output Filename</div>
+				<div class="param_val">
+					<input type="text" class="output_filename" placeholder="File extension is added automatically">
+				</div>
+			</div>
+
+			<sysbtn class="action_btn export">Export</sysbtn>
+		</div>
+
+	</md-packer>
+</template>
+
+
