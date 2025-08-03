@@ -3,6 +3,7 @@
 $this.counter = {};
 
 $this.load = function(){
+	$this.main_clock_id = 'kbs.main';
 	$this.player_data_schema = new Set();
 	$this.pair_list = new Map();
 
@@ -36,6 +37,12 @@ $this.load = function(){
 		ksys.context.module.prm('timer_has_vs', timer_has_vs.checked);
 	}
 
+	const vs_as_movs = document.querySelector('#param_list input[vs_as_movs]');
+	vs_as_movs.checked = ksys.context.module.cache.vs_as_movs || false;
+	vs_as_movs.onchange = function(){
+		ksys.context.module.prm('vs_as_movs', vs_as_movs.checked);
+	}
+
 	$this.titles = {
 		'personal': new vmix.title({
 			'title_name': 'personal.gtzip',
@@ -59,6 +66,12 @@ $this.load = function(){
 	// document.querySelector('#img_proxy_whitelist').value = ksys.db.module.read('proxy_whitelist.kbdata') || '';
 
 	// $this.toggle_image_proxies();
+
+	ksys.ticker.bundestag.attach({
+		'clock_id': $this.main_clock_id,
+		'tick': $this.clock_tick_event,
+		'end': $this.clock_end_event,
+	})
 }
 
 $this.KBPlayer = class{
@@ -98,6 +111,7 @@ $this.KBPlayer = class{
 				self.dom.index.vis_display.textContent = `${self.name} ${self.surname}`;
 				$this.save_pairs();
 			}
+			dom.root.setAttribute('preview_hidden', true);
 			self.dom.index.player_data.append(dom.elem);
 
 			self.attr_list['name'] = dom.index.input;
@@ -117,6 +131,7 @@ $this.KBPlayer = class{
 				self.dom.index.vis_display.textContent = `${self.name} ${self.surname}`;
 				$this.save_pairs();
 			}
+			dom.root.setAttribute('preview_hidden', true);
 			self.dom.index.player_data.append(dom.elem);
 			self.attr_list['surname'] = dom.index.input;
 		}
@@ -362,6 +377,7 @@ $this.msg_warn_need_alt = function(){
 
 $this.toggle_edit_mode = function(){
 	const dom = document.querySelector('kbstandard');
+	dom.removeAttribute('data_preview_mode');
 	if (dom.hasAttribute('edit_mode')){
 		dom.removeAttribute('edit_mode');
 		$this.edit_mode_active = false;
@@ -370,6 +386,20 @@ $this.toggle_edit_mode = function(){
 		$this.edit_mode_active = true;
 	}
 }
+
+$this.toggle_preview_mode = function(){
+	const dom = document.querySelector('kbstandard');
+	dom.removeAttribute('edit_mode');
+	$this.edit_mode_active = false;
+
+	if (dom.hasAttribute('data_preview_mode')){
+		dom.removeAttribute('data_preview_mode');
+	}else{
+		dom.setAttribute('data_preview_mode', true);
+	}
+}
+
+
 
 
 $this.flip_sides = function(){
@@ -620,12 +650,12 @@ $this.update_vs_title = async function(tgt_pair){
 		if (is_shared){
 			await $this.titles.vs.set_text(
 				`shared_attr_val`,
-				`${label} ${tgt_pair.players['red'].attr_list[data_id].value.trim()} ${suffix}`,
+				`${label} ${tgt_pair.players['red'].attr_list[data_id].value.trim()} ${suffix}`.trim(),
 			)
-			label_idx -= 1;
-			// continue
+			// label_idx -= 1;
+			continue
 		}
-
+		print('LABEL INDEX:', label_idx, schema_data)
 		await $this.titles.vs.set_text(
 			`ifb_title_lb_${label_idx}`,
 			label,
@@ -669,10 +699,21 @@ $this.update_vs_title = async function(tgt_pair){
 			}
 
 			// Set other data
-			await $this.titles.vs.set_text(
-				`ifb_text_${side_vmix}_${label_idx}`,
-				frmt.format(tgt_pair.players[side_kb].attr_list[data_id].value.trim()) + ' ' + suffix
-			)
+			let field_val = frmt.format(tgt_pair.players[side_kb].attr_list[data_id].value.trim());
+			if (data_id == 'record'){
+				field_val = field_val.replaceAll(':', '-');
+			}
+			if (field_val.trim()){
+				await $this.titles.vs.set_text(
+					`ifb_text_${side_vmix}_${label_idx}`,
+					(field_val + ' ' + suffix).trim()
+				)
+			}else{
+				await $this.titles.vs.set_text(
+					`ifb_text_${side_vmix}_${label_idx}`,
+					''
+				)
+			}
 		}
 	}
 
@@ -758,10 +799,23 @@ $this.update_personal_title = async function(tgt_player){
 				.replaceAll('/', '\\')
 			)
 		}else{
-			await title.set_text(
-				`attr_${label_idx}_val`,
-				tgt_player.attr_list[data_id].value.trim() + suffix,
-			)
+			let field_val = tgt_player.attr_list[data_id].value.trim();
+			if (data_id == 'record'){
+				field_val = str(field_val).upper().replaceAll(':', '-');
+			}
+
+			if (field_val){
+				await title.set_text(
+					`attr_${label_idx}_val`,
+					(str(field_val).upper() + ' ' + suffix).trim(),
+				)
+			}else{
+				await title.set_text(
+					`attr_${label_idx}_val`,
+					'',
+				)
+			}
+
 		}
 
 	}
@@ -771,10 +825,24 @@ $this.update_personal_title = async function(tgt_player){
 
 
 $this.vs_onn = async function(){
+	if (ksys.context.module.cache.vs_as_movs){
+		await vmix.talker.talk({
+			'Function': 'OverlayInput1In',
+			'Input': `kbvs_${ksys.context.module.cache.active_pair}.mov`,
+		})
+		return
+	}
 	$this.titles.vs.overlay_in(1);
 }
 
 $this.vs_off = async function(){
+	if (ksys.context.module.cache.vs_as_movs){
+		await vmix.talker.talk({
+			'Function': 'OverlayInput1Out',
+			'Input': `kbvs_${ksys.context.module.cache.active_pair}.mov`,
+		})
+		return
+	}
 	$this.titles.vs.overlay_out(1);
 }
 
@@ -796,22 +864,163 @@ $this.player_off = async function(){
 
 
 
+// ==============================
+//            Timer
+// ==============================
 
+$this.clock_pause = async function(){
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.main_clock_id,
+		'action': 'pause',
+		'data': {}
+	})
+}
 
+$this.clock_resume = async function(){
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.main_clock_id,
+		'action': 'resume',
+		'data': {}
+	})
+}
 
-$this.set_round = async function(r, resetround=false){
+$this.clock_stop = async function(){
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.main_clock_id,
+		'action': 'stop',
+		'data': {}
+	})
+}
+
+$this.clock_reset = async function(){
+	await $this.clock_stop();
+
+	const dur = ksys.context.module.cache.round_duration;
+	await $this.titles.timer.set_text(
+		'clock',
+		`${str(dur.minutes).zfill(2)}:${str(dur.seconds).zfill(2)}`
+	);
+
+	$('#timer_feedback').text(
+		`${str(dur.minutes).zfill(2)}:${str(dur.seconds).zfill(2)}`
+	);
+}
+
+$this.clock_hide = async function(pause=false){
+	if (pause){
+		await $this.clock_pause();
+	}
+	await $this.titles.timer.overlay_out(1);
+}
+
+$this.clock_show = async function(resume=true){
+	await $this.titles.timer.set_text(
+		'info_text',
+		`${ksys.context.module.cache.active_round || 1} OF ${ksys.context.module.cache.round_amount}`
+	)
+
+	const clock_state = await ksys.ticker.bundestag.read_clock($this.main_clock_id);
+	if (!clock_state || clock_state?.stopped){
+		$this.clock_fire();
+	}
+	if (clock_state || clock_state.paused){
+		await $this.clock_resume();
+	}
+
+	await $this.titles.timer.overlay_in(1);
+}
+
+$this.clock_tick_event = async function(data){
+	const time = data.time;
+
+	$('#timer_feedback').text(
+		`${str(time.clock.minutes).padStart(2, '0')}:${str(time.clock.seconds).padStart(2, '0')}`
+	);
+
+	if (time.tick <= 9){
+		await $this.clock_hide();
+		await ksys.util.sleep(1500);
+		// await $this.clock_stop();
+		$this.clock_reset();
+	}
+}
+
+$this.clock_end_event = async function(){
+	$this.clock_reset();
+}
+
+$this.set_clock_duration = function(){
+	ksys.context.module.prm(
+		'round_duration',
+		{
+			'minutes': int(document.querySelector('#round_duration_cfg_field [minutes]').value) || 1,
+			'seconds': int(document.querySelector('#round_duration_cfg_field [seconds]').value) || 0,
+		}
+	)
+}
+
+$this.set_round_amount = function(){
+	ksys.context.module.prm(
+		'round_amount',
+		int(document.querySelector('#round_amount_fields input[round_amount]').value) || 8
+	)
+	$this.redraw_round_switches();
+}
+
+$this.set_round = async function(r, reset=false){
 	// store current round number
 	ksys.context.module.prm('current_round', r);
 
 	await $this.titles.timer.set_text('round', `ROUND ${str(r).trim()}`);
 
-	// reset round if asked
-	if (resetround == true){
-		$this.respawn_timer(false, false);
+	if (reset == true){
+		await $this.clock_reset();
 	}
 }
 
+$this.clock_fire = async function(offset=null){
+	const dur = ksys.context.module.cache.round_duration;
 
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.main_clock_id,
+		'action': 'fire',
+		'data': {
+			'clock': {
+				'duration': (dur.minutes * 60) + dur.seconds,
+				'offset': offset,
+				'reversed': true,
+				'vmix_fields': [{
+					'count_as': 'clock',
+					'tplate': '%m%:%s%',
+					'gtzip_name': 'timer.gtzip',
+					'text_field_name': 'clock',
+					'pad': 2,
+				}],
+			}
+		}
+	})
+}
+
+$this.clock_fire_offset = async function(){
+	const dur = ksys.context.module.cache.round_duration;
+	const dur_s = (dur.minutes * 60) + dur.seconds;
+	const offs_s = (
+		(int(document.querySelector('#set_time_minutes').value || 0) * 60) +
+		 int(document.querySelector('#set_time_seconds').value || 0)
+	)
+
+	await $this.clock_fire(
+		dur_s - offs_s
+	)
+}
+
+
+
+
+
+
+
+/*
 $this.timer_callback = async function(ticks){
 	const minutes = Math.floor(ticks.global / 60);
 	const seconds = ticks.global - (60*minutes);
@@ -895,20 +1104,6 @@ $this.respawn_timer = async function(show=false, st=false){
 	}
 }
 
-$this.timer_hide = async function(dopause=false){
-	$this.timer_pause(dopause);
-	await $this.titles.timer.overlay_out(1);
-}
-
-$this.timer_show = async function(unpause=true){
-	$this.timer_pause(!unpause)
-	await $this.titles.timer.set_text(
-		'info_text',
-		`${ksys.context.module.cache.active_round || 1} OF ${ksys.context.module.cache.round_amount}`
-	)
-	await $this.titles.timer.overlay_in(1)
-}
-
 $this.timer_pause = function(state=true){
 	if ($this.counter){
 		$this.counter.pause = state;
@@ -947,27 +1142,11 @@ $this.timer_set_time = function(){
 		})
 	}
 }
+*/
 
 
 
-$this.set_round_duration = function(){
-	ksys.context.module.prm(
-		'round_duration',
-		{
-			'minutes': int(document.querySelector('#round_duration_cfg_field [minutes]').value) || 1,
-			'seconds': int(document.querySelector('#round_duration_cfg_field [seconds]').value) || 0,
-		}
-	)
-}
 
-
-$this.set_round_amount = function(){
-	ksys.context.module.prm(
-		'round_amount',
-		int(document.querySelector('#round_amount_fields input[round_amount]').value) || 8
-	)
-	$this.redraw_round_switches();
-}
 
 
 
@@ -1005,6 +1184,10 @@ $this.redraw_round_switches = function(){
 
 
 
+
+
+
+
 $this.bind_photo_ids = function(){
 	ksys.context.module.prm('pair_ids_frozen', true);
 }
@@ -1021,7 +1204,7 @@ $this.unbind_photo_ids = function(){
 
 
 
-
+/*
 $this.update_img_proxy_addr = function(){
 	const addr = document.querySelector('#image_proxies_addr').value;
 
@@ -1063,7 +1246,7 @@ $this.toggle_image_proxies = function(){
 		vmix.util.disable_image_proxy();
 	}
 }
-
+*/
 
 
 

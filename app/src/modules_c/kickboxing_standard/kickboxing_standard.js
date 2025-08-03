@@ -6,6 +6,7 @@ if(!window.kbmodules.kickboxing_standard){window.kbmodules.kickboxing_standard={
 window.kbmodules.kickboxing_standard.counter = {};
 
 window.kbmodules.kickboxing_standard.load = function(){
+	window.kbmodules.kickboxing_standard.main_clock_id = 'kbs.main';
 	window.kbmodules.kickboxing_standard.player_data_schema = new Set();
 	window.kbmodules.kickboxing_standard.pair_list = new Map();
 
@@ -39,6 +40,12 @@ window.kbmodules.kickboxing_standard.load = function(){
 		ksys.context.module.prm('timer_has_vs', timer_has_vs.checked);
 	}
 
+	const vs_as_movs = document.querySelector('#param_list input[vs_as_movs]');
+	vs_as_movs.checked = ksys.context.module.cache.vs_as_movs || false;
+	vs_as_movs.onchange = function(){
+		ksys.context.module.prm('vs_as_movs', vs_as_movs.checked);
+	}
+
 	window.kbmodules.kickboxing_standard.titles = {
 		'personal': new vmix.title({
 			'title_name': 'personal.gtzip',
@@ -62,6 +69,12 @@ window.kbmodules.kickboxing_standard.load = function(){
 	// document.querySelector('#img_proxy_whitelist').value = ksys.db.module.read('proxy_whitelist.kbdata') || '';
 
 	// window.kbmodules.kickboxing_standard.toggle_image_proxies();
+
+	ksys.ticker.bundestag.attach({
+		'clock_id': window.kbmodules.kickboxing_standard.main_clock_id,
+		'tick': window.kbmodules.kickboxing_standard.clock_tick_event,
+		'end': window.kbmodules.kickboxing_standard.clock_end_event,
+	})
 }
 
 window.kbmodules.kickboxing_standard.KBPlayer = class{
@@ -101,6 +114,7 @@ window.kbmodules.kickboxing_standard.KBPlayer = class{
 				self.dom.index.vis_display.textContent = `${self.name} ${self.surname}`;
 				window.kbmodules.kickboxing_standard.save_pairs();
 			}
+			dom.root.setAttribute('preview_hidden', true);
 			self.dom.index.player_data.append(dom.elem);
 
 			self.attr_list['name'] = dom.index.input;
@@ -120,6 +134,7 @@ window.kbmodules.kickboxing_standard.KBPlayer = class{
 				self.dom.index.vis_display.textContent = `${self.name} ${self.surname}`;
 				window.kbmodules.kickboxing_standard.save_pairs();
 			}
+			dom.root.setAttribute('preview_hidden', true);
 			self.dom.index.player_data.append(dom.elem);
 			self.attr_list['surname'] = dom.index.input;
 		}
@@ -365,6 +380,7 @@ window.kbmodules.kickboxing_standard.msg_warn_need_alt = function(){
 
 window.kbmodules.kickboxing_standard.toggle_edit_mode = function(){
 	const dom = document.querySelector('kbstandard');
+	dom.removeAttribute('data_preview_mode');
 	if (dom.hasAttribute('edit_mode')){
 		dom.removeAttribute('edit_mode');
 		window.kbmodules.kickboxing_standard.edit_mode_active = false;
@@ -373,6 +389,20 @@ window.kbmodules.kickboxing_standard.toggle_edit_mode = function(){
 		window.kbmodules.kickboxing_standard.edit_mode_active = true;
 	}
 }
+
+window.kbmodules.kickboxing_standard.toggle_preview_mode = function(){
+	const dom = document.querySelector('kbstandard');
+	dom.removeAttribute('edit_mode');
+	window.kbmodules.kickboxing_standard.edit_mode_active = false;
+
+	if (dom.hasAttribute('data_preview_mode')){
+		dom.removeAttribute('data_preview_mode');
+	}else{
+		dom.setAttribute('data_preview_mode', true);
+	}
+}
+
+
 
 
 window.kbmodules.kickboxing_standard.flip_sides = function(){
@@ -623,12 +653,12 @@ window.kbmodules.kickboxing_standard.update_vs_title = async function(tgt_pair){
 		if (is_shared){
 			await window.kbmodules.kickboxing_standard.titles.vs.set_text(
 				`shared_attr_val`,
-				`${label} ${tgt_pair.players['red'].attr_list[data_id].value.trim()} ${suffix}`,
+				`${label} ${tgt_pair.players['red'].attr_list[data_id].value.trim()} ${suffix}`.trim(),
 			)
-			label_idx -= 1;
-			// continue
+			// label_idx -= 1;
+			continue
 		}
-
+		print('LABEL INDEX:', label_idx, schema_data)
 		await window.kbmodules.kickboxing_standard.titles.vs.set_text(
 			`ifb_title_lb_${label_idx}`,
 			label,
@@ -672,10 +702,21 @@ window.kbmodules.kickboxing_standard.update_vs_title = async function(tgt_pair){
 			}
 
 			// Set other data
-			await window.kbmodules.kickboxing_standard.titles.vs.set_text(
-				`ifb_text_${side_vmix}_${label_idx}`,
-				frmt.format(tgt_pair.players[side_kb].attr_list[data_id].value.trim()) + ' ' + suffix
-			)
+			let field_val = frmt.format(tgt_pair.players[side_kb].attr_list[data_id].value.trim());
+			if (data_id == 'record'){
+				field_val = field_val.replaceAll(':', '-');
+			}
+			if (field_val.trim()){
+				await window.kbmodules.kickboxing_standard.titles.vs.set_text(
+					`ifb_text_${side_vmix}_${label_idx}`,
+					(field_val + ' ' + suffix).trim()
+				)
+			}else{
+				await window.kbmodules.kickboxing_standard.titles.vs.set_text(
+					`ifb_text_${side_vmix}_${label_idx}`,
+					''
+				)
+			}
 		}
 	}
 
@@ -761,10 +802,23 @@ window.kbmodules.kickboxing_standard.update_personal_title = async function(tgt_
 				.replaceAll('/', '\\')
 			)
 		}else{
-			await title.set_text(
-				`attr_${label_idx}_val`,
-				tgt_player.attr_list[data_id].value.trim() + suffix,
-			)
+			let field_val = tgt_player.attr_list[data_id].value.trim();
+			if (data_id == 'record'){
+				field_val = str(field_val).upper().replaceAll(':', '-');
+			}
+
+			if (field_val){
+				await title.set_text(
+					`attr_${label_idx}_val`,
+					(str(field_val).upper() + ' ' + suffix).trim(),
+				)
+			}else{
+				await title.set_text(
+					`attr_${label_idx}_val`,
+					'',
+				)
+			}
+
 		}
 
 	}
@@ -774,10 +828,24 @@ window.kbmodules.kickboxing_standard.update_personal_title = async function(tgt_
 
 
 window.kbmodules.kickboxing_standard.vs_onn = async function(){
+	if (ksys.context.module.cache.vs_as_movs){
+		await vmix.talker.talk({
+			'Function': 'OverlayInput1In',
+			'Input': `kbvs_${ksys.context.module.cache.active_pair}.mov`,
+		})
+		return
+	}
 	window.kbmodules.kickboxing_standard.titles.vs.overlay_in(1);
 }
 
 window.kbmodules.kickboxing_standard.vs_off = async function(){
+	if (ksys.context.module.cache.vs_as_movs){
+		await vmix.talker.talk({
+			'Function': 'OverlayInput1Out',
+			'Input': `kbvs_${ksys.context.module.cache.active_pair}.mov`,
+		})
+		return
+	}
 	window.kbmodules.kickboxing_standard.titles.vs.overlay_out(1);
 }
 
@@ -799,22 +867,163 @@ window.kbmodules.kickboxing_standard.player_off = async function(){
 
 
 
+// ==============================
+//            Timer
+// ==============================
 
+window.kbmodules.kickboxing_standard.clock_pause = async function(){
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': window.kbmodules.kickboxing_standard.main_clock_id,
+		'action': 'pause',
+		'data': {}
+	})
+}
 
+window.kbmodules.kickboxing_standard.clock_resume = async function(){
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': window.kbmodules.kickboxing_standard.main_clock_id,
+		'action': 'resume',
+		'data': {}
+	})
+}
 
-window.kbmodules.kickboxing_standard.set_round = async function(r, resetround=false){
+window.kbmodules.kickboxing_standard.clock_stop = async function(){
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': window.kbmodules.kickboxing_standard.main_clock_id,
+		'action': 'stop',
+		'data': {}
+	})
+}
+
+window.kbmodules.kickboxing_standard.clock_reset = async function(){
+	await window.kbmodules.kickboxing_standard.clock_stop();
+
+	const dur = ksys.context.module.cache.round_duration;
+	await window.kbmodules.kickboxing_standard.titles.timer.set_text(
+		'clock',
+		`${str(dur.minutes).zfill(2)}:${str(dur.seconds).zfill(2)}`
+	);
+
+	$('#timer_feedback').text(
+		`${str(dur.minutes).zfill(2)}:${str(dur.seconds).zfill(2)}`
+	);
+}
+
+window.kbmodules.kickboxing_standard.clock_hide = async function(pause=false){
+	if (pause){
+		await window.kbmodules.kickboxing_standard.clock_pause();
+	}
+	await window.kbmodules.kickboxing_standard.titles.timer.overlay_out(1);
+}
+
+window.kbmodules.kickboxing_standard.clock_show = async function(resume=true){
+	await window.kbmodules.kickboxing_standard.titles.timer.set_text(
+		'info_text',
+		`${ksys.context.module.cache.active_round || 1} OF ${ksys.context.module.cache.round_amount}`
+	)
+
+	const clock_state = await ksys.ticker.bundestag.read_clock(window.kbmodules.kickboxing_standard.main_clock_id);
+	if (!clock_state || clock_state?.stopped){
+		window.kbmodules.kickboxing_standard.clock_fire();
+	}
+	if (clock_state || clock_state.paused){
+		await window.kbmodules.kickboxing_standard.clock_resume();
+	}
+
+	await window.kbmodules.kickboxing_standard.titles.timer.overlay_in(1);
+}
+
+window.kbmodules.kickboxing_standard.clock_tick_event = async function(data){
+	const time = data.time;
+
+	$('#timer_feedback').text(
+		`${str(time.clock.minutes).padStart(2, '0')}:${str(time.clock.seconds).padStart(2, '0')}`
+	);
+
+	if (time.tick <= 9){
+		await window.kbmodules.kickboxing_standard.clock_hide();
+		await ksys.util.sleep(1500);
+		// await window.kbmodules.kickboxing_standard.clock_stop();
+		window.kbmodules.kickboxing_standard.clock_reset();
+	}
+}
+
+window.kbmodules.kickboxing_standard.clock_end_event = async function(){
+	window.kbmodules.kickboxing_standard.clock_reset();
+}
+
+window.kbmodules.kickboxing_standard.set_clock_duration = function(){
+	ksys.context.module.prm(
+		'round_duration',
+		{
+			'minutes': int(document.querySelector('#round_duration_cfg_field [minutes]').value) || 1,
+			'seconds': int(document.querySelector('#round_duration_cfg_field [seconds]').value) || 0,
+		}
+	)
+}
+
+window.kbmodules.kickboxing_standard.set_round_amount = function(){
+	ksys.context.module.prm(
+		'round_amount',
+		int(document.querySelector('#round_amount_fields input[round_amount]').value) || 8
+	)
+	window.kbmodules.kickboxing_standard.redraw_round_switches();
+}
+
+window.kbmodules.kickboxing_standard.set_round = async function(r, reset=false){
 	// store current round number
 	ksys.context.module.prm('current_round', r);
 
 	await window.kbmodules.kickboxing_standard.titles.timer.set_text('round', `ROUND ${str(r).trim()}`);
 
-	// reset round if asked
-	if (resetround == true){
-		window.kbmodules.kickboxing_standard.respawn_timer(false, false);
+	if (reset == true){
+		await window.kbmodules.kickboxing_standard.clock_reset();
 	}
 }
 
+window.kbmodules.kickboxing_standard.clock_fire = async function(offset=null){
+	const dur = ksys.context.module.cache.round_duration;
 
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': window.kbmodules.kickboxing_standard.main_clock_id,
+		'action': 'fire',
+		'data': {
+			'clock': {
+				'duration': (dur.minutes * 60) + dur.seconds,
+				'offset': offset,
+				'reversed': true,
+				'vmix_fields': [{
+					'count_as': 'clock',
+					'tplate': '%m%:%s%',
+					'gtzip_name': 'timer.gtzip',
+					'text_field_name': 'clock',
+					'pad': 2,
+				}],
+			}
+		}
+	})
+}
+
+window.kbmodules.kickboxing_standard.clock_fire_offset = async function(){
+	const dur = ksys.context.module.cache.round_duration;
+	const dur_s = (dur.minutes * 60) + dur.seconds;
+	const offs_s = (
+		(int(document.querySelector('#set_time_minutes').value || 0) * 60) +
+		 int(document.querySelector('#set_time_seconds').value || 0)
+	)
+
+	await window.kbmodules.kickboxing_standard.clock_fire(
+		dur_s - offs_s
+	)
+}
+
+
+
+
+
+
+
+/*
 window.kbmodules.kickboxing_standard.timer_callback = async function(ticks){
 	const minutes = Math.floor(ticks.global / 60);
 	const seconds = ticks.global - (60*minutes);
@@ -898,20 +1107,6 @@ window.kbmodules.kickboxing_standard.respawn_timer = async function(show=false, 
 	}
 }
 
-window.kbmodules.kickboxing_standard.timer_hide = async function(dopause=false){
-	window.kbmodules.kickboxing_standard.timer_pause(dopause);
-	await window.kbmodules.kickboxing_standard.titles.timer.overlay_out(1);
-}
-
-window.kbmodules.kickboxing_standard.timer_show = async function(unpause=true){
-	window.kbmodules.kickboxing_standard.timer_pause(!unpause)
-	await window.kbmodules.kickboxing_standard.titles.timer.set_text(
-		'info_text',
-		`${ksys.context.module.cache.active_round || 1} OF ${ksys.context.module.cache.round_amount}`
-	)
-	await window.kbmodules.kickboxing_standard.titles.timer.overlay_in(1)
-}
-
 window.kbmodules.kickboxing_standard.timer_pause = function(state=true){
 	if (window.kbmodules.kickboxing_standard.counter){
 		window.kbmodules.kickboxing_standard.counter.pause = state;
@@ -950,27 +1145,11 @@ window.kbmodules.kickboxing_standard.timer_set_time = function(){
 		})
 	}
 }
+*/
 
 
 
-window.kbmodules.kickboxing_standard.set_round_duration = function(){
-	ksys.context.module.prm(
-		'round_duration',
-		{
-			'minutes': int(document.querySelector('#round_duration_cfg_field [minutes]').value) || 1,
-			'seconds': int(document.querySelector('#round_duration_cfg_field [seconds]').value) || 0,
-		}
-	)
-}
 
-
-window.kbmodules.kickboxing_standard.set_round_amount = function(){
-	ksys.context.module.prm(
-		'round_amount',
-		int(document.querySelector('#round_amount_fields input[round_amount]').value) || 8
-	)
-	window.kbmodules.kickboxing_standard.redraw_round_switches();
-}
 
 
 
@@ -1008,6 +1187,10 @@ window.kbmodules.kickboxing_standard.redraw_round_switches = function(){
 
 
 
+
+
+
+
 window.kbmodules.kickboxing_standard.bind_photo_ids = function(){
 	ksys.context.module.prm('pair_ids_frozen', true);
 }
@@ -1024,7 +1207,7 @@ window.kbmodules.kickboxing_standard.unbind_photo_ids = function(){
 
 
 
-
+/*
 window.kbmodules.kickboxing_standard.update_img_proxy_addr = function(){
 	const addr = document.querySelector('#image_proxies_addr').value;
 
@@ -1066,7 +1249,7 @@ window.kbmodules.kickboxing_standard.toggle_image_proxies = function(){
 		vmix.util.disable_image_proxy();
 	}
 }
-
+*/
 
 
 

@@ -56,14 +56,22 @@
 					Timer Contains VS
 					<input timer_has_vs type="checkbox">
 				</label>
-				
 			</div>
 
-<!-- 			<div param_row res_loc_row>
+			<div param_row vs_as_movs_row>
+				<label row_label>
+					Pre-Rendered VS
+					<input vs_as_movs type="checkbox">
+				</label>
+			</div>
+
+			<!--
+ 			<div param_row res_loc_row>
 				<div row_label>Resources Location</div>
 				<input type="text" res_path placeholder="Absolute path to a folder. Quotation marks allowed">
 				<sysbtn btname="save_res_path" onclick="window.kbmodules.kickboxing_standard.save_res_path()">Save Path</sysbtn>
-			</div> -->
+			</div>
+			-->
 		</div>
 
 		<div
@@ -77,6 +85,14 @@
 				<sysbtn onclick="window.kbmodules.kickboxing_standard.save_schema()">Save Schema</sysbtn>
 			</div>
 			<div id="schema_cfg_list"></div>
+		</div>
+
+		<div id="special_clauses_list" regular_box>
+			<h3>Special clauses</h3>
+			<div selectable_recursive>
+				<div>flag</div>
+				<div>record</div>
+			</div>
 		</div>
 	</tab>
 
@@ -104,17 +120,17 @@
 						seq_align="vertical"
 						btname=""
 						seq_info="alive+<+cond+vis_show+resume+>+<+else+update+play+vis_show+>"
-						onclick="window.kbmodules.kickboxing_standard.respawn_manager(true)"
+						onclick="window.kbmodules.kickboxing_standard.clock_show()"
 						>
 						<span>ONN, Start</span>
 					</vmixbtn>
-					<vmixbtn btname="" seq_info="vis_hide+pause" onclick="window.kbmodules.kickboxing_standard.timer_hide(true)">OFF, Pause</vmixbtn>
+					<vmixbtn btname="" seq_info="vis_hide+pause" onclick="window.kbmodules.kickboxing_standard.clock_hide(true)">OFF, Pause</vmixbtn>
 				</div>
 
 				<div row>
-					<vmixbtn btname="" seq_info="stop+update" onclick="window.kbmodules.kickboxing_standard.respawn_timer(false)">Reset</vmixbtn>
-					<vmixbtn btname="" seq_info="pause" onclick="window.kbmodules.kickboxing_standard.timer_pause(true)">Pause</vmixbtn>
-					<vmixbtn btname="" seq_info="resume" onclick="window.kbmodules.kickboxing_standard.timer_pause(false)">Resume</vmixbtn>
+					<vmixbtn btname="" seq_info="stop+update" onclick="window.kbmodules.kickboxing_standard.clock_reset()">Reset</vmixbtn>
+					<vmixbtn btname="" seq_info="pause" onclick="window.kbmodules.kickboxing_standard.clock_pause(true)">Pause</vmixbtn>
+					<vmixbtn btname="" seq_info="resume" onclick="window.kbmodules.kickboxing_standard.clock_resume(false)">Resume</vmixbtn>
 				</div>
 
 				<div row flex_row align_flex_end>
@@ -123,7 +139,7 @@
 							<input id="set_time_minutes" noctrl type="number" placeholder="MM">
 							<input id="set_time_seconds" noctrl type="number" placeholder="SS">
 						</div>
-						<vmixbtn btname="" seq_info="update+resume" onclick="window.kbmodules.kickboxing_standard.timer_set_time()">Set Time</vmixbtn>
+						<vmixbtn btname="" seq_info="update+resume" onclick="window.kbmodules.kickboxing_standard.clock_fire_offset()">Set Time</vmixbtn>
 					</div>
 					
 					<div id="round_config">
@@ -135,7 +151,7 @@
 								<input minutes noctrl type="number" placeholder="MM">
 								<input seconds noctrl type="number" placeholder="SS">
 								<sysbtn
-									onclick="window.kbmodules.kickboxing_standard.set_round_duration()"
+									onclick="window.kbmodules.kickboxing_standard.set_clock_duration()"
 									btname="set_round_duration"
 									>Set Duration</sysbtn>
 							</div>
@@ -157,6 +173,7 @@
 			<div id="player_pool" subtle_box>
 				<div id="player_pool_ctrl">
 					<sysbtn onclick="window.kbmodules.kickboxing_standard.toggle_edit_mode()">Toggle Edit Mode</sysbtn>
+					<sysbtn onclick="window.kbmodules.kickboxing_standard.toggle_preview_mode()">Toggle Preview Mode</sysbtn>
 					<sysbtn
 						edit_visible
 						btname="flip_pair_colors"
@@ -210,7 +227,7 @@
 		<div class="kb_player">
 			<div edit_hidden class="vis_display"></div>
 			<div edit_visible class="player_data_shared"></div>
-			<div edit_visible class="player_data"></div>
+			<div preview_visible edit_visible class="player_data"></div>
 		</div>
 	</template>
 
