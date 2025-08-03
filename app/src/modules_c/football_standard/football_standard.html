@@ -6,6 +6,7 @@
 		<sys-tab match_id="club_def" default>Clubs</sys-tab>
 		<sys-tab match_id="team_lineup">Config/Lists</sys-tab>
 		<sys-tab match_id="teams_layouts">Layout</sys-tab>
+		<sys-tab match_id="misc_titles">Misc Titles</sys-tab>
 		<sys-tab match_id="layout_buttons">Layout Ctrl</sys-tab>
 		<sys-tab match_id="punisher">Cards/Goals</sys-tab>
 		<sys-tab match_id="replacement">Substitute</sys-tab>
@@ -26,6 +27,8 @@
 	<tab class="tab_hidden" tabid="fucking_docs">
 		<md-packer></md-packer>
 		<http-resource-proxy-control></http-resource-proxy-control>
+		<div id="role_editor" kbhint="Changes are saved and propagated automatically"></div>
+		<div id="sequencer" kbhint="Determines most timings, such as for how long should a yellow/red card indicator be on screen. Changes are saved and propagated automatically. This is some important shit - don't fuck with it"></div>
 	</tab>
 
 	<!-- <tab class="tab_hidden" tabid="stats_db"></tab> -->
@@ -54,7 +57,7 @@
 
 				<sysbtn
 				 btname="delete_current_club"
-				 kbhint="Hold CTRL"
+				 kbhint="Hold CTRL (Because there's no Ctrl + Z for this)"
 				 onclick="window.kbmodules.football_standard.delete_current_club(event)"
 				 mod_key="ctrl"
 				>Delete Current Club</sysbtn>
@@ -73,56 +76,142 @@
 		</string-formatting>
 
 		<general-cfg subtle_box>
+			<general-cfg-entry kbhint="Absolute path to ffmpeg.exe">
+				<general-cfg-label>FFMPEG</general-cfg-label>
+				<general-cfg-ctrl>
+					<input type="text" id="ffmpeg_path" onchange_vis_feed>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Absolute path to magick.exe">
+				<general-cfg-label>Image Magick</general-cfg-label>
+				<general-cfg-ctrl>
+					<input type="text" id="image_magick_path" onchange_vis_feed>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Resources location, such as card and ball images">
+				<general-cfg-label>Resources</general-cfg-label>
+				<general-cfg-ctrl>
+					<input type="text" id="resources_location" onchange_vis_feed>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Determines how cards are handled">
+				<general-cfg-label>Red Card Schema</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="card_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Red cards are images"
+							kbswitch_item
+							images
+						>Images</div>
+						<div
+							kbhint="Red cards are GT shapes"
+							kbswitch_item
+							color
+						>Colour</div>
+					</div>
+					<input type="color" id="red_card_schema_color" kbhint="Red card colour in the timer title">
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Determines how player names are displayed">
+				<general-cfg-label>Player Name Schema</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="pname_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Just the surname"
+							kbswitch_item
+							surname
+						>Surname</div>
+						<div
+							kbhint="Prefixed with the first letter of whatever is in the player's name field"
+							kbswitch_item
+							prefixed
+						>Prefixed</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Determines how titles are displayed">
+				<general-cfg-label>Title Schema</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="title_schema_switch" kbswitch_style="default">
+						<div
+							class="title_schema_item"
+							kbhint="Everything is a separate title"
+							kbswitch_item
+							separate
+						>Separate</div>
+						<div
+							class="title_schema_item"
+							kbhint="Things are group into a single titles with pages"
+							kbswitch_item
+							paged
+						>Paged</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
 			<general-cfg-entry id="timersys_switch" kbhint="Hold CTRL. This will terminate and re-create all timers">
 				<general-cfg-label>Timer system</general-cfg-label>
-				<kb-radio-switch
-					kb_style="default"
-					kb_layout="horizontal"
-					kb_default="builtin"
-					display_name="Timer System"
-					mod_key="ctrlKey"
-					kb_switch_id="timer_system"
-					onchange="window.kbmodules.football_standard.update_selected_timer_system(event)"
-				>
-					<kb-radio-switch-entry kb_param_id="builtin">Built-in</kb-radio-switch-entry>
-					<kb-radio-switch-entry kb_param_id="at_at">AT-AT</kb-radio-switch-entry>
-				</kb-radio-switch>
+				<general-cfg-ctrl>
+					<kb-radio-switch
+						kb_style="default"
+						kb_layout="horizontal"
+						kb_default="builtin"
+						display_name="Timer System"
+						mod_key="ctrlKey"
+						kb_switch_id="timer_system"
+						onchange="window.kbmodules.football_standard.update_selected_timer_system(event)"
+					>
+						<kb-radio-switch-entry kb_param_id="builtin">Built-in</kb-radio-switch-entry>
+						<kb-radio-switch-entry kb_param_id="at_at">AT-AT</kb-radio-switch-entry>
+					</kb-radio-switch>
+				</general-cfg-ctrl>
 			</general-cfg-entry>
 
 			<general-cfg-entry>
 				<general-cfg-label>AT-AT Port</general-cfg-label>
-				<input id="atat_port_input" noctrl type="number" min="1" max="65535">
-				<sysbtn
-					btname="update_atat_port"
-					kbhint="Hold ALT. The KB AT-AT service will be restarted"
-					onclick="window.kbmodules.football_standard.update_atat_port(event)"
-					click_timeout="700"
-					mod_key="alt"
-				>Update AT-AT port</sysbtn>
+				<general-cfg-ctrl>
+					<input id="atat_port_input" noctrl type="number" min="1" max="65535" monospace_ibm>
+					<sysbtn
+						btname="update_atat_port"
+						kbhint="Hold ALT. The KB AT-AT service will be restarted"
+						onclick="window.kbmodules.football_standard.update_atat_port(event)"
+						click_timeout="700"
+						mod_key="alt"
+					>Update AT-AT port</sysbtn>
+				</general-cfg-ctrl>
 			</general-cfg-entry>
 
 			<general-cfg-entry>
 				<general-cfg-label>AT-AT Return Address</general-cfg-label>
-				<input id="atat_return_addr_input" noctrl type="text">
-				<sysbtn
-					btname="update_atat_return_addr"
-					kbhint="Hold ALT. The KB AT-AT service will be restarted"
-					onclick="window.kbmodules.football_standard.update_atat_return_addr(event)"
-					click_timeout="700"
-					mod_key="alt"
-				>Update</sysbtn>
-				<sysbtn
-					btname="atat_auto_addr"
-					kbhint="Try determining the right value automatically"
-					onclick="window.kbmodules.football_standard.atat_auto_return_addr(event)"
-				>Auto</sysbtn>
-				<!-- >Update AT-AT Return Address</sysbtn> -->
-				<div id="atat_ip_addr_picker"></div>
+				<general-cfg-ctrl id="atat_ctrl">
+					<input id="atat_return_addr_input" noctrl type="text" monospace_ibm>
+					<sysbtn
+						btname="update_atat_return_addr"
+						kbhint="Hold ALT. The KB AT-AT service will be restarted"
+						onclick="window.kbmodules.football_standard.update_atat_return_addr(event)"
+						click_timeout="700"
+						mod_key="alt"
+					>Update</sysbtn>
+					<sysbtn
+						btname="atat_auto_addr"
+						kbhint="Try determining the right value automatically"
+						onclick="window.kbmodules.football_standard.atat_auto_return_addr(event)"
+					>Auto</sysbtn>
+					<!-- >Update AT-AT Return Address</sysbtn> -->
+					<div id="atat_ip_addr_picker" monospace_ibm></div>
+				</general-cfg-ctrl>
 			</general-cfg-entry>
 
 			<general-cfg-entry>
 				<general-cfg-label>Round Duration</general-cfg-label>
-				<input id="round_duration" noctrl type="number" onchange_vis_feed>
+				<general-cfg-ctrl>
+					<input id="round_duration" noctrl type="number" onchange_vis_feed>
+				</general-cfg-ctrl>
 			</general-cfg-entry>
 
 		</general-cfg>
@@ -157,16 +246,14 @@
 		</div>
 	</tab>
 
-	<tab class="tab_hidden" tabid="layout_buttons">
-		<div id="layout_buttons">
-
+	<tab class="tab_hidden" tabid="misc_titles">
+		<div id="commenter_ctrl">
 			<h1>Commenter</h1>
-			<!-- Сукманский is the best commenter ever -->
 			<div id="commenter_ctrl">
 
 				<div id="commenter_ctrl_head">
 					<div class="layout_buttons_vs_ctrl_head_minititle">Commenter's Name. No post-formatting applied</div>
-					<input onchange="window.kbmodules.football_standard.save_commenter()" type="text" id="commenter_name_input">
+					<input onchange="window.kbmodules.football_standard.save_misc_titles()" type="text" id="commenter_name_input">
 				</div>
 
 				<div id="commenter_ctrl_body">
@@ -185,8 +272,11 @@
 
 				</div>
 			</div>
+		</div>
+	</tab>
 
-
+	<tab class="tab_hidden" tabid="layout_buttons">
+		<div id="layout_buttons">
 			<h1>Splash (VS) Control</h1>
 			<div id="layout_buttons_vs_ctrl">
 				<div id="layout_buttons_vs_ctrl_head">
@@ -370,17 +460,27 @@
 		<div id="replacement">
 			<div id="replacement_buttons">
 				<vmixbtn
+					horizontal
 					seq_info="auto_seq"
-					btname="exec_replacement_sequence"
-					onclick="window.kbmodules.football_standard.exec_substitute()"
-				>Execute Sequence</vmixbtn>
-				
+					btname="exec_replacement_sequence_match"
+					onclick="window.kbmodules.football_standard.exec_substitute('match')"
+				>Single during MATCH</vmixbtn>
+
+				<vmixbtn
+					horizontal
+					seq_info="auto_seq"
+					btname="exec_replacement_sequence_break"
+					onclick="window.kbmodules.football_standard.exec_substitute('break')"
+				>Single during BREAK</vmixbtn>
+
+				<!--
 				<vmixbtn
 					halfsize
 					off
 					seq_info="auto_tweaks"
 					btname="shadow_player_swap"
 				>Shadow swap</vmixbtn>
+				-->
 				<!-- <vmixbtn btname="exec_replacement_sequences" onclick="window.kbmodules.football_standard.start_base_timer()">AAA</vmixbtn> -->
 			</div>
 			<div id="replacement_teams">
@@ -388,17 +488,37 @@
 					<div class="replacement_team_head"></div>
 					<div class="replacement_team_body">
 						<div leaving class="replacement_leaving replacement_list"></div>
-						<div class="replacement_vis_que">&lt;</div>
+						<!-- <div class="replacement_vis_que">&lt;</div> -->
+						<div class="replacement_vis_que">
+							<img contain src="./assets/icon_arrow_left.svg">
+							<img contain src="./assets/icon_arrow_left.svg">
+							<img contain src="./assets/icon_arrow_left.svg">
+						</div>
 						<div inbound class="replacement_incoming replacement_list"></div>
 					</div>
+					<sysbtn
+						class="stack_substitute"
+						onclick="window.kbmodules.football_standard.stack_substitute()"
+					>Stack</sysbtn>
+					<!-- <div class="subs_stack" subtle_box></div> -->
 				</div>
 				<div guest class="replacement_team" id="replacement_team2">
 					<div class="replacement_team_head"></div>
 					<div class="replacement_team_body">
 						<div leaving class="replacement_leaving replacement_list"></div>
-						<div class="replacement_vis_que">&lt;</div>
+						<!-- <div class="replacement_vis_que">&lt;</div> -->
+						<div class="replacement_vis_que">
+							<img contain src="./assets/icon_arrow_left.svg">
+							<img contain src="./assets/icon_arrow_left.svg">
+							<img contain src="./assets/icon_arrow_left.svg">
+						</div>
 						<div inbound class="replacement_incoming replacement_list"></div>
 					</div>
+					<sysbtn
+						class="stack_substitute"
+						onclick="window.kbmodules.football_standard.stack_substitute()"
+					>Stack</sysbtn>
+					<!-- <div class="subs_stack" subtle_box></div> -->
 				</div>
 			</div>
 		</div>
@@ -457,7 +577,7 @@
 
 				<box regular_box style="flex-direction: row; display: flex; margin-left: 10px; align-items: center;">
 					<div id="timer_ctrl_additional">
-						<input onchange="window.kbmodules.football_standard.update_extra_time_amount()" type="number" noctrl placeholder="MINUTES">
+						<input onchange_vis_feed onchange="window.kbmodules.football_standard.update_extra_time_amount()" type="number" noctrl placeholder="MINUTES">
 						<!-- <vmixbtn seq_info="update+play+vis_show" btname="launch_extra_timer" onclick="window.kbmodules.football_standard.launch_extra_time()">Launch Extra Time</vmixbtn> -->
 						<vmixbtn
 							halfsize
@@ -669,6 +789,7 @@
 			<img contain class="player_club_logo" src="">
 			<div class="player_number"></div>
 			<div class="player_surname"></div>
+			<div class="player_role"></div>
 		</player>
 	</template>
 
@@ -695,6 +816,13 @@
 				<input type="text" class="player_param_input">
 			</player-param>
 
+			<!-- role -->
+			<player-param prmname="player_role">
+				<div class="player_param_label">Role</div>
+				<!-- <input type="text" class="player_param_input"> -->
+
+			</player-param>
+
 
 		</player-config>
 	</template>
@@ -706,21 +834,23 @@
 
 			<side-indicator></side-indicator>
 
-			<lineup-config kbhint="Colours update/save automatically upon changes">
+			<lineup-config>
 
 				<sysbtn
 				 kbhint="Open this club for editing in the club panel"
 				 btname="edit_club_from_lineup"
 				>Edit this club</sysbtn>
 
-				<lineup-param class="lineup_param_add_hover" prmname="tshirt_color">
+				<lineup-param class="lineup_param_add_hover" prmname="tshirt_color" kbhint="&quot;Ну дизайнер титрiв вирiшив, що красивiше буде лише з одним кольором&quot;">
 					<div class="param_label">T-Shirt Colour</div>
 					<div class="param_content"></div>
 				</lineup-param>
-				<lineup-param class="lineup_param_add_hover" prmname="shorts_color">
-					<div class="param_label">Shorts Colour</div>
+				<!--
+				<lineup-param class="lineup_param_add_hover" prmname="shorts_color" kbhint="I RAN OUT OF TIME: BOTH NEED TO BE SET TO THE SAME VALUE !!!!!!!!!!!!">
+					<div class="param_label">T-Shirt Colour B</div>
 					<div class="param_content"></div>
 				</lineup-param>
+				 -->
 				<lineup-param class="lineup_param_add_hover" prmname="gk_color">
 					<div class="param_label">Goalkeeper Colour</div>
 					<div class="param_content"></div>
@@ -750,7 +880,10 @@
 
 	<!-- colour picker template -->
 	<template id="team_lineup_color_picker_template">
-		<lineup-color-picker></lineup-color-picker>
+		<lineup-color-picker>
+			<input type="color">
+			<div class="color_code"></div>
+		</lineup-color-picker>
 	</template>
 
 

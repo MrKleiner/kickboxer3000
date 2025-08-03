@@ -104,7 +104,9 @@ img[vis_feedback]
 	animation: blink-animation 0.2s steps(2, start) infinite;
 }
 
-
+[tabid="fucking_docs"]{
+	padding-bottom: 200px;
+}
 
 
 
@@ -162,9 +164,19 @@ img[vis_feedback]
 	justify-content: center;
 	padding-left: 5px;
 	padding-right: 10px;
+	text-wrap: nowrap;
 }
 
+~~ .player_role{
+	display: none;
+	margin-left: auto;
+	margin-right: 15px;
+}
 
+~~ .player_role_visfeed{
+	font-size: 25px;
+	font-family: monospace;
+}
 
 
 
@@ -614,6 +626,7 @@ Header
 ~~ lineup-param{
 	display: flex;
 	flex-direction: row;
+	align-items: center;
 	margin-top: 5px;
 	padding: 3px;
 }
@@ -642,8 +655,10 @@ Header
 	flex-direction: row;
 	height: 100%;
 	/*width: fit-content;*/
+	align-items: center;
 }
 
+/*
 ~~ picker-color{
 	height: 20px;
 	aspect-ratio: 1/1;
@@ -654,7 +669,30 @@ Header
 	outline: 2px solid cyan;
 	outline-offset: 1px;
 }
+*/
 
+
+lineup-color-picker .color_code{
+	width: 100px !important;
+	margin-left: 20px !important;
+}
+
+lineup-color-picker .palette{
+	display: flex;
+	flex-direction: row;
+	padding: 1px 5px 1px 4px !important;
+	/*border-radius: 10px;*/
+	height: -webkit-fill-available;
+	align-items: center;
+}
+
+lineup-color-picker .text_color_label{
+	margin-left: 25px;
+}
+
+lineup-color-picker .text_color_switch{
+	margin-left: 10px;
+}
 
 
 /*
@@ -711,6 +749,10 @@ Header
 	z-index: 5;
 }
 
+~~ player .player_role{
+	display: flex;
+}
+
 
 
 
@@ -756,6 +798,9 @@ Header
 	margin-bottom: 300px;
 }
 
+~~ field-layout field-layout-picker player .player_role{
+	display: flex;
+}
 
 
 
@@ -1142,9 +1187,91 @@ card vis feedback on list items
 	padding: 15px;
 
 	height: 420px;
-	width: 390px;
+	width: 410px;
 	position: relative;
 }
+
+~~ .replacement_team .replacement_list player-picker{
+	height: -webkit-fill-available;
+}
+
+
+
+/*
+===============================================
+             Substitutes Stack
+===============================================
+
+!~~ [tabid="replacement"] .subs_stack
+*/
+
+~~ {
+	margin-top: 40px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+~~ .subs_stack_ctrl{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+}
+
+~~ .subs_stack_ctrl sysbtn{
+	width: 150px;
+	height: 40px;
+	margin-right: 100px;
+	font-size: 25px;
+}
+
+~~ .subs_stack_ctrl vmixbtn{
+	width: auto;
+	height: 100px;
+	font-size: 24px;
+}
+
+~~ .stack_players{
+	display: flex;
+	width: -webkit-fill-available;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+~~ .subs_stack_pair{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	width: -webkit-fill-available;
+	padding: 4px 0px 4px 0px;
+	margin-top: 7px;
+}
+
+~~ .subs_stack_pair:hover{
+	background: rgba(255, 255, 255, 0.1);
+}
+
+~~ .subs_stack_pair > .arrow_icon{
+	width: 20px;
+	margin: 0px 10px 0px 10px;
+}
+
+
+~~ .subs_stack_player{
+	width: 40%;
+}
+
+~~ .generic_player_list_item{
+	margin: 0px;
+}
+
+
+
+
+
+
 
 
 
@@ -2363,7 +2490,8 @@ tab.tab_hidden
 	/*background: cyan;*/
 	background: rgba(0, 0, 0, 0.3);
 	padding: 7px;
-	outline: 1px solid rgb(70, 70, 70)
+	outline: 1px solid rgb(70, 70, 70);
+	width: 48vw;
 }
 
 #replacement .replacement_team .replacement_team_head
@@ -2432,12 +2560,11 @@ tab.tab_hidden
 	text-align: center;
 }
 
-#replacement .replacement_team .replacement_vis_que
+/*#replacement .replacement_team .replacement_vis_que
 {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
-	/*background: red;*/
 	font-size: 70px;
 	font-family: 'tahoma_bold';
 	margin: 0px 10px 0px 10px;
@@ -2447,8 +2574,25 @@ tab.tab_hidden
 	user-select: none;
 	pointer-events: none;
 	align-self: center;
+}*/
+
+#replacement .replacement_team .replacement_vis_que
+{
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	width: 20px;
+	justify-content: space-around;
+	align-items: center;
+	align-self: center;
 }
 
+#replacement .replacement_team .replacement_vis_que img
+{
+	width: 23px;
+	height: 23px;
+	transform: scaleY(3);
+}
 
 
 
@@ -2459,6 +2603,7 @@ tab.tab_hidden
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
+	align-items: center;
 	/*margin-top: 75px;*/
 }
 
@@ -2473,7 +2618,21 @@ tab.tab_hidden
 }
 
 
+[btname="exec_replacement_sequence_match"],
+[btname="exec_replacement_sequence_break"]
+{
+	height: 100px !important;
+}
 
+
+.stack_substitute{
+	font-size: 25px;
+	width: 350px;
+	height: 40px;
+	/*margin-right: 50px;*/
+	margin-top: 20px;
+	align-self: center;
+}
 
 
 
@@ -2954,11 +3113,26 @@ tab.tab_hidden
 	margin-left: 20px;
 	margin-bottom: 20px;
 	padding: 7px 0px 10px 20px;
-	width: 600px;
+	width: 700px;
+}
+
+~~ general-cfg-ctrl{
+	display: flex;
+	flex-direction: row;
+}
+
+~~ general-cfg-entry{
+	/*padding: 3px 0px 3px 0px;*/
+	height: 35px;
 }
 
 ~~ general-cfg-entry general-cfg-label{
-	margin: 0px 15px 0px 1px;
+	margin: 0px 7px 0px 1px;
+	width: 175px;
+}
+
+~~ general-cfg-entry:hover{
+	background: rgba(255, 255, 255, 0.05);
 }
 
 ~~ general-cfg-entry{
@@ -2971,13 +3145,39 @@ tab.tab_hidden
 ~~ sysbtn[btname="update_atat_port"],
 ~~ sysbtn[btname="update_atat_return_addr"]
 {
-	margin-left: 15px;
+	/*margin-left: 15px;*/
+}
+
+~~ sysbtn[btname="update_atat_port"]{
+	margin-left: 30px;
+}
+
+#red_card_schema_color{
+	margin-left: 30px;
+}
+
+#atat_ctrl{
+	padding-right: 7px;
+	justify-content: space-between;
+	flex-grow: 1;
+}
+
+#atat_ctrl sysbtn{
+	width: 60px;
+}
+
+#atat_port_input{
+	text-align: center;
+	width: 70px;
 }
 
 
-
-
-
+#ffmpeg_path,
+#image_magick_path,
+#resources_location
+{
+	width: 450px;
+}
 
 
 /*
@@ -3102,3 +3302,86 @@ resource-proxy-ctrl{
 	margin-left: 20px !important;
 	margin-bottom: 25px !important;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+===============================================
+                Player Roles
+===============================================
+*/
+
+
+player-param select,
+player-param option{
+	/*font-family: monospace;*/
+	font-family: ibm_plex;
+}
+
+#role_editor{
+	margin-bottom: 25px;
+}
+
+/*
+
+!~~ #player_role_editor
+
+*/
+
+~~ {
+	display: flex;
+	flex-direction: column;
+	margin-left: 20px;
+	width: 800px;
+}
+
+~~ .header_text{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	font-size: 21px;
+	margin-bottom: 10px;
+}
+
+~~ .role_pool{
+	display: flex;
+	flex-direction: column;
+	padding-top: 20px;
+}
+
+~~ .player_role_instance{
+	display: flex;
+	flex-direction: row;
+	height: 35px;
+	align-items: center;
+	margin: 2px 0px 2px 0px;
+}
+
+~~ .player_role_instance:hover{
+	background: rgba(255, 255, 255, 0.1);
+}
+
+~~ .player_role_instance .icon{
+	height: 90%;
+}
+
+~~ .player_role_instance .name_input{
+	margin-left: 10px;
+}
+
+
+
+
+
+

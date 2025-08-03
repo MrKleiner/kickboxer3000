@@ -1,114 +1,111 @@
 
 
 /*
-Previous system was a total embarrassment and offense for real programming.
 
-So this is even worse.
+	Long story short, previous system indexed players by a string composed
+	of the players' name + surname + number.
+	This could totally lead to collisions when creating player lists from
+	scratch. It's completely unreliable and utterly fucking retarded.
 
-Long story short, previous system indexed players by a string composed
-of the players' name + surname + number.
-This could totally lead to collisions when creating player lists from
-scratch. It's completely unreliable and utterly fucking retarded.
+	The new system hasn't got any of these problems.
+	It may or may not be slower because of that, but who cares.
 
-The new system doesn't has any of these problems.
-It may or may not be slower because of that, but who cares.
-
-The new system utilizes registers pointing to JS objects.
-This introduces a risk of redundant data, but garbage collection
-is very simple in this situation and the only sacrifice is a few
-milliseconds lost due to all the iterations needed for registers.
+	The new system utilizes registers pointing to JS objects.
+	This introduces a risk of redundant data, but garbage collection
+	is very simple in this situation and the only sacrifice is a few
+	milliseconds lost due to all the iterations needed for registers.
 
 
-+------------------+
-| Home/Enemy Club  |
-+-----+------------+
-      |
-      +---+
-          |
-          v
-        +------------+
-    +-->|    Club    |
-    |   +------------+
-    |         |
-    |         |     +------------------+
-    |         +-----+    Club Info     |
-    |         |     +------------------+
-    |         |
-    |         |     +-----------------------------------+
-    |         +-----+ Visual header reference registry  |
-    |         |     +-----------------------------------+
-    |         |
-    |         |     +----------------+
-    |         +-----+ Control Panel  |
-    |         |     +--------+-------+
-    |         |              |
-    |         |              |
-    |         |              |   +------------------+
-    |         |              +---+ Player List DOM  |
-    |         |                  +---------+--------+
-    |         |                            |
-    |         |                            |
-    |         |                            |   +------------------+
-    |         |                            +---+  Player cfg DOM  |
-    |         |                            |   +---------+--------+
-    |         |                            |             |
-    |         |                            ...           |
-    |         |                                          |
-    |         |     +------------------+                 |
-    |         +-----+ Player registry  |                 |
-    |               +--------+---------+                 |
-    |                        |            +--------------+
-    |                        |            |  +----------------------------------------------+
-    |                        |            |  |                                              |
-    |                        |            v  v                                              |
-    |                        |     +------------+                                           |
-    |                        +-----+   Player   |<--------------------------------------+   |
-    |                              +------+-----+                                       |   |
-    |                                     |                                             |   |
-    |                                     |   +------------+                            |   |
-    |                                     +---+    Info    |                            |   |
-    |                                     |   +------------+                            |   |
-    |                                     |                                             |   |
-    |                                     |   +-----------------------------------+     |   |
-    |                                     +---+ DOM element reference registry    |     |   |
-    |                                     |   +-----------------------------------+     |   |
-    |                                     |                             v               |   |
-    |                                     |   +---------------------+   |               |   |
-    |                                     +-->| List item DOM elem  |<--+               ^   |
-    |                                     |   +---------------------+                   |   |
-    |                                     |                                             |   |
-    |                                     |   +----------------+                        |   |
-    |                                     +-->| cfg DOM elem   |                        |   |
-    |                                         +----------------+                        |   |
-    |                                                                                   |   |
-    |   +-------------+                                                                 |   ^
-    +--<| Team Lineup |                                                                 |   |
-        +------+------+                                                                 |   |
-               |                                                                        |   |
-               |   +----------------+                                                   |   |
-               +---+   Main List    |                                                   |   |
-               |   +--------+-------+                                                   |   |
-               |            |                                                           |   |
-               |            |   +----------------+                                      |   |
-               |            +---+   List entry   |>-------------------------------------+   |
-               |            |   +----------------+                                          |
-               |            |                                                               |
-               |            ...                                                             |
-               |                                                                            |
-               |                                                                            |
-               |   +----------------+                                                       |
-               +---+ Reserve List   |                                                       |
-               |   +--------+-------+                                                       |
-               |            |                                                               |
-               |            |   +----------------+                                          |
-               |            +---+   List entry   |>-----------------------------------------+
-               |            |   +----------------+
-               |            |
-               |            ...
-               |
-               |    +----------------+
-               +----+ Control panel  |
-                    +----------------+
+	+------------------+
+	| Home/Enemy Club  |
+	+-----+------------+
+	      |
+	      +---+
+	          |
+	          v
+	        +------------+
+	    +-->|    Club    |
+	    |   +------------+
+	    |         |
+	    |         |     +------------------+
+	    |         +-----+    Club Info     |
+	    |         |     +------------------+
+	    |         |
+	    |         |     +-----------------------------------+
+	    |         +-----+ Visual header reference registry  |
+	    |         |     +-----------------------------------+
+	    |         |
+	    |         |     +----------------+
+	    |         +-----+ Control Panel  |
+	    |         |     +--------+-------+
+	    |         |              |
+	    |         |              |
+	    |         |              |   +------------------+
+	    |         |              +---+ Player List DOM  |
+	    |         |                  +---------+--------+
+	    |         |                            |
+	    |         |                            |
+	    |         |                            |   +------------------+
+	    |         |                            +---+  Player cfg DOM  |
+	    |         |                            |   +---------+--------+
+	    |         |                            |             |
+	    |         |                            ...           |
+	    |         |                                          |
+	    |         |     +------------------+                 |
+	    |         +-----+ Player registry  |                 |
+	    |               +--------+---------+                 |
+	    |                        |            +--------------+
+	    |                        |            |  +----------------------------------------------+
+	    |                        |            |  |                                              |
+	    |                        |            v  v                                              |
+	    |                        |     +------------+                                           |
+	    |                        +-----+   Player   |<--------------------------------------+   |
+	    |                              +------+-----+                                       |   |
+	    |                                     |                                             |   |
+	    |                                     |   +------------+                            |   |
+	    |                                     +---+    Info    |                            |   |
+	    |                                     |   +------------+                            |   |
+	    |                                     |                                             |   |
+	    |                                     |   +-----------------------------------+     |   |
+	    |                                     +---+ DOM element reference registry    |     |   |
+	    |                                     |   +-----------------------------------+     |   |
+	    |                                     |                             v               |   |
+	    |                                     |   +---------------------+   |               |   |
+	    |                                     +-->| List item DOM elem  |<--+               ^   |
+	    |                                     |   +---------------------+                   |   |
+	    |                                     |                                             |   |
+	    |                                     |   +----------------+                        |   |
+	    |                                     +-->| cfg DOM elem   |                        |   |
+	    |                                         +----------------+                        |   |
+	    |                                                                                   |   |
+	    |   +-------------+                                                                 |   ^
+	    +--<| Team Lineup |                                                                 |   |
+	        +------+------+                                                                 |   |
+	               |                                                                        |   |
+	               |   +----------------+                                                   |   |
+	               +---+   Main List    |                                                   |   |
+	               |   +--------+-------+                                                   |   |
+	               |            |                                                           |   |
+	               |            |   +----------------+                                      |   |
+	               |            +---+   List entry   |>-------------------------------------+   |
+	               |            |   +----------------+                                          |
+	               |            |                                                               |
+	               |            ...                                                             |
+	               |                                                                            |
+	               |                                                                            |
+	               |   +----------------+                                                       |
+	               +---+ Reserve List   |                                                       |
+	               |   +--------+-------+                                                       |
+	               |            |                                                               |
+	               |            |   +----------------+                                          |
+	               |            +---+   List entry   |>-----------------------------------------+
+	               |            |   +----------------+
+	               |            |
+	               |            ...
+	               |
+	               |    +----------------+
+	               +----+ Control panel  |
+	                    +----------------+
 
 
 */
@@ -206,6 +203,12 @@ $this.load = async function(){
 		score_manager: null,
 
 		penalty_manager: new $this.PenaltyManager(5),
+
+		title_graphics: {
+			red_card: Path(app_root, 'assets/red_card.png'),
+			yellow_card: Path(app_root, 'assets/yellow_card.png'),
+			ycbr: Path(app_root, 'assets/pink_panther.png'),
+		},
 	};
 
 	$this.time_lenghts_dict = {
@@ -303,6 +306,34 @@ $this.load = async function(){
 				}
 			}),
 
+			'subs1': new vmix.title({
+				'title_name': 'Half_Substitution.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 50,
+					'frames_in': 75,
+					'margin': 5,
+				}
+			}),
+			'subs2': new vmix.title({
+				'title_name': 'Half_Substitution2.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 50,
+					'frames_in': 75,
+					'margin': 5,
+				}
+			}),
+			'subs3': new vmix.title({
+				'title_name': 'Half_Substitution3.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 50,
+					'frames_in': 75,
+					'margin': 5,
+				}
+			}),
+
 
 			// VS
 			'splash': new vmix.title({
@@ -351,7 +382,7 @@ $this.load = async function(){
 
 			// Timer and scores
 			'timer': new vmix.title({
-				'title_name': 'score_and_time.gtzip',
+				'title_name': 'persistent_header.gtzip',
 				'default_overlay': 1,
 				'timings': {
 					'fps': 25,
@@ -395,6 +426,143 @@ $this.load = async function(){
 				}
 			}),
 		};
+	}
+
+
+	// --------------------------
+	// Image magick location
+	// --------------------------
+	{
+		$this.img_magick = document.querySelector('#image_magick_path');
+		$this.img_magick.value = mctx.cache.img_magick || '/';
+		$this.img_magick.onchange = function(){
+			$this.img_magick.value = $this.img_magick.value.replaceAll('"', '');
+			ksys.context.module.prm('img_magick', $this.img_magick.value);
+		}
+	}
+
+
+
+	// --------------------------
+	// FFMPEG location
+	// --------------------------
+	{
+		$this.ffmpeg = document.querySelector('#ffmpeg_path');
+		$this.ffmpeg.value = mctx.cache.ffmpeg || '/';
+		$this.ffmpeg.onchange = function(){
+			$this.ffmpeg.value = $this.ffmpeg.value.replaceAll('"', '');
+			ksys.context.module.prm('ffmpeg', $this.ffmpeg.value);
+		}
+	}
+
+
+	// --------------------------
+	// Title schema switch
+	// --------------------------
+	{
+		$this.title_schema_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': mctx.cache.title_schema,
+			'dom_array': [
+				{
+					'id': 'separate',
+					'dom': document.querySelector('#title_schema_switch [separate]'),
+				},
+				{
+					'id': 'paged',
+					'dom': document.querySelector('#title_schema_switch [paged]'),
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				print('Saved title schema:', schema_id);
+				$this.update_title_schema(schema_id);
+			}
+		});
+
+		if ($this.title_schema_switch.selected == 'paged'){
+			$this.persistent_header = new $this.PersistentHeader();
+			await $this.persistent_header.pages.pull_page_from_vmix();
+		}
+	}
+
+
+	// --------------------------
+	// Red card schema switch
+	// --------------------------
+	{
+		$this.red_card_schema_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': mctx.cache.red_card_schema_switch,
+			'dom_array': [
+				{
+					'id': 'images',
+					'dom': document.querySelector('#card_schema_switch [images]'),
+				},
+				{
+					'id': 'color',
+					'dom': document.querySelector('#card_schema_switch [color]'),
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				ksys.context.module.prm('red_card_schema_switch', schema_id);
+			}
+		});
+
+		$this.red_card_schema_color = document.querySelector('#red_card_schema_color');
+		$this.red_card_schema_color.value = mctx.cache.red_card_schema_color || 'ff0000';
+		$this.red_card_schema_color.onchange = function(){
+			ksys.context.module.prm('red_card_schema_color', $this.red_card_schema_color.value);
+		}
+	}
+
+
+	// --------------------------
+	// Resources location
+	// --------------------------
+	{
+		$this.resources_location = document.querySelector('#resources_location');
+		$this.resources_location.value = mctx.cache.resources_location || '/';
+		$this.resources_location.onchange = function(){
+			$this.resources_location.value = $this.resources_location.value.replaceAll('"', '');
+			ksys.context.module.prm('resources_location', $this.resources_location.value);
+		}
+	}
+
+	// --------------------------
+	// Player name schema switch
+	// --------------------------
+	{
+		$this.pname_schema_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': mctx.cache.pname_schema,
+			'dom_array': [
+				{
+					'id': 'surname',
+					'dom': document.querySelector('#pname_schema_switch [surname]'),
+				},
+				{
+					'id': 'prefixed',
+					'dom': document.querySelector('#pname_schema_switch [prefixed]'),
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				ksys.context.module.prm('pname_schema', schema_id);
+			}
+		});
+	}
+
+	// --------------------------
+	//         Role Editor
+	// --------------------------
+	{
+		$this.role_editor = new $this.PlayerRolesEditor();
+
+		$this.role_editor.load();
+
+		document.querySelector('#role_editor').append($this.role_editor.editor_dom.root);
 	}
 
 	// --------------------------
@@ -649,6 +817,105 @@ $this.load = async function(){
 
 		$this.resource_index.penalty_manager.resync_vmix();
 	}
+
+	// --------------------------
+	//         Sequencer
+	// --------------------------
+	{
+		$this.sequencer = new ksys.sequencer.TitleSequencer({
+			// Cards in persistent header
+			'cards': {
+				'anim_in': 1500,
+				'hold': 7000,
+				'anim_out': 1500,
+			},
+
+
+			// Single in persistent header
+			'subs_single_match': {
+				'anim_in': 1500,
+				'hold': 7000,
+				'anim_out': 1500,
+			},
+			// Stack in persistent header
+			'subs_stack_match': {
+				'anim_in': 1500 + 4500,
+				'hold': 3000,
+				'anim_out': 1500,
+			},
+
+
+			// Single during break
+			'subs_single_break': {
+				'anim_in': 1500,
+				'hold': 7000,
+				'anim_out': 1500,
+			},
+			// Stack during match
+			'subs_stack_break': {
+				'anim_in': 1500,
+				'hold': 7000,
+				'anim_out': 1500,
+			},
+
+			// SCORED!!
+			'scored': {
+				'anim_in': 1500,
+				'hold': 7000,
+				'anim_out': 1500,
+			},
+
+			// SCORED!!
+			'field_layout': {
+				'anim_in': 2500,
+				'hold_main': 7000,
+				// 'hold_reserve': 7000,
+				'anim_out': 2500,
+			},
+		});
+
+		$this.sequencer.load();
+
+		document.querySelector('#sequencer').append($this.sequencer.dom.root);
+	}
+
+
+	/*
+	// --------------------------
+	//         SAMPLE DATA
+	// --------------------------
+	{
+		// kbmodules.football_standard.resource_index.home_lineup.main_players.at(0)
+		// kbmodules.football_standard.resource_index.home_lineup.subs.add_pair
+
+		$this.resource_index.home_lineup.subs.add_pair([
+			$this.resource_index.home_lineup.main_players.at(0),
+			$this.resource_index.home_lineup.main_players.at(1),
+		])
+		$this.resource_index.home_lineup.subs.add_pair([
+			$this.resource_index.home_lineup.main_players.at(2),
+			$this.resource_index.home_lineup.main_players.at(3),
+		])
+		$this.resource_index.home_lineup.subs.add_pair([
+			$this.resource_index.home_lineup.main_players.at(4),
+			$this.resource_index.home_lineup.main_players.at(5),
+		])
+
+		$this.resource_index.guest_lineup.subs.add_pair([
+			$this.resource_index.guest_lineup.main_players.at(0),
+			$this.resource_index.guest_lineup.main_players.at(1),
+		])
+		$this.resource_index.guest_lineup.subs.add_pair([
+			$this.resource_index.guest_lineup.main_players.at(2),
+			$this.resource_index.guest_lineup.main_players.at(3),
+		])
+		// $this.resource_index.guest_lineup.subs.add_pair([
+		// 	$this.resource_index.guest_lineup.main_players.at(4),
+		// 	$this.resource_index.guest_lineup.main_players.at(5),
+		// ])
+
+	}
+	*/
 }
 
 
@@ -862,7 +1129,8 @@ $this.FootballClub = class{
 			console.log('get players');
 			html_d.querySelectorAll('#ex1-tabs-1 .my-1').forEach(function(el) {
 				const pfio = el.querySelectorAll('.m-0');
-				const pnum = el.querySelector('.col-auto');
+				const pnum = el.querySelector('.card-footer .col-auto');
+				const role = el.querySelector('.card-footer .small');
 				self.register_player({
 					'name': pfio[1].innerHTML.split(/(\s+)/)[0],
 					'surname': pfio[0].innerHTML,
@@ -933,9 +1201,12 @@ $this.FootballClub = class{
 // - parent_club:FootballClub parent football club.
 // This data is persistent, unless killed
 $this.ClubPlayer = class{
+	static NPRINT_NAME = 'ClubPlayer';
+
 	constructor(parent_club, input_player_info=null){
 		const self = this;
 		ksys.util.cls_pwnage.remap(self);
+		ksys.util.nprint(self, '#7FE2FF');
 
 		const player_info = input_player_info || {};
 
@@ -951,15 +1222,34 @@ $this.ClubPlayer = class{
 
 		// todo: is this stupid?
 		self.references = new Set();
+
+		self.role = player_info.role;
 	}
 
-	// forward player data (name, surname, number)
+	$surname(self){
+		self.nprint('Getting player surname')
+		if ($this.pname_schema_switch.selected == 'prefixed'){
+			const prefix = self.player_name.trim()[0] ? `${self.player_name.trim()[0]}.` : '';
+			return `${prefix} ${self.player_surname}`
+		}else{
+			return self.player_surname
+		}
+	}
+
+	// forward player data (name, surname, number, ...)
 	// to all the related elements
 	forward_update(self){
+		self.nprint('forwarding update')
 		for (const generic_list_elem of self.references){
-			generic_list_elem.index.logo.src =          self.club.logo_path;
+			generic_list_elem.index.logo.src =            self.club.logo_path;
 			generic_list_elem.index.num.textContent =     self.player_num.upper();
 			generic_list_elem.index.surname.textContent = self.player_surname.upper();
+
+			generic_list_elem.index.role.innerHTML = '';
+			if (self.role){
+				self.nprint('Adding role DOM:', self.role.visfeed_short_dom().root)
+				generic_list_elem.index.role.append(self.role.visfeed_short_dom().root);
+			}
 		}
 
 		// todo: there used to be
@@ -1006,6 +1296,7 @@ $this.ClubPlayer = class{
 				'logo':    'img.player_club_logo',
 				'num':     '.player_number',
 				'surname': '.player_surname',
+				'role':    '.player_role',
 			}
 		);
 
@@ -1018,6 +1309,10 @@ $this.ClubPlayer = class{
 		tplate.index.logo.src = self.club.logo_path;
 		tplate.index.num.textContent = self.player_num.upper();
 		tplate.index.surname.textContent = self.player_surname.upper();
+
+		if (self.role){
+			tplate.index.role.append(self.role.visfeed_short_dom().root);
+		}
 
 		// Write down reference to this element
 		self.references.add(tplate);
@@ -1036,6 +1331,7 @@ $this.ClubPlayer = class{
 				'name':    'player-param[prmname="player_name"] input',
 				'surname': 'player-param[prmname="player_surname"] input',
 				'num':     'player-param[prmname="player_num"] input',
+				'role':    'player-param[prmname="player_role"]',
 			}
 		);
 
@@ -1043,6 +1339,10 @@ $this.ClubPlayer = class{
 		tplate.index.name.value = self.player_name.upper();
 		tplate.index.surname.value = self.player_surname.upper();
 		tplate.index.num.value = self.player_num.upper();
+		const role_selector_dom = $this.role_editor.selector_dom(self);
+		tplate.index.role.append(role_selector_dom.root);
+		// todo: is this stupid?
+		role_selector_dom.index.list.value = self.role?.role_id || '';
 
 		tplate.index.name.onchange = function(evt){
 			self.player_name = evt.target.value.lower();
@@ -1107,12 +1407,28 @@ $this.ClubPlayer = class{
 		return false
 	}
 
+	$role(self){
+		return self._role
+	}
+
+	$$role(self, tgt_role=null){
+		if ((typeof tgt_role) == 'string'){
+			self._role = $this.role_editor.lookup(tgt_role);
+			self.forward_update();
+			return
+		}
+		self._role = tgt_role;
+
+		self.forward_update();
+	}
+
 	// return a dictionary representing this player
 	as_dict(self){
 		return {
 			'name':    self.player_name,
 			'surname': self.player_surname,
 			'num':     self.player_num,
+			'role':    self.role?.role_id || null,
 		}
 	}
 }
@@ -1143,10 +1459,17 @@ $this.TeamLineup = class{
 		self.club = club;
 		const lineup_info = input_lineup_info || {};
 
+		print('Input lineup config', input_lineup_info)
+
 		// basic config
-		self.shorts_color = lineup_info.shorts_col || null;
-		self.tshirt_color = lineup_info.tshirt_col || null;
-		self.gk_color =     lineup_info.gk_col || null;
+		self.shorts_color =      lineup_info.shorts_col || null;
+		self.shorts_text_color = lineup_info.shorts_text_col || null;
+
+		self.tshirt_color =      lineup_info.tshirt_col || null;
+		self.tshirt_text_color = lineup_info.tshirt_text_col || null;
+
+		self.gk_color =          lineup_info.gk_col || null;
+		self.gk_text_color =     lineup_info.gk_text_col || null;
 
 		// todo: unused as of now
 		self.field_layout = lineup_info.field_layout || {};
@@ -1176,7 +1499,10 @@ $this.TeamLineup = class{
 		// todo: is this stupid ?
 		self.input_lineup_info = lineup_info;
 
+		// Substitute stack
+		self.subs = new $this.PlayerSubstitutes(self);
 	}
+
 
 	// get control panel element for the lineup
 	control_panel_elem(self){
@@ -1240,29 +1566,41 @@ $this.TeamLineup = class{
 		//
 		// create colour pickers
 		// 
-		self.shorts_colpick = new $this.TeamLineupColorPicker(self.available_colors, $this.update_team_colors);
-		// self.shorts_colpick = ksys.util.cls_pwnage.spawn(
-		// 	$this.TeamLineupColorPicker,
-		// 	self.available_colors,
-		// 	$this.update_team_colors
-		// )
-		self.tplate.index.shorts_color_picker.append(self.shorts_colpick.list)
+		const resources = Path($this.resources_location.value || '/');
 
-		self.tshirt_colpick = new $this.TeamLineupColorPicker(self.available_colors, $this.update_team_colors);
-		// self.tshirt_colpick = ksys.util.cls_pwnage.spawn(
-		// 	$this.TeamLineupColorPicker,
-		// 	self.available_colors,
-		// 	$this.update_team_colors
-		// )
-		self.tplate.index.tshirt_color_picker.append(self.tshirt_colpick.list)
 
-		self.gk_colpick = new $this.TeamLineupColorPicker(self.available_colors, $this.update_team_colors);
-		// self.gk_colpick = ksys.util.cls_pwnage.spawn(
-		// 	$this.TeamLineupColorPicker,
-		// 	self.available_colors,
-		// 	$this.update_team_colors
-		// )
-		self.tplate.index.gk_color_picker.append(self.gk_colpick.list)
+		// todo: shorts are now used for the timer title colours
+		self.shorts_colpick = new $this.TeamLineupColorPicker({
+			'baking': {
+				'mask': resources.join('timer_team_color_mask.png'),
+				'result_name': 'timer_team_color.png',
+			}
+		});
+		// self.tplate.index.shorts_color_picker.append(self.shorts_colpick.dom.root)
+
+
+		self.tshirt_colpick = new $this.TeamLineupColorPicker({
+			'baking': {
+				'mask': resources.join('tshirt', 'mask.png'),
+				'bg': resources.join('tshirt', 'outline.png'),
+				'result_name': 'tshirt_players.png',
+			},
+			'change_callback': function(color){
+				self.shorts_colpick.color = color;
+			}
+		});
+		self.tplate.index.tshirt_color_picker.append(self.tshirt_colpick.dom.root)
+
+
+		self.gk_colpick = new $this.TeamLineupColorPicker({
+			'baking': {
+				'mask': resources.join('tshirt', 'mask.png'),
+				'bg': resources.join('tshirt', 'outline.png'),
+				'result_name': 'tshirt_gk.png',
+			}
+		});
+		self.tplate.index.gk_color_picker.append(self.gk_colpick.dom.root)
+
 
 		//
 		// create header (visual identifier)
@@ -1325,8 +1663,13 @@ $this.TeamLineup = class{
 
 		// Colours
 		self.shorts_colpick.selected_color = self.shorts_color;
+		self.shorts_colpick.text_color = self.shorts_text_color;
+
 		self.tshirt_colpick.selected_color = self.tshirt_color;
+		self.tshirt_colpick.text_color = self.tshirt_text_color;
+
 		self.gk_colpick.selected_color = self.gk_color;
+		self.gk_colpick.text_color = self.gk_text_color;
 
 		// Players
 		for (const tgt_list of [['main_players', 'main'], ['reserve_players', 'reserve']]){
@@ -1419,7 +1762,7 @@ Colour picker for the lineup.
 	            The function receives exactly 1 argument:
 	            HEX value of the selected colour.
 */
-$this.TeamLineupColorPicker = class{
+$this._TeamLineupColorPicker = class{
 	constructor(color_codes, callback=null){
 		const self = this;
 		ksys.util.cls_pwnage.remap(self);
@@ -1484,6 +1827,572 @@ $this.TeamLineupColorPicker = class{
 
 		// col_elem.click()
 	}
+}
+
+$this.TeamLineupColorPicker = class{
+	static NPRINT_NAME = 'TeamLineupColorPicker';
+
+	constructor(params){
+		const self = this;
+		ksys.util.cls_pwnage.remap(self);
+		ksys.util.nprint(self, '#8C86FF');
+
+		self._dom = null;
+
+		// This expects:
+		// mask:         BW mask full abs path
+		// bg:           Overlay mask result over this, if any. Full abs path
+		// result_name:  filename of the resulting png image
+		self.bake_params = params?.baking;
+
+		self.change_callback = params?.change_callback;
+
+		// self.suffix = ksys.util.rnd_uuid();
+		self.suffix = params?.suffix || '';
+
+		// Whether baked result needs rebaking
+		self.bake_valid = false;
+		self._baked = null;
+
+		self._text_color_switch = null;
+	}
+
+	async img_dims(self, img_src){
+		const [promise, resolve, reject] = ksys.util.promise();
+		const img = new Image();
+		img.onload = function() {
+			resolve({
+				width:  img.width,
+				height: img.height
+			})
+		}
+		img.src = img_src;
+
+		return (await promise)
+	}
+
+	$selected_color(self){
+		return self.color
+	}
+
+	$$selected_color(self, tgt_color){
+		self.color = tgt_color;
+	}
+
+	$color(self){
+		return self.dom.index.color_input.value
+	}
+
+	$$color(self, tgt_color){
+		self.bake_valid = false;
+		const color_code = str(tgt_color || 'ffffff').replaceAll('#', '').trim();
+		self.dom.index.color_input.value = '#' + color_code;
+		self.dom.index.color_code.value = color_code;
+
+		self?.change_callback?.('#' + color_code);
+	}
+
+	$text_color(self){
+		return self.text_color_switch.selected;
+	}
+
+	$$text_color(self, tgt_color){
+		self.nprint('Setting BW color switch to:', tgt_color)
+		self.text_color_switch.selected = tgt_color;
+	}
+
+	async run_proc(self, bin_path, params, pipe_data, buf_only=false){
+		const text_decoder = new TextDecoder();
+
+		const [promise, resolve, reject] = ksys.util.promise();
+		const stdio = {'stdio': pipe_data?.proc_params}
+		const proc = child_proc(
+			bin_path,
+			params,
+			pipe_data ? stdio : {}
+		);
+
+		const status = {
+			'stdout': [],
+			'stderr': [],
+			'stdbuf': [],
+			'exit_code': null,
+		}
+
+		proc.stdout.on('data', function(data){
+			if (!buf_only){
+				try{status.stdout.push(text_decoder.decode(data))}catch{};
+			}
+			status.stdbuf.push(data);
+		})
+
+		proc.stderr.on('data', function(data){
+			try{status.stderr.push(text_decoder.decode(data))}catch{};
+		})
+
+		proc.on('close', function(code){
+			status.exit_code = code;
+			resolve(true);
+		})
+
+		if (pipe_data){
+			let idx = 3;
+			for (const pipe_buf of pipe_data.bufs){
+				proc.stdio[idx].write(
+					Buffer.from(pipe_buf)
+				)
+				proc.stdio[idx].end();
+				idx += 1;
+			}
+		}
+
+
+		await promise;
+
+		return {
+			'stderr': status.stderr.join(''),
+			'stdout': status.stdout.join(''),
+			'stdbuf': Buffer.concat(status.stdbuf),
+			'code': status.exit_code,
+		}
+	}
+
+	$baked_WORKS(self){
+		return new Promise(async function(resolve, reject){
+			if (self._baked && self.bake_valid){
+				resolve(self._baked)
+				return
+			}
+			if (!self.bake_params){
+				resolve(null)
+				return
+			}
+
+			const text_decoder = new TextDecoder();
+
+			const fill_dims = await self.img_dims(self.bake_params.mask);
+			self.nprint('Fill dims:', fill_dims);
+
+			const result_fpath = Path($this.resources_location.value).join('baked', str(self.bake_params.result_name));
+
+			// 1 - generate color fill
+			self.nprint('Generating fill');
+			const fill_fpath = Path($this.resources_location.value, 'baked', `${self.color.replaceAll('#', '')}.png`);
+			const fill_params = [
+				'-y',
+				'-f', 'lavfi',
+				'-i', `color=c=${self.color}:size=${fill_dims.width}x${fill_dims.height}`,
+				'-frames:v', '1',
+				`${str(fill_fpath)}`
+			]
+			self.nprint('FILL PARAMS', fill_params);
+			const fill_proc = child_proc(`C:\\custom\\ffmpeg_vulkan\\bin\\ffmpeg.exe`, fill_params);
+			const [fill_promise, fill_resolve, fill_reject] = ksys.util.promise();
+			fill_proc.on('close', function(code){
+				self.nprint('Fill generation exit code:', code);
+				fill_resolve(true);
+			})
+			fill_proc.stdout.on('data', function(data){
+				self.nprint(text_decoder.decode(data))
+			})
+			fill_proc.stderr.on('data', function(data){
+				self.nprint(text_decoder.decode(data))
+			})
+			await fill_promise
+			self.nprint('DONE Generating fill')
+
+			// 2 - apply mask
+			self.nprint('Applying mask')
+			const masked_fpath = result_fpath.withStem(result_fpath.stem + '_masked');
+			self.nprint('Masked:', masked_fpath)
+			const mask_proc = child_proc($this.img_magick.value, [
+				`${str(fill_fpath)}`, `${str(self.bake_params.mask)}`,
+				'-alpha', 'off',
+				'-compose', 'CopyOpacity',
+				'-composite',
+				`${str(masked_fpath)}`
+			])
+			const [mask_promise, mask_resolve, mask_reject] = ksys.util.promise();
+			mask_proc.on('close', function(code){
+				self.nprint('Mask generation exit code:', code);
+				mask_resolve(true);
+			})
+			mask_proc.stdout.on('data', function(data){
+				self.nprint(text_decoder.decode(data))
+			})
+			mask_proc.stderr.on('data', function(data){
+				self.nprint(text_decoder.decode(data))
+			})
+			await mask_promise
+			self.nprint('DONE Applying mask')
+
+			// at this point - the image is ready
+			let baked_result_fpath = masked_fpath;
+
+			// 3 - apply bg (if any)
+			if (self.bake_params.bg){
+				self.nprint('Overlaying')
+				baked_result_fpath = result_fpath;
+				const overlay_proc = child_proc($this.img_magick.value, [
+					// bottom gear
+					str(self.bake_params.bg),
+					// top gear
+					str(masked_fpath),
+					'-gravity', 'center',
+					'-composite', str(result_fpath),
+				])
+				const [overlay_promise, overlay_resolve, overlay_reject] = ksys.util.promise();
+				overlay_proc.on('close', function(code){
+					self.nprint('BG overlay exit code:', code);
+					overlay_resolve(true);
+				})
+				overlay_proc.stdout.on('data', function(data){
+					self.nprint(text_decoder.decode(data))
+				})
+				overlay_proc.stderr.on('data', function(data){
+					self.nprint(text_decoder.decode(data))
+				})
+				await overlay_promise
+				self.nprint('DONE Overlaying')
+			}
+
+			self.nprint('Bake final result:', baked_result_fpath);
+
+			self.bake_valid = true;
+
+			self._baked = baked_result_fpath
+
+			resolve(self._baked)
+		})
+	}
+
+	$baked_shorter(self){
+		return new Promise(async function(resolve, reject){
+			if (self._baked && self.bake_valid){
+				resolve(self._baked)
+				return
+			}
+			if (!self.bake_params){
+				resolve(null)
+				return
+			}
+
+			const text_decoder = new TextDecoder();
+
+			const fill_dims = await self.img_dims(self.bake_params.mask);
+			self.nprint('Fill dims:', fill_dims);
+
+			const result_fpath = Path(
+				$this.resources_location.value,
+				'baked',
+				str(self.suffix + self.bake_params.result_name)
+			)
+
+
+			// 1 - generate color fill
+			self.nprint('Generating fill');
+			const fill_fpath = Path(
+				$this.resources_location.value,
+				'baked',
+				`${self.suffix + self.color.replaceAll('#', '')}.png`
+			);
+			const fill_params = [
+				'-y',
+				'-f', 'lavfi',
+				'-i', `color=c=${self.color}:size=${fill_dims.width}x${fill_dims.height}`,
+				'-frames:v', '1',
+				`${str(fill_fpath)}`
+			]
+			self.nprint('FILL PARAMS', fill_params);
+			const fill_proc_result = await self.run_proc(
+				$this.ffmpeg.value,
+				fill_params
+			)
+			self.nprint('DONE Generating fill', fill_proc_result)
+
+
+			// 2 - apply mask
+			self.nprint('Applying mask')
+			const masked_fpath = result_fpath.withStem(result_fpath.stem + '_masked');
+			const mask_params = [
+				str(fill_fpath),  str(self.bake_params.mask),
+				'-alpha',         'off',
+				'-compose',       'CopyOpacity',
+				'-composite',
+				str(masked_fpath),
+			]
+			self.nprint('Mask params:', mask_params)
+			const mask_proc_result = await self.run_proc(
+				$this.img_magick.value,
+				mask_params
+			)
+			self.nprint('DONE Applying mask', mask_proc_result)
+
+
+			// at this point - the image is ready
+			let baked_result_fpath = masked_fpath;
+
+			// 3 - apply bg (if any)
+			if (self.bake_params.bg){
+				self.nprint('Overlaying')
+				baked_result_fpath = result_fpath;
+				const overlay_params = [
+					// bottom gear
+					str(self.bake_params.bg),
+					// top gear
+					str(masked_fpath),
+					'-gravity', 'center',
+					'-composite', str(result_fpath),
+				]
+				self.nprint('Overlay params:', overlay_params)
+				const overlay_proc_result = await self.run_proc(
+					$this.img_magick.value,
+					overlay_params
+				)
+				self.nprint('DONE Overlaying:', overlay_proc_result)
+			}
+
+			self.nprint('Bake final result:', baked_result_fpath);
+
+			self.bake_valid = true;
+
+			self._baked = baked_result_fpath
+
+			resolve(self._baked)
+		})
+	}
+
+	async test(self){
+		// #698cdd
+		// -f lavfi -i color=c=#698cdd:size=250x250:rate=1 -frames:v 1 -vcodec png -f image2pipe pipe:1
+		const fill_params = [
+			// '-y',
+			'-f', 'lavfi',
+			'-i', `color=c=#698cdd:size=250x250:rate=1`,
+			'-frames:v', '1',
+			'-vcodec', 'png',
+			'-f', 'image2pipe',
+			// `${str(fill_fpath)}`
+			'pipe:1',
+		]
+		const proc_result = await self.run_proc(
+			$this.ffmpeg.value,
+			fill_params,
+		)
+
+		self.nprint(proc_result)
+
+		Path('W:/fussball/titles/vbet_22_07_2025/dev/pipe_test.png').writeFileSync(proc_result.stdbuf);
+
+		// $this.img_magick.value
+		const pipe_data = {
+			'proc_params': [
+				'pipe',
+				'pipe',
+				'pipe',
+				'pipe',
+				'pipe',
+			],
+			'bufs': [
+				proc_result.stdbuf,
+				Path(self.bake_params.mask).readFileSync(),
+			]
+		}
+		const mask_params = [
+			'fd:3', 'fd:4',
+			'-alpha',     'off',
+			'-compose',   'CopyOpacity',
+			'-composite',
+			'png:-',
+		]
+
+		const mask_result = await self.run_proc(
+			$this.img_magick.value,
+			mask_params,
+			pipe_data,
+		)
+
+		self.nprint('Mask result:', mask_result)
+
+		Path('W:/fussball/titles/vbet_22_07_2025/dev/pipe_test_masked.png').writeFileSync(mask_result.stdbuf);
+	}
+
+	$baked(self){
+		return new Promise(async function(resolve, reject){
+			if (self._baked && self.bake_valid){
+				resolve(self._baked)
+				return
+			}
+			if (!self.bake_params){
+				resolve(null)
+				return
+			}
+
+			// The fill must be of the same resolution as the mask
+			const fill_dims = await self.img_dims(self.bake_params.mask);
+			self.nprint('Fill dims:', fill_dims);
+
+
+			// 1 - generalte solid colour fill
+			// ffmpeg.exe params
+			const fill_params = [
+				'-f',        'lavfi',
+				'-i',        `color=c=${self.color}:size=${fill_dims.width}x${fill_dims.height}`,
+				'-frames:v', '1',
+				'-vcodec',   'png',
+				'-f',        'image2pipe',
+				'pipe:1',
+			]
+			// ffmpeg.exe result
+			self.nprint('Generating fill', fill_params);
+			const fill_result = await self.run_proc(
+				$this.ffmpeg.value,
+				fill_params,
+				false, false
+			)
+			self.nprint('Fill result', fill_result);
+
+
+			// 2 - generate masked
+			const mask_pipe_data = {
+				'proc_params': [
+					'pipe',
+					'pipe',
+					'pipe',
+					'pipe',
+					'pipe',
+				],
+				'bufs': [
+					fill_result.stdbuf,
+					Path(self.bake_params.mask).readFileSync(),
+				]
+			}
+			const mask_params = [
+				'fd:3',
+				'fd:4',
+				'-alpha',     'off',
+				'-compose',   'CopyOpacity',
+				'-composite', 'png:-',
+			]
+			self.nprint('Generating masked', mask_pipe_data, mask_params);
+			const mask_result = await self.run_proc(
+				$this.img_magick.value,
+				mask_params,
+				mask_pipe_data,
+				false
+			)
+			self.nprint('Mask result:', mask_result)
+
+			let result_buf = mask_result.stdbuf;
+
+			// 3 - overlay over another image, if needed
+			if (self.bake_params.bg){
+				const overlay_params = [
+					// bottom gear
+					'fd:3',
+					// top gear
+					'fd:4',
+					'-gravity',   'center',
+					'-composite', 'png:-',
+				]
+				const overlay_pipe_data = {
+					'proc_params': [
+						'pipe',
+						'pipe',
+						'pipe',
+						'pipe',
+						'pipe',
+					],
+					'bufs': [
+						// bottom gear
+						Path(self.bake_params.bg).readFileSync(),
+						// top gear
+						mask_result.stdbuf,
+					]
+				}
+				const overlay_result = await self.run_proc(
+					$this.img_magick.value,
+					overlay_params,
+					overlay_pipe_data,
+					false
+				)
+				self.nprint('Overlay result:', overlay_result);
+
+				result_buf = overlay_result.stdbuf;
+			}
+
+			self.bake_valid = true;
+			self._baked = result_buf;
+
+			resolve(self._baked)
+
+		})
+	}
+
+	$text_color_switch(self){
+		if (self._text_color_switch){
+			return self._text_color_switch
+		}
+
+		self._text_color_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': 'white',
+			'dom_array': [
+				{
+					'id': 'white',
+					'dom': self.dom.index.bw_white,
+				},
+				{
+					'id': 'black',
+					'dom': self.dom.index.bw_black,
+				},
+			],
+			'callback': function(kbswitch, color){
+				self.text_color = color;
+				$this.global_save({'lineup_lists': true})
+			}
+		});
+
+		return self._text_color_switch
+	}
+
+	$dom(self){
+		if (self._dom){
+			return self._dom
+		}
+
+		self._dom = ksys.context.tplates.general.team_lineup_color_picker({
+			'color_input': '.color_picker',
+			'color_code':  '.color_code',
+
+			'bw_white':    '.text_color_switch [kbswitch_item][white]',
+			'bw_black':    '.text_color_switch [kbswitch_item][black]',
+		})
+
+		self._dom.index.color_input.onchange = function(){
+			self.color = self._dom.index.color_input.value;
+			// self.bake_valid = false;
+			// self._dom.index.color_code.value = self._dom.index.color_input.value.replaceAll('#', '');
+			// todo: is this the right place for this?
+			// Trigger lineup save
+			$this.global_save({'lineup_lists': true})
+		}
+		self._dom.index.color_code.onchange = function(){
+			self.color = self._dom.index.color_code.value;
+			// self.bake_valid = false;
+			// self.color = self._dom.index.color_code.value;
+			// todo: is this the right place for this?
+			// Trigger lineup save
+			$this.global_save({'lineup_lists': true})
+		}
+
+		self._dom.index.color_code.textContent = self.color;
+		self._dom.index.color_input.value = self.color;
+
+		return self._dom
+	}
+
 }
 
 
@@ -2369,7 +3278,6 @@ $this.CardManager = class {
 		self.resync_vmix();
 	}
 
-
 	// Show the cards the player has received
 	// Directly in the list item
 	// todo: get rid of jquery
@@ -2377,7 +3285,7 @@ $this.CardManager = class {
 		let items = [];
 		if (!list_dom && !player){
 			items = [...self.player_picker.filtered_entries];
-			print('Redrawing entire list:', items)
+			// print('Redrawing entire list:', items)
 		}else{
 			items = [{
 				'list_elem': list_dom,
@@ -2408,11 +3316,10 @@ $this.CardManager = class {
 
 	}
 
-
 	// Enable/disable buttons based on selected player
 	// And append cards to the list item
 	eval_button_states(self){
-		print('evaluating button states')
+		// print('evaluating button states')
 		// todo: it's really stupid that it's here
 		self.redraw_card_vis_feedback_in_list_item()
 
@@ -2463,7 +3370,6 @@ $this.CardManager = class {
 			})
 		}
 	}
-
 
 	// Resync dependencies:
 	// If the club changed - purge old player card map and red counter
@@ -2527,10 +3433,56 @@ $this.CardManager = class {
 
 	// 1+ code duplications is already too much
 	async show_card_title(self, title, player){
+		if ($this.title_schema_switch.selected == 'paged'){
+			let header_text = '';
+			let icon = null;
+
+			if (title.title_name == 'yellow_card.gtzip'){
+				header_text = 'ЖОВТА КАРТКА';
+				icon = Path($this.resources_location.value, 'icons/yellow_card.png')
+			}
+
+			if (title.title_name == 'ycbr.gtzip'){
+				header_text = 'ДРУГА ЖОВТА КАРТКА';
+				icon = Path($this.resources_location.value, 'icons/ycbr.png')
+			}
+
+			if (title.title_name == 'red_card.gtzip'){
+				header_text = 'ЧЕРВОНА КАРТКА';
+				icon = Path($this.resources_location.value, 'icons/red_card.png')
+			}
+
+			// $this.timeout_persistent_header_btns(7000 + 2500 + 50);
+			$this.timeout_persistent_header_btns(
+				$this.sequencer.sequences.cards.sum
+			);
+
+			const time = $this.get_current_time(true);
+			const time_suffix = time.extra ? `+${time.extra}` : '';
+
+			await $this.persistent_header.event({
+				'header': header_text,
+				'upper_text': player.surname,
+				'lower_text': `${time.base}'` + time_suffix + ' ХВИЛИНА',
+				'icon': str(icon),
+				'team_logo': player.club.logo_path,
+			})
+
+			// let it hang for 7 seconds
+			// await ksys.util.sleep(7000);
+			await ksys.util.sleep(
+				$this.sequencer.sequences.cards.items.hold.dur
+			);
+			// Switch back to clock
+			await $this.persistent_header.clock();
+			// Do not proceed any further
+			return
+		}
+
 		// Set the player's surname
 		await title.set_text(
 			'player_name',
-			`${player.player_num} ${ksys.strf.params.players.format(player.player_surname)}`,
+			`${player.player_num} ${ksys.strf.params.players.format(player.surname)}`,
 		)
 		// Set club logo
 		await title.set_img_src('club_logo', player.club.logo_path)
@@ -2539,6 +3491,7 @@ $this.CardManager = class {
 		await title.overlay_in()
 		// let it hang for 7 seconds
 		await ksys.util.sleep(7000)
+		// await ksys.util.sleep($this.sequencer.sequences.cards.items.hold.dur);
 		// hide the title
 		await title.overlay_out()
 	}
@@ -2735,7 +3688,6 @@ $this.CardManager = class {
 
 	// resync title state in vmix
 	async resync_vmix(self){
-		// L
 		// todo: there's an automatic assumption that home is index 1 of the cards
 		const retarded = ['home', 'guest'];
 		for (const _side_idx in retarded){
@@ -2743,7 +3695,18 @@ $this.CardManager = class {
 			const side = self.sides[retarded[side_idx]];
 
 			for (const card_idx of range(3)){
-				await $this.titles.timer.toggle_img(`rcard_${side_idx+1}_${card_idx+1}`, !!side.red_stack.at(card_idx))
+				if ($this.red_card_schema_switch.selected == 'images'){
+					await $this.titles.timer.toggle_img(
+						`rcard_${side_idx+1}_${card_idx+1}`,
+						!!side.red_stack.at(card_idx)
+					)
+				}else{
+					await $this.titles.timer.set_shape_color(
+						`rcard_${side_idx+1}_${card_idx+1}`,
+						$this.red_card_schema_color.value + (!!side.red_stack.at(card_idx) ? '' : '00')
+					)
+				}
+				
 			}
 		}
 	}
@@ -3159,7 +4122,7 @@ $this.ClubGoals = class {
 
 
 // This class keeps track of both sides' scores
-$this.ScoreManager = class {
+$this.ScoreManager = class{
 	constructor(init_data=null){
 		const self = this;
 		ksys.util.cls_pwnage.remap(self);
@@ -3631,6 +4594,1024 @@ $this.PenaltyTableEntry = class{
 
 
 
+$this.PersistentHeaderPageManager = class{
+	static NPRINT_NAME = 'PersistentHeaderPageManager';
+
+	// Fuck you
+	NAV_MAP = Object.freeze({
+		0: Object.freeze([
+			1, 3, 5, 7, 9,
+		]),
+		1: Object.freeze([
+			2,
+		]),
+		2: Object.freeze([
+			1, 3, 5, 7, 9,
+		]),
+		3: Object.freeze([
+			4,
+		]),
+		4: Object.freeze([
+			1, 5, 7, 9,
+		]),
+		5: Object.freeze([
+			1, 6,
+		]),
+		6: Object.freeze([
+			1, 3, 5, 7, 9,
+		]),
+		7: Object.freeze([
+			8,
+		]),
+		8: Object.freeze([
+			1, 3, 5, 7, 9,
+		]),
+		9: Object.freeze([
+			10,
+		]),
+		10: Object.freeze([
+			1, 3, 5, 7, 9,
+		]),
+	});
+
+	OWNERSHIP = Object.freeze({
+		'clock':  Object.freeze( [2, 4, 6, 8, 10] ),
+		'event':  Object.freeze( [1]              ),
+		'ballin': Object.freeze( [3]              ),
+		'sub_1':  Object.freeze( [5]              ),
+		'sub_3':  Object.freeze( [7]              ),
+		'empty':  Object.freeze( [9]              ),
+	});
+
+	TR_DUR = Object.freeze({
+		0:  1500,
+		1:  1500,
+		2:  1500,
+		3:  1500,
+		4:  1500,
+		5:  1500,
+		6:  1500,
+		7:  1500 + 5000,
+		8:  1500,
+		9:  1500,
+		10: 1500,
+	})
+
+	constructor(){
+		const self = ksys.util.cls_pwnage.remap(this);
+		ksys.util.nprint(self, '#FF57CA');
+		// self._current = ksys.context.module.prm('pheader_nav_current') || 0;
+		self._current = 0;
+	}
+
+	$current(self){
+		return (self._current || 0)
+	}
+
+	$$current(self, newval){
+		if (!Number.isInteger(newval)){
+			self.nprint('Invalid current:', newval);
+			return
+		}
+
+		self._current = int(newval);
+		// ksys.context.module.prm('pheader_nav_current', self._current);
+	}
+
+	// Get VMIX project XML and determine current page index from it
+	async pull_page_from_vmix(self, apply=true){
+		const title_data = await $this.titles.timer.pull_xml();
+		if (!title_data){
+			return null
+		}
+
+		const idx = int(title_data.getAttribute('selectedIndex')) || 0;
+
+		if (apply){
+			self.current = idx;
+			return self.current;
+		}
+
+		return idx || null
+	}
+
+	reset(self){
+		self.current = 0;
+	}
+
+	seek(self, target){
+		if (target == 'clock' && self.current == 0){
+			self.nprint('Page 0 (clock) to clock switch requested. Ignoring');
+			return false
+		}
+
+		if ( !target || !(target in self.OWNERSHIP) ){
+			self.nprint('Invalid target:', target);
+			return false
+		}
+
+		// Where to current can transition
+		const current_allowance = self.NAV_MAP[self.current];
+		const target_ownerships = self.OWNERSHIP[target];
+
+		if (target_ownerships.includes(self.current)){
+			self.nprint('Switching to the already displayed item. Aborting');
+			return false
+		}
+
+		self.nprint(
+			'Seeking for', target,
+			'Target is on one of:', target_ownerships,
+			'Current can switch to:', current_allowance,
+		);
+
+		for (const allowed of current_allowance){
+			for (const tgt of target_ownerships){
+				if (allowed == tgt){
+					return tgt;
+				}
+			}
+		}
+
+		return null
+
+		// let found = false;
+		// for (const allowed of current_allowance){
+		// 	for (const tgt of target_ownerships){
+		// 		if (allowed == tgt){
+		// 			self.current = tgt;
+		// 			await $this.titles.timer.page(tgt, self.TR_DUR[tgt]);
+		// 			found = true;
+		// 			break
+		// 		}
+		// 	}
+		// 	if (found){
+		// 		break
+		// 	}
+		// }
+	}
+
+	async transition(self, target=null){
+		for (const attempt of range(3)){
+			if (attempt == 0){
+				const direct_switch = self.seek(target);
+				if (direct_switch === false){return};
+				if (direct_switch == null){continue};
+
+				self.nprint('Found switch target on first attempt');
+				self.current = direct_switch;
+				await $this.titles.timer.page(
+					direct_switch,
+					self.TR_DUR[direct_switch]
+				);
+
+				return
+			}
+
+			// Try switching to clock and then to target
+			if (attempt == 1){
+				const to_clock = self.seek('clock');
+				if (to_clock === false){
+					self.nprint(
+						'Second switch attempt said the title is already at clock',
+						'which is impossible. Proceeding to next attempt'
+					)
+					continue
+				}
+				if (to_clock == null){continue};
+
+
+				self.current = to_clock;
+
+
+				const to_target = self.seek(target);
+				if (to_target === false){
+					self.nprint(
+						'Second switch attempt said that after switching to clock -',
+						'the title is already at target page, which is impossible.',
+						'Proceeding to next attempt'
+					)
+					continue
+				}
+				if (to_target == null){continue};
+
+
+				self.current = to_target;
+
+
+				self.nprint('Switching to clock and then target');
+				await $this.titles.timer.page(
+					to_clock,
+					self.TR_DUR[to_clock]
+				);
+				await $this.titles.timer.page(
+					to_target,
+					self.TR_DUR[to_target]
+				);
+				return
+			}
+
+
+			if (attempt == 2){
+				self.nprint('Last resort: Switching without considering animations');
+				self.current = self.OWNERSHIP[target][0];
+				await $this.titles.timer.page(
+					self.current,
+					self.TR_DUR[self.current]
+				);
+			}
+		}
+
+		// if (!found && !already_seeking){
+		// 	self.nprint('No route found. Switching to clock and then to target');
+		// 	await self.transition('clock', true);
+		// 	await self.transition(target, true);
+		// }
+
+		// if (!found && already_seeking){
+		// 	self.nprint(
+		// 		'Failed to switch back to clock when seeking route.',
+		// 		'Resetting to 0 '
+		// 	)
+		// }
+	}
+}
+
+
+$this.PersistentHeader = class{
+	static NPRINT_NAME = 'PersistentHeader';
+
+	EVENT_TEXT_FIELDS = Object.freeze([
+		// evt = event
+		Object.freeze(['evt_header',     'header']),
+		Object.freeze(['evt_upper_text', 'upper_text']),
+		Object.freeze(['evt_lower_text', 'lower_text']),
+	]);
+
+	EVENT_IMAGE_FIELDS = Object.freeze([
+		// evt = event
+		Object.freeze(['evt_icon',      'icon']),
+		Object.freeze(['evt_team_logo', 'team_logo']),
+	]);
+
+	constructor(){
+		const self = ksys.util.cls_pwnage.remap(this);
+		ksys.util.nprint(self, '#5AF9FF');
+
+		self.pages = new $this.PersistentHeaderPageManager();
+		self.title = $this.titles.timer;
+	}
+
+	async hide_all(self){
+		await self.pages.transition('empty');
+	}
+
+	async clock(self){
+		await self.pages.transition('clock');
+	}
+
+	/*
+		event_data (dict):
+		    text fields:
+		    - evt_header
+		    - evt_upper_text
+		    - evt_lower_text
+
+		    image_fields:
+		    - evt_icon
+		    - evt_team_logo
+	*/
+	async event(self, event_data){
+		if (!event_data){
+			self.nerr('FATAL: Bad event data:', event_data);
+			return
+		}
+
+		// Set text fields
+		for (const field_data of self.EVENT_TEXT_FIELDS){
+			const [vmix_id, dict_id] = field_data;
+
+			if (dict_id in event_data){
+				await self.title.toggle_text(vmix_id, true);
+				await self.title.set_text(vmix_id, event_data[dict_id]);
+			}else{
+				await self.title.toggle_text(vmix_id, false);
+			}
+		}
+
+		// Set image fields
+		for (const field_data of self.EVENT_IMAGE_FIELDS){
+			const [vmix_id, dict_id] = field_data;
+
+			if (dict_id in event_data){
+				await self.title.toggle_img(vmix_id, true);
+				await self.title.set_img_src(vmix_id, event_data[dict_id]);
+			}else{
+				await self.title.toggle_img(vmix_id, false);
+			}
+		}
+
+		await self.pages.transition('event');
+	}
+
+	// Fuck it, we ball
+	async ballin(self, perc_data){
+		// percent left, percent right
+		const [p_l, p_r] = perc_data;
+
+		await self.title.set_text('Stat_A', `${p_l}%`);
+		await self.title.set_text('Stat_B', `${p_r}%`);
+		await self.pages.transition('ballin');
+	}
+
+	async subs(self, subs_data){
+		if (!subs_data?.players){
+			self.nerr('FATAL: Bad substitute data:', subs_data);
+			return
+		}
+
+		self.nprint('Substitute:', subs_data);
+
+		if (subs_data.players.length == 1){
+			// Set team logo
+			await self.title.set_img_src('subs1_team_logo', subs_data.team_logo);
+
+			// Set player names
+			await self.title.set_text('subs1_leaving0', subs_data.players[0].leaving);
+			await self.title.set_text('subs1_inbound0', subs_data.players[0].inbound);
+
+			await self.pages.transition('sub_1');
+		}
+
+		if (subs_data.players.length > 1){
+			// Set team logo
+			await self.title.set_img_src('subs3_team_logo', subs_data.team_logo);
+
+			// Hide all text fields and arrows
+			for (const idx of range(3)){
+				// text fields
+				await self.title.toggle_text(`subs3_leaving${idx}`, false);
+				await self.title.toggle_text(`subs3_inbound${idx}`, false);
+				// arrow icons
+				await self.title.toggle_img(`leaving_icon_${idx}`, false);
+				await self.title.toggle_img(`inbound_icon_${idx}`, false);
+			}
+
+			// Fill and show fields
+			for (const idx of range(3)){
+				const player_data = subs_data.players[idx];
+				if (!player_data){break};
+
+				// set text in leaving/inbound text fields
+				await self.title.set_text(`subs3_leaving${idx}`, player_data.leaving);
+				await self.title.set_text(`subs3_inbound${idx}`, player_data.inbound);
+
+				// re-enable leaving/inbound text fields
+				await self.title.toggle_text(`subs3_leaving${idx}`, true);
+				await self.title.toggle_text(`subs3_inbound${idx}`, true);
+				// re-enable arrow icons
+				await self.title.toggle_img(`leaving_icon_${idx}`, true);
+				await self.title.toggle_img(`inbound_icon_${idx}`, true);
+			}
+
+			await self.pages.transition('sub_3');
+		}
+	}
+}
+
+
+
+$this.PlayerRoleInstance = class{
+	static NPRINT_NAME = 'PlayerRoleInstance';
+
+	constructor(editor, role_data){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#FFFB88',
+		);
+
+		self.editor = editor;
+
+		// indexed DOM templates reference array
+		self.references = {
+			'full':  new Set(),
+			'short': new Set(),
+		}
+
+		// todo: ensure uuid doesn't already exist
+		self._role_id = role_data?.role_id || ksys.util.rnd_uuid();
+		self._role_name_full = role_data?.role_name_full || '';
+		self._role_name_short = role_data?.role_name_short || '';
+
+		self._editor_dom = null;
+	}
+
+	litter(self, litter_type){
+		for (const rubbish of self.references[litter_type]){
+			// self.nprint('Deleting litter:', self.references[litter_type])
+			if (!document.body.contains(rubbish.root)){
+				self.references[litter_type].delete(rubbish);
+			}
+		}
+	}
+
+	// Update visual feeds
+	render_visfeed(self, kind){
+		// todo: can this be better?
+		for (const dom of self.references.full){
+			dom.index.text.textContent = self.role_name_full;
+		}
+		for (const dom of self.references.short){
+			dom.index.text.textContent = self.role_name_short;
+		}
+	}
+
+	$role_id(self){
+		return self._role_id
+	}
+
+	$role_name_full(self){
+		return self._role_name_full
+	}
+
+	$$role_name_full(self, tgt_name){
+		self._role_name_full = tgt_name;
+		self.render_visfeed();
+		self.editor.check_duplicates();
+	}
+
+	$role_name_short(self){
+		return self._role_name_short
+	}
+
+	$$role_name_short(self, tgt_name){
+		self._role_name_short = tgt_name;
+		self.render_visfeed();
+		self.editor.check_duplicates();
+	}
+
+	remove(self){
+		const home_playerbase = $this.resource_index?.home_club?.playerbase || new Set();
+		const guest_playerbase = $this.resource_index?.guest_club?.playerbase || new Set();
+		for (const player of home_playerbase.union(guest_playerbase)){
+			if (player.role == self){
+				player.role = null;
+			}
+		}
+
+		self.editor.roles.delete(self);
+		self._editor_dom.root.remove();
+		self.editor.check_duplicates();
+		self.render_visfeed();
+
+		// todo: is this really needed?
+		// self.editor = null;
+	}
+
+	visfeed_full_dom(self){
+		self.litter('full');
+
+		const dom = ksys.context.tplates.p_roles.visfeed_full({
+			'text': '.player_role_visfeed',
+		})
+
+		dom.index.text.textContent = self.role_id;
+
+		self.references.full.add(dom);
+
+		return dom
+	}
+
+	visfeed_short_dom(self){
+		self.litter('short');
+
+		const dom = ksys.context.tplates.p_roles.visfeed_short({
+			'text': '.player_role_visfeed',
+		})
+
+		dom.index.text.textContent = self.role_name_short;
+
+		self.references.short.add(dom);
+
+		return dom
+	}
+
+	$editor_dom(self){
+		if (self._editor_dom){
+			return self._editor_dom
+		}
+
+		self._editor_dom = ksys.context.tplates.p_roles.role_instance({
+			'icon':       '.icon',
+			'name_full':  '.name_input.full',
+			'name_short': '.name_input.short',
+		})
+
+		const dom_idx = self._editor_dom.index;
+
+		self._editor_dom.index.name_full.value = self.role_name_full;
+		self._editor_dom.index.name_short.value = self.role_name_short;
+
+		dom_idx.name_full.onchange = function(){
+			self.role_name_full = dom_idx.name_full.value;
+			self.editor.save();
+		}
+
+		dom_idx.name_short.onchange = function(){
+			self.role_name_short = dom_idx.name_short.value;
+			self.editor.save();
+		}
+
+		self._editor_dom.root.oncontextmenu = function(evt){
+			if (evt.altKey){
+				self.remove()
+				self.editor.save();
+			}
+		}
+
+		return self._editor_dom
+	}
+
+	warn(self, state){
+		if (state){
+			self.editor_dom.index.icon.classList.remove('kbsys_hidden_opacity');
+		}else{
+			self.editor_dom.index.icon.classList.add('kbsys_hidden_opacity');
+		}
+	}
+
+	to_dict(self){
+		return {
+			'role_id':         self.role_id,
+			'role_name_full':  self.role_name_full,
+			'role_name_short': self.role_name_short,
+		}
+	}
+}
+
+
+$this.PlayerRolesEditor = class{
+	static NPRINT_NAME = 'PlayerRolesEditor';
+
+	CFGFILE_NAME = 'player_roles.kbdata';
+
+	constructor(){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#FFAE6D',
+		);
+
+		self.roles = new Set();
+
+		self.selector_doms = new Set();
+
+		self._editor_dom = null;
+	}
+
+	lookup(self, tgt_id){
+		for (const role of self.roles){
+			if (role.role_id == tgt_id){
+				return role
+			}
+		}
+	}
+
+	litter(self){
+		for (const rubbish of self.selector_doms){
+			if (!document.body.contains(rubbish.root)){
+				self.selector_doms.delete(rubbish);
+			}
+		}
+	}
+
+	check_duplicates(self){
+		self.nprint('Checking duplicates');
+
+		for (const role of self.roles){
+			role.warn(false);
+		}
+
+		for (const role of self.roles){
+			self.nprint('Checking for duplicate', role)
+			const duplicates = [];
+			for (const dupe_role of self.roles){
+				const has_dupes = [
+					role.role_name_full.lower() == dupe_role.role_name_full.lower(),
+					role.role_name_short.lower() == dupe_role.role_name_short.lower(),
+				]
+				if (has_dupes.includes(true)){
+					duplicates.push(dupe_role)
+				}
+			}
+
+			if (duplicates.length > 1){
+				for (const dupe_role of duplicates){
+					dupe_role.warn(true);
+				}
+			}
+		}
+	}
+
+	render_selector(self, dom){
+		// self.nprint('Redrawing role selector');
+
+		const current_val = dom.index.list.value;
+
+		// todo: remove jquery
+		$(dom.index.list).find('option').remove();
+
+		for (const role of self.roles){
+			const vis = `${role.role_name_full.padEnd(17).replaceAll(' ', '&nbsp')} | ${role.role_name_short}`;
+
+			$(dom.index.list).append(`
+				<option value="${role.role_id}">${vis}</option>
+			`)
+		}
+
+		dom.index.list.value = current_val;
+	}
+
+	selector_dom(self, tgt_player){
+		self.litter();
+
+		const dom = ksys.context.tplates.p_roles.role_selector({
+			'list': 'select',
+		})
+
+		self.selector_doms.add(dom);
+
+		dom.index.list.onfocus = function(){
+			self.render_selector(dom);
+		}
+
+		dom.index.list.onchange = function(){
+			tgt_player.role = self.lookup(dom.index.list.value);
+		}
+
+		self.render_selector(dom);
+
+		return dom
+	}
+
+	create(self, data=null){
+		const role = new $this.PlayerRoleInstance(self, data);
+		self.roles.add(role);
+		self.editor_dom.index.role_pool.append(role.editor_dom.root);
+		return role
+	}
+
+	$editor_dom(self){
+		if (self._editor_dom){
+			return self._editor_dom
+		}
+
+		self._editor_dom = ksys.context.tplates.p_roles.role_editor({
+			'add_new':   '.editor_btn.create_role',
+			'role_pool': '.role_pool',
+		})
+
+		self._editor_dom.index.add_new.onclick = function(){
+			self.create();
+		}
+
+		return self._editor_dom
+	}
+
+	save(self){
+		const data = [];
+
+		for (const role of self.roles){
+			data.push(role.to_dict())
+		}
+
+		ksys.db.module.write(
+			self.CFGFILE_NAME,
+			JSON.stringify(data)
+		);
+
+		self.nprint('Saved', data);
+	}
+
+	load(self){
+		const data = ksys.db.module.read(self.CFGFILE_NAME, 'json') || [];
+
+		for (const role of data){
+			self.create(role);
+		}
+
+		self.check_duplicates();
+
+		self.nprint('Loaded:', data);
+	}
+}
+
+
+
+$this.PlayerSubstitutes = class{
+	constructor(lineup){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#FFF5A1',
+		);
+
+		self.lineup = lineup;
+
+		self.stack = new Set();
+
+		self._stack_ctrl_dom = null;
+	}
+
+	clear_stack(self){
+		for (const pair of [...self.stack]){
+			self.remove_pair(pair);
+		}
+	}
+
+	remove_pair(self, pair_data){
+		if (!pair_data){
+			ksys.info_msg.send_msg(
+				`FATAL: Tried removing invalid substitute pair from stack`,
+				'err',
+				6000
+			);
+			self.nerr('FATAL:', 'invalid player pair (remove):', players, self);
+
+			return false
+		}
+
+		self.stack.delete(pair_data);
+
+		pair_data.dom.root.remove();
+
+		return true
+	}
+
+	add_pair(self, players){
+		const [leaving, inbound] = players;
+		if (!leaving || !inbound){
+			ksys.info_msg.send_msg(
+				`FATAL: Tried adding invalid players to substitute stack`,
+				'err',
+				6000
+			);
+			self.nerr('FATAL:', 'invalid player pair (add):', players, self);
+
+			return false
+		}
+
+		if (self.stack.size >= 3){
+			ksys.info_msg.send_msg(
+				`There are 3 players already`,
+				'warn',
+				4000
+			);
+
+			return false
+		}
+
+		const pair_dom = ksys.context.tplates.subs.stack_pair({
+			'leaving': '.subs_stack_player.leaving',
+			'inbound': '.subs_stack_player.inbound',
+		})
+
+		const pair_data = {
+			'dom': pair_dom,
+			'leaving': leaving,
+			'inbound': inbound,
+		}
+
+		self.stack.add(pair_data);
+
+		pair_dom.index.leaving.append(leaving.generic_list_elem().root);
+		pair_dom.index.inbound.append(inbound.generic_list_elem().root);
+
+		self.stack_ctrl_dom.index.stack_list.append(pair_dom.root);
+
+		pair_dom.root.oncontextmenu = function(evt){
+			if (evt.altKey){
+				self.remove_pair(pair_data);
+			}
+		}
+
+		return pair_data
+	}
+
+	// Force run single substitute
+	async run_title_single(self, players, subs_type='break'){
+		const [leaving, inbound] = players;
+		if (!leaving || !inbound){
+			ksys.info_msg.send_msg(
+				`FATAL: Tried using invalid players for single substitute during match`,
+				'err',
+				6000
+			);
+			self.nerr('FATAL:', 'invalid player pair (run_single_title):', players, self);
+
+			return false
+		}
+
+		if (subs_type == 'match'){
+			// Persistent Header can only do one thing at a time
+			$this.timeout_persistent_header_btns(
+				$this.sequencer.sequences.subs_single_match.sum
+			);
+			// Persistent header class applies data and switches to the corrent page on its own,
+			// BUT it does NOT switch back to clock
+			await $this.persistent_header.subs({
+				'team_logo': leaving.club.logo_path,
+				'players': [{
+					'leaving': ksys.strf.params.players.format(leaving.surname),
+					'inbound': ksys.strf.params.players.format(inbound.surname),
+				}]
+			})
+			// Hold the title for n seconds
+			await ksys.util.sleep($this.sequencer.sequences.subs_single_match.items.hold.dur);
+			// Switch back to clock, because this doesn't happen automatically for good reasons
+			await $this.persistent_header.clock();
+		}
+
+		if (subs_type == 'break'){
+			ksys.btns.adv_timeout({
+				'exec_replacement_sequence_stack_break_home': $this.sequencer.sequences.subs_stack_break.sum,
+				'exec_replacement_sequence_stack_break_guest': $this.sequencer.sequences.subs_stack_break.sum,
+				'exec_replacement_sequence_break': $this.sequencer.sequences.subs_single_break.sum,
+			})
+
+			// Set Logo
+			await $this.titles.subs1.set_img_src(
+				'club_logo',
+				leaving.club.logo_path
+			);
+
+			// NAMES - LEAVING
+			await $this.titles.subs1.set_text(
+				'pnum_leaving0',
+				leaving.player_num
+			);
+			await $this.titles.subs1.set_text(
+				'pname_leaving0',
+				`${ksys.strf.params.players.format(leaving.surname)}`
+			);
+
+			// NAMES - INBOUND
+			await $this.titles.subs1.set_text(
+				'pnum_inbound0',
+				inbound.player_num
+			);
+			await $this.titles.subs1.set_text(
+				'pname_inbound0',
+				`${ksys.strf.params.players.format(inbound.surname)}`
+			);
+
+			// Show the title
+			await $this.titles.subs1.overlay_in();
+
+
+			// Hold the title for n seconds
+			await ksys.util.sleep($this.sequencer.sequences.subs_single_break.items.hold.dur);
+			// Hide the title
+			await $this.titles.subs1.overlay_out();
+		}
+	}
+
+	// Force run as stack
+	async run_title_stack(self, subs_type='break'){
+		if (self.stack.size <= 0){
+			ksys.info_msg.send_msg(
+				`Empty stack`,
+				'warn',
+				3000
+			);
+			return
+		}
+
+		// Persistent header title
+		if (subs_type == 'match'){
+			// Persistent Header can only do one thing at a time
+			$this.timeout_persistent_header_btns(
+				$this.sequencer.sequences.subs_stack_match.sum
+			);
+			// .subs expects ready to use strings
+			const players = [];
+			for (const pdata of self.stack){
+				players.push({
+					'leaving': ksys.strf.params.players.format(pdata.leaving.surname),
+					'inbound': ksys.strf.params.players.format(pdata.inbound.surname),
+				})
+			}
+			// Persistent header class applies data and switches to the corrent page on its own,
+			// BUT it does NOT switch back to clock
+			await $this.persistent_header.subs({
+				'team_logo': self.stack.at(0)?.leaving?.club?.logo_path,
+				'players': players,
+			})
+			// Hold the title for n seconds
+			await ksys.util.sleep($this.sequencer.sequences.subs_stack_match.items.hold.dur);
+			// Switch back to clock, because this doesn't happen automatically for good reasons
+			await $this.persistent_header.clock();
+		}
+
+		// Multiple titles during the break
+		if (subs_type == 'break'){
+			ksys.btns.adv_timeout({
+				'exec_replacement_sequence_stack_break_home': $this.sequencer.sequences.subs_stack_break.sum,
+				'exec_replacement_sequence_stack_break_guest': $this.sequencer.sequences.subs_stack_break.sum,
+				'exec_replacement_sequence_break': $this.sequencer.sequences.subs_single_break.sum,
+			})
+
+			// important todo: this is fucking retarded
+			for (const tile_id of ['subs2', 'subs3']){
+				const tgt_title = $this.titles[tile_id];
+
+				// Set Logo
+				await tgt_title.set_img_src(
+					'club_logo',
+					self.lineup.club.logo_path
+				);
+
+				const stack = [...self.stack];
+
+				for (const idx of range(3)){
+					const leaving = stack[idx].leaving;
+					const inbound = stack[idx].inbound;
+
+					// NAMES - LEAVING
+					await tgt_title.set_text(
+						`pnum_leaving${idx}`,
+						leaving.player_num
+					);
+					await tgt_title.set_text(
+						`pname_leaving${idx}`,
+						`${ksys.strf.params.players.format(leaving.surname)}`
+					);
+
+					// NAMES - INBOUND
+					await tgt_title.set_text(
+						`pnum_inbound${idx}`,
+						inbound.player_num
+					);
+					await tgt_title.set_text(
+						`pname_inbound${idx}`,
+						`${ksys.strf.params.players.format(inbound.surname)}`
+					);
+				}
+			}
+
+			// Select the appropriate title
+			const tgt_title = $this.titles[`subs${self.stack.size}`];
+
+			// Show the appropriate title
+			await tgt_title.overlay_in();
+
+			// Hold the title for n seconds
+			await ksys.util.sleep($this.sequencer.sequences.subs_stack_break.items.hold.dur);
+
+			// Hide the title
+			await tgt_title.overlay_out();
+		}
+	}
+
+	$stack_ctrl_dom(self){
+		if (self._stack_ctrl_dom){
+			return self._stack_ctrl_dom
+		}
+
+		self._stack_ctrl_dom = ksys.context.tplates.subs.stack({
+			'clear_stack': '.clear_subs_stack_btn',
+			'exec_match':  '[btname="exec_replacement_sequence_stack_match"]',
+			'exec_break':  '[btname="exec_replacement_sequence_stack_break"]',
+			'stack_list':  '.stack_players',
+		})
+
+		const suffix = self.lineup.club.is_enemy ? '_guest' : '_home';
+
+		self._stack_ctrl_dom.index.exec_match.setAttribute(
+			'btname',
+			self._stack_ctrl_dom.index.exec_match.getAttribute('btname') + suffix
+		)
+		self._stack_ctrl_dom.index.exec_break.setAttribute(
+			'btname',
+			self._stack_ctrl_dom.index.exec_break.getAttribute('btname') + suffix
+		)
+
+		self._stack_ctrl_dom.index.clear_stack.onclick = function(){
+			self.clear_stack();
+		}
+
+		self._stack_ctrl_dom.index.exec_match.onclick = function(){
+			self.run_title_stack('match');
+		}
+
+		self._stack_ctrl_dom.index.exec_break.onclick = function(){
+			self.run_title_stack('break');
+		}
+
+		return self._stack_ctrl_dom
+	}
+}
+
+
+
 
 
 
@@ -3920,6 +5901,12 @@ $this.create_club_lineup = function(side, clubname, input_lineup_info=null){
 	// resync penalty manager
 	$this.resource_index.penalty_manager.resync();
 
+	// resync substitutes
+	document.querySelector(`#replacement_teams .replacement_team[${side}] .subs_stack`)?.remove?.();
+	document.querySelector(`#replacement_teams .replacement_team[${side}]`).append(
+		lineup.subs.stack_ctrl_dom.root
+	)
+
 	// resync old system stats headers
 	// todo: finally make old stat system use new stuff
 	{
@@ -3934,6 +5921,8 @@ $this.create_club_lineup = function(side, clubname, input_lineup_info=null){
 			$('#replacement_team2 .replacement_team_head').html($this.resource_index.side.guest.club.vis_header_elem());
 		}		
 	}
+
+	ksys.btns.resync();
 }
 
 
@@ -3944,29 +5933,50 @@ $this.update_team_colors = async function(){
 	const guest = $this.resource_index.guest_lineup;
 
 	if (home){
+		vmix.util.HTTPResourceProxy.reg_buf([
+			'timer_tshirt_color_home',
+			await home.shorts_colpick.baked,
+		]);
 		// tshirt home
 		await $this.titles.timer.set_img_src(
-			'team_col_l_top',
-			base_path.join(`l_top_${home.colors.tshirt}.png`),
+			'tshirt_color_l',
+			// base_path.join(`l_top_${home.colors.tshirt}.png`),
+			'timer_tshirt_color_home'
+		)
+		// Final scores shape tshirt colour
+		await $this.titles.final_scores.set_shape_color(
+			'tshirt_color_l',
+			// base_path.join(`r_top_${guest.colors.tshirt}.png`),
+			home.tshirt_colpick.color
 		)
 		// shorts home
-		await $this.titles.timer.set_img_src(
-			'team_col_l_bot',
-			base_path.join(`l_bot_${home.colors.shorts}.png`),
-		)
+		// await $this.titles.timer.set_img_src(
+		// 	'team_col_l_bot',
+		// 	base_path.join(`l_bot_${home.colors.shorts}.png`),
+		// )
 	}
 
 	if (guest){
+		vmix.util.HTTPResourceProxy.reg_buf([
+			'timer_tshirt_color_guest',
+			await guest.shorts_colpick.baked,
+		]);
 		// tshirt guest
 		await $this.titles.timer.set_img_src(
-			'team_col_r_top',
-			base_path.join(`r_top_${guest.colors.tshirt}.png`),
+			'tshirt_color_r',
+			// base_path.join(`r_top_${guest.colors.tshirt}.png`),
+			'timer_tshirt_color_guest'
+		)
+		await $this.titles.final_scores.set_shape_color(
+			'tshirt_color_r',
+			// base_path.join(`r_top_${guest.colors.tshirt}.png`),
+			guest.tshirt_colpick.color
 		)
 		// shorts guest
-		await $this.titles.timer.set_img_src(
-			'team_col_r_bot',
-			base_path.join(`r_bot_${guest.colors.shorts}.png`),
-		)
+		// await $this.titles.timer.set_img_src(
+		// 	'team_col_r_bot',
+		// 	base_path.join(`r_bot_${guest.colors.shorts}.png`),
+		// )
 	}
 }
 
@@ -3981,124 +5991,10 @@ $this.wipe_player_list_from_title = async function(){
 	await ksys.util.sleep(500)
 }
 
-// Push current field layout/lineup to the field layout title in vmix
-$this._forward_field_layout_to_vmix = async function(team){
-	const tgt_side = str(team).lower();
-	const tgt_field = $this.resource_index.side?.[tgt_side]?.field;
-
-	if (!tgt_field){
-		ksys.info_msg.send_msg('Lineup does not exist for this side', 'warn', 9000);
-		return
-	}
-
-	// Switch off all buttons responsible for showing the title on screen
-	ksys.btns.toggle({
-		'show_home_field_layout':    false,
-		'hide_home_field_layout':    false,
-		'show_guest_field_layout':   false,
-		'hide_guest_field_layout':   false,
-
-		'prepare_home_team_layout':  false,
-		'prepare_guest_team_layout': false,
-	})
-
-	// target vmix title
-	const title = $this.titles.team_layout;
-
-	// t-shirt colours
-	// todo: remove hardcoded paths
-	const player_tshirt_col =
-	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
-	.join(`${tgt_field.lineup.colors.tshirt || 'ffffff'}.png`);
-
-	// await title.pause_render()
-
-	// 
-	// player slots
-	// 
-	// await $this.wipe_player_list_from_title()
-
-	// Set label back to starters
-	await title.set_text('playerlist_head', 'СТАРТОВІ');
-
-	for (const cell of tgt_field.iter_cells()){
-		// tshirt colour
-		await title.set_img_src(`plr_bg_${cell.id}`, str(player_tshirt_col));
-		// player number
-		await title.toggle_text(`plr_num_${cell.id}`, !!cell.player)
-		// player name
-		await title.toggle_text(`plr_name_${cell.id}`, !!cell.player)
-		// tshirt image
-		await title.toggle_img(`plr_bg_${cell.id}`, !!cell.player)
-
-		if (cell.player){
-			// player number
-			await title.set_text(`plr_num_${cell.id}`, cell.player.player_num);
-			// player name
-			await title.set_text(`plr_name_${cell.id}`, ksys.strf.params.players.format(cell.player.player_surname));
-		}
-	}
-	// goalkeeper tshirt colour
-	const gk_tshirt_col =
-	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
-	.join(`${tgt_field.lineup.colors.gk || 'ffffff'}.png`);
-	await title.set_img_src(`plr_bg_8_5`, str(gk_tshirt_col))
-
-
-
-	// 
-	// Main players
-	// 
-
-	// todo: stupid counter ?
-	// let counter = 1;
-	// for (const player of tgt_field.lineup.main_players){
-	for (const player_idx of range(11)){
-		const player = tgt_field.lineup.main_players.at(player_idx);
-
-		const player_num = player?.player_num || '';
-		const player_surname = ksys.strf.params.players.format(player?.player_surname || '')
-
-		// player number
-		await title.set_text(`plist_num_${player_idx + 1}`, player_num)
-		// player surname
-		await title.set_text(`plist_pname_${player_idx + 1}`, player_surname);
-
-		// counter += 1;
-	}
-
-
-
-	// Coach
-	await title.set_text(
-		'coach_name',
-		ksys.strf.params.coach.format(tgt_field.lineup.club.main_coach)
-	)
-	// Club name
-	await title.set_text(
-		'club_name',
-		ksys.strf.params.club_name.format(tgt_field.lineup.club.club_name)
-	)
-	// Club logo
-	await title.set_img_src('club_logo', tgt_field.lineup.club.logo_path)
-	print('Finished')
-
-	// await title.resume_render()
-
-	// Enable buttons responsible for showing the team's layout which was just prepared
-	{
-		ksys.btns.pool[`show_${tgt_side}_field_layout`].toggle(true)
-		ksys.btns.pool[`hide_${tgt_side}_field_layout`].toggle(true)
-
-		ksys.btns.pool[`prepare_home_team_layout`].toggle(true)
-		ksys.btns.pool[`prepare_guest_team_layout`].toggle(true)
-	}
-}
-
-
 $this.forward_field_layout_to_vmix = async function(team){
 	const tgt_side = str(team).lower();
 	const tgt_field = $this.resource_index.side?.[tgt_side]?.field;
+	const suffix = $this.resource_index.side?.[tgt_side]?.club?.is_enemy ? 'guest' : 'home';
 
 	if (!tgt_field){
 		ksys.info_msg.send_msg('Lineup does not exist for this side', 'warn', 9000);
@@ -4120,22 +6016,21 @@ $this.forward_field_layout_to_vmix = async function(team){
 	// get target vmix title
 	const title = $this.titles.team_layout;
 
-	// construct t-shirt colour path
-	// (absolute path to the corresponding tshirt colour)
-	// todo: remove hardcoded paths
-	const player_tshirt_col =
-	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
-	.join(`${tgt_field.lineup.colors.tshirt || 'ffffff'}.png`);
-
-
-
+	vmix.util.HTTPResourceProxy.reg_buf([
+		`tshirt_color_${suffix}`,
+		await tgt_field.lineup.tshirt_colpick.baked,
+	]);
+	vmix.util.HTTPResourceProxy.reg_buf([
+		`gk_color_${suffix}`,
+		await tgt_field.lineup.gk_colpick.baked,
+	]);
 
 	// -------------------
 	// player cells on field
 	// -------------------
 	for (const cell of tgt_field.iter_cells()){
 		// tshirt colour
-		await title.set_img_src(`plr_bg_${cell.id}`, str(player_tshirt_col));
+		await title.set_img_src(`plr_bg_${cell.id}`, `tshirt_color_${suffix}`);
 		// player number
 		await title.toggle_text(`plr_num_${cell.id}`, !!cell.player)
 		// player name
@@ -4147,29 +6042,23 @@ $this.forward_field_layout_to_vmix = async function(team){
 			// player number
 			await title.set_text(`plr_num_${cell.id}`, cell.player.player_num);
 			// player name
-			await title.set_text(`plr_name_${cell.id}`, ksys.strf.params.players.format(cell.player.player_surname));
+			await title.set_text(`plr_name_${cell.id}`, ksys.strf.params.players.format(cell.player.surname));
 		}
 
 		// Set text colour
-		const text_color = $this.resource_index.color_dict[tgt_field.lineup.colors.tshirt];
-		if (text_color){
-			await title.set_text_color(`plr_num_${cell.id}`, text_color);
-		}else{
-			await title.set_text_color(`plr_num_${cell.id}`, '000000');
-		}
+		await title.set_text_color(
+			`plr_num_${cell.id}`,
+			(tgt_field.lineup.tshirt_colpick.text_color == 'white') ? 'ffffff' : '000000'
+		);
 	}
-	// goalkeeper tshirt colour
-	const gk_tshirt_col =
-	Path('C:\\custom\\vmix_assets\\t_shirts\\tshirts')
-	.join(`${tgt_field.lineup.colors.gk || 'ffffff'}.png`);
-	await title.set_img_src(`plr_bg_8_5`, str(gk_tshirt_col))
 
-	const gk_text_color = $this.resource_index.color_dict[tgt_field.lineup.colors.gk];
-	if (gk_text_color){
-		await title.set_text_color(`plr_num_8_5`, gk_text_color);
-	}else{
-		await title.set_text_color(`plr_num_8_5`, '000000');
-	}
+	// goalkeeper tshirt colour
+	await title.set_img_src(`plr_bg_8_5`, `gk_color_${suffix}`)
+
+	await title.set_text_color(
+		`plr_num_8_5`,
+		(tgt_field.lineup.gk_colpick.text_color == 'white') ? 'ffffff' : '000000'
+	);
 
 
 	// -------------------
@@ -4195,7 +6084,7 @@ $this.forward_field_layout_to_vmix = async function(team){
 			const player = list_data.plist.at(player_idx);
 
 			const player_num = player?.player_num || '';
-			const player_surname = ksys.strf.params.players.format(player?.player_surname || '')
+			const player_surname = ksys.strf.params.players.format(player?.surname || '')
 
 			// player number
 			await title.set_text(
@@ -4210,6 +6099,25 @@ $this.forward_field_layout_to_vmix = async function(team){
 		}
 	}
 
+	// important todo: this is shit
+	const reserve_list_nums = [];
+	const reserve_list_names = [];
+	for (const player_idx of range(11)){
+		const player = tgt_field.lineup.reserve_players.at(player_idx);
+		if (player){
+			reserve_list_nums.push(player.player_num);
+			reserve_list_names.push(player.surname);
+		}
+	}
+
+	await title.set_text(
+		'subs_numbers',
+		reserve_list_nums.join('\n')
+	)
+	await title.set_text(
+		'subs_names',
+		reserve_list_names.join('\n')
+	)
 
 
 	// -------------------
@@ -4230,7 +6138,7 @@ $this.forward_field_layout_to_vmix = async function(team){
 	await title.set_img_src('club_logo', tgt_field.lineup.club.logo_path)
 	print('Finished forwarding layout data to VMIX')
 
-	await ksys.util.sleep(1000)
+	await ksys.util.sleep(1000);
 
 	// Enable buttons responsible for showing the team's layout which was just prepared
 	{
@@ -4291,7 +6199,7 @@ $this._show_field_layout = async function(team){
 			// player number
 			await title.set_text(`plist_num_${idx}`, player.player_num)
 			// player surname
-			await title.set_text(`plist_pname_${idx}`, ksys.strf.params.players.format(player.player_surname));
+			await title.set_text(`plist_pname_${idx}`, ksys.strf.params.players.format(player.surname));
 		}else{
 			// player number
 			await title.set_text(`plist_num_${idx}`, ' ')
@@ -4315,6 +6223,10 @@ $this.show_field_layout = async function(team){
 
 	await $this.titles.team_layout.overlay_in()
 
+	await ksys.util.sleep($this.sequencer.sequences.field_layout.items.hold_main.dur);
+
+	await $this.titles.team_layout.page(1);
+
 	ksys.btns.pool[`show_${team}_field_layout`].toggle(true)
 }
 
@@ -4330,9 +6242,23 @@ $this.hide_field_layout = async function(){
 	})
 }
 
+$this.update_title_schema = function(schema_id){
+	ksys.context.module.prm('title_schema', schema_id);
+}
 
-
-
+$this.timeout_persistent_header_btns = function(dur){
+	ksys.btns.adv_timeout({
+		'yellow_card':     dur,
+		'red_card':        dur,
+		'scored':          dur,
+		'kill_card':       dur,
+		'scored_off':      dur,
+		'show_main_timer': dur,
+		'hide_main_timer': dur,
+		'exec_replacement_sequence_stack_match': dur,
+		'exec_replacement_sequence_match': dur,
+	})
+}
 
 
 
@@ -4546,17 +6472,17 @@ $this.hide_card = async function(){
 // ================================
 //        Substitute
 // ================================
-$this.exec_substitute = async function(){
+$this.substitute_player_pair = function(){
 	// todo: is this stupid ?
 	const leaving_player = (
-		$this.resource_index.side.home.substitute['inbound']?.selected_entry?.player
-		||
-		$this.resource_index.side.guest.substitute['inbound']?.selected_entry?.player
-	);
-	const incoming_player = (
 		$this.resource_index.side.home.substitute['leaving']?.selected_entry?.player
 		||
 		$this.resource_index.side.guest.substitute['leaving']?.selected_entry?.player
+	);
+	const incoming_player = (
+		$this.resource_index.side.home.substitute['inbound']?.selected_entry?.player
+		||
+		$this.resource_index.side.guest.substitute['inbound']?.selected_entry?.player
 	);
 
 	if (!leaving_player || !incoming_player){
@@ -4565,38 +6491,81 @@ $this.exec_substitute = async function(){
 			'warn',
 			2000
 		);
+		return [null, null]
+	}
+
+	return [leaving_player, incoming_player]
+}
+
+// SINGLE
+$this.exec_substitute = async function(subs_type){
+	const [leaving_player, incoming_player] = $this.substitute_player_pair();
+	if (!leaving_player || !incoming_player){
 		return
 	}
 
-	const title = $this.titles.replacement_seq;
+	if ($this.title_schema_switch.selected == 'separate'){
+		const title = $this.titles.replacement_seq;
 
-	// Set players' names
+		// Set players' names
 
-	// leaving
-	await title.set_text(
-		'leaving_player',
-		`${leaving_player.player_num} ${ksys.strf.params.players.format(leaving_player.player_surname)}`,
-	)
-	// inbound
-	await title.set_text(
-		'incoming_player',
-		`${incoming_player.player_num} ${ksys.strf.params.players.format(incoming_player.player_surname)}`,
-	)
-	// Set club logo
-	await title.set_img_src('club_logo', leaving_player.club.logo_path)
+		// leaving
+		await title.set_text(
+			'leaving_player',
+			`${leaving_player.player_num} ${ksys.strf.params.players.format(leaving_player.surname)}`,
+		)
+		// inbound
+		await title.set_text(
+			'incoming_player',
+			`${incoming_player.player_num} ${ksys.strf.params.players.format(incoming_player.surname)}`,
+		)
+		// Set club logo
+		await title.set_img_src('club_logo', leaving_player.club.logo_path)
 
-	// show the title
-	await title.overlay_in()
-	// let it hang for 11 seconds
-	// (this wait time also accounts for the scripted animation sequence inside the title)
-	await ksys.util.sleep(11000)
-	// hide the title
-	await title.overlay_out()
+		// show the title
+		await title.overlay_in()
+		// let it hang for 11 seconds
+		// (this wait time also accounts for the scripted animation sequence inside the title)
+		await ksys.util.sleep(11000)
+		// hide the title
+		await title.overlay_out()
+	}
+
+
+	if ($this.title_schema_switch.selected == 'paged'){
+		let stack;
+
+		if (leaving_player.club.is_enemy){
+			stack = $this.resource_index.guest_lineup.subs;
+		}else{
+			stack = $this.resource_index.home_lineup.subs;
+		}
+
+		await stack.run_title_single(
+			[leaving_player, incoming_player],
+			subs_type
+		)
+	}
 }
 
 
 
+$this.stack_substitute = function(){
+	const [leaving_player, incoming_player] = $this.substitute_player_pair();
+	if (!leaving_player || !incoming_player){
+		return
+	}
 
+	let stack;
+
+	if (leaving_player.club.is_enemy){
+		stack = $this.resource_index.guest_lineup.subs;
+	}else{
+		stack = $this.resource_index.home_lineup.subs;
+	}
+
+	stack.add_pair([leaving_player, incoming_player])
+}
 
 
 
@@ -4808,6 +6777,8 @@ $this.get_current_time = function(minutes=false, tsum=false){
 $this.main_timer_vis = async function(state){
 	const title = $this.titles.timer;
 
+	// await $this.update_team_colors();
+
 	if (state == true){
 		if (!$this.resource_index?.side?.home?.club || !$this.resource_index?.side?.guest?.club){
 			ksys.info_msg.send_msg(
@@ -4842,14 +6813,16 @@ $this.main_timer_vis = async function(state){
 
 $this.extra_time_vis = async function(state){
 	if (state == true){
-		await $this.titles.timer.toggle_text('time_added', true)
-		await $this.titles.timer.toggle_text('extra_ticker', true)
-		await $this.titles.timer.toggle_img('extra_time_bg', true)
+		await $this.titles.timer.set_shape_color('main_time_bg', 'D80D8300');
+		await $this.titles.timer.toggle_text('time_added', true);
+		await $this.titles.timer.toggle_text('extra_ticker', true);
+		await $this.titles.timer.toggle_img('extra_time_bg', true);
 	}
 	if (state == false){
-		await $this.titles.timer.toggle_text('time_added', false)
-		await $this.titles.timer.toggle_text('extra_ticker', false)
-		await $this.titles.timer.toggle_img('extra_time_bg', false)
+		await $this.titles.timer.set_shape_color('main_time_bg', 'D80D83');
+		await $this.titles.timer.toggle_text('time_added', false);
+		await $this.titles.timer.toggle_text('extra_ticker', false);
+		await $this.titles.timer.toggle_img('extra_time_bg', false);
 	}
 }
 
@@ -5567,21 +7540,44 @@ $this.add_score_from_cards_panel = async function(){
 
 	// Show the title
 
-	// Set logo
-	await $this.titles.gscore.set_img_src(
-		'club_logo',
-		player.club.logo_path
-	)
+	if ($this.title_schema_switch == 'separate'){
+		// Set logo
+		await $this.titles.gscore.set_img_src(
+			'club_logo',
+			player.club.logo_path
+		)
 
-	// Set player's surname
-	await $this.titles.gscore.set_text(
-		'player_name',
-		`${player.player_num} ${ksys.strf.params.players.format(player.player_surname)}`
-	)
+		// Set player's surname
+		await $this.titles.gscore.set_text(
+			'player_name',
+			`${player.player_num} ${ksys.strf.params.players.format(player.surname)}`
+		)
 
-	await $this.titles.gscore.overlay_in()
-	await ksys.util.sleep(7000)
-	await $this.titles.gscore.overlay_out()
+		await $this.titles.gscore.overlay_in()
+		await ksys.util.sleep(7000)
+		await $this.titles.gscore.overlay_out()
+	}else{
+
+		const time = $this.get_current_time(true);
+		const time_suffix = time.extra ? `+${time.extra}` : '';
+
+		$this.timeout_persistent_header_btns(
+			$this.sequencer.sequences.scored.sum
+		);
+
+		await $this.persistent_header.event({
+			'header': 'АВТОР ГОЛУ',
+			'upper_text': ksys.strf.params.players.format(player.surname),
+			'lower_text': `${time.base}'` + time_suffix + ' ХВИЛИНА',
+			// 'icon': null,
+			'team_logo': player.club.logo_path,
+		})
+
+		await ksys.util.sleep($this.sequencer.sequences.scored.items.hold.dur);
+
+		await $this.persistent_header.clock()
+	}
+
 }
 
 $this.hide_scored_title = async function(){
@@ -5618,72 +7614,74 @@ $this.mod_score_author = function(evt){
 
 
 /*
-Algorithm responsible for displaying the score summary
-and collapsing multiple scores with the same author into a
-single row/string/call it whatever you want
+	Algorithm responsible for displaying the score summary
+	and collapsing multiple scores with the same author into a
+	single row/string/call it whatever you want
 
 
-> Loop through every score unit of the team, as 'unit_a'
-    > If 'unit_a' has no author - skip, continue iteration
+	> Loop through every score unit of the team, as 'unit_a'
+	    > If 'unit_a' has no author - skip, continue iteration
 
-    > If the author of 'unit_a' should be ignored - skip, continue iteration
+	    > If the author of 'unit_a' should be ignored - skip, continue iteration
 
-	> Append the author of 'unit_a' to an array
-	  to ignore units with the same author on next iteration
-
-
-	Basically, we get a player who scored at least a single score
-	and iterate over the score stack again to collect all the scores
-	belonging to him.
+		> Append the author of 'unit_a' to an array
+		  to ignore units with the same author on next iteration
 
 
-    > Loop through every score unit of the team again, as 'unit_b'
-        > Check if the author of 'unit_b' equals to 'unit_a'. If not - skip, continue iteration.
-
-        > Append the 'unit_b' to an array as text, such as 45'+2 (АГ)
-          (an array would look like this: [`14'`, `27' (АГ)`, `45'+2`])
-
-    > Depending on the side (home/guest)
-      join the array mentioned above into a string with a ` ,` separator
-      and add author name derived from 'unit_a' to the string either
-      to the beginning or end:
-      HOME:  [`14'`, `27' (АГ)`, `45'+2`].join(', ') + 'unit_a'.author
-      GUEST: 'unit_a'.author + [`14'`, `27' (АГ)`, `45'+2`].join(', ')
-      And append the resulting string to an array of rows that will be
-      displayed in the VMIX title
+		Basically, we get a player who scored at least a single score
+		and iterate over the score stack again to collect all the scores
+		belonging to him.
 
 
-Authorless scores are fucking evil.
+	    > Loop through every score unit of the team again, as 'unit_b'
+	        > Check if the author of 'unit_b' equals to 'unit_a'. If not - skip, continue iteration.
 
-> Loop through every score unit of the team yet again, as 'unit_a'
-    > Skip the unit if it DOES have an author
+	        > Append the 'unit_b' to an array as text, such as 45'+2 (АГ)
+	          (an array would look like this: [`14'`, `27' (АГ)`, `45'+2`])
 
-    > Append the score unit as text (e.g. `45'+2 (АГ)`)
-      to an array of rows that will be displayed in the VMIX title
+	    > Depending on the side (home/guest)
+	      join the array mentioned above into a string with a ` ,` separator
+	      and add author name derived from 'unit_a' to the string either
+	      to the beginning or end:
+	      HOME:  [`14'`, `27' (АГ)`, `45'+2`].join(', ') + 'unit_a'.author
+	      GUEST: 'unit_a'.author + [`14'`, `27' (АГ)`, `45'+2`].join(', ')
+	      And append the resulting string to an array of rows that will be
+	      displayed in the VMIX title
 
 
-The text block inside of the score summary VMIX title
-where the score summary is displayed
-represents a single huge block of text,
-there are no rows whatsoever, therefore...
+	Authorless scores are fucking evil.
 
-> Join the array of rows with `\n` separator
-  and send the resulting string to the VMIX title:
-  [
-      `11' ПЕТРОВ`,
-      `14', 27' (АГ), 45'+2 ВОЙЦЕХОВСЬКИЙ`,
-      ...
-  ].join('\n')
-  =
-  11' ПЕТРОВ\n
-  14', 27' (АГ), 45'+2 ВОЙЦЕХОВСЬКИЙ
+	> Loop through every score unit of the team yet again, as 'unit_a'
+	    > Skip the unit if it DOES have an author
 
-> Profit.
+	    > Append the score unit as text (e.g. `45'+2 (АГ)`)
+	      to an array of rows that will be displayed in the VMIX title
+
+
+	The text block inside of the score summary VMIX title
+	where the score summary is displayed
+	represents a single huge block of text,
+	there are no rows whatsoever, therefore...
+
+	> Join the array of rows with `\n` separator
+	  and send the resulting string to the VMIX title:
+	  [
+	      `11' ПЕТРОВ`,
+	      `14', 27' (АГ), 45'+2 ВОЙЦЕХОВСЬКИЙ`,
+	      ...
+	  ].join('\n')
+	  =
+	  11' ПЕТРОВ\n
+	  14', 27' (АГ), 45'+2 ВОЙЦЕХОВСЬКИЙ
+
+	> Profit.
 
 */
 
 // todo: get rid of ?.
 $this.show_score_summary = async function(){
+	await $this.update_team_colors();
+
 	// todo: this is only a dict for easy access
 	const score_summary = {
 		'home': [],
@@ -5800,7 +7798,7 @@ $this.show_score_summary = async function(){
 	const score_amt_r = $this.resource_index?.score_manager?.sides?.guest?.score_list?.score_stack?.size || 0;
 	await $this.titles.final_scores.set_text(
 		'score_sum',
-		`${score_amt_l} : ${score_amt_r}`
+		`${score_amt_l} ${score_amt_r}`
 	)
 
 
@@ -5814,7 +7812,7 @@ $this.show_score_summary = async function(){
 	// todo: hardcoded path. Too bad.
 	$this.titles.final_scores.set_img_src(
 		'upper_bg',
-		Path('C:/custom/vmix_assets/differential').join(`${need_rows}.png`)
+		Path($this.resources_location.value, 'final_scores').join(`${need_rows}.png`)
 	)
 
 
@@ -6214,9 +8212,14 @@ $this.save_lineup_lists = function(){
 			// colours
 			// todo: lineup has a built-in colours getter (lineup.colors)
 			// returns a dict
-			'tshirt_col': tgt_lineup.tshirt_colpick.selected_color,
-			'shorts_col': tgt_lineup.shorts_colpick.selected_color,
-			'gk_col':     tgt_lineup.gk_colpick.selected_color,
+			'tshirt_col':      tgt_lineup.tshirt_colpick.color,
+			'tshirt_text_col': tgt_lineup.tshirt_colpick.text_color,
+
+			'shorts_col':      tgt_lineup.shorts_colpick.color,
+			'shorts_text_col': tgt_lineup.shorts_colpick.text_color,
+
+			'gk_col':          tgt_lineup.gk_colpick.color,
+			'gk_text_col':     tgt_lineup.gk_colpick.text_color,
 
 			// create player struct
 			'player_lineup': {
@@ -6273,9 +8276,14 @@ $this.load_lineup_lists = function(){
 			side,
 			side_info.club_name,
 			{
-				'tshirt_col': side_info.tshirt_col,
-				'shorts_col': side_info.shorts_col,
-				'gk_col':     side_info.gk_col,
+				'tshirt_col':      side_info.tshirt_col,
+				'tshirt_text_col': side_info.tshirt_text_col,
+
+				'shorts_col':      side_info.shorts_col,
+				'shorts_text_col': side_info.shorts_text_col,
+
+				'gk_col':          side_info.gk_col,
+				'gk_text_col':     side_info.gk_text_col,
 
 				'main_players':    side_info.player_lineup.main_players,
 				'reserve_players': side_info.player_lineup.reserve_players,
@@ -6629,12 +8637,16 @@ $this.init_new_match = function(evt){
 		ksys.db.module.delete(fname);
 	}
 
+	ksys.context.module.prm('todays_commenter', '');
+	ksys.context.module.prm('vs_title_bottom_upper_line', '');
+	ksys.context.module.prm('vs_title_bottom_lower_line', '');
+
 	// why bother...
 	// Just reload the controller...
-	// ksys.fbi.warn_critical(
-	// 	`Please press CTRL + R (there's nothing else you can do)`
-	// )
 	$('body').css({'pointer-events': 'none'});
+	ksys.fbi.warn_critical(
+		`Please press CTRL + R (there's nothing else you can do)`
+	)
 	ksys.util.reload();
 
 }

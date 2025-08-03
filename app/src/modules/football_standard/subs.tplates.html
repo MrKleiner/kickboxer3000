@@ -1,0 +1,33 @@
+
+
+
+<template id="stack">
+	<div class="subs_stack" subtle_box>
+		<div class="subs_stack_ctrl">
+			<sysbtn class="clear_subs_stack_btn">Clear List</sysbtn>
+			<vmixbtn
+				horizontal
+				seq_info="auto_seq"
+				btname="exec_replacement_sequence_stack_match"
+			>Multiple during<br>MATCH</vmixbtn>
+			<vmixbtn
+				horizontal
+				seq_info="auto_seq"
+				btname="exec_replacement_sequence_stack_break"
+			>Multiple during<br>BREAK</vmixbtn>
+		</div>
+		<div class="stack_players" kbhint="ALT + RMB to remove a pair"></div>
+	</div>
+</template>
+
+
+
+<template id="stack_pair">
+	<div class="subs_stack_pair">
+		<div class="subs_stack_player leaving"></div>
+		<img class="arrow_icon" src="./assets/icon_arrow_left.svg" contain>
+		<div class="subs_stack_player inbound"></div>
+	</div>
+</template>
+
+
