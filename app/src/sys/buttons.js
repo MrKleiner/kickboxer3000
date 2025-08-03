@@ -2,13 +2,13 @@
 // todo: this system needs to be rewritten
 
 // Die
-Element.prototype.vmixbtn = function(state=false) {
+Element.prototype.vmixbtn = function(state=false, adv=false) {
 	if (this.closest('vmixbtn')){
 		if (state == false){
-			this.classList.add('vmixbtn_locked')
+			this.classList.add(adv ? 'vmixbtn_adv_locked' : 'vmixbtn_locked')
 		}
 		if (state == true){
-			this.classList.remove('vmixbtn_locked')
+			this.classList.remove(adv ? 'vmixbtn_adv_locked' : 'vmixbtn_locked')
 		}
 	}
 }
@@ -58,7 +58,7 @@ document.addEventListener('click', evt => {
 
 
 
-
+const pool = {}
 
 
 const _vb = {
@@ -87,7 +87,7 @@ const icon_registry = {
 
 
 // pre-load all the icons
-_vb.preload_icons = async function(){
+const preload_icons = async function(){
 	for (const idx in icon_registry){
 		const icon_path = icon_registry[idx];
 
@@ -112,13 +112,13 @@ _vb.preload_icons = async function(){
 }
 
 // _vb.icon_pre_load
-_vb.icon_pre_load = async function(){
-	return await _vb.preload_icons()
+const icon_pre_load = async function(){
+	return await preload_icons()
 }
 
 
 
-_vb.vmixbtn = class{
+const vmixbtn = class{
 	constructor(sel=null){
 		const self = this;
 		ksys.util.cls_pwnage.remap(self);
@@ -149,36 +149,36 @@ _vb.vmixbtn = class{
 		}
 	}
 
-	toggle(self, state=null){
+	toggle(self, state=null, adv=false){
 		if (state == true){
-			self.elem.vmixbtn(true)
+			self.elem.vmixbtn(true, adv)
 			self.enabled = true;
 			return
 		}
 		if (state == false){
-			self.elem.vmixbtn(false)
+			self.elem.vmixbtn(false, adv)
 			self.enabled = false;
 			return
 		}
 
 		// toggle
 		if (self.enabled == true){
-			self.elem.vmixbtn(false)
+			self.elem.vmixbtn(false, adv)
 		}else{
-			self.elem.vmixbtn(true)
+			self.elem.vmixbtn(true, adv)
 		}
 	}
 }
 
 
-_vb.resync = function(){
+const resync = function(){
 	// Wipe the existing pool
-	_vb.pool = {};
+	// pool = {};
 
 	// index every named button
 	for (let reg of document.querySelectorAll('vmixbtn[btname]')){
 		const btname = reg.getAttribute('btname');
-		_vb.pool[btname] = new _vb.vmixbtn(`vmixbtn[btname="${btname}"]`)
+		pool[btname] = new vmixbtn(`vmixbtn[btname="${btname}"]`)
 	}
 
 	// create hints
@@ -205,10 +205,10 @@ _vb.resync = function(){
 	}
 }
 
-_vb.timeout = function(cmd){
+const timeout = function(cmd){
 
 	for (const btname in cmd){
-		const btn = _vb.pool[btname];
+		const btn = pool[btname];
 		if (!btn){
 			console.warn('Cannot find button', btname)
 			continue
@@ -218,9 +218,40 @@ _vb.timeout = function(cmd){
 	}
 }
 
-_vb.toggle = function(cmd){
+
+const adv_timeout = function(btn_ids){
+	for (const btname in btn_ids){
+		const btn = pool[btname];
+		if (!btn){
+			console.warn('Cannot find button', btname)
+			continue
+		}
+
+		btn.toggle(false, true);
+
+		const pie = new ksys.info_msg.MagicCircle({
+			'get_stuck': false,
+			'stroke_w': 35,
+		});
+		const pie_dom = $('<div class="kb_btn_timeout_vis"></div>')[0];
+		pie_dom.append(pie.dom);
+
+		btn.elem.append(pie_dom);
+
+		pie.launch_anim(btn_ids[btname] || 500)
+		.then((value) => {
+			if (!pie.get_stuck){
+				pie_dom.remove();
+				btn.toggle(true, true);
+			}
+		});
+	}
+}
+
+
+const toggle = function(cmd){
 	for (const btname in cmd){
-		const btn = _vb.pool[btname];
+		const btn = pool[btname];
 		if (!btn){
 			console.warn('Cannot find button', btname)
 			continue
@@ -233,9 +264,13 @@ _vb.toggle = function(cmd){
 
 
 
-// console.log('Initialized Buttons System');
-// module.exports = new vmix_t_bottuns();
-module.exports = _vb;
-// module.exports = {
-
-// }
+// module.exports = _vb;
+module.exports = {
+	vmixbtn,
+	resync,
+	timeout,
+	toggle,
+	icon_pre_load,
+	adv_timeout,
+	pool,
+}

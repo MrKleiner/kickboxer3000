@@ -30,13 +30,15 @@ const describeArc = function(x, y, radius, startAngle, endAngle){
 
 
 const MagicCircle = class{
-	constructor(){
+	constructor(params){
 		const self = this;
 		ksys.util.cls_pwnage.remap(self);
 
+		self.get_stuck = params?.get_stuck || false;
+
 		self.dom = $(`
 			<svg viewBox="-100 -100 200 200">
-				<path fill="none" stroke="white" stroke-width="190px" />
+				<path fill="none" stroke="white" stroke-width="${params?.stroke_w || 190}px" />
 			</svg>
 		`)[0];
 
@@ -56,6 +58,10 @@ const MagicCircle = class{
 			current_angle += step_angle;
 			self.tgt_path.setAttribute('d', describeArc(0, 0, 100-10, 0, current_angle.clamp(0, 360)))
 
+			if (current_angle >= 140 && self.get_stuck){
+				break
+			}
+
 			if (current_angle >= 359){
 				break
 			}
@@ -65,8 +71,12 @@ const MagicCircle = class{
 	async launch_anim(self, dur=500){
 		const step = 1;
 		for (const angle of range(360)){
+			// self.tgt_path.setAttribute('d', describeArc(0, 0, 100-10, 0, angle.clamp(0, 360)));
 			self.tgt_path.setAttribute('d', describeArc(0, 0, 100-10, 0, angle.clamp(0, 360)));
 			await ksys.util.sleep(dur / 360);
+			if (angle >= 140 && self.get_stuck){
+				break
+			}
 		}
 	}
 }
@@ -96,13 +106,14 @@ const InfoMessage = class{
 
 
 // the "new" keyword is stoopid
-const fuck_js = function(text, msg_type='warn', dur=1000){
+const send_msg = function(text, msg_type='warn', dur=1000){
 	return new InfoMessage(text, msg_type, dur)
 }
 
 
 module.exports = {
-	send_msg: fuck_js,
+	send_msg,
+	MagicCircle,
 }
 
 

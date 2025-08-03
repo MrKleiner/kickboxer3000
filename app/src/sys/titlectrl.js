@@ -1,7 +1,6 @@
 
 const electron_http_server = require('http');
 
-
 // timings are in the following format:
 // {
 // 	'fps': 30,
@@ -12,6 +11,7 @@ const electron_http_server = require('http');
 
 const sys_data = {
 	'overlay_preview_mode': false,
+	'mem_bufs': {},
 };
 
 const global_params = {
@@ -211,6 +211,7 @@ const HTTPResourceProxySecurityWhitelist = class{
 	map_fpath(self, tgt_fpath){
 		return {
 			'fpath': tgt_fpath,
+			'raw': tgt_fpath,
 		}
 	}
 }
@@ -262,6 +263,7 @@ const HTTPResourceProxySecurityDynamic = class{
 
 		return {
 			'ok': false,
+			'raw': url_data.get('fpath'),
 		}
 	}
 }
@@ -338,6 +340,8 @@ const HTTPResourceProxySecurityToken = class{
 		return {
 			'ok': true,
 			'fpath': fpath,
+			// important todo: this is weird
+			'raw': url_data.get('fpath').slice(0, slice_size),
 		}
 	}
 }
@@ -429,6 +433,27 @@ const HTTPResourceProxy = class{
 				(new HTTPResourceProxyControlPanel({'resource_proxy': global_params.resource_proxy})).dom.root
 			);
 		}
+	}
+
+	static reg_buf(buf_data){
+		let buf_path = null;
+		let buf = null;
+
+		if (Array.isArray(buf_data)){
+			// important todo: this is generally fine, but duplicating buffers
+			// so much is not good
+			buf_path = str(buf_data[0]).lower().trim();
+			buf = Buffer.from(buf_data[1]);
+		}else{
+			buf_path = str(buf_data.path).lower().trim();
+			buf = Buffer.from(buf_data.buf);
+		}
+
+		sys_data.mem_bufs[buf_path] = buf;
+	}
+
+	static sysdata(){
+		return sys_data
 	}
 
 	$own_ip(self){
@@ -563,6 +588,25 @@ const HTTPResourceProxy = class{
 					[...request_url_params.entries()]
 				);
 			}
+			return
+		}
+
+		const path_raw = (
+			validation.raw
+			.replaceAll(Path('fuck').dirname, '')
+			.replaceAll('/', '')
+			.replaceAll('\\', '')
+			.lower()
+			.trim()
+		);
+		self.nprint('RAW:', path_raw)
+		const mem_buf = sys_data.mem_bufs[path_raw];
+		if (mem_buf){
+			self.nprint('Returning memory buffer:', path_raw);
+			res.statusCode = 200;
+			res.write(mem_buf);
+			res.end();
+
 			return
 		}
 
@@ -716,7 +760,11 @@ const HTTPResourceProxyControlPanel = class{
 
 
 
+// todo: page switching logic from football to here
 const VMIXTitle = class{
+	ADV_LETTERS = true;
+	ADV_LETTERS_ARRAY = 'ыъэё';
+
 	constructor(title_name, gt_format=true){
 		const self = ksys.util.cls_pwnage.remap(this);
 
@@ -764,10 +812,27 @@ const VMIXTitle = class{
 		}
 	}
 
+	// Pul this title's XML data from VMIX
+	async pull_xml(self){
+		return (await vmix.talker.project()).querySelector(
+			`inputs input[title="${self.title_name}"]`
+		)
+	}
+
 	async set_text(self, field_name, newval){
+		let val = str(newval);
+		if (self.ADV_LETTERS){
+			for (const letter of self.ADV_LETTERS_ARRAY){
+				val = (
+					val
+					.replaceAll(letter, '')
+					.replaceAll(letter.upper(), '')
+				)
+			}
+		}
 		await vmix.talker.talk({
 			'Function': 'SetText',
-			'Value': newval,
+			'Value': val,
 			'Input': self.title_name,
 			'SelectedName': field_name + (self.gtformat ? '.Text' : ''),
 		})
@@ -781,11 +846,10 @@ const VMIXTitle = class{
 		})
 	}
 
-
 	async set_img_src(self, img_name, newsrc){
 		let img_src;
 
-		if (global_params.resource_proxy){
+		if (ksys.context.global.cache.resource_proxy_enabled){
 			img_src = global_params.resource_proxy.map_fpath(newsrc);
 		}else{
 			img_src = newsrc;
@@ -793,7 +857,7 @@ const VMIXTitle = class{
 
 		await vmix.talker.talk({
 			'Function': 'SetImage',
-			'Value': str(img_src),
+			'Value': str(img_src).trim() || '',
 			'Input': self.title_name,
 			'SelectedName': img_name + (self.gtformat ? '.Source' : ''),
 		})
@@ -807,8 +871,7 @@ const VMIXTitle = class{
 		})
 	}
 
-	// PreviewOverlayInput1
-	// todo: add check to prevent exceeding 4 overlays
+	// todo: add check to prevent exceeding 4 (max) overlays
 	// todo: check for valid overlay numbers ?
 	async overlay_in(self, overlay_num=null, wait=true){
 		const target_overlay = overlay_num || self.default_overlay || 1;
@@ -847,7 +910,7 @@ const VMIXTitle = class{
 	}
 
 
-	// todo: these manipulations require
+	// todo: these manipulations (pause/resume render) require
 	// beyond sattelite manufacturing precision,
 	// otherwise retarded artifacts occur
 
@@ -858,7 +921,8 @@ const VMIXTitle = class{
 			'Input': self.title_name,
 		})
 	}
-	// Resume render
+	// Resume title rendering after making multiple updates, so that
+	// certain animations trigger perfectly parallel to each other
 	async resume_render(self){
 		await vmix.talker.talk({
 			'Function': `ResumeRender`,
@@ -870,12 +934,40 @@ const VMIXTitle = class{
 	async set_text_color(self, field_name, hex_color){
 		await vmix.talker.talk({
 			'Function': 'SetTextColour',
-			'Value': `#${hex_color}`,
+			'Value': `#${str(hex_color).replaceAll('#', '')}`,
 			'Input': self.title_name,
 			'SelectedName': field_name + (self.gtformat ? '.Text' : ''),
 		})
 	}
+
+	async set_shape_color(self, field_name, hex_color){
+		await vmix.talker.talk({
+			'Function': 'SetColor',
+			'Value': `#${str(hex_color).replaceAll('#', '')}`,
+			'Input': self.title_name,
+			'SelectedName': field_name + (self.gtformat ? '.Fill.Color' : ''),
+		})
+	}
+
+	async page(self, page_num, anim_dur=null){
+		// await vmix.talker.talk({
+		// 	'Function': 'TitleBeginAnimation',
+		// 	'Value': `[Page${page_num}]`,
+		// 	'Input': self.title_name,
+		// })
+
+		await vmix.talker.talk({
+			'Function': 'SelectIndex',
+			'Value': page_num,
+			'Input': self.title_name,
+		})
+
+		if (anim_dur){
+			await ksys.util.sleep(anim_dur);
+		}
+	}
 }
+
 
 document.addEventListener('keydown', evt => {
 	// if (evt.which == 80 && evt.ctrlKey && evt.altKey){

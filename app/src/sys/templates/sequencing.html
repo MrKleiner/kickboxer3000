@@ -1,0 +1,52 @@
+
+
+
+
+
+<!-- Root editor -->
+<template id="editor">
+	<title-sequence-editor regular_box>
+		<div class="editor_ctrl">
+			<label class="lock_timings" basic_cbox kbhint="Visual only. This is some important shit. Editing these numbers by accident is bad">
+				Lock Timings
+				<input type="checkbox">
+			</label>
+		</div>
+		<div class="seq_pool"></div>
+	</title-sequence-editor>
+</template>
+
+
+<!-- Sequence instance -->
+<template id="sequence">
+	<title-sequence subtle_box>
+		<div class="seq_ctrl">
+			<div class="seq_param">
+				<!-- <label>Sequence ID</label> -->
+				<div class="seq_id"></div>
+			</div>
+		</div>
+		<div class="seq_items_pool"></div>
+	</title-sequence>
+</template>
+
+
+<!-- Sequence item -->
+<template id="sequence_item">
+	<div class="seq_item">
+		<div class="seq_item_param">
+			<!-- <label>Item ID</label> -->
+			<div class="item_id seq_item_param_val"></div>
+		</div>
+		<div class="seq_item_param item_dur">
+			<label>Duration:</label>
+			<input class="seq_item_param_val" onchange_vis_feed noctrl type="number" value="500">
+		</div>
+	</div>
+</template>
+
+
+
+
+
+
