@@ -1,4 +1,7 @@
 
+const { ipcRenderer } = require('electron');
+
+
 const _ticker = {
 	sys_pool: {},
 	syskill: false,
@@ -241,21 +244,6 @@ class _kb_ticker{
 
 }
 
-
-const KBTicker = class {
-	constructor(ticker_prms){
-		const self = this;
-		ksys.util.cls_pwnage.remap(self);
-
-		if (!ticker_prms){
-			console.error('KBTicker: Invalid params', ticker_prms);
-			return
-		}
-
-		
-
-	}
-}
 
 
 
@@ -962,8 +950,6 @@ const KbAtTicker = class{
 
 		self.running = true;
 
-		// !%~ start,resume,pause,terminate,get_curtime,resub_to_echo,resub_to_end,resume_from_offset
-
 		// todo: Fuck javascript ?
 		{
 			self.start = async function(auto_attach=true, auto_echo_sub=true){
@@ -1361,11 +1347,88 @@ _ticker.kb_at.AddrPicker = AddrPicker;
 
 
 
+// ============================================================
+// ------------------------------------------------------------
+//               Even Fancier Node IPC Shit
+// ------------------------------------------------------------
+// ============================================================
+
+const NodeAtAtBundestag = class{
+	constructor(pipe){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#AB78FF',
+		);
+
+		self.pipe = pipe[0];
+
+		self.nprint('Attached to autobahn', pipe, self);
+
+		self.attachments = {};
+
+		self.pipe.onmessage = function(msg){
+			self.nprint('Got autobahn message:', msg.data);
+			self.attachments[msg.data.clock_data.id]?.[msg.data.broadcast_tgt]?.(msg.data.clock_data);
+		}
+	}
+
+	static async sys_init(){
+		return new Promise(function(resolve, reject){
+			ipcRenderer.invoke('kbn.atat.autobahn', {
+				'cmd_id': 'attach',
+				'data': {},
+			});
+
+			ipcRenderer.on('kb.atat.accept_autobahn', function(evt, data){
+				print('Got attach request', evt, data);
+				_ticker.bundestag = new _ticker.NodeAtAtBundestag(evt.ports);
+				resolve(true);
+			})
+		});
+	}
+
+	attach(self, params){
+		self.nprint('Attached', params, 'to', self);
+		let attachment_dict = self.attachments[params.clock_id];
+		if (!attachment_dict){
+			attachment_dict = {}
+			self.attachments[params.clock_id] = attachment_dict;
+		}
+
+		attachment_dict.tick = params.tick || attachment_dict.tick;
+		attachment_dict.end = params.end || attachment_dict.end;
+	}
+
+	create_clock(self, params){
+		return ipcRenderer.invoke('kbn.atat.clock', {
+			'cmd_id': 'create',
+			'data': params,
+		});
+	}
+
+	edit_clock(self, params){
+		return ipcRenderer.invoke('kbn.atat.clock', {
+			'cmd_id': 'edit',
+			'data': params,
+		});
+	}
+
+	read_clock(self, clock_id){
+		return ipcRenderer.invoke('kbn.atat.clock', {
+			'cmd_id': 'read',
+			'data': {
+				'clock_id': clock_id,
+			},
+		});
+	}
+}
+
+_ticker.NodeAtAtBundestag = NodeAtAtBundestag;
+
+
+
+
 
 
 module.exports = _ticker;
-
-
-
-
 

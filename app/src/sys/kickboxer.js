@@ -41,6 +41,11 @@ const http_em = require('http');
 // Electron's crypto module
 const crypto_em = require('crypto');
 
+// Subprocess like in python
+// const { spawn } = require('child_process')
+const { spawn, execFile , execFileSync } = require('child_process')
+const child_proc = spawn;
+
 // Fuck you
 const { ipcRenderer } = require('electron');
 
@@ -57,12 +62,10 @@ const Path = function(){
 
 	cls.is_relative_to = function(target){
 	    const stack = Path(cls).parts();
-	    print('Stack:', stack)
 	    const parent = str(target);
 
 	    while (stack.length){
 	        const current = str(Path(stack.join('/')));
-	        print('Current:', current, 'Parent:', parent)
 	        if (current == parent){
 	            return true;
 	        }
@@ -143,6 +146,7 @@ const ksys = {
 	switches:       require('./sys/switches.js'),
 	packer_md:      require('./sys/packer.js'),
 	gtzip_wrangler: require('./sys/gtzip_wrangler.js'),
+	sequencer:      require('./sys/sequencing.js'),
 
 	// Global events listeners
 	binds:   {},
@@ -528,31 +532,41 @@ ksys.util.lock_gui = function(state){
 }
 
 ksys.util.reload = function(){
-	ipcRenderer.invoke('ipc_hard_reload', { key: 'value' });
+	ipcRenderer.invoke('kbn.main.reload', { key: 'value' });
 }
 
-ksys.util.nprint = function(cls, color, extras=''){
+ksys.util.nprint = function(cls, color, extras='', cls_name_override=null){
+	const nprint_name = (
+		cls.constructor.NPRINT_NAME ||
+		cls.constructor.name ||
+		cls_name_override ||
+		'UNKNOWN_CLASS'
+	)
+
+	const console_color = (color == '?') ? ksys.util.rnd_hex(true) : color;
+
 	cls.nprint = function(){
 		if (cls.constructor.MUTE_NPRINT){return};
 		console.log(
-			`%c[${cls.constructor.name}]`,
-			`color: ${color};` + extras,
+			// `%c[${cls_name_override || cls.constructor.name}]`,
+			`%c[${nprint_name}]`,
+			`color: ${console_color};` + extras,
 			...arguments
 		)
 	}
 	cls.nwarn = function(){
 		if (cls.constructor.MUTE_NPRINT){return};
 		console.warn(
-			`%c[${cls.constructor.name}]`,
-			`color: ${color};` + extras,
+			`%c[${nprint_name}]`,
+			`color: ${console_color};` + extras,
 			...arguments
 		)
 	}
 	cls.nerr = function(){
 		if (cls.constructor.MUTE_NPRINT){return};
 		console.error(
-			`%c[${cls.constructor.name}]`,
-			`color: ${color};` + extras,
+			`%c[${nprint_name}]`,
+			`color: ${console_color};` + extras,
 			...arguments
 		)
 	}
@@ -701,6 +715,103 @@ ksys.util.promise = function(){
 	promise_data[0] = promise_itself;
 
 	return promise_data;
+}
+
+ksys.util.rnd_hex = function(hashtag=false){
+	// Generate a random integer between 0 and 0xFFFFFF
+	const rnd_int = Math.floor(Math.random() * 0x1000000);
+	// Convert to hexadecimal and pad with leading zeros if necessary
+	const hex_str = rnd_int.toString(16).padStart(6, '0');
+	return (hashtag ? '#' : '') + hex_str;
+}
+
+// A dictionary where key is whatever a class' property returns
+// Todo: this is some unused shit
+ksys.util.ClassDict = class{
+	static NPRINT_NAME = 'ClassDict';
+
+	constructor(key_attr){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#FFFB88',
+		);
+
+		self.key_attr = key_attr.trim();
+
+		self.cls_array = new Set();
+	}
+
+	check_cls(self, tgt_cls){
+		if (!(self.key_attr in tgt_cls)){
+			throw new Error('Class', tgt_cls, `doesn't contain attribute`, self.key_attr);
+		}
+	}
+
+	cls_lookup(self, tgt_cls){
+		self.check_cls(tgt_cls);
+
+		for (const set_cls of self.cls_array){
+			// todo: == or === ????
+			if (set_cls[self.key_attr] === tgt_cls[self.key_attr]){
+				return set_cls;
+			}
+		}
+
+		return undefined
+	}
+
+	lookup(self, key_val){
+		for (const set_cls of self.cls_array){
+			if (set_cls[self.key_attr] === key_val){
+				return set_cls
+			}
+		}
+
+		return undefined
+	}
+
+	set(self, tgt_cls){
+		self.check_cls(tgt_cls);
+
+		const existing_cls = self.cls_lookup(tgt_cls);
+
+		if (existing_cls){
+			self.cls_array.delete(existing_cls);
+		}
+
+		self.cls_array.add(tgt_cls);
+	}
+
+	cls_get(self, tgt_cls){
+		self.check_cls(tgt_cls);
+
+		return self.cls_lookup(tgt_cls)
+	}
+
+	get(self, key_val){
+		return self.lookup(key_val)
+	}
+
+	includes(self, key_val){
+		return Boolean(self.lookup(key_val))
+	}
+
+	cls_includes(self, tgt_cls){
+		self.check_cls(tgt_cls);
+		return Boolean(self.cls_lookup(tgt_cls))
+	}
+
+	* iter(self){
+		for (const i of self.cls_array){
+			yield i
+		}
+	}
+
+	* iter_kv(self){
+		for (const i of self.cls_array){
+			yield [i[self.key_attr], i]
+		}
+	}
 }
 
 // swap nodes
@@ -917,6 +1028,9 @@ async function app_init()
 	// Index module templates
 	ksys.tplates.index_module_templates();
 
+	// Node AT-AT Ticker
+	await ksys.ticker.NodeAtAtBundestag.sys_init();
+
 
 	// if vmix is not reachable - do not save the IP/port and simply prompt input again
 	if (reach == false){
@@ -937,6 +1051,11 @@ async function app_init()
 
 		// init resource proxy
 		await vmix.util.HTTPResourceProxy.sys_init();
+
+		ipcRenderer.invoke('kbn.basic_vmix.update_addr', {
+			'ip': ksys.context.global.cache['vmix_ip'],
+			'port': ksys.context.global.cache['vmix_port']
+		});
 
 		// if vmix is reachable - display a list of available systems
 		// OR load previously active module
@@ -973,10 +1092,13 @@ $(document).ready(function(){
 // ------------------------------------------------------------
 // ============================================================
 
-// alt + w
+// alt + w and ctrl + r
 document.addEventListener('keydown', evt => {
-	if (evt.which == 87 && evt.altKey){
+	if (evt.code == 'KeyW' && evt.altKey){
 		sys_load('welcome')
+	}
+	if (evt.code == 'KeyR' && evt.ctrlKey){
+		// ksys.util.reload();
 	}
 });
 
@@ -1005,5 +1127,8 @@ document.addEventListener('focusin', function(evt){
 	const tag = evt.target;
 	if (['INPUT', 'TEXTAREA'].includes(tag.tagName) && !('spellcheck' in tag.attributes)){
 		tag.setAttribute('spellcheck', 'false');
+	}
+	if (['INPUT', 'TEXTAREA'].includes(tag.tagName) && tag.classList.contains('kbsys_locked')){
+		tag.blur();
 	}
 })
