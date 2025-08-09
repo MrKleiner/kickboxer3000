@@ -56,6 +56,8 @@ const NodeAtAtInstance = class{
 		if (!self.clock_id){
 			self.nerr('Ticker with no id:', self, init_params);
 		}
+
+		self.last_impulse = self.sys_time_s;
 	}
 
 	$time(self){
@@ -180,7 +182,7 @@ const NodeAtAtInstance = class{
 		self.diesel_engine = true;
 
 		// Create starting point
-		let last_impulse = self.sys_time_s;
+		self.last_impulse = self.sys_time_s;
 
 		while (true){
 			try{
@@ -199,8 +201,8 @@ const NodeAtAtInstance = class{
 
 				// Check if a second has passed
 				const current_impulse = self.sys_time_s;
-				if (current_impulse > last_impulse){
-					last_impulse = self.sys_time_s;
+				if (current_impulse > self.last_impulse){
+					self.last_impulse = self.sys_time_s;
 					self.tick += 1;
 
 					self.nprint('\t\t', self.tick, self.clock_id);
@@ -272,13 +274,14 @@ const NodeAtAtInstance = class{
 	}
 
 	resume(self){
-		self.nprint('Resuming')
+		self.nprint('Resuming');
 		// Stopped and terminated timers cannot be resumed
 		if (self.stopped || self.terminated){return};
 		// todo: Does this actually RESOLVE or CAUSE issues?
 		const resolve = self.pause_promise_resolve;
 		self.pause_promise = null;
 		self.pause_promise_resolve = null;
+		self.last_impulse = self.sys_time_s;
 		resolve?.(true);
 	}
 
