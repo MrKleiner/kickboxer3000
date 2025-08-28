@@ -171,6 +171,10 @@ img:not([candrag]){
 	opacity: 0.5 !important;
 }
 
+.kbsys_locked *{
+	pointer-events: none !important;
+}
+
 [monospace],
 [monospace] *
 {
@@ -1197,7 +1201,20 @@ hintsys-bar #hintsys_bar_msgs .kbmsg[err]{
 	animation: sys_err-blink-animation 0.1s steps(2, start) infinite;
 }
 
+body.hintsys_no_warn{
+	transition: .5s;
+	box-shadow: inset 0px 0px 0px 0px rgba(255, 255, 255, 0);
+}
 
+body.hintsys_warn_non_ctritical{
+	/*transition: .25s;*/
+	box-shadow: inset 0px 0px 77px 45px rgba(255, 200, 0, 1);
+}
+
+body.hintsys_warn_ctritical{
+	/*transition: .25s;*/
+	box-shadow: inset 0px 0px 77px 45px rgba(235, 71, 24, 1);
+}
 
 
 
@@ -1696,3 +1713,141 @@ title-sequence-editor .seq_ctrl .seq_param label{
 }
 
 
+
+
+
+
+/*
+=========================================
+          Psych Ward
+=========================================
+!~~ .psych_ward_editor
+*/
+
+.psych_ward_editor{
+	display: flex;
+	flex-direction: column;
+	margin-left: 20px;
+	margin-bottom: 50px;
+	margin-right: 30px;
+	/*width: 850px;*/
+}
+
+.psych_ward_editor .psych_ward_header{
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	height: 100px;
+	width: 400px;
+	padding: 10px;
+}
+
+.psych_ward_editor .psych_ward_header img{
+	position: absolute;
+	width: 400px;
+	height: 100px;
+}
+
+.psych_ward_editor .durka{
+	color: red;
+	font-size: 35px;
+	z-index: 3;
+	font-weight: bold;
+}
+
+.psych_ward_editor > sysbtn{
+	width: 200px;
+	padding-top: 5px;
+	padding-bottom: 5px;
+	margin-top: 20px;
+}
+
+
+.psych_ward_editor .psych_ward_cfg_item{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: 6px 0px 6px 7px;
+	margin-top: 10px;
+	border-left: 2px solid white;
+}
+
+.psych_ward_editor .psych_ward_cfg_item:hover{
+	background: rgba(255, 255, 255, 0.1);
+}
+
+
+.psych_ward_editor .psych_ward_cfg_item .cfg_label{
+	width: 100px;
+}
+
+.psych_ward_editor .psych_ward_cfg_item input{
+	width: 450px;
+}
+
+.psych_ward_editor .flist{
+	margin-top: 20px;
+	width: 300px;
+	height: 400px;
+	font-family: 'ibm_plex';
+	font-size: 17px;
+}
+
+.psych_ward_editor .psych_ward_viewer{
+	display: flex;
+	flex-direction: row;
+	position: relative;
+}
+
+.psych_ward_editor .psych_ward_results{
+	display: flex;
+	flex-direction: column;
+	width: 550px;
+	padding: 10px;
+	margin-top: 30px;
+}
+
+.psych_ward_editor .title_thumbnail{
+	top: 70px;
+	margin-left: 50px;
+	position: sticky;
+	height: 400px;
+	width: 700px;
+}
+
+.psych_ward_editor .psych_ward_results .psych_ward_title{
+	display: flex;
+	flex-direction: row;
+	margin-top: 15px;
+	padding: 10px;
+	align-items: center;
+}
+
+.psych_ward_editor .psych_ward_results .psych_ward_title:hover{
+	outline-color: white;
+	background: rgb(30, 30, 30);
+}
+
+.psych_ward_editor .psych_ward_results .psych_ward_title .title_data{
+	display: flex;
+	flex-direction: column;
+	margin-left: 20px;
+	height: 100%;
+	justify-content: space-evenly;
+}
+
+.psych_ward_editor .psych_ward_results .psych_ward_title .preview_img{
+	width: 100px;
+	height: 80px;
+}
+
+.psych_ward_editor .psych_ward_results .psych_ward_title .title_name{
+	font-family: 'ibm_plex';
+	font-size: 17px;
+}
+
+.psych_ward_editor .psych_ward_results .psych_ward_title .title_data sysbtn{
+	width: 150px;
+}

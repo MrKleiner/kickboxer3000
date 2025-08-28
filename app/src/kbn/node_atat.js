@@ -6,6 +6,7 @@ const kb_util = require('../kbn/kbn_util.js');
 const NodeAtAtInstance = class{
 	// Heartbeat in ms
 	static IMPULSE_INTERVAL = 100;
+	// static IMPULSE_INTERVAL = (1000 / 60);
 	// Don't fuck with this
 	static CLOCK_SPEED_FACTOR = 1;
 
@@ -72,6 +73,18 @@ const NodeAtAtInstance = class{
 		const hours = Math.floor(minutes / 60) || 0;
 		const seconds = tick % 60;
 
+		// Пойдите убейтесь блять об стенку мрази конченые
+		let fuck_tick = self.tick + (self.clock_params.offset || 0) + self.clock_params.fuck_you;
+		if (self.clock_params.reversed){
+			fuck_tick = (
+				self.clock_params.duration
+				- (self.tick + (self.clock_params.offset || 0))
+			);
+		}
+		const fuck_minutes = Math.floor(fuck_tick / 60) || 0;
+		const fuck_hours = Math.floor(fuck_minutes / 60) || 0;
+		const fuck_seconds = fuck_tick % 60;
+
 		/*
 		const r_tick = (
 			self.clock_params.duration
@@ -82,6 +95,8 @@ const NodeAtAtInstance = class{
 		const r_seconds = r_tick % 60;
 		*/
 
+		const ms = 0;
+
 		return {
 			'tick': tick,
 
@@ -89,11 +104,19 @@ const NodeAtAtInstance = class{
 				minutes,
 				hours,
 				seconds,
+				ms,
 			},
 			'clock': {
 				'minutes': minutes % 60,
 				'hours': hours % 24,
 				'seconds': seconds,
+				'ms': 0,
+			},
+			'fuck': {
+				'minutes': fuck_minutes,
+				'hours': fuck_hours % 24,
+				'seconds': fuck_seconds,
+				'ms': 0,
 			},
 			/*
 			'reversed': {
@@ -117,13 +140,29 @@ const NodeAtAtInstance = class{
 		// const time = self.clock_params.reversed ? self.time.reversed : self.time;
 		const time = self.time;
 		for (const field of self.clock_params.vmix_fields || []){
+			if (self.clock_params.fuck_you > 0){
+				self.kbn.vmix.talk({
+					'Function': 'SetText',
+					'Value': (
+						field.tplate
+						.replaceAll('%h%',  time.fuck.hours.toString().padStart(field.pad, '0'))
+						.replaceAll('%m%',  time.fuck.minutes.toString().padStart(field.pad, '0'))
+						.replaceAll('%mt%', time.fuck.minutes.toString().padStart(field.pad, '0'))
+						.replaceAll('%s%',  time.fuck.seconds.toString().padStart(field.pad, '0'))
+					),
+					'Input': field.gtzip_name,
+					'SelectedName': field.text_field_name + (self.GTFORMAT ? '.Text' : ''),
+				})
+				continue
+			}
 			self.kbn.vmix.talk({
 				'Function': 'SetText',
 				'Value': (
 					field.tplate
-					.replaceAll('%h%', time[field.count_as || 'clock'].hours.toString().padStart(field.pad, '0'))
-					.replaceAll('%m%', time[field.count_as || 'clock'].minutes.toString().padStart(field.pad, '0'))
-					.replaceAll('%s%', time[field.count_as || 'clock'].seconds.toString().padStart(field.pad, '0'))
+					.replaceAll('%h%',  time[field.count_as || 'clock'].hours.toString().padStart(field.pad, '0'))
+					.replaceAll('%m%',  time[field.count_as || 'clock'].minutes.toString().padStart(field.pad, '0'))
+					.replaceAll('%mt%', time.total.minutes.toString().padStart(field.pad, '0'))
+					.replaceAll('%s%',  time[field.count_as || 'clock'].seconds.toString().padStart(field.pad, '0'))
 				),
 				'Input': field.gtzip_name,
 				'SelectedName': field.text_field_name + (self.GTFORMAT ? '.Text' : ''),
@@ -212,7 +251,8 @@ const NodeAtAtInstance = class{
 				}
 
 				// Check if target duration was reached
-				if (self.tick >= (self.clock_params.duration - self.clock_params.offset)){
+				// if (self.tick >= (self.clock_params.duration - self.clock_params.offset)){
+				if (self.tick >= self.clock_params.duration){
 					// If so - stop and call the callback (if any)
 					self.update_browsers('end');
 					self.stop();
@@ -247,6 +287,7 @@ const NodeAtAtInstance = class{
 		self.clock_params.offset = params?.clock?.offset || 0;
 		self.clock_params.vmix_fields = params?.clock?.vmix_fields;
 		self.clock_params.reversed = params?.clock?.reversed || false;
+		self.clock_params.fuck_you = params?.clock.fuck_you || 0; 
 
 		// The timer is no longer stopped
 		// Also, this (.fire()) is the only way to un-stop the timer
@@ -288,7 +329,344 @@ const NodeAtAtInstance = class{
 	stop(self){
 		self.stopped = true;
 		self.pause();
+		// todo: uncomment this
+		// self.tick = 0;
+	}
+
+	reset(self){
+		self.stopped = true;
+		self.pause();
 		self.tick = 0;
+		self.fuck_you = 0;
+	}
+
+	// Terminated timers cannot be started
+	terminate(self){
+		self.terminated = true;
+	}
+}
+
+const AtomicNodeAtAtInstance = class{
+	// Heartbeat in ms
+	static IMPULSE_INTERVAL = (1000 / 60);
+
+	GTFORMAT = true;
+
+	constructor(init_params){
+		const self = kb_util.nprint(cls_pwnage.remap(this));
+
+		// This ticker's ID
+		self.clock_id = init_params.clock_id;
+		// Bundestag
+		self.bundestag = init_params.bundestag;
+		// KickBoxerNode
+		self.kbn = init_params.kbn;
+
+		// Ever increasing progress number (always whole)
+		self.tick = 0;
+
+		// Current clock parameters
+		self.clock_params = {
+			// Clock duration. Everything has a duration
+			'duration': 0,
+			// Offset, so that the clock starts from n-second
+			'offset': 0,
+			// Target VMIX fields to be updated
+			'vmix_fields': [],
+			// Whether the clock should tick in reverse direction
+			'reversed': false,
+		};
+
+		// Pause promise (if any)
+		self.pause_promise = null;
+		// Whether the timer is stopped or not
+		// A stopped timer cannot be resumed. Only fired
+		self.stopped = true;
+
+		// Terminated timers cannot be manipulated in any way
+		self.terminated = false;
+
+		// The impulse machine
+		self.diesel_engine = false;
+
+		if (!self.clock_id){
+			self.nerr('Ticker with no id:', self, init_params);
+		}
+
+		self.last_impulse = self.sys_time_s;
+	}
+
+	$time(self){
+		let tick = self.tick + (self.clock_params.offset || 0);
+		if (self.clock_params.reversed){
+			tick = (
+				self.clock_params.duration
+				- (self.tick + (self.clock_params.offset || 0))
+			);
+		}
+		const minutes = Math.floor(tick / 60) || 0;
+		const hours = Math.floor(minutes / 60) || 0;
+		const seconds = tick % 60;
+
+		// Пойдите убейтесь блять об стенку мрази конченые
+		let fuck_tick = self.tick + (self.clock_params.offset || 0) + self.clock_params.fuck_you;
+		if (self.clock_params.reversed){
+			fuck_tick = (
+				self.clock_params.duration
+				- (self.tick + (self.clock_params.offset || 0))
+			);
+		}
+		const fuck_minutes = Math.floor(fuck_tick / 60) || 0;
+		const fuck_hours = Math.floor(fuck_minutes / 60) || 0;
+		const fuck_seconds = fuck_tick % 60;
+
+		/*
+		const r_tick = (
+			self.clock_params.duration
+			- (self.tick + (self.clock_params.offset || 0))
+		);
+		const r_minutes = Math.floor(r_tick / 60) || 0;
+		const r_hours = Math.floor(r_minutes / 60) || 0;
+		const r_seconds = r_tick % 60;
+		*/
+
+		const ms = 0;
+
+		return {
+			'tick': tick,
+
+			'total': {
+				minutes,
+				hours,
+				seconds,
+				ms,
+			},
+			'clock': {
+				'minutes': minutes % 60,
+				'hours': hours % 24,
+				'seconds': seconds,
+				'ms': 0,
+			},
+			'fuck': {
+				'minutes': fuck_minutes,
+				'hours': fuck_hours % 24,
+				'seconds': fuck_seconds,
+				'ms': 0,
+			},
+			/*
+			'reversed': {
+				'total': {
+					r_minutes,
+					r_hours,
+					r_seconds,
+				},
+				'clock': {
+					'minutes': r_minutes % 60,
+					'hours': r_hours % 24,
+					'seconds': r_seconds,
+				},
+			}
+			*/
+		}
+	}
+
+	// Send HTTP request to VMIX to update target text fields
+	async update_vmix(self){
+		// const time = self.clock_params.reversed ? self.time.reversed : self.time;
+		const time = self.time;
+		for (const field of self.clock_params.vmix_fields || []){
+			if (self.clock_params.fuck_you > 0){
+				self.kbn.vmix.talk({
+					'Function': 'SetText',
+					'Value': (
+						field.tplate
+						.replaceAll('%h%',  time.fuck.hours.toString().padStart(field.pad, '0'))
+						.replaceAll('%m%',  time.fuck.minutes.toString().padStart(field.pad, '0'))
+						.replaceAll('%mt%', time.fuck.minutes.toString().padStart(field.pad, '0'))
+						.replaceAll('%s%',  time.fuck.seconds.toString().padStart(field.pad, '0'))
+					),
+					'Input': field.gtzip_name,
+					'SelectedName': field.text_field_name + (self.GTFORMAT ? '.Text' : ''),
+				})
+				continue
+			}
+			self.kbn.vmix.talk({
+				'Function': 'SetText',
+				'Value': (
+					field.tplate
+					.replaceAll('%h%',  time[field.count_as || 'clock'].hours.toString().padStart(field.pad, '0'))
+					.replaceAll('%m%',  time[field.count_as || 'clock'].minutes.toString().padStart(field.pad, '0'))
+					.replaceAll('%mt%', time.total.minutes.toString().padStart(field.pad, '0'))
+					.replaceAll('%s%',  time[field.count_as || 'clock'].seconds.toString().padStart(field.pad, '0'))
+				),
+				'Input': field.gtzip_name,
+				'SelectedName': field.text_field_name + (self.GTFORMAT ? '.Text' : ''),
+			})
+		}
+	}
+
+	// Send status update to browser windows
+	async update_browsers(self, status_type='general'){
+		if (status_type == 'tick'){
+			self.bundestag.autobahn_broadcast({
+				'broadcast_tgt': status_type,
+				'clock_data': {
+					'id': self.clock_id,
+					'paused': !!self.pause_promise,
+					'stopped': self.stopped,
+					'terminated': self.terminated,
+					'params': self.clock_params,
+					'tick': self.tick,
+					'time': self.time,
+				},
+			});
+		}
+
+		if (status_type == 'end'){
+			self.bundestag.autobahn_broadcast({
+				'broadcast_tgt': status_type,
+				'clock_data': {
+					'id': self.clock_id,
+					'paused': !!self.pause_promise,
+					'stopped': self.stopped,
+					'terminated': self.terminated,
+					'params': self.clock_params,
+					'tick': self.tick,
+					'time': self.time,
+				},
+			});
+		}
+	}
+
+	// System time in seconds
+	$sys_time_s(self){
+		return Math.ceil(
+			(new Date()).getTime() / (1000 / self.constructor.CLOCK_SPEED_FACTOR)
+		)
+	}
+
+	// System time in milliseconds
+	$sys_time_ms(self){
+		return (new Date()).getTime()
+	}
+
+	async impulse_machine(self){
+		// There can only be one impulse machine per timer
+		if (self.diesel_engine){return};
+		self.diesel_engine = true;
+
+		// Create starting point
+		self.last_impulse = self.sys_time_s;
+
+		while (true){
+			try{
+				// Wait for pause to resolve (if any)
+				await self.pause_promise;
+
+				// Sleep in-between impulses
+				await kb_util.sleep(self.constructor.IMPULSE_INTERVAL);
+
+				if (self.terminated){return};
+
+				// todo: Is this really necessary?
+				if (self.stopped){continue};
+
+				self.nprint('IMPULSE', self.clock_id);
+
+				// Check if a second has passed
+				const current_impulse = self.sys_time_s;
+				if (current_impulse > self.last_impulse){
+					self.last_impulse = self.sys_time_s;
+					self.tick += 1;
+
+					self.nprint('\t\t', self.tick, self.clock_id);
+
+					self.update_vmix();
+					self.update_browsers('tick');
+				}
+
+				// Check if target duration was reached
+				// if (self.tick >= (self.clock_params.duration - self.clock_params.offset)){
+				if (self.tick >= self.clock_params.duration){
+					// If so - stop and call the callback (if any)
+					self.update_browsers('end');
+					self.stop();
+				}
+			}catch(err){
+				self.nprint('impulse_machine ERROR:', err);
+			}
+
+		}
+	}
+
+	// Run the ticker
+	fire(self, params=null){
+		if (self.terminated){
+			self.warn('Manipulations on a terminated timer:', self.clock_id, self);
+			return
+		}
+
+		self.nprint('Editing clock:', params);
+
+		// Reset progress
+		self.tick = 0;
+
+		// Update clock params
+		self.clock_params.duration = params?.clock?.duration;
+		self.clock_params.offset = params?.clock?.offset || 0;
+		self.clock_params.vmix_fields = params?.clock?.vmix_fields;
+		self.clock_params.reversed = params?.clock?.reversed || false;
+		self.clock_params.fuck_you = params?.clock.fuck_you || 0; 
+
+		// The timer is no longer stopped
+		// Also, this (.fire()) is the only way to un-stop the timer
+		self.stopped = false;
+
+		// Make sure impulse machine is up and running
+		self.impulse_machine();
+
+		// Push 0 to VMIX
+		self.update_vmix();
+
+		// Start the timer
+		self.resume();
+	}
+
+	pause(self){
+		self.nprint('Pausing')
+		// Stopped and terminated timers cannot be paused
+		if (self.stopped || self.terminated){return};
+		if (!self.pause_promise){
+			self.pause_promise = new Promise(function(resolve){
+				self.pause_promise_resolve = resolve;
+			})
+		}
+	}
+
+	resume(self){
+		self.nprint('Resuming');
+		// Stopped and terminated timers cannot be resumed
+		if (self.stopped || self.terminated){return};
+		// todo: Does this actually RESOLVE or CAUSE issues?
+		const resolve = self.pause_promise_resolve;
+		self.pause_promise = null;
+		self.pause_promise_resolve = null;
+		self.last_impulse = self.sys_time_s;
+		resolve?.(true);
+	}
+
+	stop(self){
+		self.stopped = true;
+		self.pause();
+		// todo: uncomment this
+		// self.tick = 0;
+	}
+
+	reset(self){
+		self.stopped = true;
+		self.pause();
+		self.tick = 0;
+		self.fuck_you = 0;
 	}
 
 	// Terminated timers cannot be started
@@ -329,6 +707,7 @@ const NodeAtAtBundestag = class{
 			['create', 'create_clock'],
 			['edit', 'edit_clock'],
 			['read', 'read_clock'],
+			['reset', 'reset_clock'],
 		]],
 	]);
 
@@ -482,6 +861,16 @@ const NodeAtAtBundestag = class{
 				'paused': !!clock.pause_promise,
 				'stopped': !!clock.stopped,
 			}
+		}else{
+			return false
+		}
+	}
+
+	reset_clock(self, params){
+		const clock = self.clock_dict[params.data.clock_id];
+		if (clock){
+			clock.reset();
+			return true
 		}else{
 			return false
 		}

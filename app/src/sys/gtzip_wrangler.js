@@ -230,6 +230,10 @@ const GTZipFile = class{
 	// Files are sequential. No need for offsets.
 	// meta always comes last. Only len is needed.
 
+	// _src is a dict:
+	//     - fpath = absolute file path to the target gtzip
+	//     - buf = raw .gtzip buffer
+
 	constructor(_src=null){
 		const self = ksys.util.cls_pwnage.remap(this);
 		ksys.util.nprint(self, '#E764FF');

@@ -351,6 +351,10 @@ img[vis_feedback]
 	padding: 3px;
 }
 
+~~ club-base-params club-param:not([prmname='init_from_url']) input[type='text']{
+	width: 250px;
+}
+
 ~~ club-base-params club-param .club_base_param_label{
 	width: 140px;
 }
@@ -385,12 +389,18 @@ img[vis_feedback]
 ~~ club-playerbase > sysbtn{
 	position: sticky;
 	height: fit-content;
-	top: 70px;
+	top: 105px;
 	width: 80%;
 	align-self: center;
 	text-align: center;
 	padding: 2px;
 	user-select: none;
+	margin-top: 5px;
+}
+
+~~ .player_editor_search{
+	position: sticky;
+	top: 70px;
 }
 
 
@@ -1387,6 +1397,8 @@ Records themselves
 	height: 36px;
 
 	/*padding: 5px;*/
+
+	position: relative;
 }
 
 ~~.score_locked{
@@ -1430,11 +1442,11 @@ Records themselves
 	position: relative;
 }
 
-~~ .score_author:hover,
-~~ score-record-flags record-flag:hover
+~~ .score_author:hover
 {
 	background: rgba(255, 255, 255, 0.05);
 }
+
 
 ~~ score-record-flags record-flag:active *
 {
@@ -1479,6 +1491,9 @@ Records themselves
 	justify-content: flex-end;
 
 	height: 100%;
+
+	position: absolute;
+	right: 0px;
 }
 
 ~~ score-record-flags record-flag
@@ -1487,8 +1502,13 @@ Records themselves
 	align-items: center;
 	padding: 0px 5px 0px 5px;
 	border-left: 1px solid gray;
-	background: rgba(0, 0, 0, 0.1);
+	/*background: rgba(0, 0, 0, 0.1);*/
+	background: #161616;
 	height: 100%;
+}
+
+~~ score-record-flags record-flag:hover{
+	background: #343434;
 }
 
 ~~ score-record-flags record-flag input
@@ -2654,7 +2674,7 @@ tab.tab_hidden
 }
 
 
-#layout_buttons_vs_ctrl, #commenter_ctrl
+#layout_buttons_vs_ctrl
 {
 	/*margin-top: 75px;*/
 	display: flex;
@@ -2666,15 +2686,13 @@ tab.tab_hidden
 	outline: 1px solid rgb(90, 90, 90);
 }
 
-#layout_buttons_vs_ctrl_head,
-#commenter_ctrl_head
+#layout_buttons_vs_ctrl_head
 {
 	display: flex;
 	flex-direction: column;
 }
 
-#layout_buttons_vs_ctrl_head .layout_buttons_vs_ctrl_head_minititle,
-#commenter_ctrl_head .layout_buttons_vs_ctrl_head_minititle
+#layout_buttons_vs_ctrl_head .layout_buttons_vs_ctrl_head_minititle
 {
 	user-select: none;
 	display: flex;
@@ -2683,22 +2701,19 @@ tab.tab_hidden
 	justify-content: center;
 }
 
-#layout_buttons_vs_ctrl_head input,
-#commenter_ctrl_head input
+#layout_buttons_vs_ctrl_head input
 {
 	width: 750px;
 	font-size: 21px;
 }
 
-#layout_buttons_vs_ctrl_body,
-#commenter_ctrl_body
+#layout_buttons_vs_ctrl_body
 {
 	display: flex;
 	flex-direction: row;
 }
 
-#layout_buttons_vs_ctrl vmixbtn,
-#commenter_ctrl vmixbtn
+#layout_buttons_vs_ctrl vmixbtn
 {
 	width: 200px;
 	height: 200px;
@@ -3382,6 +3397,309 @@ player-param option{
 
 
 
+
+
+
+/*
+===============================================
+            Misc. Titles
+===============================================
+*/
+
+[tabid='misc_titles']{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding-bottom: 200px;
+}
+
+.misc_title_pair{
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	/*align-items: baseline;*/
+	align-items: center;
+	width: 95vw;
+}
+
+
+
+
+/*
+!~~ #commenter_ctrl
+*/
+~~{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	padding: 20px;
+	height: 550px;
+}
+
+~~_body{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+}
+
+~~_body input{
+	width: 600px;
+	/*height: 200px;*/
+	font-size: 21px;
+	margin: 15px 0px 25px 0px;
+}
+
+~~_buttons{
+	display: flex;
+	flex-direction: row;
+}
+
+~~_buttons vmixbtn{
+	width: 200px;
+	height: 200px;
+	font-size: 30px;
+}
+
+
+
+
+
+/*
+!~~ #tape_ctrl
+*/
+
+~~{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	padding: 20px;
+	height: 550px;
+}
+
+~~_body{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+}
+
+~~_body textarea{
+	width: 600px;
+	height: 200px;
+	font-size: 17px;
+}
+
+~~_buttons{
+	display: flex;
+	flex-direction: row;
+}
+
+~~_buttons vmixbtn{
+	width: 200px;
+	height: 200px;
+	font-size: 30px;
+}
+
+
+
+
+/*
+!~~ #info_1_ctrl
+*/
+~~{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	padding: 20px;
+	height: 550px;
+}
+
+~~_body{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+}
+
+~~_body input{
+	width: 600px;
+	/*height: 200px;*/
+	font-size: 21px;
+	margin: 15px 0px 25px 0px;
+}
+
+~~_buttons{
+	display: flex;
+	flex-direction: row;
+}
+
+~~_buttons vmixbtn{
+	width: 200px;
+	height: 200px;
+	font-size: 30px;
+}
+
+
+
+/*
+!~~ #info_2_ctrl
+*/
+~~{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	padding: 20px;
+	height: 550px;
+}
+
+~~_body{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+}
+
+~~_body input{
+	width: 600px;
+	/*height: 200px;*/
+	font-size: 21px;
+	margin: 15px 0px 25px 0px;
+}
+
+~~_buttons{
+	display: flex;
+	flex-direction: row;
+}
+
+~~_buttons vmixbtn{
+	width: 200px;
+	height: 200px;
+	font-size: 30px;
+}
+
+
+
+/*
+!~~ #water_ctrl
+*/
+~~{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	padding: 20px;
+	height: 450px;
+}
+
+~~_body{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+}
+
+~~_body input{
+	width: 600px;
+	/*height: 200px;*/
+	font-size: 21px;
+	margin: 15px 0px 25px 0px;
+}
+
+~~_buttons{
+	display: flex;
+	flex-direction: row;
+}
+
+~~_buttons vmixbtn{
+	width: 200px;
+	height: 200px;
+	font-size: 30px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+!~~ #referee_ctrl
+*/
+~~{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: 20px;
+	width: 90vw;
+}
+
+~~_body{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+	width: -webkit-fill-available;
+}
+
+~~_buttons{
+	display: flex;
+	flex-direction: row;
+	margin-top: 20px;
+}
+
+~~_buttons vmixbtn{
+	width: 200px;
+	height: 200px;
+	font-size: 30px;
+}
+
+
+#referee_array{
+	display: flex;
+	flex-direction: row;
+	width: -webkit-fill-available;
+	justify-content: space-evenly;
+}
+
+#referee_array .referee_box{
+	display: flex;
+	flex-direction: column;
+	padding: 10px;
+}
+
+#referee_array .referee_box:hover{
+	outline-color: rgb(160, 160, 160);
+}
+
+#referee_array input{
+	width: 300px;
+	margin: 10px 0px 10px 0px;
+	font-size: 21px;
+}
+
+#referee_to_defaults_btn{
+	margin-top: 20px;
+	padding-left: 15px;
+	padding-right: 15px;
+}
 
 
 

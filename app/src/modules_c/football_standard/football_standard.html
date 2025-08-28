@@ -29,6 +29,7 @@
 		<http-resource-proxy-control></http-resource-proxy-control>
 		<div id="role_editor" kbhint="Changes are saved and propagated automatically"></div>
 		<div id="sequencer" kbhint="Determines most timings, such as for how long should a yellow/red card indicator be on screen. Changes are saved and propagated automatically. This is some important shit - don't fuck with it"></div>
+		<psych-ward></psych-ward>
 	</tab>
 
 	<!-- <tab class="tab_hidden" tabid="stats_db"></tab> -->
@@ -126,7 +127,7 @@
 							surname
 						>Surname</div>
 						<div
-							kbhint="Prefixed with the first letter of whatever is in the player's name field"
+							kbhint="Prefixed with the first letter of whatever is in the player's name field: Grzegorz Brzęczyszczykiewicz -> G. Brzęczyszczykiewicz"
 							kbswitch_item
 							prefixed
 						>Prefixed</div>
@@ -150,6 +151,118 @@
 							kbswitch_item
 							paged
 						>Paged</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Main player list in the lineup title schema. One slot per player VS 2 massive text fields">
+				<general-cfg-label>Lineup Mains</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="lineup_mains_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Names and numbers are stored in 2 massive text fields"
+							kbswitch_item
+							shared
+						>Shared</div>
+						<div
+							kbhint="Every slot is a dedicated text field"
+							kbswitch_item
+							dedicated
+						>Dedicated</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Reserve player list in the lineup title schema. One slot per player VS 2 massive text fields">
+				<general-cfg-label>Lineup Reserves</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="lineup_reserves_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Names and numbers are stored in 2 massive text fields"
+							kbswitch_item
+							shared
+						>Shared</div>
+						<div
+							kbhint="Every slot is a dedicated text field"
+							kbswitch_item
+							dedicated
+						>Dedicated</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="2 commenter fields in a single title VS 2 titles for 1 commenter and 2 commenters">
+				<general-cfg-label>Commenter Schema</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="commenter_schema_switch" kbswitch_style="default">
+						<div
+							class="commenter_schema_item"
+							kbhint="2 Potential commenters, all in one title"
+							kbswitch_item
+							girls2cup1
+						>2 in 1</div>
+						<div
+							class="commenter_schema_item"
+							kbhint="A title for 1 commenter + a title for 2 commenters"
+							kbswitch_item
+							girls2cup2
+						>2 in 2</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Team colour in the final scores schema. PNG VS Masked Shape: PNG as in a PNG of appropriate colour must be generated. Masked Shape as in a GTZ shape (the colour of which can be changed directly) with a bitmap mask">
+				<general-cfg-label>Final Scores Colours</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="final_scores_color_schema_switch" kbswitch_style="default">
+						<div
+							class="final_scores_color_schema_item"
+							kbhint="Pre-generated bitmap"
+							kbswitch_item
+							bitmap
+						>Bitmap</div>
+						<div
+							class="final_scores_color_schema_item"
+							kbhint="Masked GTZ shape"
+							kbswitch_item
+							masked
+						>Masked</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Team colour in persistent header">
+				<general-cfg-label>Timer Team Colours</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="timer_team_color_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Pre-generated bitmap"
+							kbswitch_item
+							bitmap
+						>Bitmap</div>
+						<div
+							kbhint="Masked GTZ shape"
+							kbswitch_item
+							masked
+						>Masked</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Идите нахуй">
+				<general-cfg-label>Timer Display</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="timer_display_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Everything as usual"
+							kbswitch_item
+							normal
+						>Normal</div>
+						<div
+							kbhint="Говно бомжа"
+							kbswitch_item
+							fuck_shit
+						>Хуйня</div>
 					</div>
 				</general-cfg-ctrl>
 			</general-cfg-entry>
@@ -247,32 +360,176 @@
 	</tab>
 
 	<tab class="tab_hidden" tabid="misc_titles">
-		<div id="commenter_ctrl">
-			<h1>Commenter</h1>
-			<div id="commenter_ctrl">
 
-				<div id="commenter_ctrl_head">
-					<div class="layout_buttons_vs_ctrl_head_minititle">Commenter's Name. No post-formatting applied</div>
-					<input onchange="window.kbmodules.football_standard.save_misc_titles()" type="text" id="commenter_name_input">
+		<div class="misc_title_pair">
+			<div id="commenter_ctrl" subtle_box kbhint="Today's commenter">
+				<h1>Commenter</h1>
+				<div id="commenter_ctrl_body" subtle_box>
+					<input type="text" field_id="commenter_name_1" onchange_vis_feed placeholder="FIRST commenter">
+					<input type="text" field_id="commenter_name_2" onchange_vis_feed placeholder="SECOND commenter">
+					<div id="commenter_ctrl_buttons">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_commenter"
+							onclick="window.kbmodules.football_standard.show_misc_title('commenter')"
+						>Show Commenter</vmixbtn>
+						
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_commenter"
+							onclick="window.kbmodules.football_standard.hide_misc_title(['commenter', 'commenter_x2'])"
+						>Hide Commenter</vmixbtn>
+
+					</div>
 				</div>
+			</div>
 
-				<div id="commenter_ctrl_body">
-
-					<vmixbtn
-						seq_info="update+vis_show"
-						btname="show_commenter"
-						onclick="window.kbmodules.football_standard.show_commenter()"
-					>Show Commenter</vmixbtn>
-					
-					<vmixbtn
-						seq_info="vis_hide"
-						btname="hide_commenter"
-						onclick="window.kbmodules.football_standard.hide_commenter()"
-					>Hide Commenter</vmixbtn>
-
+			<div id="tape_ctrl" subtle_box kbhint="The endlessly scrolling bar...">
+				<h1>Tape</h1>
+				<div id="tape_ctrl_body" subtle_box>
+					<textarea field_id="tape" kbhint="Line breaks are replaced with whitespaces" onchange_vis_feed></textarea>
+					<div id="tape_ctrl_buttons">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_misc_title"
+							onclick="window.kbmodules.football_standard.show_misc_title('tape')"
+						>Show Tape</vmixbtn>
+						
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_misc_title"
+							onclick="window.kbmodules.football_standard.hide_misc_title('tape')"
+						>Hide Tape</vmixbtn>
+					</div>
 				</div>
 			</div>
 		</div>
+
+
+		<div class="misc_title_pair">
+			<div id="info_1_ctrl" subtle_box kbhint="1 line of text with background in the lower part of the screen">
+				<h1>Info 1</h1>
+				<div id="info_1_ctrl_body" subtle_box>
+					<input type="text" field_id="info_1" kbhint="No post-formatting applied" onchange_vis_feed>
+					<div id="info_1_ctrl_buttons">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_misc_title"
+							onclick="window.kbmodules.football_standard.show_misc_title('info_1')"
+						>Show Info 1</vmixbtn>
+
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_misc_title"
+							onclick="window.kbmodules.football_standard.hide_misc_title('info_1')"
+						>Hide Info 1</vmixbtn>
+					</div>
+				</div>
+			</div>
+
+			<div id="info_2_ctrl" subtle_box kbhint="2 lines of text with background in the lower part of the screen">
+				<h1>Info 2</h1>
+				<div id="info_2_ctrl_body" subtle_box>
+					<input
+						type="text"
+						field_id="info_2_upper"
+						onchange_vis_feed
+						placeholder="Upper line"
+						kbhint="No post-formatting applied"
+					>
+					<input
+						type="text"
+						field_id="info_2_lower"
+						onchange_vis_feed
+						placeholder="Lower line"
+						kbhint="No post-formatting applied"
+					>
+					<div id="info_2_ctrl_buttons">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_misc_title"
+							onclick="window.kbmodules.football_standard.show_misc_title('info_2')"
+						>Show Info 2</vmixbtn>
+
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_misc_title"
+							onclick="window.kbmodules.football_standard.hide_misc_title('info_2')"
+						>Hide Info 2</vmixbtn>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="misc_title_pair">
+			<div id="water_ctrl" subtle_box kbhint="C₂H₅OH">
+				<h1>Water Time</h1>
+				<div id="info_1_ctrl_body" subtle_box>
+					<input
+						type="text"
+						field_id="water_time_lower_text"
+						onchange_vis_feed
+						placeholder="СТАДІОН «ЧОРНОМОРЕЦЬ»"
+						kbhint="No post-formatting applied"
+					>
+					<div id="water_ctrl_buttons">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_misc_title"
+							onclick="window.kbmodules.football_standard.show_misc_title('water_time')"
+						>Show Water</vmixbtn>
+
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_misc_title"
+							onclick="window.kbmodules.football_standard.hide_misc_title('water_time')"
+						>Hide Water</vmixbtn>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="referee_ctrl" subtle_box kbhint="Referee">
+			<h1>Referee</h1>
+			<div id="referee_ctrl_body">
+				<div id="referee_array">
+					<div class="referee_box" subtle_box>
+						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_1_upper">
+						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_1_lower">
+					</div>
+					<div class="referee_box" subtle_box>
+						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_2_upper">
+						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_2_lower">
+					</div>
+					<div class="referee_box" subtle_box>
+						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_3_upper">
+						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_3_lower">
+					</div>
+					<div class="referee_box" subtle_box>
+						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_4_upper">
+						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_4_lower">
+					</div>
+				</div>
+
+				<div id="referee_ctrl_buttons">
+					<vmixbtn
+						seq_info="update+vis_show"
+						btname="show_misc_title"
+						onclick="window.kbmodules.football_standard.show_misc_title('referee')"
+					>Show Referee</vmixbtn>
+
+					<vmixbtn
+						seq_info="vis_hide"
+						btname="hide_misc_title"
+						onclick="window.kbmodules.football_standard.hide_misc_title('referee')"
+					>Hide Referee</vmixbtn>
+				</div>
+
+				<sysbtn id="referee_to_defaults_btn" onclick="window.kbmodules.football_standard.set_referee_to_default()">Apply Defaults</sysbtn>
+			</div>
+		</div>
+
 	</tab>
 
 	<tab class="tab_hidden" tabid="layout_buttons">
@@ -280,6 +537,8 @@
 			<h1>Splash (VS) Control</h1>
 			<div id="layout_buttons_vs_ctrl">
 				<div id="layout_buttons_vs_ctrl_head">
+					<div class="layout_buttons_vs_ctrl_head_minititle">Upmost Header</div>
+					<input onchange="window.kbmodules.football_standard.save_vs_sublines()" type="text" id="vs_text_main_header">
 					<div class="layout_buttons_vs_ctrl_head_minititle">Upper Line</div>
 					<input onchange="window.kbmodules.football_standard.save_vs_sublines()" type="text" id="vs_text_bottom_upper">
 					<div class="layout_buttons_vs_ctrl_head_minititle">Lower Line</div>
@@ -311,14 +570,30 @@
 					<div class="layout_ctrl_head">
 						<img style="height: 100px" src="./assets/red_cross.png">
 					</div>
-					
+
 					<vmixbtn
 						onclick="window.kbmodules.football_standard.forward_field_layout_to_vmix('home')"
 						seq_info="update"
 						class="prepare_team_layout"
 						btname="prepare_home_team_layout"
 					>Prepare Layout</vmixbtn>
-					
+
+					<div flex_row>
+						<vmixbtn
+							onclick="window.kbmodules.football_standard.show_field_layout_condensed('home')"
+							seq_info="update+vis_show"
+							class="lineup_condensed_btn"
+							btname="show_home_team_layout_conensed"
+						>Show Lineup Condensed</vmixbtn>
+						<vmixbtn
+							onclick="window.kbmodules.football_standard.hide_field_layout_condensed()"
+							seq_info="vis_hide"
+							class="lineup_condensed_btn"
+							btname="hide_home_team_layout_conensed"
+						>Hide Lineup Condensed</vmixbtn>
+					</div>
+
+
 					<div class="layout_ctrl_body">
 						<vmixbtn
 							off
@@ -362,6 +637,21 @@
 						class="prepare_team_layout"
 						btname="prepare_guest_team_layout"
 					>Prepare Layout</vmixbtn>
+
+					<div flex_row>
+						<vmixbtn
+							onclick="window.kbmodules.football_standard.show_field_layout_condensed('guest')"
+							seq_info="update+vis_show"
+							class="lineup_condensed_btn"
+							btname="show_guest_team_layout_conensed"
+						>Show Lineup Condensed</vmixbtn>
+						<vmixbtn
+							onclick="window.kbmodules.football_standard.hide_field_layout_condensed()"
+							seq_info="vis_hide"
+							class="lineup_condensed_btn"
+							btname="hide_guest_team_layout_conensed"
+						>Hide Lineup Condensed</vmixbtn>
+					</div>
 
 					<div class="layout_ctrl_body">
 						<vmixbtn
@@ -565,7 +855,6 @@
 							:
 							<input class="seconds" noctrl type="number" placeholder="SS">
 						</div>
-						<!-- <input placeholder="SECONDS (EXPR)" type="text"> -->
 						<vmixbtn
 							seq_info="update+play"
 							btname="continue_from_time"
@@ -585,7 +874,7 @@
 							btname="stop_extra_timer"
 							onclick="window.kbmodules.football_standard.timer_ctrl.stop_extra_time()"
 							off
-						>Stop Extra Time</vmixbtn>
+						>Terminate Extra Time</vmixbtn>
 					</div>
 
 					<vmixbtn seq_info="vis_show" btname="show_extra_time" onclick="window.kbmodules.football_standard.extra_time_vis(true)">Show Extra Time</vmixbtn>
@@ -756,6 +1045,16 @@
 					<input type="text">
 				</club-param>
 
+				<club-param prmname="main_coach_title_short" kbhint="Short variant of this person's role in this club">
+					<div class="club_base_param_label">Coach Title SHORT</div>
+					<input type="text">
+				</club-param>
+
+				<club-param prmname="main_coach_title_long" kbhint="This person's role in this club with extra description">
+					<div class="club_base_param_label">Coach Title LONG</div>
+					<input type="text">
+				</club-param>
+
 				<club-param prmname="init_from_url">
 					<div class="club_base_param_label">URL</div>
 					<input type="text">
@@ -766,6 +1065,7 @@
 
 			<!-- Playerbase definition -->
 			<club-playerbase kbhint="Delete player: ALT + RMB">
+				<input type="text" class="player_editor_search" placeholder="Quick Search">
 				<sysbtn btname="register_player_in_club">Add</sysbtn>
 				<playerbase-pool></playerbase-pool>
 			</club-playerbase>
@@ -854,6 +1154,11 @@
 				<lineup-param class="lineup_param_add_hover" prmname="gk_color">
 					<div class="param_label">Goalkeeper Colour</div>
 					<div class="param_content"></div>
+				</lineup-param>
+
+				<lineup-param class="lineup_param_add_hover" prmname="roster">
+					<div class="param_label">Roster</div>
+					<div class="param_content"><input type="text"></div>
 				</lineup-param>
 			</lineup-config>
 

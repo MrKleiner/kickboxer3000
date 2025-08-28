@@ -3,6 +3,7 @@
 $this.counter = {};
 
 $this.load = function(){
+	$this.clock_feed = document.querySelector('#timer_feedback');
 	$this.main_clock_id = 'kbs.main';
 	$this.player_data_schema = new Set();
 	$this.pair_list = new Map();
@@ -69,8 +70,8 @@ $this.load = function(){
 
 	ksys.ticker.bundestag.attach({
 		'clock_id': $this.main_clock_id,
-		'tick': $this.clock_tick_event,
-		'end': $this.clock_end_event,
+		'tick':     $this.clock_tick_event,
+		'end':      $this.clock_end_event,
 	})
 }
 
@@ -933,10 +934,13 @@ $this.clock_show = async function(resume=true){
 $this.clock_tick_event = async function(data){
 	const time = data.time;
 
-	$('#timer_feedback').text(
-		`${str(time.clock.minutes).padStart(2, '0')}:${str(time.clock.seconds).padStart(2, '0')}`
+	$this.clock_feed.textContent = (
+		str(time.clock.minutes).padStart(2, '0') + ':' +
+		str(time.clock.seconds).padStart(2, '0') + '.' +
+		str(time.clock.ms)
 	);
 
+	// if (time.total.seconds <= 9){
 	if (time.tick <= 9){
 		await $this.clock_hide();
 		await ksys.util.sleep(1500);

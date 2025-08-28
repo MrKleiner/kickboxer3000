@@ -134,6 +134,10 @@ $this.round_duration = 45;
 $this.load = async function(){
 	const mctx = ksys.context.module;
 
+	$this.main_clock_id = 'fball.main';
+	$this.extra_clock_id = 'fball.extra';
+
+
 	$this.resource_index = {
 		available_colors: [
 			'0066c3',
@@ -246,33 +250,44 @@ $this.load = async function(){
 				},
 			}),
 
+			// field layout condensed
+			'lineup_condensed': new vmix.title({
+				'title_name': 'lineup_condensed.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 5,
+				},
+			}),
+
 
 			// cards
 			'yellow_card': new vmix.title({
 				'title_name': 'yellow_card.gtzip',
 				'default_overlay': 2,
 				'timings': {
-					'fps': 25,
-					'frames_in': 72,
-					'margin': 100,
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 2,
 				}
 			}),
 			'red_card': new vmix.title({
 				'title_name': 'red_card.gtzip',
 				'default_overlay': 2,
 				'timings': {
-					'fps': 25,
-					'frames_in': 20,
-					'margin': 100,
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 2,
 				}
 			}),
 			'ycbr_card': new vmix.title({
 				'title_name': 'ycbr.gtzip',
 				'default_overlay': 2,
 				'timings': {
-					'fps': 25,
-					'frames_in': 36,
-					'margin': 100,
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 2,
 				}
 			}),
 
@@ -306,6 +321,8 @@ $this.load = async function(){
 				}
 			}),
 
+
+			// Substitute as separate title (the ones during the break)
 			'subs1': new vmix.title({
 				'title_name': 'Half_Substitution.gtzip',
 				'default_overlay': 2,
@@ -335,6 +352,36 @@ $this.load = async function(){
 			}),
 
 
+			// Substitute as separate title (the ones during the match)
+			'm_subs1': new vmix.title({
+				'title_name': 'match_substitution1.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 2,
+				}
+			}),
+			'm_subs2': new vmix.title({
+				'title_name': 'match_substitution2.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 2,
+				}
+			}),
+			'm_subs3': new vmix.title({
+				'title_name': 'match_substitution3.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 2,
+				}
+			}),
+
+
 			// VS
 			'splash': new vmix.title({
 				'title_name': 'splash.gtzip',
@@ -352,26 +399,15 @@ $this.load = async function(){
 				'title_name': 'scored.gtzip',
 				'default_overlay': 2,
 				'timings': {
-					'fps': 25,
-					'frames_in': 36,
-					'margin': 100,
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 2,
 				}
 			}),
 
 			// Coach l4d2
 			'coach': new vmix.title({
-				'title_name': 'coach.gtzip',
-				'default_overlay': 2,
-				'timings': {
-					'fps': 25,
-					'frames_in': 26,
-					'margin': 100,
-				}
-			}),
-
-			// Commenter
-			'commenter': new vmix.title({
-				'title_name': 'commenter.gtzip',
+				'title_name': 'coach_lower_third.gtzip',
 				'default_overlay': 2,
 				'timings': {
 					'fps': 25,
@@ -414,7 +450,7 @@ $this.load = async function(){
 				}
 			}),
 
-			// Statistics
+			// Penalties
 			'penalties': new vmix.title({
 				'title_name': 'penalties.gtzip',
 				'default_overlay': 2,
@@ -423,6 +459,72 @@ $this.load = async function(){
 					'frames_in': 30,
 					'frames_out': 10,
 					'margin': 100,
+				}
+			}),
+
+
+			// Misc. titles
+			'tape': new vmix.title({
+				'title_name': 'tape.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 5,
+				}
+			}),
+			'commenter': new vmix.title({
+				'title_name': 'commenter.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 5,
+				}
+			}),
+			'commenter_x2': new vmix.title({
+				'title_name': 'commenter_x2.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 5,
+				}
+			}),
+			'info_1': new vmix.title({
+				'title_name': 'info_1.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 5,
+				}
+			}),
+			'info_2': new vmix.title({
+				'title_name': 'info_2.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 5,
+				}
+			}),
+			'referee': new vmix.title({
+				'title_name': 'referee.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 5,
+				}
+			}),
+			'water_time': new vmix.title({
+				'title_name': 'water_time.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 5,
 				}
 			}),
 		};
@@ -460,6 +562,7 @@ $this.load = async function(){
 	// Title schema switch
 	// --------------------------
 	{
+		// Important todo: GTZ Shape is the only one that works
 		$this.title_schema_switch = new ksys.switches.KBSwitch({
 			'multichoice': false,
 			'can_be_empty': false,
@@ -485,6 +588,160 @@ $this.load = async function(){
 			await $this.persistent_header.pages.pull_page_from_vmix();
 		}
 	}
+
+
+	// --------------------------
+	// Commenter schema switch
+	// --------------------------
+	{
+		$this.commenter_schema_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': mctx.cache.commenter_schema,
+			'dom_array': [
+				{
+					'id': '2girls1cup',
+					'dom': qsel('#commenter_schema_switch [girls2cup1]'),
+				},
+				{
+					'id': '2girls2cups',
+					'dom': qsel('#commenter_schema_switch [girls2cup2]'),
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				ksys.context.module.prm('commenter_schema', schema_id);
+			}
+		});
+	}
+
+
+	// --------------------------
+	// Final Scores title Colours Schema
+	// --------------------------
+	{
+		$this.final_scores_color_schema_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': mctx.cache.final_scores_color_schema,
+			'dom_array': [
+				{
+					'id': 'bitmap',
+					'dom': qsel('#final_scores_color_schema_switch [bitmap]'),
+				},
+				{
+					'id': 'masked',
+					'dom': qsel('#final_scores_color_schema_switch [masked]'),
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				ksys.context.module.prm('final_scores_color_schema', schema_id);
+			}
+		});
+	}
+
+
+
+	// --------------------------
+	// Persistent header team colours schema
+	// --------------------------
+	{
+		$this.timer_team_color_schema_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': mctx.cache.final_scores_color_schema,
+			'dom_array': [
+				{
+					'id': 'bitmap',
+					'dom': qsel('#timer_team_color_schema_switch [bitmap]'),
+				},
+				{
+					'id': 'masked',
+					'dom': qsel('#timer_team_color_schema_switch [masked]'),
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				ksys.context.module.prm('timer_team_color_schema_switch', schema_id);
+			}
+		});
+	}
+
+
+
+	// --------------------------
+	// Command Layout main player list schema
+	// --------------------------
+	{
+		$this.cmd_layout_mains_schema_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': mctx.cache.cmd_layout_mains_schema,
+			'dom_array': [
+				{
+					'id': 'shared',
+					'dom': qsel('#lineup_mains_schema_switch [shared]'),
+				},
+				{
+					'id': 'dedicated',
+					'dom': qsel('#lineup_mains_schema_switch [dedicated]'),
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				ksys.context.module.prm('cmd_layout_mains_schema', schema_id);
+			}
+		});
+	}
+
+
+	// --------------------------
+	// Time display schema switch
+	// --------------------------
+	{
+		$this.timer_display_schema_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': mctx.cache.timer_display_schema || 'normal',
+			'dom_array': [
+				{
+					'id': 'normal',
+					'dom': qsel('#timer_display_schema_switch [normal]'),
+				},
+				{
+					'id': 'fuck_shit',
+					'dom': qsel('#timer_display_schema_switch [fuck_shit]'),
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				ksys.context.module.prm('timer_display_schema', schema_id);
+			}
+		});
+	}
+
+
+
+	// --------------------------
+	// Command Layout reserve player list schema
+	// --------------------------
+	{
+		$this.cmd_layout_reserves_schema_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': mctx.cache.cmd_layout_reserves_schema,
+			'dom_array': [
+				{
+					'id': 'shared',
+					'dom': qsel('#lineup_reserves_schema_switch [shared]'),
+				},
+				{
+					'id': 'dedicated',
+					'dom': qsel('#lineup_reserves_schema_switch [dedicated]'),
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				ksys.context.module.prm('cmd_layout_reserves_schema', schema_id);
+			}
+		});
+	}
+
 
 
 	// --------------------------
@@ -590,7 +847,9 @@ $this.load = async function(){
 			}
 		)
 
-		$this.resource_index.card_manager = new $this.CardManager()
+		$this.resource_index.card_manager = new $this.CardManager();
+		// Todo: it's stupid this is here
+		await $this.show_red_cards();
 
 		// Create substitutes
 		for (const side of ['home', 'guest']){
@@ -671,10 +930,11 @@ $this.load = async function(){
 		// Or even better: Make these fields part of the core
 
 		// Load todays commenter
-		$('#commenter_name_input')[0].value = mctx.cache.todays_commenter || '';
+		// $('#commenter_name_input')[0].value = mctx.cache.todays_commenter || '';
 		// Load VS sublines
 		$('#vs_text_bottom_upper')[0].value = mctx.cache.vs_title_bottom_upper_line || '';
 		$('#vs_text_bottom_lower')[0].value = mctx.cache.vs_title_bottom_lower_line || '';
+		$('#vs_text_main_header')[0].value = mctx.cache.vs_title_main_header_line || '';
 
 		$this.update_team_colors();
 		$this.resource_index.score_manager.resync_score_on_title()
@@ -793,6 +1053,31 @@ $this.load = async function(){
 		}else{
 			$this.toggle_atat_btns(true);
 			$this.toggle_atat_status_indicator(false);
+
+			// 
+			// AT-AT-N
+			// 
+
+			// Main ticker
+			ksys.ticker.bundestag.attach({
+				'clock_id': $this.main_clock_id,
+				'tick':     $this.timer_fset.builtin.timer_callback,
+				'end':      $this.timer_fset.builtin.base_timer_end_callback,
+			})
+
+			// Extra time
+			ksys.ticker.bundestag.attach({
+				'clock_id': $this.extra_clock_id,
+				'tick':     $this.timer_fset.builtin.extra_timer_callback,
+				'end':      $this.timer_fset.builtin.extra_time_end_callback,
+			})
+
+			$this.timer_fset.builtin.timer_callback(
+				await ksys.ticker.bundestag.read_clock('fball.main')
+			)
+			$this.timer_fset.builtin.extra_timer_callback(
+				await ksys.ticker.bundestag.read_clock('fball.extra')
+			)
 		}
 
 		// $this.update_selected_timer_system(tgt_timer_fset);
@@ -865,18 +1150,95 @@ $this.load = async function(){
 				'anim_out': 1500,
 			},
 
-			// SCORED!!
+			// Field Layout
 			'field_layout': {
 				'anim_in': 2500,
 				'hold_main': 7000,
 				// 'hold_reserve': 7000,
 				'anim_out': 2500,
 			},
+
+			// Lineup Condensed
+			'lineup_condensed': {
+				'anim_in': 2000,
+				// 'hold_gk': 4000,
+				'hold_page': 4000,
+				// 'hold_reserve': 7000,
+				'anim_out': 2000,
+			},
 		});
 
 		$this.sequencer.load();
 
 		document.querySelector('#sequencer').append($this.sequencer.dom.root);
+	}
+
+
+	// --------------------------
+	//         Misc. Titles
+	// --------------------------
+	{
+		//     title_id: ID of this title
+		//     dom_list: list of field DOM elements
+		//     values: dict of field values (field_name:field_value)
+
+		const misc_titles_data = ksys.db.module.read('misc_titles.kbsave', 'json') || {};
+		$this.misc_titles = Object.freeze({
+			'commenter': new $this.MiscTitle({
+				'title_id': 'commenter',
+				'dom_list': [
+					qsel('[tabid="misc_titles"] [field_id="commenter_name_1"]'),
+					qsel('[tabid="misc_titles"] [field_id="commenter_name_2"]'),
+				],
+				'values': misc_titles_data.commenter,
+			}),
+			'tape': new $this.MiscTitle({
+				'title_id': 'tape',
+				'dom_list': [
+					document.querySelector('[tabid="misc_titles"] [field_id="tape"]'),
+				],
+				'values': misc_titles_data.tape,
+			}),
+			'info_1': new $this.MiscTitle({
+				'title_id': 'info_1',
+				'dom_list': [
+					document.querySelector('[tabid="misc_titles"] [field_id="info_1"]'),
+				],
+				'values': misc_titles_data.info_1,
+			}),
+			'info_2': new $this.MiscTitle({
+				'title_id': 'info_2',
+				'dom_list': [
+					document.querySelector('[tabid="misc_titles"] [field_id="info_2_upper"]'),
+					document.querySelector('[tabid="misc_titles"] [field_id="info_2_lower"]'),
+				],
+				'values': misc_titles_data.info_2,
+			}),
+			'water_time': new $this.MiscTitle({
+				'title_id': 'water_time',
+				'dom_list': [
+					qsel('[tabid="misc_titles"] [field_id="water_time_lower_text"]'),
+				],
+				'values': misc_titles_data.water_time,
+			}),
+			'referee': new $this.MiscTitle({
+				'title_id': 'referee',
+				'dom_list': [
+					document.querySelector('[tabid="misc_titles"] [field_id="referee_1_upper"]'),
+					document.querySelector('[tabid="misc_titles"] [field_id="referee_1_lower"]'),
+
+					document.querySelector('[tabid="misc_titles"] [field_id="referee_2_upper"]'),
+					document.querySelector('[tabid="misc_titles"] [field_id="referee_2_lower"]'),
+
+					document.querySelector('[tabid="misc_titles"] [field_id="referee_3_upper"]'),
+					document.querySelector('[tabid="misc_titles"] [field_id="referee_3_lower"]'),
+
+					document.querySelector('[tabid="misc_titles"] [field_id="referee_4_upper"]'),
+					document.querySelector('[tabid="misc_titles"] [field_id="referee_4_lower"]'),
+				],
+				'values': misc_titles_data.referee,
+			}),
+		})
 	}
 
 
@@ -961,10 +1323,12 @@ $this.FootballClub = class{
 		const club_struct = input_club_struct || {};
 
 		// Base info
-		self.logo_path =           club_struct.logo_path || './assets/red_cross.png';
-		self.club_name =           (club_struct.club_name || '').lower();
-		self.club_name_shorthand = club_struct.club_name_shorthand || '';
-		self.main_coach =          (club_struct.main_coach || '').lower();
+		self.logo_path =               club_struct.logo_path || './assets/red_cross.png';
+		self.club_name =              (club_struct.club_name || '').lower();
+		self.club_name_shorthand =     club_struct.club_name_shorthand || '';
+		self.main_coach =             (club_struct.main_coach || '').lower();
+		self.main_coach_title_short = (club_struct.main_coach_title_short || '').lower();
+		self.main_coach_title_long =  (club_struct.main_coach_title_long || '').lower();
 
 		// important todo: this is very unreliable
 		self.is_enemy =            is_enemy;
@@ -1065,10 +1429,12 @@ $this.FootballClub = class{
 				'logo_feedback':    'img.club_def_logo_visfeedback',
 
 				// base params
-				'logo_input':      'club-base-params club-param[prmname="logo"] input',
-				'club_title':      'club-base-params club-param[prmname="title"] input',
-				'title_shorthand': 'club-base-params club-param[prmname="title_shorthand"] input',
-				'main_coach':      'club-base-params club-param[prmname="main_coach"] input',
+				'logo_input':             'club-base-params club-param[prmname="logo"] input',
+				'club_title':             'club-base-params club-param[prmname="title"] input',
+				'title_shorthand':        'club-base-params club-param[prmname="title_shorthand"] input',
+				'main_coach':             'club-base-params club-param[prmname="main_coach"] input',
+				'main_coach_title_short': 'club-base-params club-param[prmname="main_coach_title_short"] input',
+				'main_coach_title_long':  'club-base-params club-param[prmname="main_coach_title_long"] input',
 
 				// Playerbase
 				'reg_player_btn':  'club-playerbase sysbtn[btname="register_player_in_club"]',
@@ -1078,6 +1444,8 @@ $this.FootballClub = class{
 				// todo: inplement properly
 				'init_from_url_input': 'club-base-params club-param[prmname="init_from_url"] input',
 				'init_from_url_btn':   'club-base-params club-param[prmname="init_from_url"] sysbtn',
+
+				'search':   'input.player_editor_search',
 			}
 		);
 
@@ -1094,8 +1462,27 @@ $this.FootballClub = class{
 		tplate.index.club_title.value = self.club_name.upper();
 		tplate.index.title_shorthand.value = self.club_name_shorthand.upper();
 		tplate.index.main_coach.value = self.main_coach.upper();
+		tplate.index.main_coach_title_short.value = self.main_coach_title_short.upper();
+		tplate.index.main_coach_title_long.value = self.main_coach_title_long.upper();
 		tplate.index.logo_feedback.src = self.logo_path;
 		tplate.index.logo_feedback.setAttribute('kbhint', self.logo_path);
+
+		tplate.index.search.oninput = function(){
+			for (const player_dom of tplate.index.player_pool.querySelectorAll('player-config')){
+				const nameid = (
+					        player_dom.querySelector('[prmname="player_num"] input').value.lower()
+					+ ' ' + player_dom.querySelector('[prmname="player_surname"] input').value.lower()
+					+ ' ' + player_dom.querySelector('[prmname="player_name"] input').value.lower()
+				)
+
+				const seqrch_query = tplate.index.search.value.lower().trim();
+				if (nameid.includes(seqrch_query) || !seqrch_query){
+					player_dom.classList.remove('kbsys_hidden');
+				}else{
+					player_dom.classList.add('kbsys_hidden');
+				}
+			}
+		}
 
 		// bind button for adding new players
 		tplate.index.reg_player_btn.onclick = function(){
@@ -1119,22 +1506,33 @@ $this.FootballClub = class{
 		tplate.index.main_coach.onchange = function(evt){
 			self.main_coach = evt.target.value.lower();
 		}
+		// bind coach title change
+		tplate.index.main_coach_title_short.onchange = function(evt){
+			self.main_coach_title_short = evt.target.value.lower();
+		}
+		// bind coach title change
+		tplate.index.main_coach_title_long.onchange = function(evt){
+			self.main_coach_title_long = evt.target.value.lower();
+		}
 
 		// todo: implement properly
-		// bind coach change
 		tplate.index.init_from_url_btn.onclick = async function(evt){
 			const html_d = (new DOMParser).parseFromString(
-				(await ksys.util.url_get(tplate.index.init_from_url_input.value, 'text')).payload, 'text/html'
+				(await ksys.util.url_get(tplate.index.init_from_url_input.value, 'text')).payload,
+				'text/html'
 			);
 			console.log('get players');
 			html_d.querySelectorAll('#ex1-tabs-1 .my-1').forEach(function(el) {
 				const pfio = el.querySelectorAll('.m-0');
 				const pnum = el.querySelector('.card-footer .col-auto');
 				const role = el.querySelector('.card-footer .small');
-				self.register_player({
+				const pdata = self.register_player({
 					'name': pfio[1].innerHTML.split(/(\s+)/)[0],
 					'surname': pfio[0].innerHTML,
 					'num': pnum.innerHTML.trim(),
+					'role': $this.role_editor.create({
+						'role_name_full': (role?.textContent || '').lower().trim(),
+					}),
 				})
 				// let plr = {};
 				// plr.name = pfio[1].innerHTML.split(/(\s+)/)[0];
@@ -1160,11 +1558,13 @@ $this.FootballClub = class{
 	// return a json representing this club
 	to_json(self){
 		const dump = {
-			'logo_path':           self.logo_path,
-			'club_name':           self.club_name,
-			'club_name_shorthand': self.club_name_shorthand,
-			'main_coach':          self.main_coach,
-			'playerbase':          [],
+			'logo_path':              self.logo_path,
+			'club_name':              self.club_name,
+			'club_name_shorthand':    self.club_name_shorthand,
+			'main_coach':             self.main_coach,
+			'main_coach_title_short': self.main_coach_title_short,
+			'main_coach_title_long':  self.main_coach_title_long,
+			'playerbase':             [],
 		};
 
 		for (const player of self.playerbase){
@@ -1245,11 +1645,11 @@ $this.ClubPlayer = class{
 			generic_list_elem.index.num.textContent =     self.player_num.upper();
 			generic_list_elem.index.surname.textContent = self.player_surname.upper();
 
-			generic_list_elem.index.role.innerHTML = '';
-			if (self.role){
-				self.nprint('Adding role DOM:', self.role.visfeed_short_dom().root)
-				generic_list_elem.index.role.append(self.role.visfeed_short_dom().root);
-			}
+			// generic_list_elem.index.role.innerHTML = '';
+			// if (self.role){
+			// 	self.nprint('Adding role DOM:', self.role.visfeed_short_dom().root)
+			// 	generic_list_elem.index.role.append(self.role.visfeed_short_dom().root);
+			// }
 		}
 
 		// todo: there used to be
@@ -1283,7 +1683,7 @@ $this.ClubPlayer = class{
 	collect_garbage(self){
 		for (const rubbish of self.references){
 			if (!document.body.contains(rubbish.elem)){
-				self.references.delete(rubbish)
+				self.references.delete(rubbish);
 			}
 		}
 	}
@@ -1310,9 +1710,13 @@ $this.ClubPlayer = class{
 		tplate.index.num.textContent = self.player_num.upper();
 		tplate.index.surname.textContent = self.player_surname.upper();
 
-		if (self.role){
-			tplate.index.role.append(self.role.visfeed_short_dom().root);
-		}
+		// if (self.role){
+		// 	tplate.index.role.append(self.role.visfeed_short_dom().root);
+		// }
+
+		// const role_selector_short_dom = self.role.editor.selector_dom(self, true);
+		// role_selector_short_dom.index.list.value = self.role?.role_id || '';
+		// tplate.index.role.append(role_selector_short_dom.root);
 
 		// Write down reference to this element
 		self.references.add(tplate);
@@ -1491,6 +1895,8 @@ $this.TeamLineup = class{
 		// why??
 		self.tplate = null;
 
+		self._roster = '';
+
 
 		// 
 		// Store input data
@@ -1503,6 +1909,14 @@ $this.TeamLineup = class{
 		self.subs = new $this.PlayerSubstitutes(self);
 	}
 
+	$roster(self){
+		return self._roster || '';
+	}
+
+	redraw_pcounts(self){
+		self.tplate.index.append_to_main_list_btn.textContent = `Add Here (${self.main_players.size})`;
+		self.tplate.index.append_to_reserve_list_btn.textContent = `Add Here (${self.reserve_players.size})`;
+	}
 
 	// get control panel element for the lineup
 	control_panel_elem(self){
@@ -1522,6 +1936,7 @@ $this.TeamLineup = class{
 				'shorts_color_picker': 'lineup-param[prmname="shorts_color"] .param_content',
 				'tshirt_color_picker': 'lineup-param[prmname="tshirt_color"] .param_content',
 				'gk_color_picker':     'lineup-param[prmname="gk_color"] .param_content',
+				'roster':              'lineup-param[prmname="roster"] input',
 
 				// lists
 				'player_picker_placeholder': 'lineup-lists lineup-player-picker',
@@ -1540,6 +1955,21 @@ $this.TeamLineup = class{
 			self.tplate.index.side.setAttribute('enemy', true)
 		}else{
 			self.tplate.index.side.setAttribute('home', true)
+		}
+
+		self._roster = ksys.context.module.prm(
+			self.club.is_enemy ? 'roster_guest' : 'roster_home'
+		) || '';
+
+		// Roster
+		self.tplate.index.roster.value = self._roster;
+
+		self.tplate.index.roster.onchange = function(){
+			self._roster = self.tplate.index.roster.value;
+			ksys.context.module.prm(
+				(self.club.is_enemy ? 'roster_guest' : 'roster_home'),
+				self.tplate.index.roster.value
+			);
 		}
 
 		//
@@ -1627,6 +2057,8 @@ $this.TeamLineup = class{
 			// todo: is this the right place for this?
 			// Trigger lineup save
 			$this.global_save({'lineup_lists': true})
+
+			// self.redraw_pcounts();
 		}
 		// Append chosen player to the reserve player list
 		self.tplate.index.append_to_reserve_list_btn.onclick = function(){
@@ -1643,6 +2075,8 @@ $this.TeamLineup = class{
 			// todo: is this the right place for this?
 			// Trigger lineup save
 			$this.global_save({'lineup_lists': true})
+
+			// self.redraw_pcounts();
 		}
 		// Edit related club in the club panel
 		self.tplate.index.edit_club_btn.onclick = function(){
@@ -1685,6 +2119,8 @@ $this.TeamLineup = class{
 				}
 			}
 		}
+
+		// self.redraw_pcounts();
 
 
 		return self.tplate.elem
@@ -1732,6 +2168,8 @@ $this.TeamLineup = class{
 			self.tplate.index.reserve_list.append(list_elem.elem)
 		}
 
+		self.redraw_pcounts();
+
 	}
 
 	// - player: ClubPlayer
@@ -1742,7 +2180,9 @@ $this.TeamLineup = class{
 		if (which_list == 'main'){target_list = self.main_players};
 		if (which_list == 'reserve'){target_list = self.reserve_players};
 
-		target_list.delete(player)
+		target_list.delete(player);
+
+		self.redraw_pcounts();
 	}
 
 	// get selected lineup colours
@@ -2497,7 +2937,10 @@ $this.PlayerPicker = class{
 				})
 
 				// apply post-filter actions, if any
-				self?.post_filter_action?.(list_item, player)
+				self?.post_filter_action?.(list_item, player);
+
+				// Important todo: big crisis
+				$this.role_editor.litter();
 			}
 		}
 
@@ -2766,6 +3209,16 @@ $this.FieldLayout = class{
 				yield cell
 			}
 		}
+	}
+
+	$goalkeeper(self){
+		for (const cell_data of self.iter_cells()){
+			if (cell_data.id == '8_5'){
+				return cell_data.player
+			}
+		}
+
+		return null
 	}
 
 	// check whether the player is on the field
@@ -3477,23 +3930,44 @@ $this.CardManager = class {
 			await $this.persistent_header.clock();
 			// Do not proceed any further
 			return
+		}else{
+			// Set the player's surname
+			await title.set_text(
+				'player_name',
+				ksys.strf.params.players.format(player.surname),
+			)
+
+			// important todo: Hardcoded shit
+			// Set description
+			const time = $this.get_current_time(true);
+			const time_suffix = time.extra ? `+${time.extra}` : '';
+			await title.set_text(
+				'descr',
+				`${time.base}'` + time_suffix + ' ХВИЛИНА',
+			)
+
+			// Set club logo
+			await title.set_img_src('club_logo', player.club.logo_path)
+
+			ksys.btns.adv_timeout({
+				'yellow_card': $this.sequencer.sequences.cards.sum,
+				'red_card':    $this.sequencer.sequences.cards.sum,
+			})
+
+			// Hide red cards
+			await $this.hide_red_cards();
+
+			// show the title
+			await title.overlay_in()
+			// let it hang for 7 seconds
+			await ksys.util.sleep(
+				$this.sequencer.sequences.cards.items.hold.dur
+			)
+			// await ksys.util.sleep($this.sequencer.sequences.cards.items.hold.dur);
+			// hide the title
+			await title.overlay_out()
+			await $this.show_red_cards();
 		}
-
-		// Set the player's surname
-		await title.set_text(
-			'player_name',
-			`${player.player_num} ${ksys.strf.params.players.format(player.surname)}`,
-		)
-		// Set club logo
-		await title.set_img_src('club_logo', player.club.logo_path)
-
-		// show the title
-		await title.overlay_in()
-		// let it hang for 7 seconds
-		await ksys.util.sleep(7000)
-		// await ksys.util.sleep($this.sequencer.sequences.cards.items.hold.dur);
-		// hide the title
-		await title.overlay_out()
 	}
 
 	// hand a yellow card to a player
@@ -4345,12 +4819,51 @@ $this.PenaltyManager = class{
 		$('#penalty_pools').append(self.sides.guest.dom_data.elem);
 	}
 
-	resync_vmix(self){
+	async resync_vmix(self){
 		for (const side in self.sides){
 			for (const row_idx in self.sides[side].ctrl_elems){
 				self.sides[side].ctrl_elems[row_idx].push_to_vmix()
 			}
 		}
+
+		await $this.titles.penalties.set_img_src(
+			'club_logo_l',
+			$this.resource_index.side.home.club.logo_path
+		)
+		await $this.titles.penalties.set_img_src(
+			'club_logo_r',
+			$this.resource_index.side.guest.club.logo_path
+		)
+
+		await $this.titles.penalties.set_shape_color(
+			'color_l',
+			$this.resource_index.side.home.lineup.tshirt_colpick.color
+		)
+		await $this.titles.penalties.set_shape_color(
+			'color_r',
+			$this.resource_index.side.guest.lineup.tshirt_colpick.color
+		)
+
+		await $this.titles.penalties.set_text(
+			'team_name_r',
+			$this.resource_index.side.guest.club.club_name_shorthand.upper()
+		)
+		await $this.titles.penalties.set_text(
+			'team_name_l',
+			$this.resource_index.side.home.club.club_name_shorthand.upper()
+		)
+
+		await $this.titles.penalties.set_text(
+			`score_l`,
+			// $this.resource_index.score_manager.sides['home'].score_list.score_stack.size
+			self.sides.home.sum
+		)
+		await $this.titles.penalties.set_text(
+			`score_r`,
+			// $this.resource_index.score_manager.sides['guest'].score_list.score_stack.size
+			self.sides.guest.sum
+		)
+
 	}
 }
 
@@ -4415,6 +4928,19 @@ $this.TeamPenaltyPool = class{
 			self.ctrl_elems[pn_idx].unreg();
 		}
 	}
+
+	$sum(self){
+		let sum = 0;
+
+		for (const penalty_unit of Object.values(self.ctrl_elems)){
+			if (penalty_unit.counts){
+				sum += 1;
+			}
+		}
+
+		return sum
+	}
+
 }
 
 
@@ -4447,45 +4973,29 @@ $this.PenaltyTableEntry = class{
 
 		self.dom_data.index.cbox_yes.onchange = function(){
 			self.dom_data.index.cbox_no.checked = false;
-			self.push_to_vmix(true);
+			// self.push_to_vmix(true);
+			self.parent_pool.parent_manager.resync_vmix();
+			$this.save_penalties();
 		}
 		self.dom_data.index.cbox_no.onchange = function(){
 			self.dom_data.index.cbox_yes.checked = false;
-			self.push_to_vmix(true);
+			// self.push_to_vmix(true);
+			self.parent_pool.parent_manager.resync_vmix();
+			$this.save_penalties();
 		}
 
 		if (input_data){
 			// todo: this is stupid
 			if (input_data.state == 'yes'){
-				// If it's yes, then there must be an associated record
-				// important todo: this is incredibly retarded
-				let stop = false;
-				for (const score_record of self.parent_pool.score_manager.score_list.score_stack){
-					stop = true;
-					if (score_record.id == input_data.id_bind){
-						self.associated_record = score_record;
-						stop = false;
-						break
-					}
-				}
-				if(stop){
-					console.error(
-						`Couldn't bind penalty record to a score record`,
-						input_data,
-					)
-					return
-				}
-
 				self.dom_data.index.cbox_yes.checked = true;
-				self.push_to_vmix();
 			}
 			if (input_data.state == 'no'){
 				self.dom_data.index.cbox_no.checked = true;
-				self.push_to_vmix();
 			}
 			if (input_data.state != 'no' && input_data.state != 'yes'){
 				self.push_to_vmix();
 			}
+			self.push_to_vmix();
 		}
 	}
 
@@ -4494,82 +5004,40 @@ $this.PenaltyTableEntry = class{
 		const tgt_title = $this.titles.penalties;
 		const score_manager = self.parent_pool.score_manager.score_list;
 		if (!score_manager){
-			console.warn('No score manager exist', score_manager);
+			console.warn('No score manager exists', score_manager);
 			return
 		}
 
 		const tgt_idx = (self.parent_pool.parent_manager.pcount - 1) - self.idx;
 
-		// todo: this is copypaste from old implementation
-		tgt_title.toggle_img(
-			`pn_${self.side}_t_${tgt_idx}`,
-			self.dom_data.index.cbox_yes.checked,
-		)
+		// penalties
+		// let tgt_icon = Path($this.resources_location.value, 'icons/yellow_card.png');
+		let tgt_icon = Path($this.resources_location.value, 'icons/p_neutral.png');
 
-		tgt_title.toggle_img(
-			`pn_${self.side}_f_${tgt_idx}`,
-			self.dom_data.index.cbox_no.checked,
-		)
-
-		if (self.dom_data.index.cbox_no.checked || self.dom_data.index.cbox_yes.checked){
-			tgt_title.toggle_img(
-				`pn_${self.side}_n_${tgt_idx}`,
-				false,
-			)
-		}else{
-			tgt_title.toggle_img(
-				`pn_${self.side}_n_${tgt_idx}`,
-				true,
-			)
+		if (self.dom_data.index.cbox_no.checked){
+			tgt_icon = Path($this.resources_location.value, 'icons/p_no.png');
 		}
 
 		if (self.dom_data.index.cbox_yes.checked){
-			self.counts = true;
-
-			if (!self.associated_record){
-				print('Score manager is:', score_manager)
-				self.associated_record = score_manager.add_score(
-					null,
-					null,
-					null,
-					true,
-					false,
-					null,
-					true
-				)
-			}
-		}else{
-			self.counts = false;
-
-			if (self.associated_record){
-				score_manager.delete_record(self.associated_record);
-				self.associated_record = null;
-			}
+			tgt_icon = Path($this.resources_location.value, 'icons/p_yes.png');
 		}
 
-		tgt_title.set_text(
-			`team_score_${self.side}`,
-			score_manager.score_stack.size
-		)
+		tgt_title.set_img_src(`p_${self.side}_${tgt_idx}`, tgt_icon);
+
+		if (self.dom_data.index.cbox_yes.checked){
+			self.counts = true;
+		}else{
+			self.counts = false;
+		}
+
+		// tgt_title.set_text(
+		// 	`score_${self.side}`,
+		// 	score_manager.score_stack.size
+		// )
 
 		if (dosave){
 			$this.save_penalties();
 		}
-		
-
-		/*
-		let additive = 0
-		for (const elem of $this.penalty_registry){
-			if (elem.side != self.side){continue};
-			if (elem.dom_data.index.cbox_yes.checked){
-				additive += 1
-			}
-		}
-		tgt_title.set_text(
-			`team_score_${self.side}`,
-			$this.resource_index.score_manager.sides[self.side == 'l' ? 'home' : 'guest'].score_list.score_stack.size + additive
-		)
-		*/
 	}
 
 	get_state(self){
@@ -5001,8 +5469,11 @@ $this.PlayerRoleInstance = class{
 		// todo: ensure uuid doesn't already exist
 		self._role_id = role_data?.role_id || ksys.util.rnd_uuid();
 		self._role_name_full = role_data?.role_name_full || '';
+		self._role_name_alt = role_data?.role_name_alt || '';
 		self._role_name_short = role_data?.role_name_short || '';
+		self._priority = role_data?.priority || false;
 
+		self._priority_switch = null;
 		self._editor_dom = null;
 	}
 
@@ -5040,6 +5511,16 @@ $this.PlayerRoleInstance = class{
 		self.editor.check_duplicates();
 	}
 
+	$role_name_alt(self){
+		return self._role_name_alt
+	}
+
+	$$role_name_alt(self, tgt_name){
+		self._role_name_alt = tgt_name;
+		// self.render_visfeed();
+		self.editor.check_duplicates();
+	}
+
 	$role_name_short(self){
 		return self._role_name_short
 	}
@@ -5048,6 +5529,10 @@ $this.PlayerRoleInstance = class{
 		self._role_name_short = tgt_name;
 		self.render_visfeed();
 		self.editor.check_duplicates();
+	}
+
+	$priority(self){
+		return !!self.priority_switch.selected
 	}
 
 	remove(self){
@@ -5096,6 +5581,30 @@ $this.PlayerRoleInstance = class{
 		return dom
 	}
 
+	$priority_switch(self){
+		if (self._priority_switch){
+			return self._priority_switch
+		}
+
+		self._priority_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': true,
+			'set_default': self._priority,
+			'dom_array': [
+				{
+					'id':  'yes',
+					'dom': self.editor_dom.index.priority,
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				self._priority = self._priority_switch.selected;
+				self.editor.save();
+			}
+		});
+
+		return self._priority_switch
+	}
+
 	$editor_dom(self){
 		if (self._editor_dom){
 			return self._editor_dom
@@ -5105,15 +5614,25 @@ $this.PlayerRoleInstance = class{
 			'icon':       '.icon',
 			'name_full':  '.name_input.full',
 			'name_short': '.name_input.short',
+			'name_alt':   '.name_input.altr',
+			'priority':   '.priority_cbox_content',
 		})
 
 		const dom_idx = self._editor_dom.index;
 
 		self._editor_dom.index.name_full.value = self.role_name_full;
+		self._editor_dom.index.name_alt.value = self.role_name_alt;
 		self._editor_dom.index.name_short.value = self.role_name_short;
+
+		self.priority_switch.selected = self._priority;
 
 		dom_idx.name_full.onchange = function(){
 			self.role_name_full = dom_idx.name_full.value;
+			self.editor.save();
+		}
+
+		dom_idx.name_alt.onchange = function(){
+			self.role_name_alt = dom_idx.name_alt.value;
 			self.editor.save();
 		}
 
@@ -5144,7 +5663,9 @@ $this.PlayerRoleInstance = class{
 		return {
 			'role_id':         self.role_id,
 			'role_name_full':  self.role_name_full,
+			'role_name_alt':   self.role_name_alt,
 			'role_name_short': self.role_name_short,
+			'priority':        self.priority_switch.selected,
 		}
 	}
 }
@@ -5177,9 +5698,10 @@ $this.PlayerRolesEditor = class{
 	}
 
 	litter(self){
-		for (const rubbish of self.selector_doms){
-			if (!document.body.contains(rubbish.root)){
-				self.selector_doms.delete(rubbish);
+		for (const selector_data of self.selector_doms){
+			const [tgt_player, dom] = selector_data;
+			if (!document.body.contains(dom.root)){
+				self.selector_doms.delete(selector_data);
 			}
 		}
 	}
@@ -5212,7 +5734,7 @@ $this.PlayerRolesEditor = class{
 		}
 	}
 
-	render_selector(self, dom){
+	render_selector(self, dom, short_only=false){
 		// self.nprint('Redrawing role selector');
 
 		const current_val = dom.index.list.value;
@@ -5221,7 +5743,13 @@ $this.PlayerRolesEditor = class{
 		$(dom.index.list).find('option').remove();
 
 		for (const role of self.roles){
-			const vis = `${role.role_name_full.padEnd(17).replaceAll(' ', '&nbsp')} | ${role.role_name_short}`;
+			let vis = '?';
+
+			if (short_only){
+				vis = role.role_name_short;
+			}else{
+				vis = `${role.role_name_full.padEnd(17).replaceAll(' ', '&nbsp')} | ${role.role_name_short}`;
+			}
 
 			$(dom.index.list).append(`
 				<option value="${role.role_id}">${vis}</option>
@@ -5231,29 +5759,46 @@ $this.PlayerRolesEditor = class{
 		dom.index.list.value = current_val;
 	}
 
-	selector_dom(self, tgt_player){
-		self.litter();
+	update_selectors(self){
+		for (const selector_data of self.selector_doms){
+			const [tgt_player, s_dom] = selector_data;
+			// self.nprint('Updating', s_dom.root, 'to', tgt_player.role.role_id);
+			// s_dom.root.value = tgt_player.role.role_id;
+		}
+	}
+
+	selector_dom(self, tgt_player, short_only=false){
+		// self.litter();
 
 		const dom = ksys.context.tplates.p_roles.role_selector({
 			'list': 'select',
 		})
 
-		self.selector_doms.add(dom);
+		self.selector_doms.add([tgt_player, dom]);
 
 		dom.index.list.onfocus = function(){
-			self.render_selector(dom);
+			self.render_selector(dom, short_only);
 		}
 
 		dom.index.list.onchange = function(){
 			tgt_player.role = self.lookup(dom.index.list.value);
+			self.update_selectors();
 		}
 
-		self.render_selector(dom);
+		self.render_selector(dom, short_only);
 
 		return dom
 	}
 
-	create(self, data=null){
+	create(self, data=null, check_duplicates=true){
+		if (check_duplicates && data?.role_name_full){
+			for (const role of self.roles){
+				if (!role.role_name_full){continue};
+				if (role.role_name_full.lower().trim() == data.role_name_full){
+					return role;
+				}
+			}
+		}
 		const role = new $this.PlayerRoleInstance(self, data);
 		self.roles.add(role);
 		self.editor_dom.index.role_pool.append(role.editor_dom.root);
@@ -5411,23 +5956,70 @@ $this.PlayerSubstitutes = class{
 		}
 
 		if (subs_type == 'match'){
-			// Persistent Header can only do one thing at a time
-			$this.timeout_persistent_header_btns(
-				$this.sequencer.sequences.subs_single_match.sum
-			);
-			// Persistent header class applies data and switches to the corrent page on its own,
-			// BUT it does NOT switch back to clock
-			await $this.persistent_header.subs({
-				'team_logo': leaving.club.logo_path,
-				'players': [{
-					'leaving': ksys.strf.params.players.format(leaving.surname),
-					'inbound': ksys.strf.params.players.format(inbound.surname),
-				}]
-			})
-			// Hold the title for n seconds
-			await ksys.util.sleep($this.sequencer.sequences.subs_single_match.items.hold.dur);
-			// Switch back to clock, because this doesn't happen automatically for good reasons
-			await $this.persistent_header.clock();
+			if ($this.title_schema_switch.selected == 'paged'){
+				// Persistent Header can only do one thing at a time
+				$this.timeout_persistent_header_btns(
+					$this.sequencer.sequences.subs_single_match.sum
+				);
+				// Persistent header class applies data and switches to the corrent page on its own,
+				// BUT it does NOT switch back to clock
+				await $this.persistent_header.subs({
+					'team_logo': leaving.club.logo_path,
+					'players': [{
+						'leaving': ksys.strf.params.players.format(leaving.surname),
+						'inbound': ksys.strf.params.players.format(inbound.surname),
+					}]
+				})
+				// Hold the title for n seconds
+				await ksys.util.sleep($this.sequencer.sequences.subs_single_match.items.hold.dur);
+				// Switch back to clock, because this doesn't happen automatically for good reasons
+				await $this.persistent_header.clock();
+			}else{
+				// Set Logo
+				await $this.titles.m_subs1.set_img_src(
+					'club_logo',
+					self.lineup.club.logo_path
+				);
+
+				// NAMES - LEAVING
+				await $this.titles.m_subs1.set_text(
+					`pnum_leaving0`,
+					leaving.player_num
+				);
+				await $this.titles.m_subs1.set_text(
+					`pname_leaving0`,
+					`${ksys.strf.params.players.format(leaving.surname)}`
+				);
+
+				// NAMES - INBOUND
+				await $this.titles.m_subs1.set_text(
+					`pnum_inbound0`,
+					inbound.player_num
+				);
+				await $this.titles.m_subs1.set_text(
+					`pname_inbound0`,
+					`${ksys.strf.params.players.format(inbound.surname)}`
+				);
+
+				$this.timeout_persistent_header_btns(
+					$this.sequencer.sequences.subs_single_match.sum
+				)
+
+				// Hide red cards
+				await $this.hide_red_cards();
+
+				// Show the title
+				await $this.titles.m_subs1.overlay_in();
+
+				// Hold the title for n seconds
+				await ksys.util.sleep($this.sequencer.sequences.subs_single_match.items.hold.dur);
+
+				// Hide the title
+				await $this.titles.m_subs1.overlay_out();
+
+				// Bring back red cards
+				await $this.show_red_cards();
+			}
 		}
 
 		if (subs_type == 'break'){
@@ -5487,28 +6079,94 @@ $this.PlayerSubstitutes = class{
 
 		// Persistent header title
 		if (subs_type == 'match'){
-			// Persistent Header can only do one thing at a time
-			$this.timeout_persistent_header_btns(
-				$this.sequencer.sequences.subs_stack_match.sum
-			);
-			// .subs expects ready to use strings
-			const players = [];
-			for (const pdata of self.stack){
-				players.push({
-					'leaving': ksys.strf.params.players.format(pdata.leaving.surname),
-					'inbound': ksys.strf.params.players.format(pdata.inbound.surname),
+			if ($this.title_schema_switch.selected == 'paged'){
+				// Persistent Header can only do one thing at a time
+				$this.timeout_persistent_header_btns(
+					$this.sequencer.sequences.subs_stack_match.sum
+				);
+				// .subs expects ready to use strings
+				const players = [];
+				for (const pdata of self.stack){
+					players.push({
+						'leaving': ksys.strf.params.players.format(pdata.leaving.surname),
+						'inbound': ksys.strf.params.players.format(pdata.inbound.surname),
+					})
+				}
+				// Persistent header class applies data and switches to the corrent page on its own,
+				// BUT it does NOT switch back to clock
+				await $this.persistent_header.subs({
+					'team_logo': self.stack.at(0)?.leaving?.club?.logo_path,
+					'players': players,
 				})
+				// Hold the title for n seconds
+				await ksys.util.sleep($this.sequencer.sequences.subs_stack_match.items.hold.dur);
+				// Switch back to clock, because this doesn't happen automatically for good reasons
+				await $this.persistent_header.clock();
+			}else{
+				// important todo: this is fucking retarded
+				for (const tile_id of ['m_subs1', 'm_subs2', 'm_subs3']){
+					const tgt_title = $this.titles[tile_id];
+
+					// Set Logo
+					await tgt_title.set_img_src(
+						'club_logo',
+						self.lineup.club.logo_path
+					);
+
+					const stack = [...self.stack];
+
+					for (const idx of range(3)){
+						if (!stack[idx]){continue};
+						const leaving = stack[idx].leaving;
+						const inbound = stack[idx].inbound;
+
+						// NAMES - LEAVING
+						await tgt_title.set_text(
+							`pnum_leaving${idx}`,
+							leaving.player_num
+						);
+						await tgt_title.set_text(
+							`pname_leaving${idx}`,
+							`${ksys.strf.params.players.format(leaving.surname)}`
+						);
+
+						// NAMES - INBOUND
+						await tgt_title.set_text(
+							`pnum_inbound${idx}`,
+							inbound.player_num
+						);
+						await tgt_title.set_text(
+							`pname_inbound${idx}`,
+							`${ksys.strf.params.players.format(inbound.surname)}`
+						);
+					}
+				}
+
+				// Select the appropriate title
+				const tgt_title = $this.titles[`m_subs${self.stack.size}`];
+
+				// Hide red cards
+				await $this.hide_red_cards();
+
+				// Show the appropriate title
+				await tgt_title.overlay_in();
+
+				// Hold the title for n seconds
+				await ksys.util.sleep($this.sequencer.sequences.subs_stack_match.items.hold.dur);
+
+				// Switch page
+				await tgt_title.page(1);
+
+				// Hold the page for n seconds
+				await ksys.util.sleep($this.sequencer.sequences.subs_stack_match.items.hold.dur);
+
+				// Hide the title
+				await tgt_title.overlay_out();
+
+				// Show red cards
+				await $this.show_red_cards();
 			}
-			// Persistent header class applies data and switches to the corrent page on its own,
-			// BUT it does NOT switch back to clock
-			await $this.persistent_header.subs({
-				'team_logo': self.stack.at(0)?.leaving?.club?.logo_path,
-				'players': players,
-			})
-			// Hold the title for n seconds
-			await ksys.util.sleep($this.sequencer.sequences.subs_stack_match.items.hold.dur);
-			// Switch back to clock, because this doesn't happen automatically for good reasons
-			await $this.persistent_header.clock();
+
 		}
 
 		// Multiple titles during the break
@@ -5520,7 +6178,7 @@ $this.PlayerSubstitutes = class{
 			})
 
 			// important todo: this is fucking retarded
-			for (const tile_id of ['subs2', 'subs3']){
+			for (const tile_id of ['subs1', 'subs2', 'subs3']){
 				const tgt_title = $this.titles[tile_id];
 
 				// Set Logo
@@ -5532,6 +6190,7 @@ $this.PlayerSubstitutes = class{
 				const stack = [...self.stack];
 
 				for (const idx of range(3)){
+					if (!stack[idx]){continue};
 					const leaving = stack[idx].leaving;
 					const inbound = stack[idx].inbound;
 
@@ -5611,7 +6270,48 @@ $this.PlayerSubstitutes = class{
 }
 
 
+$this.MiscTitle = class{
+	static NPRINT_NAME = 'MiscTitle';
+	// Field data is:
+	//     title_id: ID of this title
+	//     dom_list: list of field DOM elements
+	//     values: dict of field values (field_name:field_value)
+	constructor(field_data){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#FFFFFF',
+		);
 
+		// self.nprint('Input data:', field_data)
+
+		self.title_id = field_data.title_id;
+		self.fields = {};
+
+		for (const field_dom of field_data.dom_list){
+			self.bind_field(field_dom, field_data.values);
+		}
+	}
+
+	bind_field(self, tgt_field, set_data=null){
+		const field_id = tgt_field.getAttribute('field_id');
+		self.fields[field_id] = tgt_field;
+		tgt_field.value = set_data?.[field_id] || '';
+		tgt_field.onchange = function(){
+			$this.global_save({'misc_titles': true});
+		}
+	}
+
+	to_dict(self){
+		const fields = {};
+
+		for (const field_data of Object.entries(self.fields)){
+			const [field_id, field_dom] = field_data;
+			fields[field_id] = field_dom.value;
+		}
+
+		return fields
+	}
+}
 
 
 
@@ -5928,50 +6628,66 @@ $this.create_club_lineup = function(side, clubname, input_lineup_info=null){
 
 // forward team colours to vmix timer + score title
 $this.update_team_colors = async function(){
-	const base_path = Path('C:/custom/vmix_assets/t_shirts/overlay');
 	const home = $this.resource_index.home_lineup;
 	const guest = $this.resource_index.guest_lineup;
 
 	if (home){
-		vmix.util.HTTPResourceProxy.reg_buf([
-			'timer_tshirt_color_home',
-			await home.shorts_colpick.baked,
-		]);
-		// tshirt home
-		await $this.titles.timer.set_img_src(
-			'tshirt_color_l',
-			// base_path.join(`l_top_${home.colors.tshirt}.png`),
-			'timer_tshirt_color_home'
-		)
-		// Final scores shape tshirt colour
-		await $this.titles.final_scores.set_shape_color(
-			'tshirt_color_l',
-			// base_path.join(`r_top_${guest.colors.tshirt}.png`),
-			home.tshirt_colpick.color
-		)
-		// shorts home
-		// await $this.titles.timer.set_img_src(
-		// 	'team_col_l_bot',
-		// 	base_path.join(`l_bot_${home.colors.shorts}.png`),
-		// )
+		if ($this.timer_team_color_schema_switch.selected == 'bitmap'){
+			vmix.util.HTTPResourceProxy.reg_buf([
+				'timer_tshirt_color_home',
+				await home.shorts_colpick.baked,
+			]);
+			// tshirt home
+			await $this.titles.timer.set_img_src(
+				'tshirt_color_l',
+				'timer_tshirt_color_home'
+			)
+			// Final scores shape tshirt colour
+			await $this.titles.final_scores.set_shape_color(
+				'tshirt_color_l',
+				home.tshirt_colpick.color
+			)
+		}else{
+			// tshirt home
+			await $this.titles.timer.set_shape_color(
+				'tshirt_color_l',
+				home.shorts_colpick.color
+			)
+			// Final scores shape tshirt colour
+			await $this.titles.final_scores.set_shape_color(
+				'tshirt_color_l',
+				home.tshirt_colpick.color
+			)
+		}
 	}
 
 	if (guest){
-		vmix.util.HTTPResourceProxy.reg_buf([
-			'timer_tshirt_color_guest',
-			await guest.shorts_colpick.baked,
-		]);
-		// tshirt guest
-		await $this.titles.timer.set_img_src(
-			'tshirt_color_r',
-			// base_path.join(`r_top_${guest.colors.tshirt}.png`),
-			'timer_tshirt_color_guest'
-		)
-		await $this.titles.final_scores.set_shape_color(
-			'tshirt_color_r',
-			// base_path.join(`r_top_${guest.colors.tshirt}.png`),
-			guest.tshirt_colpick.color
-		)
+		if ($this.timer_team_color_schema_switch.selected == 'bitmap'){
+			vmix.util.HTTPResourceProxy.reg_buf([
+				'timer_tshirt_color_guest',
+				await guest.shorts_colpick.baked,
+			]);
+			// tshirt guest
+			await $this.titles.timer.set_img_src(
+				'tshirt_color_r',
+				'timer_tshirt_color_guest'
+			)
+			await $this.titles.final_scores.set_shape_color(
+				'tshirt_color_r',
+				guest.tshirt_colpick.color
+			)
+		}else{
+			// tshirt guest
+			await $this.titles.timer.set_shape_color(
+				'tshirt_color_r',
+				guest.shorts_colpick.color
+			)
+			await $this.titles.final_scores.set_shape_color(
+				'tshirt_color_r',
+				guest.tshirt_colpick.color
+			)
+		}
+
 		// shorts guest
 		// await $this.titles.timer.set_img_src(
 		// 	'team_col_r_bot',
@@ -6016,6 +6732,7 @@ $this.forward_field_layout_to_vmix = async function(team){
 	// get target vmix title
 	const title = $this.titles.team_layout;
 
+	// important todo: this implies proxy is always active
 	vmix.util.HTTPResourceProxy.reg_buf([
 		`tshirt_color_${suffix}`,
 		await tgt_field.lineup.tshirt_colpick.baked,
@@ -6052,6 +6769,13 @@ $this.forward_field_layout_to_vmix = async function(team){
 		);
 	}
 
+	// roster
+	await title.set_text(
+		'roster',
+		$this.resource_index.side?.[tgt_side]?.lineup?.roster || ''
+	)
+
+
 	// goalkeeper tshirt colour
 	await title.set_img_src(`plr_bg_8_5`, `gk_color_${suffix}`)
 
@@ -6064,60 +6788,86 @@ $this.forward_field_layout_to_vmix = async function(team){
 	// -------------------
 	// player slots in lineup
 	// -------------------
+	if ($this.cmd_layout_mains_schema_switch.selected == 'dedicated'){
+		const data_mapping = [
+			{
+				'plist': tgt_field.lineup.main_players,
+				'slot_type': 'm',
+			},
+			{
+				'plist': tgt_field.lineup.reserve_players,
+				'slot_type': 'r',
+			},
+		]
+		for (const list_data of data_mapping){
+			for (const player_idx of range(11)){
 
-	// 
-	// Player slots in lineup
-	// 
-	const data_mapping = [
-		{
-			'plist': tgt_field.lineup.main_players,
-			'slot_type': 'm',
-		},
-		{
-			'plist': tgt_field.lineup.reserve_players,
-			'slot_type': 'r',
-		},
-	]
-	for (const list_data of data_mapping){
+				const player = list_data.plist.at(player_idx);
+
+				const player_num = player?.player_num || '';
+				const player_surname = ksys.strf.params.players.format(player?.surname || '')
+
+				// player number
+				await title.set_text(
+					`plist_num_${list_data.slot_type}_${player_idx + 1}`,
+					player_num
+				)
+				// player surname
+				await title.set_text(
+					`plist_pname_${list_data.slot_type}_${player_idx + 1}`,
+					player_surname
+				);
+			}
+		}
+	}
+
+	if ($this.cmd_layout_mains_schema_switch.selected == 'shared'){
+		// important todo: this is shit
+		const mains_list_nums = [];
+		const mains_list_names = [];
 		for (const player_idx of range(11)){
-
-			const player = list_data.plist.at(player_idx);
-
-			const player_num = player?.player_num || '';
-			const player_surname = ksys.strf.params.players.format(player?.surname || '')
-
-			// player number
-			await title.set_text(
-				`plist_num_${list_data.slot_type}_${player_idx + 1}`,
-				player_num
-			)
-			// player surname
-			await title.set_text(
-				`plist_pname_${list_data.slot_type}_${player_idx + 1}`,
-				player_surname
-			);
+			const player = tgt_field.lineup.main_players.at(player_idx);
+			if (player){
+				mains_list_nums.push(player.player_num);
+				mains_list_names.push(
+					ksys.strf.params.players.format(player.surname)
+				);
+			}
 		}
+
+		await title.set_text(
+			'main_nums',
+			mains_list_nums.join('\n')
+		)
+		await title.set_text(
+			'main_names',
+			mains_list_names.join('\n')
+		)
 	}
 
-	// important todo: this is shit
-	const reserve_list_nums = [];
-	const reserve_list_names = [];
-	for (const player_idx of range(11)){
-		const player = tgt_field.lineup.reserve_players.at(player_idx);
-		if (player){
-			reserve_list_nums.push(player.player_num);
-			reserve_list_names.push(player.surname);
+
+	if ($this.cmd_layout_reserves_schema_switch.selected == 'shared'){
+		// important todo: this is shit
+		const reserve_list_nums = [];
+		const reserve_list_names = [];
+		for (const player_idx of range(11)){
+			const player = tgt_field.lineup.reserve_players.at(player_idx);
+			if (player){
+				reserve_list_nums.push(player.player_num);
+				reserve_list_names.push(player.surname);
+			}
 		}
+
+		await title.set_text(
+			'sub_nums',
+			reserve_list_nums.join('\n')
+		)
+		await title.set_text(
+			'sub_names',
+			reserve_list_names.join('\n')
+		)
 	}
 
-	await title.set_text(
-		'subs_numbers',
-		reserve_list_nums.join('\n')
-	)
-	await title.set_text(
-		'subs_names',
-		reserve_list_names.join('\n')
-	)
 
 
 	// -------------------
@@ -6128,6 +6878,11 @@ $this.forward_field_layout_to_vmix = async function(team){
 	await title.set_text(
 		'coach_name',
 		ksys.strf.params.coach.format(tgt_field.lineup.club.main_coach)
+	)
+	// Coach title
+	await title.set_text(
+		'coach_title',
+		ksys.strf.params.coach.format(tgt_field.lineup.club.main_coach_title_short + ':')
 	)
 	// Club name
 	await title.set_text(
@@ -6151,72 +6906,6 @@ $this.forward_field_layout_to_vmix = async function(team){
 	}
 }
 
-
-// Show the field layout on screen
-$this._show_field_layout = async function(team){
-	const tgt_lineup = $this.resource_index.side?.[str(team).lower()]?.lineup;
-
-	// todo: there's a batch switch now
-	{
-		ksys.btns.pool[`show_home_field_layout`].toggle(false)
-		ksys.btns.pool[`show_guest_field_layout`].toggle(false)
-	}
-
-	const title = $this.titles.team_layout;
-
-
-	// ?????
-	await ksys.util.sleep(1000)
-
-	// show the overlay
-	await title.overlay_in()
-
-	// ?????
-	await ksys.util.sleep(7000)
-
-	// wait for 10 seconds
-	// await ksys.util.sleep(10000)
-	await ksys.util.sleep(5000)
-
-
-	// pause render
-	await title.pause_render()
-
-	// ?????
-	await ksys.util.sleep(1000)
-
-	// commit warcrimes (changes)
-	// await $this.wipe_player_list_from_title()
-
-	// Set label to reserve
-	await title.set_text('playerlist_head', 'ЗАПАСНІ');
-
-	let counter = 1;
-	for (const idx of range(1, 12)){
-		// await ksys.util.sleep(100)
-		const player = tgt_lineup.reserve_players.at(idx - 1);
-		if (player){
-			// player number
-			await title.set_text(`plist_num_${idx}`, player.player_num)
-			// player surname
-			await title.set_text(`plist_pname_${idx}`, ksys.strf.params.players.format(player.surname));
-		}else{
-			// player number
-			await title.set_text(`plist_num_${idx}`, ' ')
-			// player surname
-			await title.set_text(`plist_pname_${idx}`, ' ');
-		}
-
-
-		// counter += 1;
-	}
-
-	// sleep for extra second, just in case
-	await ksys.util.sleep(1000)
-
-	// unpause render
-	await title.resume_render()
-}
 
 $this.show_field_layout = async function(team){
 	ksys.btns.pool[`show_${team}_field_layout`].toggle(false)
@@ -6242,6 +6931,290 @@ $this.hide_field_layout = async function(){
 	})
 }
 
+$this._show_field_layout_condensed = async function(team){
+	const tgt_side = str(team).lower();
+	const tgt_lineup = $this.resource_index.side?.[tgt_side]?.lineup;
+	const role_gropus = {};
+
+	// Group players by roles
+	for (const player of tgt_lineup.main_players){
+		const role_id = player?.role?.role_id;
+		if (!role_id){continue};
+		if (!(role_id in role_gropus)){
+			// Set for extra safety
+			role_gropus[role_id] = new Set();
+		}
+
+		role_gropus[role_id].add(player);
+	}
+
+	// todo: hardcoded title setup
+	const grp_array = Object.entries(role_gropus).slice(0, 3);
+	const grp_amount = grp_array.length;
+
+	// Disable all groups
+	for (const grp_idx of range(3)){
+		for (const x_idx of range(3)){
+			for (const p_idx of range(4)){
+				for (const nn of ['num', 'name']){
+					await $this.titles.lineup_condensed.toggle_text(
+						`c${grp_idx}_x${x_idx}_${nn}_${p_idx}`,
+						false
+					)
+				}
+			}
+		}
+	}
+
+	// Enable and apply data
+	for (const grp_idx of range(grp_amount)){
+		const [role_id, plist] = grp_array[grp_idx];
+
+		// Determine required X
+		const x_idx = grp_array[grp_idx].size - 1;
+
+		// Apply group label
+		await $this.titles.lineup_condensed.set_text(
+			`c${grp_idx}_label`,
+			$this.role_editor.lookup(role_id).role_name_full || ''
+		)
+
+		// Player data
+		let p_idx = 0;
+		for (const p_data of grp_array[grp_idx]){
+			for (const nn of ['num', 'name']){
+				// Apply data
+				await $this.titles.lineup_condensed.set_text(
+					`c${grp_idx}_x${x_idx}_${nn}_${p_idx}`,
+					ksys.strf.params.players.format(p_data.surname)
+				)
+				// Show fields
+				await $this.titles.lineup_condensed.toggle_text(
+					`c${grp_idx}_x${x_idx}_${nn}_${p_idx}`,
+					true
+				)
+			}
+
+			p_idx += 1;
+		}
+	}
+
+	// Goalkeeper
+	const gk_data = $this.resource_index.side?.[tgt_side]?.field?.goalkeeper;
+	for (const nn of ['num', 'name']){
+		// GK Num
+		await $this.titles.lineup_condensed.set_text(
+			'gk_num',
+			gk_data?.player_num || ''
+		)
+		// GK Name
+		await $this.titles.lineup_condensed.set_text(
+			'gk_name',
+			ksys.strf.params.players.format(gk_data?.surname || '')
+		)
+	}
+
+	// Show title
+	await $this.titles.lineup_condensed.overlay_in();
+
+	// Hold goalkeeper
+	
+
+	// Go through categories
+	for (const grp_idx of range(grp_amount)){
+		await ksys.util.sleep($this.sequencer.sequences.lineup_condensed.items.hold_page.dur);
+		await $this.titles.lineup_condensed.page(grp_idx + 1);
+	}
+
+	for (const grp_data of grp_array){
+		const [role_id, plist] = grp_data;
+		for (const player of plist){
+			print($this.role_editor.lookup(role_id).role_name_full, ':', player.surname);
+		}
+	}
+
+}
+
+$this.show_field_layout_condensed = async function(team){
+	const max_per_page = 3;
+	const tgt_side = str(team).lower();
+	const tgt_lineup = $this.resource_index.side?.[tgt_side]?.lineup;
+	const role_gropus = {};
+
+	// Group players by roles
+	for (const player of tgt_lineup.main_players){
+		const role_id = player?.role?.role_id;
+		if (!role_id){continue};
+		if (!(role_id in role_gropus)){
+			// Set for extra safety
+			role_gropus[role_id] = new Set();
+		}
+
+		role_gropus[role_id].add(player);
+	}
+	print('Condensed data:', role_gropus);
+
+	// Sort groups by their priority
+	// Because having a special page is stupid
+	// Everything must be a regular page, shown in the required order
+	const role_groups_sorted = [];
+
+	for (const grp_data of Object.entries(role_gropus)){
+		const [role_id, plr_set] = grp_data;
+		const role_data = $this.role_editor.lookup(role_id);
+
+		if (role_data.priority){
+			role_groups_sorted.unshift([role_id, plr_set]);
+		}else{
+			role_groups_sorted.push([role_id, plr_set]);
+		}
+	}
+
+
+	// todo: What if a crisis happens before this function finishes?
+	await $this.titles.lineup_condensed.resume_render();
+
+	await $this.titles.lineup_condensed.set_text(
+		'roster',
+		tgt_lineup.roster || ''
+	)
+
+	await $this.titles.lineup_condensed.set_text(
+		'club_name',
+		tgt_lineup.club.club_name || ''
+	)
+
+	// todo: this is stupid
+	let title_shown = false;
+
+	let last_role_grp = null;
+
+	// Go through every group
+	for (const grp_data of role_groups_sorted){
+		const [role_id, plr_set] = grp_data;
+		const plr_array = Array.from(plr_set);
+
+		// Sort the group, so that the largest names are in the end
+		// And therefore have a much bigger chance of appearing on a 2x page
+		plr_array.sort(function(a, b){
+			return (b.surname.length - a.surname.length)
+		})
+
+		while (plr_array.length){
+
+			// Create a page
+			const page_data = [];
+			while (plr_array.length && (page_data.length < max_per_page)){
+				const player = plr_array.pop();
+				page_data.push([
+					// Player Number
+					player.player_num,
+					// Player Name
+					ksys.strf.params.players.format(player.surname),
+				])
+			}
+
+			// Pause title renering (multiple updates incoming)
+			//     There's some evidence to suggest that no render pausing is needed
+			//     while the title is not on screen.
+			//     Furthermore:
+			//         Not on screen: Pause -> Apply Data -> Resume -> Show
+			//         Apparently breakes shit.
+			//     Long story short: Pause must only happen when the title is already on screen.
+			if (title_shown){
+				await $this.titles.lineup_condensed.pause_render();
+			}
+
+			// Wipe all fields
+			for (const xcom of range(max_per_page)){
+				for (const p_idx of range(max_per_page)){
+					for (const nn of ['num', 'name']){
+						await $this.titles.lineup_condensed.set_text(
+							`c0_x${xcom+1}_${nn}_${p_idx}`,
+							''
+						)
+					}
+				}
+			}
+
+			const current_role_grp = ($this.role_editor.lookup(role_id).role_name_alt || '').upper() + ':';
+
+			if (last_role_grp != current_role_grp){
+				// Whipe role label to ensure the animation plays
+				await $this.titles.lineup_condensed.set_text(
+					'c0_label',
+					''
+				)
+
+				// Re-apply role data to ensure the animation plays
+				await $this.titles.lineup_condensed.set_text(
+					'c0_label',
+					// todo: + ':' assumes role name exists
+					($this.role_editor.lookup(role_id).role_name_alt || '').upper() + ':'
+				)
+			}
+
+			last_role_grp = current_role_grp;
+
+			print('GRP LABEL:', ($this.role_editor.lookup(role_id).role_name_alt || '') + ':')
+
+			// Determine XCOM
+			const xcom = page_data.length;
+
+			// Apply player data to corresponding fields
+			for (const plr_idx of range(page_data.length)){
+				[pnum, pname] = page_data[plr_idx];
+				print('XCOM', xcom, ':', pnum, pname)
+				await $this.titles.lineup_condensed.set_text(
+					`c0_x${xcom}_num_${plr_idx}`,
+					pnum
+				)
+				await $this.titles.lineup_condensed.set_text(
+					`c0_x${xcom}_name_${plr_idx}`,
+					pname
+				)
+			}
+
+			// Resume render
+			// Should play "page" animation
+			await $this.titles.lineup_condensed.resume_render();
+
+			if (!title_shown){
+				title_shown = true;
+				print('Showing condensed title');
+				await $this.titles.lineup_condensed.overlay_in();
+				await ksys.util.sleep(
+					$this.sequencer.sequences.lineup_condensed.items.anim_in.dur
+				);
+			}
+
+			print('Holding condensed title page');
+
+			// Hold the page for n seconds
+			await ksys.util.sleep(
+				$this.sequencer.sequences.lineup_condensed.items.hold_page.dur
+			);
+		}
+	}
+
+	// await ksys.util.sleep(
+	// 	$this.sequencer.sequences.lineup_condensed.items.hold_page.dur
+	// );
+
+	await $this.titles.lineup_condensed.overlay_out();
+	await ksys.util.sleep(
+		$this.sequencer.sequences.lineup_condensed.items.anim_out.dur
+	);
+	print('Done condensed title');
+}
+
+
+
+
+$this.hide_field_layout_condensed = async function(team){
+	await $this.titles.lineup_condensed.overlay_out();
+}
+
 $this.update_title_schema = function(schema_id){
 	ksys.context.module.prm('title_schema', schema_id);
 }
@@ -6263,29 +7236,119 @@ $this.timeout_persistent_header_btns = function(dur){
 
 
 // ================================
-//        Commenter stuff
+//        Misc. Titles
 // ================================
-$this.save_commenter = function(){
-	ksys.context.module.prm('todays_commenter', $('#commenter_name_input')[0].value)
+$this.show_misc_title = async function(tgt_title){
+	if (tgt_title == 'tape'){
+		const tape_words = [];
+		for (const word of $this.misc_titles.tape.fields.tape.value.split('\n')){
+			tape_words.push(word.trim());
+		}
+		await $this.titles.tape.set_text(
+			'text',
+			tape_words.join(' ')
+		)
+		await $this.titles.tape.overlay_in();
+	}
+	if (tgt_title == 'commenter'){
+		const name_1 = $this.misc_titles.commenter.fields.commenter_name_1.value.trim();
+		const name_2 = $this.misc_titles.commenter.fields.commenter_name_2.value.trim();
+
+		// 2 girls 1 cup
+		await $this.titles.commenter.set_text(
+			'name',
+			name_1
+		)
+		await $this.titles.commenter.set_text(
+			'name2',
+			name_2
+		)
+
+		// 2 girls 2 cups
+		await $this.titles.commenter_x2.set_text(
+			'name',
+			name_1
+		)
+		await $this.titles.commenter_x2.set_text(
+			'name2',
+			name_2
+		)
+
+		// Show appropriate title
+		if ($this.commenter_schema_switch.selected == '2girls2cups'){
+			if (name_1 && name_2){
+				await $this.titles.commenter_x2.overlay_in();
+			}else{
+				await $this.titles.commenter.overlay_in();
+			}
+		}else{
+			await $this.titles.commenter.overlay_in();
+		}
+	}
+	if (tgt_title == 'info_1'){
+		await $this.titles.info_1.set_text(
+			'text',
+			$this.misc_titles.info_1.fields.info_1.value
+		)
+		await $this.titles.info_1.overlay_in();
+	}
+	if (tgt_title == 'info_2'){
+		await $this.titles.info_2.set_text(
+			'text_upper',
+			$this.misc_titles.info_2.fields.info_2_upper.value
+		)
+		await $this.titles.info_2.set_text(
+			'text_lower',
+			$this.misc_titles.info_2.fields.info_2_lower.value
+		)
+		await $this.titles.info_2.overlay_in();
+	}
+	if (tgt_title == 'referee'){
+		for (const idx of range(1, 5)){
+			await $this.titles.referee.set_text(
+				`name_${idx}`,
+				$this.misc_titles.referee.fields[`referee_${idx}_upper`].value.upper()
+			)
+			await $this.titles.referee.set_text(
+				`title_${idx}`,
+				$this.misc_titles.referee.fields[`referee_${idx}_lower`].value.upper()
+			)
+		}
+		await $this.titles.referee.overlay_in();
+	}
+	if (tgt_title == 'water_time'){
+		await $this.titles.water_time.set_text(
+			'lower_text',
+			$this.misc_titles.water_time.fields.water_time_lower_text.value
+		)
+		await $this.titles.water_time.overlay_in();
+	}
 }
 
-$this.show_commenter = async function(){
-	ksys.btns.pool.show_commenter.toggle(false)
-
-	await $this.titles.commenter.set_text(
-		'name',
-		$('#commenter_name_input')[0].value
-	)
-	await $this.titles.commenter.overlay_in()
-
-	ksys.btns.pool.show_commenter.toggle(true)
+$this.hide_misc_title = async function(tgt_title){
+	for (const t_id of (Array.isArray(tgt_title) ? tgt_title : [tgt_title])){
+		await $this.titles[t_id].overlay_out();
+	}
 }
 
-$this.hide_commenter = async function(){
-	ksys.btns.pool.show_commenter.toggle(false)
-	await $this.titles.commenter.overlay_out()
-	ksys.btns.pool.show_commenter.toggle(true)
+$this.set_referee_to_default = function(){
+	const titles = [
+		'ГОЛОВНИЙ АРБІТР',
+		'ПОМІЧНИК АРБІТРА',
+		'ПОМІЧНИК АРБІТРА',
+		'РЕЗЕРВНИЙ АРБІТР',
+	]
+
+	for (const idx of range(4)){
+		$this.misc_titles.referee.fields[`referee_${idx+1}_lower`].value = titles[idx];
+	}
+
+	$this.global_save({'misc_titles': true});
 }
+
+
+
+
 
 
 
@@ -6294,8 +7357,9 @@ $this.hide_commenter = async function(){
 //        VS stuff
 // ================================
 $this.save_vs_sublines = function(){
-	ksys.context.module.prm('vs_title_bottom_upper_line', $('#vs_text_bottom_upper')[0].value, false)
-	ksys.context.module.prm('vs_title_bottom_lower_line', $('#vs_text_bottom_lower')[0].value)
+	ksys.context.module.prm('vs_title_bottom_upper_line', $('#vs_text_bottom_upper')[0].value, false);
+	ksys.context.module.prm('vs_title_bottom_lower_line', $('#vs_text_bottom_lower')[0].value, false);
+	ksys.context.module.prm('vs_title_main_header_line', $('#vs_text_main_header')[0].value);
 }
 
 $this.show_vs_title = async function(){
@@ -6316,6 +7380,9 @@ $this.show_vs_title = async function(){
 	await $this.titles.splash.set_text('title_lower_top', $('#vs_text_bottom_upper').val())
 	await $this.titles.splash.set_text('title_lower_bot', $('#vs_text_bottom_lower').val())
 
+	// Set main header
+	await $this.titles.splash.set_text('title_upper', $('#vs_text_main_header').val())
+
 	// Set logos
 	await $this.titles.splash.set_img_src(
 		'logo_l',
@@ -6324,6 +7391,16 @@ $this.show_vs_title = async function(){
 	await $this.titles.splash.set_img_src(
 		'logo_r',
 		$this.resource_index?.guest_club?.logo_path || ''
+	)
+
+	// Set team colours
+	await $this.titles.splash.set_shape_color(
+		'team_color_l',
+		$this.resource_index.side.home?.lineup?.tshirt_colpick?.color
+	)
+	await $this.titles.splash.set_shape_color(
+		'team_color_r',
+		$this.resource_index.side.guest?.lineup?.tshirt_colpick?.color
 	)
 
 	// Set Club names
@@ -6377,6 +7454,10 @@ $this.show_coach = async function(side){
 	await $this.titles.coach.set_text(
 		'name',
 		ksys.strf.params.coach.format(tgt_club.main_coach)
+	)
+	await $this.titles.coach.set_text(
+		'title',
+		ksys.strf.params.coach.format(tgt_club.main_coach_title_long)
 	)
 	await $this.titles.coach.set_img_src(
 		'club_logo',
@@ -6504,48 +7585,18 @@ $this.exec_substitute = async function(subs_type){
 		return
 	}
 
-	if ($this.title_schema_switch.selected == 'separate'){
-		const title = $this.titles.replacement_seq;
+	let stack;
 
-		// Set players' names
-
-		// leaving
-		await title.set_text(
-			'leaving_player',
-			`${leaving_player.player_num} ${ksys.strf.params.players.format(leaving_player.surname)}`,
-		)
-		// inbound
-		await title.set_text(
-			'incoming_player',
-			`${incoming_player.player_num} ${ksys.strf.params.players.format(incoming_player.surname)}`,
-		)
-		// Set club logo
-		await title.set_img_src('club_logo', leaving_player.club.logo_path)
-
-		// show the title
-		await title.overlay_in()
-		// let it hang for 11 seconds
-		// (this wait time also accounts for the scripted animation sequence inside the title)
-		await ksys.util.sleep(11000)
-		// hide the title
-		await title.overlay_out()
+	if (leaving_player.club.is_enemy){
+		stack = $this.resource_index.guest_lineup.subs;
+	}else{
+		stack = $this.resource_index.home_lineup.subs;
 	}
 
-
-	if ($this.title_schema_switch.selected == 'paged'){
-		let stack;
-
-		if (leaving_player.club.is_enemy){
-			stack = $this.resource_index.guest_lineup.subs;
-		}else{
-			stack = $this.resource_index.home_lineup.subs;
-		}
-
-		await stack.run_title_single(
-			[leaving_player, incoming_player],
-			subs_type
-		)
-	}
+	await stack.run_title_single(
+		[leaving_player, incoming_player],
+		subs_type
+	)
 }
 
 
@@ -6566,6 +7617,11 @@ $this.stack_substitute = function(){
 
 	stack.add_pair([leaving_player, incoming_player])
 }
+
+
+
+
+
 
 
 
@@ -6789,6 +7845,15 @@ $this.main_timer_vis = async function(state){
 			return
 		}
 
+		if ( ($this.ticker_time.extra.minutes <= 0) && ($this.ticker_time.extra.seconds <= 0) ){
+			await $this.extra_time_vis(false);
+		}
+
+		// todo: hardcoded pages
+		await $this.titles.timer.page(2);
+
+		await $this.resource_index.card_manager.redraw_counters();
+
 		// Update team colours
 		await $this.update_team_colors()
 
@@ -6812,18 +7877,31 @@ $this.main_timer_vis = async function(state){
 }
 
 $this.extra_time_vis = async function(state){
+	// await $this.titles.timer.resume_render();
+	// await $this.titles.timer.pause_render();
 	if (state == true){
-		await $this.titles.timer.set_shape_color('main_time_bg', 'D80D8300');
+		// await $this.titles.timer.set_shape_color('main_time_bg', 'D80D8300');
+		// await $this.titles.timer.toggle_text('time_added', true);
+		// await $this.titles.timer.toggle_text('extra_ticker', true);
+		// await $this.titles.timer.toggle_img('extra_time_bg', true);
+
+		await $this.titles.timer.toggle_img('main_time_bg', false);
+		await $this.titles.timer.toggle_text('base_ticker', false);
+
 		await $this.titles.timer.toggle_text('time_added', true);
 		await $this.titles.timer.toggle_text('extra_ticker', true);
 		await $this.titles.timer.toggle_img('extra_time_bg', true);
+		
 	}
 	if (state == false){
-		await $this.titles.timer.set_shape_color('main_time_bg', 'D80D83');
+		await $this.titles.timer.toggle_text('base_ticker', true);
+		await $this.titles.timer.toggle_img('main_time_bg', true);
+
 		await $this.titles.timer.toggle_text('time_added', false);
 		await $this.titles.timer.toggle_text('extra_ticker', false);
 		await $this.titles.timer.toggle_img('extra_time_bg', false);
 	}
+	// await $this.titles.timer.resume_render();
 }
 
 $this.zero_timer_time = function(){
@@ -6833,6 +7911,14 @@ $this.zero_timer_time = function(){
 	$this.ticker_time.extra.minutes = 0;
 	$this.ticker_time.extra.seconds = 0;
 }
+
+$this.show_red_cards = async function(){
+	await $this.titles.timer.page(2);
+}
+$this.hide_red_cards = async function(){
+	await $this.titles.timer.page(1);
+}
+
 
 
 // ----------------
@@ -7303,7 +8389,7 @@ $this.timer_fset.at_at.stop_extra_time = async function(){
 // Simply port the round number saving mechanism from AT-AT,
 // Save the round numbers and only execute the "... == '45:01'" hack
 // according to round numbers
-$this.timer_fset.builtin.start_base_timer = async function(rnum){
+$this.timer_fset.builtin._start_base_timer = async function(rnum){
 
 	$this?.base_counter?.force_kill?.()
 	$this.base_counter = null;
@@ -7358,7 +8444,63 @@ $this.timer_fset.builtin.start_base_timer = async function(rnum){
 	// print($this.base_counter)
 }
 
-$this.timer_fset.builtin.timer_callback = function(tick){
+$this.timer_fset.builtin.start_base_timer = async function(rnum){
+	print('STARTING BASE TIMER.....')
+	// Destroy any extra time things
+	await $this.timer_fset.builtin.destroy_extra_clock();
+
+	// Reset time data for extra time
+	$this.ticker_time.extra.minutes = 0;
+	$this.ticker_time.extra.seconds = 0;
+
+	// Save current round number
+	ksys.context.module.prm('round_num', rnum);
+
+	// Get round duration
+	const dur = $this.round_duration * 60;
+
+	print('ROUND DURATION:', dur)
+
+	// Edit the main clock and start it
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.main_clock_id,
+		'action': 'fire',
+		'data': {
+			'clock': {
+				'duration': dur,
+				// If it's the second round, then offset is the length of the
+				// first time, such as 45.
+				// Otherwise - offset is 0 (first round)
+				'offset': (rnum == 2) ? dur : 0,
+				'reversed': false,
+				'vmix_fields': [{
+					'count_as': 'clock',
+					'tplate': '%mt%:%s%',
+					'gtzip_name': $this.titles.timer.title_name,
+					'text_field_name': 'base_ticker',
+					// pad with 2 zeroes
+					'pad': 2,
+				}],
+			}
+		}
+	})
+}
+
+$this.timer_fset.builtin.base_timer_end_callback = async function(data){
+	print('BASE TIMER END CALLBACK')
+	// simply start extra time
+	$this.timer_fset.builtin.launch_extra_time();
+}
+
+$this.timer_fset.builtin.destroy_base_timer = async function(){
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.main_clock_id,
+		'action': 'stop',
+		'data': {}
+	})
+}
+
+$this.timer_fset.builtin._timer_callback = function(tick){
 	const minutes = Math.floor(tick.global / 60);
 	const seconds = tick.global - (60*minutes);
 
@@ -7390,8 +8532,20 @@ $this.timer_fset.builtin.timer_callback = function(tick){
 	$('#timer_feedback_main').text(text);
 }
 
+$this.timer_fset.builtin.timer_callback = function(data){
+	if (!data?.time?.total){return};
+	const time = data.time;
+
+	$this.ticker_time.base.minutes = time.total.minutes;
+	$this.ticker_time.base.seconds = time.clock.seconds;
+
+	$('#timer_feedback_main').text(
+		`${str(time.total.minutes).zfill(2)}:${str(time.clock.seconds).zfill(2)}`
+	);
+}
+
 // todo: make this function work with the new time input schema
-$this.timer_fset.builtin.resume_main_timer_from_offset = function(event){
+$this.timer_fset.builtin._resume_main_timer_from_offset = function(event){
 
 	$this?.extra_counter?.force_kill?.()
 	$this.extra_counter = null;
@@ -7441,12 +8595,79 @@ $this.timer_fset.builtin.resume_main_timer_from_offset = function(event){
 	// print($this.base_counter)
 }
 
+$this.timer_fset.builtin.resume_main_timer_from_offset = async function(event){
+	// Destroy any extra time things
+	await $this.timer_fset.builtin.destroy_extra_clock();
+
+	// Read current round number
+	const rnum = int(ksys.context.module.prm('round_num')) || 1;
+
+	// Calc offsets
+	const offs_minutes = int(qsel('#base_timer_resume_input .minutes').value || 0);
+	const offs_seconds = int(qsel('#base_timer_resume_input .seconds').value || 0);
+
+	// Final offset in seconds
+	const offs = (offs_minutes * 60) + offs_seconds;
+
+	// Calc round duration in seconds
+	const dur = $this.round_duration * 60;
+
+	// Edit the main clock and start it
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.main_clock_id,
+		'action': 'fire',
+		'data': {
+			'clock': {
+				'duration': dur - (offs % dur),
+				// If it's the second round, then offset is the length of the
+				// first time, such as 45.
+				// Otherwise - offset is 0 (first round)
+				'offset': offs,
+				'reversed': false,
+				'vmix_fields': [{
+					'count_as': 'clock',
+					'tplate': '%mt%:%s%',
+					'gtzip_name': $this.titles.timer.title_name,
+					'text_field_name': 'base_ticker',
+					// pad with 2 zeroes
+					'pad': 2,
+				}],
+			}
+		}
+	})
+}
+
 
 
 // 
 // Extra timer
 // 
-$this.timer_fset.builtin.launch_extra_time = async function(){
+
+$this.timer_fset.builtin.destroy_extra_clock = async function(){
+	// Stop extra time clock
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.extra_clock_id,
+		'action': 'stop',
+		'data': {}
+	})
+	await ksys.ticker.bundestag.reset_clock($this.extra_clock_id);
+
+	// Clear additional extra time fields
+	$this.titles.timer.set_text('time_added', '');
+	$('#timer_ctrl_additional input')[0].value = '';
+
+	$this.ticker_time.extra.minutes = 0;
+	$this.ticker_time.extra.seconds = 0;
+
+	$('#timer_feedback_extra').text(
+		'--:--'
+	);
+
+	// Hide extra time
+	await $this.extra_time_vis(false);
+}
+
+$this.timer_fset.builtin._launch_extra_time = async function(){
 	$this?.extra_counter?.force_kill?.()
 	$this.extra_counter = null;
 
@@ -7489,7 +8710,49 @@ $this.timer_fset.builtin.launch_extra_time = async function(){
 	// await $this.titles.timer.toggle_text('extra_ticker', true)
 }
 
-$this.timer_fset.builtin.extra_timer_callback = function(tick){
+$this.timer_fset.builtin.launch_extra_time = async function(){
+	// Stop extra time clock
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.extra_clock_id,
+		'action': 'stop',
+		'data': {}
+	})
+
+	// Push extra time amount field value to VMIX title
+	await $this.update_extra_time_amount();
+
+	const fuck_shit = $this.timer_display_schema_switch.selected == 'fuck_shit';
+
+	// Edit the extra clock and start it
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.extra_clock_id,
+		'action': 'fire',
+		'data': {
+			'clock': {
+				// It's actually not endless
+				'duration': 60**2,
+				'reversed': false,
+				'fuck_you': fuck_shit ? ($this.ticker_time.base.minutes * 60) : 0,
+				'vmix_fields': [{
+					'count_as': 'clock',
+					'tplate': '%m%:%s%',
+					'gtzip_name': $this.titles.timer.title_name,
+					'text_field_name': 'extra_ticker',
+					// 'text_field_name': fuck_shit ? 'base_ticker' : 'extra_ticker',
+					// pad with 2 zeroes
+					'pad': 2,
+				}],
+			}
+		}
+	})
+}
+
+$this.timer_fset.builtin.extra_time_end_callback = async function(){
+	// todo: not much needs to be done here really.
+	// or is it ?
+}
+
+$this.timer_fset.builtin._extra_timer_callback = function(tick){
 	const minutes = Math.floor(tick.global / 60)
 	const seconds = tick.global - (60*minutes)
 
@@ -7502,10 +8765,37 @@ $this.timer_fset.builtin.extra_timer_callback = function(tick){
 	$('#timer_feedback_extra').text(text)
 }
 
-$this.timer_fset.builtin.stop_extra_time = function(){
-	$this?.extra_counter?.force_kill?.()
-	$this.extra_counter = null;
+$this.timer_fset.builtin.extra_timer_callback = function(data){
+	if (!data?.time?.total){return};
+
+	const time = data.time;
+
+	$this.ticker_time.extra.minutes = time.clock.minutes;
+	$this.ticker_time.extra.seconds = time.clock.seconds;
+
+	$('#timer_feedback_extra').text(
+		`${str(time.clock.minutes).zfill(2)}:${str(time.clock.seconds).zfill(2)}`
+	);
 }
+
+$this.timer_fset.builtin.stop_extra_time = async function(){
+	// Stop extra time clock
+	await $this.timer_fset.builtin.destroy_extra_clock();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -7539,8 +8829,7 @@ $this.add_score_from_cards_panel = async function(){
 	)
 
 	// Show the title
-
-	if ($this.title_schema_switch == 'separate'){
+	if ($this.title_schema_switch.selected == 'separate'){
 		// Set logo
 		await $this.titles.gscore.set_img_src(
 			'club_logo',
@@ -7550,12 +8839,31 @@ $this.add_score_from_cards_panel = async function(){
 		// Set player's surname
 		await $this.titles.gscore.set_text(
 			'player_name',
-			`${player.player_num} ${ksys.strf.params.players.format(player.surname)}`
+			ksys.strf.params.players.format(player.surname)
 		)
 
+		// Set time
+		const time = $this.get_current_time(true);
+		const time_suffix = time.extra ? `+${time.extra}` : '';
+		await $this.titles.gscore.set_text(
+			'descr',
+			`${time.base}'` + time_suffix + ' ХВИЛИНА'
+		)
+
+		ksys.btns.adv_timeout({
+			'scored': $this.sequencer.sequences.scored.sum,
+		})
+
+		// Hide red cards
+		await $this.hide_red_cards();
+
 		await $this.titles.gscore.overlay_in()
-		await ksys.util.sleep(7000)
+		await ksys.util.sleep(
+			$this.sequencer.sequences.scored.items.hold.dur
+		)
 		await $this.titles.gscore.overlay_out()
+		await $this.show_red_cards();
+
 	}else{
 
 		const time = $this.get_current_time(true);
@@ -7581,7 +8889,9 @@ $this.add_score_from_cards_panel = async function(){
 }
 
 $this.hide_scored_title = async function(){
-	await $this.titles.gscore.overlay_out()
+	await $this.titles.gscore.overlay_out();
+	// todo: Check if it's already on the required page
+	await $this.show_red_cards();
 }
 
 $this.mod_score_author = function(evt){
@@ -7843,6 +9153,11 @@ $this.show_score_summary = async function(){
 		'team_logo_l',
 		$this.resource_index.side.home?.club?.logo_path || ''
 	)
+	// team colour LEFT
+	await $this.titles.final_scores.set_shape_color(
+		'color_home',
+		$this.resource_index.side.home?.lineup?.tshirt_colpick?.color
+	)
 
 	// team name RIGHT
 	await $this.titles.final_scores.set_text(
@@ -7854,11 +9169,19 @@ $this.show_score_summary = async function(){
 		'team_logo_r',
 		$this.resource_index.side.guest?.club?.logo_path || ''
 	)
+	// team colour RIGHT
+	await $this.titles.final_scores.set_shape_color(
+		'color_guest',
+		$this.resource_index.side.guest?.lineup?.tshirt_colpick?.color
+	)
 
+	const current_total = ($this.ticker_time.base.minutes * 60) + $this.ticker_time.base.seconds;
+	const dur_total = $this.round_duration * 60;
 	// Set bottom text
 	await $this.titles.final_scores.set_text(
 		'bottom_text',
-		$('#vs_text_bottom_lower').val()
+		// $this.ticker_time.base.minutes $this.round_duration
+		(current_total <= dur_total) ? 'ПЕРШИЙ ТАЙМ' : 'ДРУГИЙ ТАЙМ'
 	)
 
 	// show the title
@@ -8500,8 +9823,21 @@ $this.load_score_data = function(){
 
 
 
+// ---------------
+//  Misc. Titles
+// ---------------
+$this.save_misc_titles = function(){
+	const misc_title_data = {};
 
+	for (const misc_title of Object.values($this.misc_titles)){
+		misc_title_data[misc_title.title_id] = misc_title.to_dict();
+	}
 
+	ksys.db.module.write(
+		'misc_titles.kbsave',
+		JSON.stringify(misc_title_data, null, '\t')
+	)
+}
 
 
 
@@ -8552,6 +9888,11 @@ $this.global_save = function(save_targets=null){
 	if (what_to_save.penalties || save_targets == null){
 		$this.save_penalties()
 	}
+
+	// Save score data
+	if (what_to_save.misc_titles || save_targets == null){
+		$this.save_misc_titles();
+	}
 }
 
 
@@ -8576,31 +9917,7 @@ $this.save_penalties = function(){
 $this.show_penalty_title = async function(){
 	const tgt_title = $this.titles.penalties;
 
-	await tgt_title.set_img_src(
-		'club_logo_l',
-		$this.resource_index.side.home.club.logo_path
-	)
-	await tgt_title.set_img_src(
-		'club_logo_r',
-		$this.resource_index.side.guest.club.logo_path
-	)
-	await tgt_title.set_text(
-		'team_name_r',
-		$this.resource_index.side.guest.club.club_name.upper()
-	)
-	await tgt_title.set_text(
-		'team_name_l',
-		$this.resource_index.side.home.club.club_name.upper()
-	)
-
-	await tgt_title.set_text(
-		`team_score_l`,
-		$this.resource_index.score_manager.sides['home'].score_list.score_stack.size
-	)
-	await tgt_title.set_text(
-		`team_score_r`,
-		$this.resource_index.score_manager.sides['guest'].score_list.score_stack.size
-	)
+	await $this.resource_index.penalty_manager.resync_vmix();
 
 	await ksys.util.sleep(500);
 	await tgt_title.overlay_in(2);
@@ -8640,6 +9957,7 @@ $this.init_new_match = function(evt){
 	ksys.context.module.prm('todays_commenter', '');
 	ksys.context.module.prm('vs_title_bottom_upper_line', '');
 	ksys.context.module.prm('vs_title_bottom_lower_line', '');
+	ksys.context.module.prm('vs_text_main_header', '');
 
 	// why bother...
 	// Just reload the controller...

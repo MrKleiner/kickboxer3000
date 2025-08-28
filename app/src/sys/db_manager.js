@@ -22,10 +22,10 @@
 // Load as: 'text' | 'buffer' | 'json' (deafult to 'text')
 const db_module_read_file = function(fname=null, load_as='text'){
 
-	const target_file = app_root.join('db', 'module', ksys.context.module_name, fname)
+	const target_file = app_root.join('db', 'module', ksys.context.module_name, fname);
 
 	// ensure that the destination file exists
-	if (!target_file.existsSync()){
+	if (!target_file.isFileSync()){
 		console.warn('Requested to read invalid file from module database:', fname)
 		return null
 	}

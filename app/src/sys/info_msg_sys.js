@@ -96,11 +96,53 @@ const InfoMessage = class{
 		self.msg_body.prepend(self.pie.dom);
 		$('hintsys-bar #hintsys_bar_msgs').prepend(self.msg_body);
 
-		self.pie.launch_anim(dur)
+		if (msg_type == 'warn'){
+			self.body_warn('warn');
+		}
+		if (msg_type == 'err'){
+			self.body_warn('err');
+		}
+
+		self.pie.launch_anim(
+			dur + ((msg_type == 'warn' || msg_type == 'err') ? 1150 : 0)
+		)
 		.then((value) => {
 			self.msg_body.remove();
 		});
 		
+	}
+
+	async body_warn(warn_type='warn'){
+		let color = null;
+
+		if (warn_type == 'warn'){
+			color = 'rgba(255, 200, 0, 1)';
+		}
+		if (warn_type == 'err'){
+			color = '#F23A27';
+		}
+
+		// box-shadow: inset 0px 0px 77px 45px rgba(255, 200, 0, 1);
+		let shadow_size = 97;
+
+		for (const i of range(4)){
+			document.body.style.boxShadow = `inset 0px 0px ${shadow_size}px ${shadow_size}px ${color}`;
+			document.querySelector('html').style.filter = 'invert(1)'
+			await ksys.util.sleep(50);
+			document.body.style.boxShadow = `inset 0px 0px ${shadow_size/2}px ${shadow_size/2}px ${color}`;
+			document.querySelector('html').style.filter = ''
+			await ksys.util.sleep(50);
+		}
+
+		for (const i of range(shadow_size)){
+			document.body.style.boxShadow = `inset 0px 0px ${shadow_size}px ${shadow_size}px ${color}`;
+			await ksys.util.sleep(10);
+			shadow_size -= 1;
+		}
+
+		shadow_size -= 1;
+
+		document.body.style.boxShadow = '';
 	}
 }
 

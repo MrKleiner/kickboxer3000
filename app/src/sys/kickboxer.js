@@ -20,6 +20,13 @@ window.print = console.log;
 //              Base Libs
 // ===================================
 
+const qsel = function(){
+	return document.querySelector(...arguments);
+};
+const qselAll = function(){
+	return document.querySelectorAll(...arguments);
+}
+
 // Jquery
 const $ = window.jQuery = require('./apis/jquery/3_6_0/jquery.min.js');
 
@@ -147,6 +154,7 @@ const ksys = {
 	packer_md:      require('./sys/packer.js'),
 	gtzip_wrangler: require('./sys/gtzip_wrangler.js'),
 	sequencer:      require('./sys/sequencing.js'),
+	psych_ward:     require('./sys/psych_ward.js'),
 
 	// Global events listeners
 	binds:   {},
@@ -166,7 +174,7 @@ const vmix = {
 };
 
 
-
+const long_name = 'Grzegorz Brzęczyszczykiewicz';
 
 
 
@@ -938,6 +946,9 @@ const sys_load = function(nm, save_state=true)
 
 	// Resync Packer
 	ksys.packer_md.resync()
+
+	// Resync psych ward
+	ksys.psych_ward.m_init()
 
 	// resync switches
 	// ksys.switches.resync()
