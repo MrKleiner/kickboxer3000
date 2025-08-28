@@ -3,24 +3,7 @@
 $this.counter = {};
 
 $this.load = function(){
-	$this.titles = {
-		'personal': new vmix.title({
-			'title_name': 'personal.gtzip',
-		}),
-
-		'vs': new vmix.title({
-			'title_name': 'vs_main.gtzip',
-		}),
-
-		'timer': new vmix.title({
-			'title_name': 'timer.gtzip',
-		}),
-
-		'lower': new vmix.title({
-			'title_name': 'midfight_lower.gtzip',
-		}),
-	}
-
+	$this.main_clock_id = 'sambo.main';
 	$this.player_data_schema = new Set();
 	$this.pair_list = new Map();
 
@@ -54,33 +37,41 @@ $this.load = function(){
 		ksys.context.module.prm('timer_has_vs', timer_has_vs.checked);
 	}
 
-	document.querySelector('#image_proxies').checked = !!ksys.context.module.cache.img_proxies_enabled;
-	document.querySelector('#image_proxies_addr').value = ksys.context.module.cache.img_proxy_addr;
-	document.querySelector('#img_proxy_whitelist').value = ksys.db.module.read('proxy_whitelist.kbdata') || '';
-
-	$this.toggle_image_proxies();
-
-	const score_values = [1, 2, 3];
-
-	for (const side of ['l', 'r']){
-		for (const score_val of score_values){
-			for (const sign_data of [[1, 'add'], [-1, 'sub']]){
-				const [sign, dom_selector] = sign_data;
-				const btn_dom = ksys.tplates.index_tplate(
-					'#score_mod_btn_template', {}
-				);
-				btn_dom.root.textContent = str((sign > 0) ? '+' : '-') + str(score_val);
-				document.querySelector(`.score_ctrl_${side} .score_btns.score_${dom_selector}`).append(btn_dom.root);
-				const tgt_input = document.querySelector(`#score_input_${side}`);
-				btn_dom.root.onclick = function(){
-					const new_val = int(tgt_input.value || 0) + (score_val * sign);
-					tgt_input.value = (new_val > 0) ? new_val : 0;
-					tgt_input?.onchange?.();
-					$this.save_pairs();
-				}
-			}
-		}
+	const vs_as_movs = document.querySelector('#param_list input[vs_as_movs]');
+	vs_as_movs.checked = ksys.context.module.cache.vs_as_movs || false;
+	vs_as_movs.onchange = function(){
+		ksys.context.module.prm('vs_as_movs', vs_as_movs.checked);
 	}
+
+	$this.titles = {
+		'personal': new vmix.title({
+			'title_name': 'personal.gtzip',
+		}),
+
+		'vs': new vmix.title({
+			'title_name': 'vs_main.gtzip',
+		}),
+
+		'timer': new vmix.title({
+			'title_name': 'timer.gtzip',
+		}),
+
+		'lower': new vmix.title({
+			'title_name': 'midfight_lower.gtzip',
+		}),
+	}
+
+	// document.querySelector('#image_proxies').checked = !!ksys.context.module.cache.img_proxies_enabled;
+	// document.querySelector('#image_proxies_addr').value = ksys.context.module.cache.img_proxy_addr;
+	// document.querySelector('#img_proxy_whitelist').value = ksys.db.module.read('proxy_whitelist.kbdata') || '';
+
+	// $this.toggle_image_proxies();
+
+	ksys.ticker.bundestag.attach({
+		'clock_id': $this.main_clock_id,
+		'tick': $this.clock_tick_event,
+		'end': $this.clock_end_event,
+	})
 }
 
 $this.KBPlayer = class{
@@ -104,7 +95,6 @@ $this.KBPlayer = class{
 
 		self.name = '';
 		self.surname = '';
-		self.score = 0;
 
 		// Add name/surname
 		{
@@ -121,6 +111,7 @@ $this.KBPlayer = class{
 				self.dom.index.vis_display.textContent = `${self.name} ${self.surname}`;
 				$this.save_pairs();
 			}
+			dom.root.setAttribute('preview_hidden', true);
 			self.dom.index.player_data.append(dom.elem);
 
 			self.attr_list['name'] = dom.index.input;
@@ -138,8 +129,10 @@ $this.KBPlayer = class{
 			dom.index.input.onchange = function(){
 				self.surname = dom.index.input.value;
 				self.dom.index.vis_display.textContent = `${self.name} ${self.surname}`;
+				self.score_ctrl.dom.index.surname.textContent = self.surname.upper();
 				$this.save_pairs();
 			}
+			dom.root.setAttribute('preview_hidden', true);
 			self.dom.index.player_data.append(dom.elem);
 			self.attr_list['surname'] = dom.index.input;
 		}
@@ -153,6 +146,11 @@ $this.KBPlayer = class{
 			$this.update_personal_title(self);
 		}
 
+		self.score_ctrl = new $this.PlayerScoreControl({
+			'tgt_player': self,
+		});
+
+
 		ksys.util.cls_pwnage.remap(self);
 	}
 
@@ -161,7 +159,7 @@ $this.KBPlayer = class{
 			'name': self.name,
 			'surname': self.surname,
 			'vs_photo_side': self.vs_photo_side,
-			'score': self.score || 0,
+			'score': self.score_ctrl.score,
 		};
 		for (const data_id in self.attr_list){
 			data[data_id] = self.attr_list[data_id].value;
@@ -173,7 +171,6 @@ $this.KBPlayer = class{
 	apply_data(self, data){
 		self.name = data.name;
 		self.surname = data.surname;
-		self.score = data.score || 0;
 
 		self.vs_photo_side = data.vs_photo_side || 'l';
 
@@ -188,6 +185,8 @@ $this.KBPlayer = class{
 
 			self.attr_list[data_id].value = data[data_id] || '';
 		}
+
+		self.score_ctrl.score = data.score;
 	}
 
 	update_schema(self){
@@ -282,6 +281,9 @@ $this.KBPlayerPair = class{
 			self.dom.elem.remove();
 			$this.update_pair_index();
 			$this.save_pairs();
+
+			self.players.red.score_ctrl.dom.root.remove();
+			self.players.blu.score_ctrl.dom.root.remove();
 		}
 
 		self.dom.index.move_up.onclick = function(evt){
@@ -296,9 +298,6 @@ $this.KBPlayerPair = class{
 		}
 		self.dom.index.flip_players.onclick = function(evt){
 			self.flip_sides();
-			if (self.dom.elem.classList.contains('active_pair')){
-				self.fwd_score_vis();
-			}
 			$this.save_pairs();
 		}
 		self.dom.index.flip_photos.onclick = function(evt){
@@ -309,8 +308,8 @@ $this.KBPlayerPair = class{
 		self.dom.index.header.onclick = function(evt){
 			if ($this.edit_mode_active){return};
 			self.mark_active();
-			self.fwd_score_vis();
 			$this.update_vs_title(self);
+			$this.update_score(self);
 		}
 
 	}
@@ -346,6 +345,7 @@ $this.KBPlayerPair = class{
 		const red = self.players.red;
 
 		blu.dom.elem.swapWith(red.dom.elem);
+		blu.score_ctrl.dom.root.swapWith(red.score_ctrl.dom.root);
 
 		self.players.blu = red;
 		self.players.red = blu;
@@ -372,38 +372,71 @@ $this.KBPlayerPair = class{
 		ksys.context.module.prm('active_pair', self.index);
 		$('#player_list .player_pair').removeClass('active_pair');
 		self.dom.elem.classList.add('active_pair');
-	}
 
-	fwd_score_vis(self, include_input=true){
-		const red_score = document.querySelector('#score_input_l');
-		const blu_score = document.querySelector('#score_input_r');
+		const score_ctrl = document.querySelector('#score_ctrl');
+		score_ctrl.innerHTML = '';
 
-		if (include_input){
-			red_score.value = int(self.players.red.score);
-			blu_score.value = int(self.players.blu.score);
-		}
-
-		red_score.onchange = function(){
-			print('Onchange trigger')
-			self.players.red.score = int(red_score.value || 0);
-			self.push_scores_to_vmix();
-			$this.save_pairs();
-		}
-		blu_score.onchange = function(){
-			print('Onchange trigger')
-			self.players.blu.score = int(blu_score.value || 0);
-			self.push_scores_to_vmix();
-			$this.save_pairs();
-		}
-
-		self.push_scores_to_vmix();
-	}
-
-	push_scores_to_vmix(self){
-		$this.titles.timer.set_text('score_l', self.players.red.score);
-		$this.titles.timer.set_text('score_r', self.players.blu.score);
+		score_ctrl.append(self.players.blu.score_ctrl.dom.root);
+		score_ctrl.append(self.players.red.score_ctrl.dom.root);
 	}
 }
+
+
+$this.PlayerScoreControl = class{
+	constructor(params){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#66CEFF',
+		);
+
+		self.tgt_player = params.tgt_player;
+		self._score = params.score || 0;
+
+		self._dom = null;
+	}
+
+	$score(self){
+		return (self._score || 0)
+	}
+
+	$$score(self, tgt_score){
+		self._score = int(tgt_score) || 0;
+		self._score = self._score.clamp(0, Infinity);
+		self.dom.index.input.value = self._score;
+	}
+
+	$dom(self){
+		if (self._dom){
+			return self._dom
+		}
+
+		self._dom = ksys.context.tplates.sambo.player_score_ctrl({
+			'input':    'input.score_input',
+			'surname':  '.pscore_psurname',
+		})
+
+		for (const btn_add of self._dom.root.querySelectorAll('.pscore_btn')){
+			btn_add.onclick = function(){
+				self.score += int(btn_add.getAttribute('score_amount'));
+				$this.save_pairs();
+				$this.update_score(self.tgt_player.pair);
+			}
+		}
+
+		self._dom.index.input.onchange = function(){
+			self.score = int(self._dom.index.input.value) || 0;
+			$this.save_pairs();
+			$this.update_score(self.tgt_player.pair);
+		}
+
+		self._dom.index.surname.textContent = self.tgt_player.surname.upper();
+
+		return self._dom
+	}
+}
+
+
+
 
 
 $this.msg_warn_need_alt = function(){
@@ -421,6 +454,7 @@ $this.msg_warn_need_alt = function(){
 
 $this.toggle_edit_mode = function(){
 	const dom = document.querySelector('kbstandard');
+	dom.removeAttribute('data_preview_mode');
 	if (dom.hasAttribute('edit_mode')){
 		dom.removeAttribute('edit_mode');
 		$this.edit_mode_active = false;
@@ -429,6 +463,20 @@ $this.toggle_edit_mode = function(){
 		$this.edit_mode_active = true;
 	}
 }
+
+$this.toggle_preview_mode = function(){
+	const dom = document.querySelector('kbstandard');
+	dom.removeAttribute('edit_mode');
+	$this.edit_mode_active = false;
+
+	if (dom.hasAttribute('data_preview_mode')){
+		dom.removeAttribute('data_preview_mode');
+	}else{
+		dom.setAttribute('data_preview_mode', true);
+	}
+}
+
+
 
 
 $this.flip_sides = function(){
@@ -446,28 +494,16 @@ $this.flip_photos = function(){
 }
 
 $this.flip_colors = function(){
-	// print('Kys pls?')
 	for (const pair of $this.pair_list.values()){
 		pair.flip_colors();
 	}
 
-	if (document.querySelector('#timer_ctrl_score').classList.contains('red_vs_blu')){
-		$('#timer_ctrl_score').removeClass('red_vs_blu');
-		$('#timer_ctrl_score').addClass('blu_vs_red');
-
-		// ksys.context.module.prm('color_order', 'blu_vs_red');
-		// return
-	}else{
-		$('#timer_ctrl_score').removeClass('blu_vs_red');
-		$('#timer_ctrl_score').addClass('red_vs_blu');
-
-		// ksys.context.module.prm('color_order', 'red_vs_blu');
-	}
-
-
 	if (document.querySelector('#player_list').classList.contains('red_vs_blu')){
 		$('#player_list').removeClass('red_vs_blu');
 		$('#player_list').addClass('blu_vs_red');
+
+		$('#score_ctrl').removeClass('red_vs_blu');
+		$('#score_ctrl').addClass('blu_vs_red');
 
 		ksys.context.module.prm('color_order', 'blu_vs_red');
 		return
@@ -476,6 +512,9 @@ $this.flip_colors = function(){
 	if (document.querySelector('#player_list').classList.contains('blu_vs_red')){
 		$('#player_list').removeClass('blu_vs_red');
 		$('#player_list').addClass('red_vs_blu');
+
+		$('#score_ctrl').removeClass('blu_vs_red');
+		$('#score_ctrl').addClass('red_vs_blu');
 
 		ksys.context.module.prm('color_order', 'red_vs_blu');
 		return
@@ -501,14 +540,14 @@ $this.set_color_order = function(order){
 		$('#player_list').removeClass('blu_vs_red');
 		$('#player_list').addClass('red_vs_blu');
 
-		$('#timer_ctrl_score').removeClass('blu_vs_red');
-		$('#timer_ctrl_score').addClass('red_vs_blu');
+		$('#score_ctrl').removeClass('blu_vs_red');
+		$('#score_ctrl').addClass('red_vs_blu');
 	}else{
 		$('#player_list').removeClass('red_vs_blu');
 		$('#player_list').addClass('blu_vs_red');
 
-		$('#timer_ctrl_score').removeClass('red_vs_blu');
-		$('#timer_ctrl_score').addClass('blu_vs_red');
+		$('#score_ctrl').removeClass('red_vs_blu');
+		$('#score_ctrl').addClass('blu_vs_red');
 	}
 }
 
@@ -652,7 +691,6 @@ $this.load_pairs = function(){
 	for (const pair of $this.pair_list.values()){
 		if (pair.index == ksys.context.module.cache.active_pair){
 			pair.mark_active();
-			pair.fwd_score_vis();
 			break
 		}
 	}
@@ -700,12 +738,12 @@ $this.update_vs_title = async function(tgt_pair){
 		if (is_shared){
 			await $this.titles.vs.set_text(
 				`shared_attr_val`,
-				`${label} ${tgt_pair.players['red'].attr_list[data_id].value.trim()} ${suffix}`,
+				`${label} ${tgt_pair.players['red'].attr_list[data_id].value.trim()} ${suffix}`.trim(),
 			)
-			label_idx -= 1;
-			// continue
+			// label_idx -= 1;
+			continue
 		}
-
+		print('LABEL INDEX:', label_idx, schema_data)
 		await $this.titles.vs.set_text(
 			`ifb_title_lb_${label_idx}`,
 			label,
@@ -727,7 +765,7 @@ $this.update_vs_title = async function(tgt_pair){
 					)
 					.replaceAll('/', '\\')
 				)
-				// continue
+				continue
 			}
 
 			// Set name/surname
@@ -740,21 +778,30 @@ $this.update_vs_title = async function(tgt_pair){
 
 			// todo: this is a temp solution
 			if (ksys.context.module.cache.timer_has_vs){
-				print('??????')
 				await $this.titles.timer.set_text(
 					`player_${side_vmix}`,
 					frmt.format(
-						// `${tgt_pair.players[side_kb].name} ${tgt_pair.players[side_kb].surname}`
-						str(tgt_pair.players[side_kb].surname)
+						`${tgt_pair.players[side_kb].name} ${tgt_pair.players[side_kb].surname}`
 					),
 				)
 			}
 
 			// Set other data
-			await $this.titles.vs.set_text(
-				`ifb_text_${side_vmix}_${label_idx}`,
-				frmt.format(tgt_pair.players[side_kb].attr_list[data_id].value.trim()) + ' ' + suffix
-			)
+			let field_val = frmt.format(tgt_pair.players[side_kb].attr_list[data_id].value.trim());
+			if (data_id == 'record'){
+				field_val = field_val.replaceAll(':', '-');
+			}
+			if (field_val.trim()){
+				await $this.titles.vs.set_text(
+					`ifb_text_${side_vmix}_${label_idx}`,
+					(field_val + ' ' + suffix).trim()
+				)
+			}else{
+				await $this.titles.vs.set_text(
+					`ifb_text_${side_vmix}_${label_idx}`,
+					''
+				)
+			}
 		}
 	}
 
@@ -779,7 +826,6 @@ $this.update_vs_title = async function(tgt_pair){
 			.replaceAll('/', '\\')
 		)
 	}
-
 
 	/*
 	for (const side of ['l', 'r']){
@@ -841,10 +887,23 @@ $this.update_personal_title = async function(tgt_player){
 				.replaceAll('/', '\\')
 			)
 		}else{
-			await title.set_text(
-				`attr_${label_idx}_val`,
-				tgt_player.attr_list[data_id].value.trim() + suffix,
-			)
+			let field_val = tgt_player.attr_list[data_id].value.trim();
+			if (data_id == 'record'){
+				field_val = str(field_val).upper().replaceAll(':', '-');
+			}
+
+			if (field_val){
+				await title.set_text(
+					`attr_${label_idx}_val`,
+					(str(field_val).upper() + ' ' + suffix).trim(),
+				)
+			}else{
+				await title.set_text(
+					`attr_${label_idx}_val`,
+					'',
+				)
+			}
+
 		}
 
 	}
@@ -852,12 +911,39 @@ $this.update_personal_title = async function(tgt_player){
 }
 
 
+$this.update_score = async function(tgt_pair){
+	await $this.titles.timer.set_text(
+		'score_l',
+		tgt_pair.players.red.score_ctrl.score
+	)
+	await $this.titles.timer.set_text(
+		'score_r',
+		tgt_pair.players.blu.score_ctrl.score
+	)
+}
+
+
+
 
 $this.vs_onn = async function(){
+	if (ksys.context.module.cache.vs_as_movs){
+		await vmix.talker.talk({
+			'Function': 'OverlayInput1In',
+			'Input': `kbvs_${ksys.context.module.cache.active_pair}.mov`,
+		})
+		return
+	}
 	$this.titles.vs.overlay_in(1);
 }
 
 $this.vs_off = async function(){
+	if (ksys.context.module.cache.vs_as_movs){
+		await vmix.talker.talk({
+			'Function': 'OverlayInput1Out',
+			'Input': `kbvs_${ksys.context.module.cache.active_pair}.mov`,
+		})
+		return
+	}
 	$this.titles.vs.overlay_out(1);
 }
 
@@ -879,27 +965,171 @@ $this.player_off = async function(){
 
 
 
+// ==============================
+//            Timer
+// ==============================
 
+$this.clock_pause = async function(){
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.main_clock_id,
+		'action': 'pause',
+		'data': {}
+	})
+}
 
+$this.clock_resume = async function(){
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.main_clock_id,
+		'action': 'resume',
+		'data': {}
+	})
+}
 
-$this.set_round = async function(r, resetround=false){
-	// store current round number
-	ksys.context.module.prm('current_round', r);
+$this.clock_stop = async function(){
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.main_clock_id,
+		'action': 'stop',
+		'data': {}
+	})
+}
 
-	await $this.titles.timer.set_text('round', `ROUND ${str(r).trim()}`);
+$this.clock_reset = async function(){
+	await $this.clock_stop();
 
-	// reset round if asked
-	if (resetround == true){
-		$this.respawn_timer(false, false);
+	const dur = ksys.context.module.cache.round_duration;
+	await $this.titles.timer.set_text(
+		'clock',
+		`${str(dur.minutes).zfill(2)}:${str(dur.seconds).zfill(2)}`
+	);
+
+	$('#timer_feedback').text(
+		`${str(dur.minutes).zfill(2)}:${str(dur.seconds).zfill(2)}`
+	);
+}
+
+$this.clock_hide = async function(pause=false){
+	if (pause){
+		await $this.clock_pause();
+	}
+	await $this.titles.timer.overlay_out(1);
+}
+
+$this.clock_show = async function(resume=true){
+	await $this.titles.timer.set_text(
+		'info_text',
+		`${ksys.context.module.cache.active_round || 1} OF ${ksys.context.module.cache.round_amount}`
+	)
+
+	const clock_state = await ksys.ticker.bundestag.read_clock($this.main_clock_id);
+	if (!clock_state || clock_state?.stopped){
+		$this.clock_fire();
+	}
+	if (clock_state || clock_state.paused){
+		await $this.clock_resume();
+	}
+
+	await $this.titles.timer.overlay_in(1);
+}
+
+$this.clock_tick_event = async function(data){
+	const time = data.time;
+
+	$('#timer_feedback').text(
+		`${str(time.clock.minutes).padStart(2, '0')}:${str(time.clock.seconds).padStart(2, '0')}`
+	);
+
+	if (time.total.seconds <= 9){
+		await $this.clock_hide();
+		await ksys.util.sleep(1500);
+		// await $this.clock_stop();
+		$this.clock_reset();
 	}
 }
 
+$this.clock_end_event = async function(){
+	$this.clock_reset();
+}
 
+$this.set_clock_duration = function(){
+	ksys.context.module.prm(
+		'round_duration',
+		{
+			'minutes': int(document.querySelector('#round_duration_cfg_field [minutes]').value) || 1,
+			'seconds': int(document.querySelector('#round_duration_cfg_field [seconds]').value) || 0,
+		}
+	)
+}
+
+$this.set_round_amount = function(){
+	ksys.context.module.prm(
+		'round_amount',
+		int(document.querySelector('#round_amount_fields input[round_amount]').value) || 8
+	)
+	$this.redraw_round_switches();
+}
+
+$this.set_round = async function(r, reset=false){
+	// store current round number
+	ksys.context.module.prm('active_round', r);
+
+	await $this.titles.timer.set_text(
+		'info_text',
+		`${ksys.context.module.cache.active_round || 1} OF ${ksys.context.module.cache.round_amount}`
+	);
+
+	if (reset == true){
+		await $this.clock_reset();
+	}
+}
+
+$this.clock_fire = async function(offset=null){
+	const dur = ksys.context.module.cache.round_duration;
+
+	await ksys.ticker.bundestag.edit_clock({
+		'clock_id': $this.main_clock_id,
+		'action': 'fire',
+		'data': {
+			'clock': {
+				'duration': (dur.minutes * 60) + dur.seconds,
+				'offset': offset,
+				'reversed': true,
+				'vmix_fields': [{
+					'count_as': 'clock',
+					'tplate': '%m%:%s%',
+					'gtzip_name': 'timer.gtzip',
+					'text_field_name': 'clock',
+					'pad': 2,
+				}],
+			}
+		}
+	})
+}
+
+$this.clock_fire_offset = async function(){
+	const dur = ksys.context.module.cache.round_duration;
+	const dur_s = (dur.minutes * 60) + dur.seconds;
+	const offs_s = (
+		(int(document.querySelector('#set_time_minutes').value || 0) * 60) +
+		 int(document.querySelector('#set_time_seconds').value || 0)
+	)
+
+	await $this.clock_fire(
+		dur_s - offs_s
+	)
+}
+
+
+
+
+
+
+
+/*
 $this.timer_callback = async function(ticks){
 	const minutes = Math.floor(ticks.global / 60);
 	const seconds = ticks.global - (60*minutes);
 
-	if (ticks.global <= 10){
+	if (ticks.global <= 9){
 		await $this.timer_hide(true);
 		$this.counter.force_kill();
 	}
@@ -978,20 +1208,6 @@ $this.respawn_timer = async function(show=false, st=false){
 	}
 }
 
-$this.timer_hide = async function(dopause=false){
-	$this.timer_pause(dopause);
-	await $this.titles.timer.overlay_out(1);
-}
-
-$this.timer_show = async function(unpause=true){
-	$this.timer_pause(!unpause)
-	await $this.titles.timer.set_text(
-		'info_text',
-		`${ksys.context.module.cache.active_round || 1} OF ${ksys.context.module.cache.round_amount}`
-	)
-	await $this.titles.timer.overlay_in(1)
-}
-
 $this.timer_pause = function(state=true){
 	if ($this.counter){
 		$this.counter.pause = state;
@@ -1030,27 +1246,11 @@ $this.timer_set_time = function(){
 		})
 	}
 }
+*/
 
 
 
-$this.set_round_duration = function(){
-	ksys.context.module.prm(
-		'round_duration',
-		{
-			'minutes': int(document.querySelector('#round_duration_cfg_field [minutes]').value) || 1,
-			'seconds': int(document.querySelector('#round_duration_cfg_field [seconds]').value) || 0,
-		}
-	)
-}
 
-
-$this.set_round_amount = function(){
-	ksys.context.module.prm(
-		'round_amount',
-		int(document.querySelector('#round_amount_fields input[round_amount]').value) || 8
-	)
-	$this.redraw_round_switches();
-}
 
 
 
@@ -1088,6 +1288,10 @@ $this.redraw_round_switches = function(){
 
 
 
+
+
+
+
 $this.bind_photo_ids = function(){
 	ksys.context.module.prm('pair_ids_frozen', true);
 }
@@ -1104,7 +1308,7 @@ $this.unbind_photo_ids = function(){
 
 
 
-
+/*
 $this.update_img_proxy_addr = function(){
 	const addr = document.querySelector('#image_proxies_addr').value;
 
@@ -1146,6 +1350,7 @@ $this.toggle_image_proxies = function(){
 		vmix.util.disable_image_proxy();
 	}
 }
+*/
 
 
 

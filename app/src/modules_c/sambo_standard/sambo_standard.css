@@ -26,12 +26,37 @@ kbstandard[edit_mode] [edit_hidden]{
 	display: none !important;
 }
 
+kbstandard[data_preview_mode] [preview_visible]{
+	display: flex !important;
+	opacity: 0.7;
+	filter: grayscale(1);
+}
+
+kbstandard[data_preview_mode] [preview_hidden]{
+	display: none !important;
+}
+
+kbstandard[data_preview_mode] input{
+	pointer-events: none !important;
+	user-select: none !important;
+}
+
 
 tab[tabid="config"]{
 	display: flex;
 	flex-direction: column;
 	overflow-y: scroll;
 	padding-bottom: 150px;
+}
+
+#special_clauses_list{
+	margin-left: 20px;
+	margin-top: 20px;
+	width: 300px;
+}
+
+#special_clauses_list h3{
+	margin-bottom: 10px;
 }
 
 #param_list{
@@ -47,14 +72,19 @@ tab[tabid="config"]{
 	width: 100%;
 }
 
-#param_list [timer_has_vs_row]{
+#param_list [timer_has_vs_row],
+#param_list [vs_as_movs_row]
+
+{
 	margin-top: 10px;
 	display: flex;
 	flex-direction: row;
 	align-items: center;
 }
 
-#param_list [timer_has_vs_row] [row_label]{
+#param_list [timer_has_vs_row] [row_label],
+#param_list [vs_as_movs_row] [row_label]
+{
 	display: flex;
 	flex-direction: row;
 	align-items: center;
@@ -64,11 +94,15 @@ tab[tabid="config"]{
 	border-radius: 5px;
 }
 
-#param_list [timer_has_vs_row] [row_label]:hover{
+#param_list [timer_has_vs_row] [row_label]:hover,
+#param_list [vs_as_movs_row] [row_label]:hover
+{
 	outline-color: gray;
 }
 
-#param_list [timer_has_vs_row] [row_label] input{
+#param_list [timer_has_vs_row] [row_label] input,
+#param_list [vs_as_movs_row] [row_label] input
+{
 	margin-left: 10px;
 	height: 20px;
 	width: 20px;
@@ -211,7 +245,7 @@ tab[tabid="ctrl"] vmixbtn{
 
 #timer_ctrl{
 	display: flex;
-	flex-direction: row;
+	flex-direction: column;
 	width: fit-content;
 
 	margin-top: 20px;
@@ -222,63 +256,7 @@ tab[tabid="ctrl"] vmixbtn{
 	flex-direction: row;
 }
 
-#timer_ctrl_score{
-	display: flex;
-	flex-direction: column;
-	margin-left: 20px;
-	border-left: 2px solid #929292;
-	padding-left: 10px;
-}
 
-#timer_ctrl_score .score_input{
-	font-size: 17px;
-	text-align: center;
-}
-
-#timer_ctrl_score .score_ctrl{
-	display: flex;
-	flex-direction: column;
-	border-left: 5px solid black;
-	padding-left: 2px;
-}
-
-#timer_ctrl_score .score_btns sysbtn{
-	display: flex;
-	font-family: monospace;
-	font-size: 17px;
-	/*width: 33%;*/
-	/*font-weight: bold;*/
-	padding: 28px 20px 28px 20px;
-}
-
-#timer_ctrl_score .score_btns{
-	display: flex;
-	flex-direction: row;
-	/*width: -webkit-fill-available;*/
-	justify-content: space-between;
-	margin-top: 5px;
-}
-
-#timer_ctrl_score .score_ctrl_r{
-	margin-top: 50px;
-}
-
-/*#bd3b3b;*/
-/*#5b7a8c;*/
-
-#timer_ctrl_score.red_vs_blu .score_ctrl.score_ctrl_l{
-	border-color: #bd3b3b;
-}
-#timer_ctrl_score.red_vs_blu .score_ctrl.score_ctrl_r{
-	border-color: #5b7a8c;
-}
-
-#timer_ctrl_score.blu_vs_red .score_ctrl.score_ctrl_l{
-	border-color: #5b7a8c;
-}
-#timer_ctrl_score.blu_vs_red .score_ctrl.score_ctrl_r{
-	border-color: #bd3b3b;
-}
 
 
 #player_pool_side{
@@ -614,4 +592,81 @@ kbstandard:not([edit_mode]) #player_list .player_pair .kb_player:active .vis_dis
 	text-align: center;
 }
 
+
+
+
+
+
+
+
+
+#score_split{
+	display: flex;
+	flex-direction: row;
+	/*align-items: center;*/
+}
+
+
+#score_ctrl{
+	display: flex;
+	flex-direction: column;
+	margin-left: 15px;
+}
+
+.pscore_ctrl{
+	display: flex;
+	flex-direction: column;
+	width: 200px;
+	margin-top: 20px;
+	padding: 10px;
+}
+
+.pscore_ctrl .score_input{
+	text-align: center !important;
+	font-size: 21px !important;
+}
+
+.pscore_btn_array{
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	margin-top: 15px;
+}
+
+.pscore_btn_array sysbtn{
+	width: 45px;
+	height: 60px;
+	font-size: 21px;
+}
+
+.pscore_psurname{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	margin-bottom: 10px;
+}
+
+.pscore_btn_array.pscore_add .pscore_btn{
+	color: #67FF72;
+}
+.pscore_btn_array.pscore_subtract .pscore_btn{
+	color: #FF7567;
+}
+
+
+#score_ctrl.red_vs_blu .pscore_ctrl:last-child{
+	border-left: 5px solid #bd3b3b;
+}
+#score_ctrl.red_vs_blu .pscore_ctrl:first-child{
+	border-left: 5px solid #5b7a8c;
+}
+
+
+#score_ctrl.blu_vs_red .pscore_ctrl:last-child{
+	border-left: 5px solid #5b7a8c;
+}
+#score_ctrl.blu_vs_red .pscore_ctrl:first-child{
+	border-left: 5px solid #bd3b3b;
+}
 
