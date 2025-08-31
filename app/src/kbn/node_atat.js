@@ -40,6 +40,8 @@ const NodeAtAtInstance = class{
 			'vmix_fields': [],
 			// Whether the clock should tick in reverse direction
 			'reversed': false,
+			// Fuck you
+			'fuck_you': 0,
 		};
 
 		// Pause promise (if any)
@@ -137,7 +139,6 @@ const NodeAtAtInstance = class{
 
 	// Send HTTP request to VMIX to update target text fields
 	async update_vmix(self){
-		// const time = self.clock_params.reversed ? self.time.reversed : self.time;
 		const time = self.time;
 		for (const field of self.clock_params.vmix_fields || []){
 			if (self.clock_params.fuck_you > 0){
@@ -147,8 +148,8 @@ const NodeAtAtInstance = class{
 						field.tplate
 						.replaceAll('%h%',  time.fuck.hours.toString().padStart(field.pad, '0'))
 						.replaceAll('%m%',  time.fuck.minutes.toString().padStart(field.pad, '0'))
-						.replaceAll('%mt%', time.fuck.minutes.toString().padStart(field.pad, '0'))
 						.replaceAll('%s%',  time.fuck.seconds.toString().padStart(field.pad, '0'))
+						.replaceAll('%mt%', time.fuck.minutes.toString().padStart(field.pad, '0'))
 					),
 					'Input': field.gtzip_name,
 					'SelectedName': field.text_field_name + (self.GTFORMAT ? '.Text' : ''),
@@ -161,8 +162,11 @@ const NodeAtAtInstance = class{
 					field.tplate
 					.replaceAll('%h%',  time[field.count_as || 'clock'].hours.toString().padStart(field.pad, '0'))
 					.replaceAll('%m%',  time[field.count_as || 'clock'].minutes.toString().padStart(field.pad, '0'))
-					.replaceAll('%mt%', time.total.minutes.toString().padStart(field.pad, '0'))
 					.replaceAll('%s%',  time[field.count_as || 'clock'].seconds.toString().padStart(field.pad, '0'))
+
+					.replaceAll('%ht%',  time.total.hours.toString().padStart(field.pad, '0'))
+					.replaceAll('%st%',  time.total.seconds.toString().padStart(field.pad, '0'))
+					.replaceAll('%mt%',  time.total.minutes.toString().padStart(field.pad, '0'))
 				),
 				'Input': field.gtzip_name,
 				'SelectedName': field.text_field_name + (self.GTFORMAT ? '.Text' : ''),
@@ -472,7 +476,6 @@ const AtomicNodeAtAtInstance = class{
 
 	// Send HTTP request to VMIX to update target text fields
 	async update_vmix(self){
-		// const time = self.clock_params.reversed ? self.time.reversed : self.time;
 		const time = self.time;
 		for (const field of self.clock_params.vmix_fields || []){
 			if (self.clock_params.fuck_you > 0){
@@ -482,8 +485,8 @@ const AtomicNodeAtAtInstance = class{
 						field.tplate
 						.replaceAll('%h%',  time.fuck.hours.toString().padStart(field.pad, '0'))
 						.replaceAll('%m%',  time.fuck.minutes.toString().padStart(field.pad, '0'))
-						.replaceAll('%mt%', time.fuck.minutes.toString().padStart(field.pad, '0'))
 						.replaceAll('%s%',  time.fuck.seconds.toString().padStart(field.pad, '0'))
+						.replaceAll('%mt%', time.fuck.minutes.toString().padStart(field.pad, '0'))
 					),
 					'Input': field.gtzip_name,
 					'SelectedName': field.text_field_name + (self.GTFORMAT ? '.Text' : ''),
@@ -496,8 +499,11 @@ const AtomicNodeAtAtInstance = class{
 					field.tplate
 					.replaceAll('%h%',  time[field.count_as || 'clock'].hours.toString().padStart(field.pad, '0'))
 					.replaceAll('%m%',  time[field.count_as || 'clock'].minutes.toString().padStart(field.pad, '0'))
-					.replaceAll('%mt%', time.total.minutes.toString().padStart(field.pad, '0'))
 					.replaceAll('%s%',  time[field.count_as || 'clock'].seconds.toString().padStart(field.pad, '0'))
+
+					.replaceAll('%ht%',  time.total.hours.toString().padStart(field.pad, '0'))
+					.replaceAll('%st%',  time.total.seconds.toString().padStart(field.pad, '0'))
+					.replaceAll('%mt%',  time.total.minutes.toString().padStart(field.pad, '0'))
 				),
 				'Input': field.gtzip_name,
 				'SelectedName': field.text_field_name + (self.GTFORMAT ? '.Text' : ''),
