@@ -3,28 +3,33 @@ const tmute = true;
 
 const vtalker = {};
 
-const valid_overlay_numbers = [
+const valid_overlay_numbers = Object.freeze([
 	1, 2, 3, 4, 5, 6, 7, 8,
 	'1', '2', '3', '4', '5', '6', '7', '8',
-];
+]);
 
 
 // Create a VMIX API request URL.
 // IP:Port is pulled from the context cache.
-vtalker.create_url = function(rparams=null, with_scheme=false){
-	const ctx_cache = ksys.context.global.cache;
+vtalker.create_url = function(rparams=null, with_scheme=false, with_path=true){
 	const prms = new URLSearchParams(rparams || {});
 
 	if (with_scheme){
+		const ctx_cache = ksys.context.global.cache;
 		return `http://${ctx_cache.vmix_ip}:${ctx_cache.vmix_port}/API/?${prms.toString()}`
 	}else{
-		return `/API/?${prms.toString()}`
+		if (with_path){
+			return `/API/?${prms.toString()}`
+		}else{
+			return prms.toString()
+		}
+		
 	}
 }
 
 
 
-// Send a command to VMIX API
+// Send a command to VMIX HTTP API
 vtalker.talk = async function(rparams=null){
 	let error_data = null;
 
@@ -96,6 +101,7 @@ vtalker.project = async function(raw=false) {
 			await vtalker.talk({'Function': ''}),
 			'application/xml'
 		);
+
 		return evaluated_xml
 	}
 }
@@ -113,6 +119,7 @@ vtalker.overlay_out = async function(ov_num){
 		'Function': `OverlayInput${ov_num}Out`,
 	})
 }
+
 
 module.exports = vtalker;
 
