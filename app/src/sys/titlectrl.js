@@ -1,14 +1,6 @@
 
 const electron_http_server = require('http');
 
-// timings are in the following format:
-// {
-// 	'fps': 30,
-// 	'frames_in': 72,
-// 	'frames_out': 72,
-// 	'margin': 3,
-// }
-
 const sys_data = {
 	'overlay_preview_mode': false,
 	'mem_bufs': {},
@@ -18,107 +10,7 @@ const global_params = {
 	'resource_proxy': null,
 };
 
-// ============================
-//        Basic, legacy
-// ============================
-const _BasicHTTPImagesProxy = class{
-	constructor(own_addr=null, whitelist=null, no_cache=true){
-		const self = ksys.util.cls_pwnage.remap(this);
 
-		ksys.util.nprint(self, '#64C3FF');
-
-		self.own_addr = own_addr || ksys.util.get_local_ipv4_addr(false);
-		self.no_cache = no_cache;
-		self.whitelist = whitelist;
-
-		self.server = electron_http_server.createServer((req, res) => {
-			self.process_request(req, res);
-			// res.statusCode = 200;
-			// res.setHeader('Content-Type', 'text/plain');
-			// res.end('Hello World\n');
-		});
-
-		self.server.listen(0, '0.0.0.0', () => {
-			self.addr = self.server.address();
-			self.nprint(
-				'Launched basic HTTP Image Proxy:',
-				`${self.addr.address}:${self.addr.port}`
-			);
-		});
-	}
-
-	terminate(self){
-		self.server.close(function() {
-			self.nprint('Shutting down basic HTTP Image Proxy');
-		});
-	}
-
-	remap_fpath(self, fpath){
-		return (
-			  `http://${self.own_addr}:${self.addr.port}`
-			+ (self.no_cache ? `/${lizard.rndwave()}` : '')
-			+ '/?'
-			+ str(new URLSearchParams({
-				'file': str(fpath),
-			}))
-		)
-	}
-
-	async process_request(self, req, res){
-		self.nprint('Incoming request:', req, res);
-		const fpath = Path(
-			(new URL(req.url, `http://${req.headers.host}`)).searchParams.get('file')
-		)
-
-		if (self?.whitelist?.length){
-			let ok = false;
-			for (const allowed_dir of self.whitelist){
-				if (!allowed_dir.trim()){continue};
-
-				if (fpath.is_relative_to(allowed_dir)){
-					self.nprint('Allowing', fpath)
-					ok = true;
-				}
-			}
-
-			if (!ok){
-				res.statusCode = 404;
-				res.write(`File ${str(fpath)} doesn't exist`);
-				res.end();
-				self.nwarn('File', str(fpath), `is not in whitelist`);
-				return
-			}
-		}
-
-		if (fpath.existsSync()){
-			res.statusCode = 200;
-			res.write(Buffer.from(
-				fpath.readFileSync()
-			))
-			res.end();
-		}else{
-			res.statusCode = 404;
-			res.write(`File ${str(fpath)} doesn't exist`);
-			res.end();
-			self.nwarn('File', str(fpath), `doesn't exist`);
-		}
-	}
-}
-
-const _enable_image_proxy = function(own_addr){
-	global_params?.proxy?.terminate?.();
-	global_params.proxy = new BasicHTTPImagesProxy(own_addr);
-}
-
-const _disable_image_proxy = function(){
-	global_params.proxy = false;
-	global_params?.proxy?.terminate?.();
-}
-
-
-
-// ksys.db.global.write('pgview_cfg_binds.kbcfg', JSON.stringify(binds))
-// JSON.parse(ksys.db.global.read('pgview_cfg_binds.kbcfg'));
 
 
 // ============================
@@ -765,6 +657,15 @@ const VMIXTitle = class{
 	ADV_LETTERS = true;
 	ADV_LETTERS_ARRAY = 'ыъэё';
 
+
+	// timings are in the following format:
+	// {
+	// 	'fps': 30,
+	// 	'frames_in': 72,
+	// 	'frames_out': 72,
+	// 	'margin': 3,
+	// }
+
 	constructor(title_name, gt_format=true){
 		const self = ksys.util.cls_pwnage.remap(this);
 
@@ -812,10 +713,29 @@ const VMIXTitle = class{
 		}
 	}
 
+	// Select this title from the project XML
+	select_from_xml(self, tgt_xml){
+		const by_name = tgt_xml.querySelector(
+			`inputs input[title="${self.title_name}"]`
+		)
+		if (by_name){
+			return by_name
+		}
+
+		const by_guid = tgt_xml.querySelector(
+			`inputs input[key="${self.title_name}"]`
+		)
+		if (by_guid){
+			return by_guid
+		}
+
+		return null
+	}
+
 	// Pul this title's XML data from VMIX
 	async pull_xml(self){
-		return (await vmix.talker.project()).querySelector(
-			`inputs input[title="${self.title_name}"]`
+		return self.select_from_xml(
+			await vmix.talker.project()
 		)
 	}
 
@@ -909,6 +829,65 @@ const VMIXTitle = class{
 		}
 	}
 
+	// List overlays occupied by this title
+	async list_occupied_overlays(self, tgt_xml=null){
+		const overlays = [];
+
+		// Get current VMIX project XML
+		const project_xml = tgt_xml || (await vmix.talker.project());
+
+		// Select this title from the VMIX project XML
+		const title_xml = self.select_from_xml(project_xml)
+
+		// If the title is not there, then it cannot be on any overlay to begin with
+		if (!title_xml){
+			return overlays
+		}
+
+		// This title's VMIX input index
+		const idx = title_xml.getAttribute('number');
+
+		// Find all overlays this title is on
+		for (const ov of project_xml.querySelectorAll('overlays overlay')){
+			if (ov.textContent == idx){
+				overlays.push(int(ov.getAttribute('number')));
+			}
+		}
+
+		return overlays
+	}
+
+	async overlay_out_all(self, wait=true){
+		let last_overlay = null
+
+		for (const i of range(2)){
+			// Find which overlay this title is on
+			const occupied = await self.list_occupied_overlays();
+
+			// Write down the overlay number the title is on, if any
+			if (occupied.length){
+				last_overlay = occupied[0];
+			}else{
+				last_overlay = null;
+			}
+
+			// If it's on none of the overlays - profit
+			if (!last_overlay){break};
+
+			// Tell VMIX to remove the title from the target overlay
+			self.overlay_out(last_overlay);
+
+			// Wait for VMIX to do it
+			for (const i of range(35)){
+				await ksys.util.sleep(500);
+				const occupied = await self.list_occupied_overlays();
+				if (!occupied.includes(last_overlay)){
+					break
+				}
+			}
+		}
+	}
+
 
 	// todo: these manipulations (pause/resume render) require
 	// beyond sattelite manufacturing precision,
@@ -950,12 +929,6 @@ const VMIXTitle = class{
 	}
 
 	async page(self, page_num, anim_dur=null){
-		// await vmix.talker.talk({
-		// 	'Function': 'TitleBeginAnimation',
-		// 	'Value': `[Page${page_num}]`,
-		// 	'Input': self.title_name,
-		// })
-
 		await vmix.talker.talk({
 			'Function': 'SelectIndex',
 			'Value': page_num,
