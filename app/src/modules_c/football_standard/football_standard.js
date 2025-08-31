@@ -722,6 +722,32 @@ window.kbmodules.football_standard.load = async function(){
 
 
 	// --------------------------
+	// Main clock visibility schema switch
+	// --------------------------
+	{
+		window.kbmodules.football_standard.timer_main_clock_vis_schema_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': mctx.cache.timer_main_clock_vis_schema || 'both',
+			'dom_array': [
+				{
+					'id': 'both',
+					'dom': qsel('#timer_main_clock_vis_schema_switch [both]'),
+				},
+				{
+					'id': 'extra_only',
+					'dom': qsel('#timer_main_clock_vis_schema_switch [extra_only]'),
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				ksys.context.module.prm('timer_main_clock_vis_schema', schema_id);
+			}
+		});
+	}
+
+
+
+	// --------------------------
 	// Command Layout reserve player list schema
 	// --------------------------
 	{
@@ -1332,6 +1358,7 @@ window.kbmodules.football_standard.FootballClub = class{
 		self.main_coach =             (club_struct.main_coach || '').lower();
 		self.main_coach_title_short = (club_struct.main_coach_title_short || '').lower();
 		self.main_coach_title_long =  (club_struct.main_coach_title_long || '').lower();
+		self.descr =                  (club_struct.descr || '').lower();
 
 		// important todo: this is very unreliable
 		self.is_enemy =            is_enemy;
@@ -1438,6 +1465,7 @@ window.kbmodules.football_standard.FootballClub = class{
 				'main_coach':             'club-base-params club-param[prmname="main_coach"] input',
 				'main_coach_title_short': 'club-base-params club-param[prmname="main_coach_title_short"] input',
 				'main_coach_title_long':  'club-base-params club-param[prmname="main_coach_title_long"] input',
+				'descr':                  'club-base-params club-param[prmname="description"] input',
 
 				// Playerbase
 				'reg_player_btn':  'club-playerbase sysbtn[btname="register_player_in_club"]',
@@ -1467,6 +1495,7 @@ window.kbmodules.football_standard.FootballClub = class{
 		tplate.index.main_coach.value = self.main_coach.upper();
 		tplate.index.main_coach_title_short.value = self.main_coach_title_short.upper();
 		tplate.index.main_coach_title_long.value = self.main_coach_title_long.upper();
+		tplate.index.descr.value = self.descr.upper();
 		tplate.index.logo_feedback.src = self.logo_path;
 		tplate.index.logo_feedback.setAttribute('kbhint', self.logo_path);
 
@@ -1516,6 +1545,10 @@ window.kbmodules.football_standard.FootballClub = class{
 		// bind coach title change
 		tplate.index.main_coach_title_long.onchange = function(evt){
 			self.main_coach_title_long = evt.target.value.lower();
+		}
+		// bind coach title change
+		tplate.index.descr.onchange = function(evt){
+			self.descr = evt.target.value.lower();
 		}
 
 		// todo: implement properly
@@ -1567,6 +1600,7 @@ window.kbmodules.football_standard.FootballClub = class{
 			'main_coach':             self.main_coach,
 			'main_coach_title_short': self.main_coach_title_short,
 			'main_coach_title_long':  self.main_coach_title_long,
+			'descr':                  self.descr,
 			'playerbase':             [],
 		};
 
@@ -6824,12 +6858,12 @@ window.kbmodules.football_standard.forward_field_layout_to_vmix = async function
 		}
 	}
 
-	if (window.kbmodules.football_standard.cmd_layout_mains_schema_switch.selected == 'shared'){
+	if (window.kbmodules.football_standard.cmd_layout_reserves_schema_switch.selected == 'shared'){
 		// important todo: this is shit
 		const mains_list_nums = [];
 		const mains_list_names = [];
 		for (const player_idx of range(11)){
-			const player = tgt_field.lineup.main_players.at(player_idx);
+			const player = tgt_field.lineup.reserve_players.at(player_idx);
 			if (player){
 				mains_list_nums.push(player.player_num);
 				mains_list_names.push(
@@ -6839,35 +6873,12 @@ window.kbmodules.football_standard.forward_field_layout_to_vmix = async function
 		}
 
 		await title.set_text(
-			'main_nums',
+			'subs_numbers',
 			mains_list_nums.join('\n')
 		)
 		await title.set_text(
-			'main_names',
+			'subs_names',
 			mains_list_names.join('\n')
-		)
-	}
-
-
-	if (window.kbmodules.football_standard.cmd_layout_reserves_schema_switch.selected == 'shared'){
-		// important todo: this is shit
-		const reserve_list_nums = [];
-		const reserve_list_names = [];
-		for (const player_idx of range(11)){
-			const player = tgt_field.lineup.reserve_players.at(player_idx);
-			if (player){
-				reserve_list_nums.push(player.player_num);
-				reserve_list_names.push(player.surname);
-			}
-		}
-
-		await title.set_text(
-			'sub_nums',
-			reserve_list_nums.join('\n')
-		)
-		await title.set_text(
-			'sub_names',
-			reserve_list_names.join('\n')
 		)
 	}
 
@@ -7235,6 +7246,38 @@ window.kbmodules.football_standard.timeout_persistent_header_btns = function(dur
 		'exec_replacement_sequence_match': dur,
 	})
 }
+
+window.kbmodules.football_standard.save_match_results = function(){
+	const match_data = {
+		'date': str(new Date),
+		'home': {
+			'club_name': window.kbmodules.football_standard.resource_index.side.home.club.club_name,
+			'score': window.kbmodules.football_standard.resource_index.score_manager.sides.home.score_list.score_stack.size,
+		},
+		'guest': {
+			'club_name': window.kbmodules.football_standard.resource_index.side.guest.club.club_name,
+			'score': window.kbmodules.football_standard.resource_index.score_manager.sides.guest.score_list.score_stack.size,
+		},
+	}
+
+	ksys.db.module.write(
+		`table/${ksys.util.rnd_uuid()}.kbdata`,
+		JSON.stringify(match_data, null, '\t')
+	)
+
+	ksys.info_msg.send_msg(
+		'Done saving match stats',
+		'ok',
+		3000
+	);
+}
+
+
+
+
+
+
+
 
 
 
@@ -7888,8 +7931,10 @@ window.kbmodules.football_standard.extra_time_vis = async function(state){
 		// await window.kbmodules.football_standard.titles.timer.toggle_text('extra_ticker', true);
 		// await window.kbmodules.football_standard.titles.timer.toggle_img('extra_time_bg', true);
 
-		await window.kbmodules.football_standard.titles.timer.toggle_img('main_time_bg', false);
-		await window.kbmodules.football_standard.titles.timer.toggle_text('base_ticker', false);
+		if (window.kbmodules.football_standard.timer_main_clock_vis_schema_switch.selected == 'extra_only'){
+			await window.kbmodules.football_standard.titles.timer.toggle_img('main_time_bg', false);
+			await window.kbmodules.football_standard.titles.timer.toggle_text('base_ticker', false);
+		}
 
 		await window.kbmodules.football_standard.titles.timer.toggle_text('time_added', true);
 		await window.kbmodules.football_standard.titles.timer.toggle_text('extra_ticker', true);
@@ -9151,6 +9196,11 @@ window.kbmodules.football_standard.show_score_summary = async function(){
 		'team_name_l',
 		ksys.strf.params.club_name.format(window.kbmodules.football_standard.resource_index.side.home?.club?.club_name)
 	)
+	// Club description LEFT
+	await window.kbmodules.football_standard.titles.final_scores.set_text(
+		'descr_l',
+		ksys.strf.params.club_name.format(window.kbmodules.football_standard.resource_index.side.home?.club?.descr)
+	)
 	// team logo LEFT
 	await window.kbmodules.football_standard.titles.final_scores.set_img_src(
 		'team_logo_l',
@@ -9166,6 +9216,11 @@ window.kbmodules.football_standard.show_score_summary = async function(){
 	await window.kbmodules.football_standard.titles.final_scores.set_text(
 		'team_name_r',
 		ksys.strf.params.club_name.format(window.kbmodules.football_standard.resource_index.side.guest?.club?.club_name || '')
+	)
+	// Club description RIGHT
+	await window.kbmodules.football_standard.titles.final_scores.set_text(
+		'descr_r',
+		ksys.strf.params.club_name.format(window.kbmodules.football_standard.resource_index.side.guest?.club?.descr)
 	)
 	// team logo RIGHT
 	await window.kbmodules.football_standard.titles.final_scores.set_img_src(

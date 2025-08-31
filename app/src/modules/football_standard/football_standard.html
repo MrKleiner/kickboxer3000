@@ -1,6 +1,7 @@
 <div id="football_standard">
 
 	<tabsys>
+		<sys-tab match_id="visual_basic">Visual Basic</sys-tab>
 		<sys-tab match_id="fucking_docs">Other</sys-tab>
 		<!-- <sys-tab match_id="stats_db">Stats DB</sys-tab> -->
 		<sys-tab match_id="club_def" default>Clubs</sys-tab>
@@ -23,6 +24,10 @@
 	<div regular_box class="ticker_status_fatal_fail" id="ticker_service_status">
 		<div id="ticker_service_status_indicator"></div>
 	</div>
+
+	<tab class="tab_hidden" tabid="visual_basic">
+		<visual-basic></visual-basic>
+	</tab>
 
 	<tab class="tab_hidden" tabid="fucking_docs">
 		<md-packer></md-packer>
@@ -267,6 +272,24 @@
 				</general-cfg-ctrl>
 			</general-cfg-entry>
 
+			<general-cfg-entry kbhint="Hide main clock when showing extra clock">
+				<general-cfg-label>Main Clock Visibility</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="timer_main_clock_vis_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Show both extra and main clock"
+							kbswitch_item
+							both
+						>Main + Extra</div>
+						<div
+							kbhint="Only show extra clock when extra time is active"
+							kbswitch_item
+							extra_only
+						>Extra Only</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
 			<general-cfg-entry id="timersys_switch" kbhint="Hold CTRL. This will terminate and re-create all timers">
 				<general-cfg-label>Timer system</general-cfg-label>
 				<general-cfg-ctrl>
@@ -330,6 +353,11 @@
 		</general-cfg>
 
 		<lineup-global-control subtle_box>
+			<sysbtn
+				btname="save_current_stats"
+				kbhint="Save current data for use in the tournament table"
+				onclick="$this.save_match_results(event)"
+			>Save Match Stats</sysbtn>
 			<sysbtn
 				btname="init_new_match"
 				kbhint="Wipe previous match stats: cards, scores, stats, etc. Hold CTRL"
@@ -1052,6 +1080,11 @@
 
 				<club-param prmname="main_coach_title_long" kbhint="This person's role in this club with extra description">
 					<div class="club_base_param_label">Coach Title LONG</div>
+					<input type="text">
+				</club-param>
+
+				<club-param prmname="description" kbhint="This club's description">
+					<div class="club_base_param_label">Description</div>
 					<input type="text">
 				</club-param>
 
