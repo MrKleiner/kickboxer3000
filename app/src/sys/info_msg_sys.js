@@ -104,7 +104,7 @@ const InfoMessage = class{
 		}
 
 		self.pie.launch_anim(
-			dur + ((msg_type == 'warn' || msg_type == 'err') ? 1150 : 0)
+			dur + ((msg_type == 'warn' || msg_type == 'err') ? 1500 : 0)
 		)
 		.then((value) => {
 			self.msg_body.remove();
