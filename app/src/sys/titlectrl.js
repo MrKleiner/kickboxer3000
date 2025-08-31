@@ -1,5 +1,7 @@
 
 const electron_http_server = require('http');
+const { ipcRenderer } = require('electron');
+
 
 const sys_data = {
 	'overlay_preview_mode': false,
@@ -942,19 +944,18 @@ const VMIXTitle = class{
 }
 
 
-document.addEventListener('keydown', evt => {
-	// if (evt.which == 80 && evt.ctrlKey && evt.altKey){
-	if (evt.code == 'KeyP' && evt.ctrlKey && evt.altKey){
-		const indicator = document.querySelector('#overlay_preview_mode');
-		if (sys_data.overlay_preview_mode == true){
-			indicator.classList.add('oprm_hidden');
-			sys_data.overlay_preview_mode = false;
-		}else{
-			indicator.classList.remove('oprm_hidden');
-			sys_data.overlay_preview_mode = true;
-		}
+
+ipcRenderer.on('kb.titlectrl.toggle_preview_mode', function(evt, data){
+	const indicator = document.querySelector('#overlay_preview_mode');
+	if (sys_data.overlay_preview_mode == true){
+		indicator.classList.add('oprm_hidden');
+		sys_data.overlay_preview_mode = false;
+	}else{
+		indicator.classList.remove('oprm_hidden');
+		sys_data.overlay_preview_mode = true;
 	}
-});
+})
+
 
 
 module.exports = {

@@ -57,7 +57,7 @@ if (require('electron-squirrel-startup')) { // eslint-disable-line global-requir
 
 
 
-// A very basic VMIX API manipulator
+// A very basic VMIX HTTP API manipulator
 const BasicVMIX = class{
 	IPC_MAP = Object.freeze([
 		['kbn.basic_vmix.update_addr', 'update_addr'],
@@ -356,6 +356,13 @@ const KickBoxer3000 = class{
 				self.main_window?.webContents?.openDevTools?.();
 			})
 		}
+
+		electron.globalShortcut.register('CommandOrControl+Alt+P', function() {
+			self.main_window?.webContents?.postMessage?.(
+				'kb.titlectrl.toggle_preview_mode',
+				null
+			);
+		})
 
 		// Create tray menu
 		self.create_tray();
