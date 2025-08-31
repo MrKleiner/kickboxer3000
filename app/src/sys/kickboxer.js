@@ -155,6 +155,8 @@ const ksys = {
 	gtzip_wrangler: require('./sys/gtzip_wrangler.js'),
 	sequencer:      require('./sys/sequencing.js'),
 	psych_ward:     require('./sys/psych_ward.js'),
+	visual_basic:   require('./sys/visual_basic.js'),
+	vmix_tcp:       require('./sys/vmix_tcp.js'),
 
 	// Global events listeners
 	binds:   {},
@@ -272,7 +274,6 @@ ksys.util.eval_xml = function(xml_str){
 //      sleep for n ms
 // -------------------------
 ksys.util.sleep = function(amt=500, ref='a') {
-
 	return new Promise(function(resolve, reject){
 	    // window.mein_sleep[ref] = setTimeout(function () {
 	    const abc = setTimeout(function () {
@@ -949,6 +950,9 @@ const sys_load = function(nm, save_state=true)
 
 	// Resync psych ward
 	ksys.psych_ward.m_init()
+
+	// Init Visual Basic
+	ksys.visual_basic.m_init()
 
 	// resync switches
 	// ksys.switches.resync()

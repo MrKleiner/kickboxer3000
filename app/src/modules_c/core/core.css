@@ -1851,3 +1851,255 @@ title-sequence-editor .seq_ctrl .seq_param label{
 .psych_ward_editor .psych_ward_results .psych_ward_title .title_data sysbtn{
 	width: 150px;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+=========================================
+          Visual Basic
+=========================================
+!~~ .visual_basic_main
+*/
+
+.visual_basic_main {
+	display: flex;
+	flex-direction: column;
+	margin: 20px 10px 0px 10px;
+	width: -webkit-fill-available;
+	height: calc(100vh - 200px);
+}
+
+.visual_basic_main .general_ctrl{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding-left: 20px;
+	margin-bottom: 10px;
+}
+
+.visual_basic_main .general_ctrl input{
+	width: 300px;
+	margin-left: 30px;
+}
+
+.visual_basic_main .general_ctrl sysbtn{
+	font-size: 19px;
+	padding: 7px 20px 7px 20px;
+}
+
+.visual_basic_main .columns{
+	display: flex;
+	flex-direction: row;
+	width: 100%;
+	justify-content: space-evenly;
+}
+
+.visual_basic_main .inputs_list{
+	display: flex;
+	flex-direction: column;
+}
+
+.visual_basic_main .inputs_list.all{
+	width: 30vw;
+	overflow-y: scroll;
+	padding: 0px 10px 10px 10px;
+	height: calc(100vh - 300px);
+}
+
+.visual_basic_main .inputs_list.favourites{
+	width: 30vw;
+	overflow-y: scroll;
+	padding: 0px 10px 10px 10px;
+	height: calc(100vh - 300px);
+}
+
+.visual_basic_main .tgt_input_ctrl{
+	height: calc(100vh - 300px);
+	width: 30vw;
+}
+
+
+
+
+
+/*
+!~~ .visual_basic_list_item 
+*/
+
+.visual_basic_list_item {
+	display: flex;
+	flex-direction: row;
+	height: 35px;
+	align-items: center;
+	margin-top: 5px;
+	padding: 2px;
+	flex-shrink: 0;
+	position: relative;
+}
+
+.visual_basic_list_item.vb_active{
+	outline: 1px solid lime;
+}
+
+.visual_basic_list_item:hover{
+	background: rgba(255, 255, 255, 0.1);
+	outline: 1px solid white;
+}
+
+.visual_basic_list_item:active{
+	background: rgba(255, 255, 255, 0.1);
+	outline: 1px solid cyan;
+}
+
+.visual_basic_list_item .input_type{
+	height: 100%;
+	width: 30px;
+}
+
+.visual_basic_list_item .input_name{
+	font-family: 'ibm_plex';
+	margin-left: 10px;
+}
+
+.visual_basic_list_item .overlay_occupation{
+	position: absolute;
+	display: flex;
+	flex-direction: row;
+	right: 0px;
+}
+
+.visual_basic_list_item .overlay_occupation .overlay{
+	font-family: 'ibm_plex';
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	width: 25px;
+	height: 25px;
+	background: #1B1B1B;
+	outline: 1px solid #B31B2D;
+	margin-right: 5px;
+}
+
+
+
+
+
+
+
+
+/*
+!~~ .visual_basic_input_ctrl
+*/
+
+.visual_basic_input_ctrl {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+}
+
+.visual_basic_input_ctrl .ctrl_general{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.visual_basic_input_ctrl .ctrl_general .overlay_ctrl{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+}
+
+.visual_basic_input_ctrl .ctrl_general .overlay_ctrl vmixbtn{
+	width:  60px;
+	height: 60px;
+	font-size: 23px;
+	flex-direction: column;
+	justify-content: flex-end;
+}
+
+.visual_basic_input_ctrl .ctrl_general .overlay_ctrl vmixbtn span{
+	margin-bottom: 5px;
+}
+
+.visual_basic_input_ctrl .ctrl_general .overlay_ctrl .vmixbtn_info_icon_pool{
+	height: 40%;
+}
+
+.visual_basic_input_ctrl .ctrl_specific{
+	overflow-y: scroll;
+}
+
+.visual_basic_input_ctrl .field_search{
+	width: 200px;
+	margin-top: 10px;
+}
+
+
+
+
+
+/*
+!~~ .visual_basic_ctrl_gt_text_field
+*/
+
+.visual_basic_ctrl_gt_text_field{
+	display: flex;
+	flex-direction: column;
+	margin: 20px 5px 5px 5px;
+	padding: 5px;
+}
+
+.visual_basic_ctrl_gt_text_field:hover{
+	outline-color: white;
+	/*background: rgba(255, 255, 255, 0.1);*/
+}
+
+/*.visual_basic_input_ctrl .ctrl_specific:has(.visual_basic_ctrl_gt_text_field:hover) .visual_basic_ctrl_gt_text_field {
+	opacity: 0.7;
+}
+.visual_basic_input_ctrl .ctrl_specific .visual_basic_ctrl_gt_text_field:hover {
+	outline-color: white;
+	opacity: 1 !important;
+}*/
+
+.visual_basic_ctrl_gt_text_field .field_info{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: 5px 0px 5px 0px;
+	margin-bottom: 5px;
+}
+
+.visual_basic_ctrl_gt_text_field .field_name{
+	font-family: 'ibm_plex';
+	width: 195px;
+	font-size: 20px;
+}
+
+.visual_basic_ctrl_gt_text_field textarea{
+	resize: vertical;
+}
+
+
+.visual_basic_missing{
+	opacity: 0.5 !important;
+	/*pointer-events: none !important;*/
+	outline: 1px solid red !important;
+}
