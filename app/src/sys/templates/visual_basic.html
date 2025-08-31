@@ -1,0 +1,106 @@
+
+
+
+<!-- GT text field -->
+<template id="gt_ctrl_text_field">
+	<div class="visual_basic_ctrl_gt_text_field" subtle_box>
+		<div class="field_info">
+			<div class="field_name">?</div>
+			<div class="edit_as" kbswitch_style="default">
+				<div
+					kbswitch_item
+					html_auto
+					kbhint="<textarea> if linebreaks are present in data pulled from VMIX. <input> otherwise"
+				>Auto</div>
+				<div
+					kbswitch_item
+					html_input
+					kbhint="<input> No line breaks possible"
+				>Input</div>
+				<div
+					kbswitch_item
+					html_textarea
+					kbhint="<textarea> Allows for linebreaks"
+				>Text Area</div>
+			</div>
+		</div>
+
+		<input type="text" onchange_vis_feed>
+		<textarea onchange_vis_feed></textarea>
+	</div>
+</template>
+
+
+
+<!-- GT specific controls -->
+<template id="gt_ctrl">
+	<div class="visual_basic_ctrl_gt"></div>
+</template>
+
+
+
+<!-- Input control panel -->
+<template id="input_ctrl">
+	<div class="visual_basic_input_ctrl">
+		<div class="ctrl_general">
+			<div class="overlay_ctrl">
+				<vmixbtn seq_info="vis_show" overlay_1 kbhint="Show this Input on Overlay 1" mod_key="alt"><span>1</span></vmixbtn>
+				<vmixbtn seq_info="vis_show" overlay_2 kbhint="Show this Input on Overlay 2" mod_key="alt"><span>2</span></vmixbtn>
+				<vmixbtn seq_info="vis_show" overlay_3 kbhint="Show this Input on Overlay 3" mod_key="alt"><span>3</span></vmixbtn>
+				<vmixbtn seq_info="vis_show" overlay_4 kbhint="Show this Input on Overlay 4" mod_key="alt"><span>4</span></vmixbtn>
+
+				<vmixbtn seq_info="vis_hide" overlay_off kbhint="Remove this Input from all Overlays" mod_key="alt"><span>OFF</span></vmixbtn>
+			</div>
+			<input type="text" class="field_search" placeholder="Search Fields">
+		</div>
+		<div class="ctrl_specific"></div>
+	</div>
+</template>
+
+
+
+
+<!-- Small visual representation of an input inside lists -->
+<template id="list_item">
+	<div class="visual_basic_list_item" kbhint="RMB to add/remove from favourites">
+		<img class="input_type" src="./assets/question_mark_icon.svg" contain>
+		<div class="input_name">?</div>
+		<div class="input_ctrl"></div>
+		<div class="overlay_occupation">
+			<div class="overlay ov_1 kbsys_hidden">1</div>
+			<div class="overlay ov_2 kbsys_hidden">2</div>
+			<div class="overlay ov_3 kbsys_hidden">3</div>
+			<div class="overlay ov_4 kbsys_hidden">4</div>
+		</div>
+	</div>
+</template>
+
+
+
+
+
+<!-- Root panel -->
+<template id="main">
+	<div class="visual_basic_main" regular_box>
+		<div class="general_ctrl">
+			<sysbtn class="refresh_all">Refresh All</sysbtn>
+			<input type="text" class="search_by_name" placeholder="Search">
+		</div>
+		<div class="columns">
+			<div class="inputs_list all" subtle_box></div>
+			<div class="inputs_list favourites" subtle_box></div>
+			<div class="tgt_input_ctrl" subtle_box></div>
+		</div>
+	</div>
+</template>
+
+
+
+
+
+
+
+
+
+
+
