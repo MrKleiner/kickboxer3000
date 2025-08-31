@@ -232,7 +232,7 @@ const PsychWard = class{
 		);
 	}
 
-	lock_gui(self, state){
+	lock_gui(self){
 		self.editor_dom.root.classList.add('kbsys_locked');
 	}
 
@@ -244,7 +244,7 @@ const PsychWard = class{
 		ksys.db.module.write('_psych_ward.kbcfg', JSON.stringify({
 			'remote_dir': str(self.remote_dir),
 			'local_dir':  str(self.local_dir),
-			'flist': self.editor_dom.index.flist.value,
+			'flist':      self.editor_dom.index.flist.value,
 		}));
 	}
 
@@ -262,6 +262,7 @@ const PsychWard = class{
 	read_input(self){
 		// textarea value
 		const input_text = self.editor_dom.index.flist.value;
+
 		// Absolute paths to gtzip titles
 		const done = [];
 		const titles = [];
@@ -344,7 +345,7 @@ const PsychWard = class{
 }
 
 
-
+// Module Init
 const m_init = function(){
 	sys_data?.current_editor?.free?.();
 	const tgt_editor = qsel('psych-ward');
