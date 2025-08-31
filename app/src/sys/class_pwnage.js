@@ -7,11 +7,13 @@
 // unless they're an object, so technically null is an object
 
 
-const remap = function(self){
+const remap = function(self, exclude){
 	const prop_names = Object.getOwnPropertyNames(self.constructor.prototype);
 
 	for (const func_name of prop_names){
 		if ( (func_name == 'constructor') || func_name.startsWith('$')){continue};
+
+		if (exclude && exclude.includes(func_name)){continue};
 
 		const original_func = self[func_name];
 
@@ -102,6 +104,155 @@ const remap = function(self){
 }
 
 
+const remap_adv = function(self, exclude){
+	// helper: get the first declared parameter name (best-effort)
+	const firstParamName = function(fn){
+		try {
+			const s = fn.toString().trim();
+			// covers: function name(a,b), async function name(a), name(a,b){...}, (a,b)=>..., a=>...
+			const sig = s.match(/^[^(]*\(\s*([^)]*)\)/) || s.match(/^([^=()]*)=>/);
+			if (!sig) { return null; }
+			const params = (sig[1] || '').split(',').map(p => p.trim()).filter(Boolean);
+			if (params.length === 0) { return null; }
+			// strip defaults and rest/destructuring whitespace
+			const first = params[0].replace(/=.*$/,'').replace(/^[\s.]*|\s*$/g,'');
+			// simple name check
+			if (/^[A-Za-z_$][\w$]*$/.test(first)) { return first; }
+			return null;
+		} catch (e){
+			return null;
+		}
+	};
+
+	// collect functions and accessors from prototype chain (stop at Object.prototype)
+	let proto = self.constructor.prototype;
+	const seen = new Set();
+	const funcs = []; // {name, fn, type, expectsSelfArg}
+	const gs_dict = {}; // accumulator for accessors
+
+	while (proto && proto !== Object.prototype){
+		const prop_names = Object.getOwnPropertyNames(proto);
+		for (const func_name of prop_names){
+			if (func_name === 'constructor') { continue; }
+			if (seen.has(func_name)) { continue; }
+			seen.add(func_name);
+
+			const desc = Object.getOwnPropertyDescriptor(proto, func_name);
+			if (!desc) { continue; }
+
+			// value = normal method/function
+			if (typeof desc.value === 'function'){
+				// skip $-prefixed accessor helpers here; we'll handle them below
+				if (!func_name.startsWith('$')){
+					const fn = desc.value;
+					const type = fn.constructor ? fn.constructor.name : 'Function';
+					const first = firstParamName(fn);
+					const expectsSelfArg = (first === 'self');
+					funcs.push({ name: func_name, fn: fn, type: type, expectsSelfArg: expectsSelfArg });
+				}
+			}
+
+			// accessor helpers using naming convention ($name or $$name)
+			if (func_name.startsWith('$') || func_name.startsWith('$$')){
+				const real_name = func_name.replaceAll('$','');
+				if (!(real_name in gs_dict)) { gs_dict[real_name] = {}; }
+
+				const helper = proto[func_name];
+				if (typeof helper !== 'function') { continue; }
+
+				const first = firstParamName(helper);
+				const expectsSelfArg = (first === 'self');
+
+				if (func_name.startsWith('$$')){
+					gs_dict[real_name].set = { helper: helper, expectsSelfArg: expectsSelfArg };
+				} else {
+					gs_dict[real_name].get = { helper: helper, expectsSelfArg: expectsSelfArg };
+				}
+			}
+		}
+		proto = Object.getPrototypeOf(proto);
+	}
+
+	// install wrappers for normal methods onto the instance
+	for (const { name, fn, type, expectsSelfArg } of funcs){
+		if (exclude && exclude.includes(name)) { continue; }
+
+		// wrapper should bind `this` correctly so `super` works.
+		// If the original declared `self` as first param, pass it as well.
+		if (type === 'AsyncFunction'){
+			if (expectsSelfArg){
+				self[name] = async function(){
+					// call with this=self and first arg = self
+					return await fn.call(self, self, ...arguments);
+				};
+			} else {
+				self[name] = async function(){
+					return await fn.call(self, ...arguments);
+				};
+			}
+		} else if (type === 'GeneratorFunction'){
+			if (expectsSelfArg){
+				self[name] = function* (){
+					return yield* fn.call(self, self, ...arguments);
+				};
+			} else {
+				self[name] = function* (){
+					return yield* fn.call(self, ...arguments);
+				};
+			}
+		} else {
+			if (expectsSelfArg){
+				self[name] = function(){
+					return fn.call(self, self, ...arguments);
+				};
+			} else {
+				self[name] = function(){
+					return fn.call(self, ...arguments);
+				};
+			}
+		}
+	}
+
+	// install getters/setters collected into gs_dict
+	for (const real_name in gs_dict){
+		const entry = gs_dict[real_name];
+		const prop_desc = {};
+
+		if (entry.get){
+			const helper = entry.get.helper;
+			const expectsSelfArg = entry.get.expectsSelfArg;
+			if (expectsSelfArg){
+				prop_desc.get = function(){
+					return helper.call(self, self);
+				};
+			} else {
+				prop_desc.get = function(){
+					return helper.call(self);
+				};
+			}
+		}
+
+		if (entry.set){
+			const helper = entry.set.helper;
+			const expectsSelfArg = entry.set.expectsSelfArg;
+			if (expectsSelfArg){
+				prop_desc.set = function(v){
+					return helper.call(self, self, v);
+				};
+			} else {
+				prop_desc.set = function(v){
+					return helper.call(self, v);
+				};
+			}
+		}
+
+		Object.defineProperty(self, real_name, prop_desc);
+	}
+
+	return self;
+}
+
+
 const spawn = function(tgt_cls, ...arguments){
 	const cls_inst = new tgt_cls(...arguments);
 	remap(cls_inst);
@@ -114,5 +265,6 @@ const spawn = function(tgt_cls, ...arguments){
 
 module.exports = {
 	remap,
+	remap_adv,
 	spawn,
 }
