@@ -564,6 +564,402 @@ const TCPSchedActivators = class extends TCPSched{
 
 
 
+const consumableBuffer = class{
+    constructor(){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#FEFF84',
+		);
+
+        self.buf = Buffer.alloc(0);
+    }
+
+    write(self, data){
+        self.buf = Buffer.concat([self.buf, data]);
+    }
+
+    eraseRead(self, amount){
+        const data = self.buf.slice(0, amount);
+        self.buf = self.buf.slice(amount);
+        return data
+    }
+}
+
+
+const TCPSchedAsync = class{
+	TCP_API_PORT = 8099;
+	LINEBREAK = new Buffer([13, 10]);
+
+	static NPRINT_LEVEL = 5;
+
+	constructor(vmix_ip){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#FEFF84',
+		);
+
+		self.VMIXIP = vmix_ip;
+
+		// Raw stream buffer sent by VMIX
+		self.TCPBufIn = new consumableBuffer();
+
+		// Pending outcoming TCP commands
+		self.pendingCommands = [];
+
+		// Response from VMIX, which is everything except ACTS:
+		// >FUNCTION OK Completed\r\n<
+		self.lastCommandResponsePromise = null;
+		self.lastCommandResponseResolve = null;
+
+		// Callback for activators subscription
+		self.activatorsCallback = null;
+
+		// When this is false - the class tries to not do anything, such as
+		// reconnecting to TCP API, executing callbacks and so on.
+		self.enabled = true;
+
+		// Commands are executed in a sync manner.
+		// This indicates whether execution schedule is running
+		self.working = false;
+
+		// This is a Promise/Resolve for waiting till TCP connection is established.
+		// .connectionBrokenPromise becomes resolved once connection is established.
+		self.connectionBrokenPromise = null;
+		self.connectionBrokenResolve = null;
+
+		// This is a Promise, which becomes unresolved once
+		// TCP connection is established and becomes resolved
+		// once the TCP connection goes away for whatever reason.
+		// Needed for .maintainConnection() to know when to proceed to the
+		// next re-connect attempt
+		self.connectionExistsPromise = null;
+		self.connectionExistsResolve = null;
+
+
+		self.UTF8TextDecoder = new TextDecoder('utf-8');
+		self.DOMParser = new DOMParser();
+
+		self.awaitingPayload = -1;
+	}
+
+	createConnectionBrokenPromise(self){
+		const [promise, resolve] = ksys.util.promise();
+
+		self.connectionBrokenPromise = promise;
+		self.connectionBrokenResolve = resolve;
+	}
+
+	createLastCommandResponsePromise(self){
+		const [promise, resolve] = ksys.util.promise();
+
+		self.lastCommandResponsePromise = promise;
+		self.lastCommandResponseResolve = resolve;
+	}
+
+	async maintainConnection(self){
+		if (!self.TCP_API_PORT || !self.VMIXIP){
+			throw new Error(
+				`Cannot maintain connection while ip:port is invalid: ${self.TCP_API_PORT}:${self.VMIXIP}`
+			);
+		}
+
+		while (self.enabled){
+			try{
+				await self.connectionExistsPromise;
+
+				if (!self.enabled){return};
+
+				const [cepPromise, cepResolve, cepReject] = ksys.util.promise();
+
+				self.connectionExistsPromise = cepPromise;
+				self.connectionExistsResolve = cepResolve;
+
+				self.client = new net.Socket();
+
+				self.client.connect(self.TCP_API_PORT, self.VMIXIP, function(){
+					self.nprintL(10, 'Connected to VMIX', self);
+
+					self.connectionBrokenResolve?.();
+				})
+
+				self.client.on('data', (data) => {
+					self.nprintL(1, 'Received', data);
+
+					self.treatServerData(data);
+				});
+
+				self.client.on('close', () => {
+					self.nprintL(10, 'Connection closed');
+
+					self.lastCommandResponseResolve({
+						'header':  null,
+						'payload': null,
+					});
+
+					self.createConnectionBrokenPromise();
+
+					self.connectionExistsPromise = null;
+					self.connectionExistsResolve?.();
+				});
+
+				self.client.on('error', (err) => {
+					self.nprintL(10, 'Connection Errored:', err);
+				});
+
+			}catch(err){
+				self.nerr('Error while maintaining TCP connection:', err);
+			}
+		}
+	}
+
+	startMaintainingConnection(self){
+		// Sync things in question.
+		// Aka .connectionBrokenPromise must be created synchronously before
+		// trying to establish the TCP connection
+		self.createConnectionBrokenPromise();
+
+		// Begin maintaining the TCP connection
+		self.maintainConnection();
+	}
+
+	async destroy(self){
+		self.enabled = false;
+		self.client?.destroy?.();
+	}
+
+	treatServerData(self, data){
+		if (!self.enabled){return};
+
+		self.nprintL(1, 'Got data chunk from VMIX:', [str(data)], self);
+
+		self.TCPBufIn.write(data);
+
+		while (self.TCPBufIn.buf.length){
+			if ((self.awaitingPayload != -1) && (self.TCPBufIn.buf.length >= self.awaitingPayload)){
+				self.nprintL(1,
+					'GOT payload of size', self.awaitingPayload,
+					'---',
+					'Current buf size is:', self.TCPBufIn.buf.length
+				)
+
+				self.lastCommandResponseResolve({
+					'header': null,
+					'payload': self.TCPBufIn.eraseRead(self.awaitingPayload - 2),
+				})
+
+				// Erase \r\n
+				self.TCPBufIn.eraseRead(2);
+
+				self.awaitingPayload = -1;
+				continue
+			}
+
+			if ((self.awaitingPayload != -1) && (self.TCPBufIn.buf.length <= self.awaitingPayload)){
+				self.nprintL(1,
+					'AWAITING payload of size', self.awaitingPayload,
+					'---',
+					'Current buf size is:', self.TCPBufIn.buf.length
+				)
+				continue
+			}
+
+			const offs = self.TCPBufIn.buf.indexOf(self.LINEBREAK);
+			if (offs == -1){break};
+
+			// Header is always UTF-8 text
+			const headerData = self.UTF8TextDecoder.decode(
+				self.TCPBufIn.eraseRead(offs)
+			)
+
+			// Erase \r\n
+			self.TCPBufIn.eraseRead(2);
+
+			self.nprintL(1, 'Header data:', headerData);
+
+			const funcName = headerData.split(' ')[0];
+
+			self.nprintL(1, 'Response function name:', funcName, self);
+
+			if (funcName == 'ACTS'){
+				self.nprintL(1, 'Got ACT:', headerData);
+				if (self.enabled){
+					self.activatorsCallback?.(headerData);
+				}
+				continue
+			}
+
+			if (funcName == 'FUNCTION'){
+				self.lastCommandResponseResolve({
+					'header': headerData,
+					'payload': null,
+				})
+				continue
+			}
+
+			if (funcName == 'VERSION'){
+				self.nprintL(10, 'Got connection confirmation from VMIX:', headerData);
+				continue
+			}
+
+			if (funcName == 'XML'){
+				const payloadLen = int(headerData.split(' ')[1]);
+				self.nprintL(1, 'XML payload len:', payloadLen);
+				self.awaitingPayload = payloadLen;
+				continue
+			}
+
+			if (funcName == 'XMLTEXT'){
+				const status = headerData.split(' ')[1];
+
+				if (status == 'OK'){
+					self.lastCommandResponseResolve({
+						'header': headerData,
+						'payload': headerData.split(' ').slice(2).join(' '),
+					})
+					continue
+				}else{
+					let payloadLen = null;
+
+					try{
+						payloadLen = int(status);
+					}catch{};
+
+					if (!payloadLen){
+						self.nprintL(1,
+							'XMLTEXT response is NOT OK and is NOT a number:', headerData
+						);
+						self.lastCommandResponseResolve({
+							'header': headerData,
+							'payload': headerData.split(' ').slice(2).join(' '),
+						})
+						continue
+					}
+
+					self.awaitingPayload = payloadLen;
+					self.nprintL(1,
+						'XMLTEXT payload: Setting payload await size to', self.awaitingPayload
+					);
+					continue
+				}
+			}
+
+			if (funcName == 'SUBSCRIBE'){
+				self.lastCommandResponseResolve({
+					'header': headerData,
+					'payload': null,
+				})
+				continue
+			}
+
+			self.nprintL(5, 'Unknown response type:', funcName)
+		}
+	}
+
+	// Run pending TCP commands
+	async resolvePending(self){
+		if (self.working){
+			self.nwarn(
+				'Tried running .resolvePending() while',
+				'another instance of .resolvePending() is still running',
+				self
+			);
+			return
+		}
+
+		try{
+			self.working = true;
+
+			while (self.pendingCommands.length){
+				const item = self.pendingCommands.shift();
+				self.nprintL(1, 'Popped', item, self);
+				const result = await self.treatCMD(item.data);
+				self.nprintL(1, 'Got result of', item, 'which is', result, self);
+
+				self.nprintL(1, 'Returning result...', self)
+
+				item.resolve(
+					result
+				)
+
+				self.nprintL(1, 'Done with', item, self);
+			}
+		}catch(err){
+			self.nerr(err);
+		}finally{
+			self.working = false;
+		}
+	}
+
+	// Run a single TCP command
+	async treatCMD(self, data){
+		self.nprintL(1, 'Treating', data, self);
+
+		if (!self.enabled){
+			self.nprint(
+				'Treating CMD of a disabled TCP Sched.',
+				'Returning NULL immediately'
+			);
+			return null
+		}
+
+		self.createLastCommandResponsePromise();
+
+		self.client.write(data);
+
+		const result = await self.lastCommandResponsePromise;
+
+		self.nprintL(1,
+			'--RESULT OF--', [data],
+			'--IS--', result, [str(result.payload)]
+		);
+
+		return result
+	}
+
+	// Schedule a single TCP command
+	async runCmd(self, data){
+		if (!self.enabled){
+			const msg = 'Cannot run commands on a destroyed schedule';
+			self.nerr(msg, self);
+			throw new Error(msg)
+		}
+
+		self.nprintL(1, 'Scheduling', data);
+		const [promise, resolve, reject] = ksys.util.promise();
+
+		const fname = data['Function'];
+		delete data['Function'];
+
+		let payload = `FUNCTION ${fname} ${vmix.talker.create_url(data, false, false)}\r\n`;
+
+		if (fname == 'XML'){
+			payload = 'XML\r\n';
+		}
+
+		if (fname == 'XMLTEXT'){
+			payload = `XMLTEXT ${data.Value}\r\n`;
+		}
+
+		if (fname == 'SUBSCRIBE ACTS'){
+			payload = `SUBSCRIBE ACTS\r\n`;
+		}
+
+		self.nprintL(1, 'Constructed payload:', [payload]);
+
+		self.pendingCommands.push({
+			'data': payload,
+			'resolve': resolve,
+		})
+
+		if (!self.working){
+			self.resolvePending();
+		}
+
+		self.nprintL(1, 'DONE Scheduling', [payload]);
+
+		return promise
+	}
+}
 
 
 
@@ -573,6 +969,7 @@ const TCPSchedActivators = class extends TCPSched{
 module.exports = {
 	TCPSched,
 	TCPSchedActivators,
+	TCPSchedAsync,
 }
 
 

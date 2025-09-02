@@ -549,35 +549,71 @@ ksys.util.nprint = function(cls, color, extras='', cls_name_override=null){
 		cls.constructor.NPRINT_NAME ||
 		cls.constructor.name ||
 		cls_name_override ||
-		'UNKNOWN_CLASS'
+		'NPRINT_UNKNOWN_CLASS'
 	)
 
 	const console_color = (color == '?') ? ksys.util.rnd_hex(true) : color;
 
+	const nprint_prefix = `%c[${nprint_name}]`;
+	const nprint_console_style = `color: ${console_color};` + extras;
+
+
 	cls.nprint = function(){
 		if (cls.constructor.MUTE_NPRINT){return};
 		console.log(
-			// `%c[${cls_name_override || cls.constructor.name}]`,
-			`%c[${nprint_name}]`,
-			`color: ${console_color};` + extras,
+			nprint_prefix,
+			nprint_console_style,
 			...arguments
 		)
 	}
 	cls.nwarn = function(){
 		if (cls.constructor.MUTE_NPRINT){return};
 		console.warn(
-			`%c[${nprint_name}]`,
-			`color: ${console_color};` + extras,
+			nprint_prefix,
+			nprint_console_style,
 			...arguments
 		)
 	}
 	cls.nerr = function(){
 		if (cls.constructor.MUTE_NPRINT){return};
 		console.error(
-			`%c[${nprint_name}]`,
-			`color: ${console_color};` + extras,
+			nprint_prefix,
+			nprint_console_style,
 			...arguments
 		)
+	}
+
+
+
+	cls.nprintL = function(log_level=-1, ...others){
+		if (cls.constructor.MUTE_NPRINT){return};
+		if ((log_level == -1) || (log_level >= (cls.constructor.NPRINT_LEVEL || 0))){
+			console.log(
+				nprint_prefix,
+				nprint_console_style,
+				...others
+			)
+		}
+	}
+	cls.nwarnL = function(log_level=-1, ...others){
+		if (cls.constructor.MUTE_NPRINT){return};
+		if ((log_level == -1) || (log_level >= (cls.constructor.NPRINT_LEVEL || 0))){
+			console.warn(
+				nprint_prefix,
+				nprint_console_style,
+				...others
+			)
+		}
+	}
+	cls.nerrL = function(log_level=-1, ...others){
+		if (cls.constructor.MUTE_NPRINT){return};
+		if ((log_level == -1) || (log_level >= (cls.constructor.NPRINT_LEVEL || 0))){
+			console.error(
+				nprint_prefix,
+				nprint_console_style,
+				...others
+			)
+		}
 	}
 
 	return cls;
