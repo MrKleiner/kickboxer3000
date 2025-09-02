@@ -201,7 +201,7 @@ const KBSwitch = class{
 	}
 
 	select(self, tgt_id=null){
-		print('Setting tgt_id', tgt_id);
+		// print('Setting tgt_id', tgt_id);
 		if (!tgt_id){
 			console.error('Fatal: No ID supplied to switch selector', tgt_id, self);
 			return

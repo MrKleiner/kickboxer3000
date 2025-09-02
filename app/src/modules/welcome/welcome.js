@@ -35,6 +35,8 @@ $this.edit_vmix_ip_addr = function(){
 		`Please press CTRL + R (there's nothing else you can do)`
 	)
 	$('body').css({'pointer-events': 'none'})
+
+	ksys.util.reload();
 }
 
 

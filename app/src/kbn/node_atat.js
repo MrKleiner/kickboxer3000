@@ -808,27 +808,6 @@ const NodeAtAtBundestag = class{
 		self.nprint('Attached autobahn to a browser window');
 	}
 
-	// Connect a browser window and node with an autobahn
-	_autobahn_attach(self, params){
-		const autobahn = new kb_util.Autobahn();
-		self.autobahns.add(autobahn);
-		params.browser_window.webContents.postMessage(
-			'node_atat_attach_autobahn',
-			null,
-			[autobahn.pipe_b],
-		)
-
-		self.nprint('Attached browser window to autobahn');
-
-		// Cleanup
-		for (const autobahn of [...self.autobahns]){
-			if (autobahn.detached){
-				autobahn.terminate();
-				self.autobahns.delete(autobahn);
-			}
-		}
-	}
-
 	// Create a NodeAtAtInstance class
 	create_clock(self, params){
 		// Terminate existing clocks with overlapping IDs
