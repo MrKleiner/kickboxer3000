@@ -7,6 +7,9 @@
 // unless they're an object, so technically null is an object
 
 
+const PURE_PWNAGE = Symbol('[[Cunts]]');
+
+
 const remap = function(self, exclude){
 	const prop_names = Object.getOwnPropertyNames(self.constructor.prototype);
 
@@ -253,6 +256,170 @@ const remap_adv = function(self, exclude){
 }
 
 
+// The PROPER shit, which works with inheritance, preserves private shit and so on.
+const pwn = function(self, prms=null){
+	let proto = self.constructor.prototype;
+
+	const func_dict = {};
+	const real_gs_dict = {};
+	const bootleg_gs_dict = {};
+
+	while (proto && proto !== Object.prototype){
+		const prop_names = Object.getOwnPropertyNames(proto);
+
+		for (const func_name of prop_names){
+			// Obviously, this is obvious
+			if (func_name === 'constructor'){continue};
+
+			// JS can actually provide some useful info on object methods
+			const desc = Object.getOwnPropertyDescriptor(proto, func_name);
+			// Not obviously, this is absolutely not obvious
+			if (!desc){continue};
+
+			// Skip already treated things
+			if (desc.value?.[PURE_PWNAGE] || desc.get?.[PURE_PWNAGE] || desc.set?.[PURE_PWNAGE]){
+				console.log('PWN: Skipping', desc);
+				continue
+			}
+
+			// Mark as done
+			for (const elem of [desc.value, desc.get, desc.set]){
+				if (elem){
+					elem[PURE_PWNAGE] = true;
+				}
+			}
+
+			// Whether it's a real get/set
+			const is_real_gs = desc.get || desc.set;
+
+			// Determine whether this function is a bootleg get/set thing.
+			// It's said, that get/set can be remapped, but paranoia stats
+			// are far too high at this point.
+			const [is_bootleg_gs, is_bootleg_getter, is_bootleg_setter] = [
+				func_name.startsWith('$'),
+				func_name.startsWith('$') && !func_name.startsWith('$$'),
+				func_name.startsWith('$$'),
+			]
+
+			// First of all - Sync/Async/Generator functions
+			// $-prefixed shit is handled treated separately
+			if ( (typeof desc.value === 'function') && !is_bootleg_gs && !is_real_gs){
+				func_dict[func_name] = {
+					'func':  desc.value,
+					'ftype': (desc?.value?.constructor) ? desc.value.constructor.name : 'Function',
+				}
+			}
+
+			// Treat real get/set
+			if (is_real_gs){
+				real_gs_dict[func_name] = desc;
+			}
+
+			// Explicit get/set determined by $ prefix
+			if (is_bootleg_gs){
+				// This function's real name
+				const real_name = func_name.replaceAll('$','');
+				if (!(real_name in bootleg_gs_dict)){
+					bootleg_gs_dict[real_name] = {};
+				}
+
+				const tgt_func = proto[func_name];
+
+				if (typeof tgt_func == 'function'){
+					if (is_bootleg_setter){
+						bootleg_gs_dict[real_name]['set'] = tgt_func;
+					}else{
+						bootleg_gs_dict[real_name]['get'] = tgt_func;
+					}
+				}
+
+				delete self[func_name];
+			}
+		}
+
+		proto = Object.getPrototypeOf(proto);
+	}
+
+	// Remap regular functions
+	for (const [fname, fdata] of Object.entries(func_dict)){
+		const {func, ftype} = fdata;
+
+		if (ftype == 'AsyncFunction'){
+			if (prms?.explicit == false){
+				self[fname] = async function(){
+					return await func.call(self, ...arguments);
+				};
+			}else{
+				self[fname] = async function(){
+					return await func.call(self, self, ...arguments);
+				};
+			}
+		}else if(ftype == 'GeneratorFunction'){
+			if (prms?.explicit == false){
+				self[fname] = function*(){
+					return yield* func.call(self, ...arguments);
+				};
+			}else{
+				self[fname] = function*(){
+					return yield* func.call(self, self, ...arguments);
+				};
+			}
+		}else{
+			if (prms?.explicit == false){
+				self[fname] = function(){
+					return func.call(self, ...arguments);
+				};
+			}else{
+				self[fname] = function(){
+					return func.call(self, self, ...arguments);
+				};
+			}
+		}
+	}
+
+	// Bootleg getters and setters
+	for (const [gs_name, gs_data] of Object.entries(bootleg_gs_dict)){
+		const [gs_get, gs_set] = [gs_data.get, gs_data.set];
+		const prop_desc = {};
+
+		if (gs_get){
+			prop_desc.get = function(){
+				return gs_get.call(self, self);
+			};
+		}
+
+		if (gs_set){
+			prop_desc.set = function(tgt_val){
+				return gs_set.call(self, self, tgt_val);
+			};
+		}
+
+		Object.defineProperty(self, gs_name, prop_desc);
+	}
+
+	// Real getters and setters
+	for (const [gs_name, gs_data] of Object.entries(real_gs_dict)){
+		const [gs_get, gs_set] = [gs_data.get, gs_data.set];
+
+		if (gs_get){
+			gs_data.get = function(){
+				return gs_get.call(self, self);
+			};
+		}
+
+		if (gs_set){
+			gs_data.set = function(tgt_val){
+				return gs_set.call(self, self, tgt_val);
+			};
+		}
+
+		Object.defineProperty(self, gs_name, gs_data);
+	}
+
+	return self;
+}
+
+
 const spawn = function(tgt_cls, ...arguments){
 	const cls_inst = new tgt_cls(...arguments);
 	remap(cls_inst);
@@ -262,9 +429,9 @@ const spawn = function(tgt_cls, ...arguments){
 
 
 
-
 module.exports = {
 	remap,
 	remap_adv,
 	spawn,
+	pwn,
 }
