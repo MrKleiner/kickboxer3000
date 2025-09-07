@@ -610,6 +610,7 @@ const TCPSchedAsync = class{
 		// >FUNCTION OK Completed\r\n<
 		self.lastCommandResponsePromise = null;
 		self.lastCommandResponseResolve = null;
+		self.lastCommandHeader = null;
 
 		// Callback for activators subscription
 		self.activatorsCallback = null;
@@ -728,7 +729,10 @@ const TCPSchedAsync = class{
 	}
 
 	treatServerData(self, data){
-		if (!self.enabled){return};
+		if (!self.enabled){
+			self.nwarn('Tried trating server data on a disabled schedule', self);
+			return
+		};
 
 		self.nprintL(1, 'Got data chunk from VMIX:', [str(data)], self);
 
@@ -737,18 +741,20 @@ const TCPSchedAsync = class{
 		while (self.TCPBufIn.buf.length){
 			if ((self.awaitingPayload != -1) && (self.TCPBufIn.buf.length >= self.awaitingPayload)){
 				self.nprintL(1,
-					'GOT payload of size', self.awaitingPayload,
+					'GOT PAYLOAD of size', self.awaitingPayload,
 					'---',
 					'Current buf size is:', self.TCPBufIn.buf.length
 				)
 
 				self.lastCommandResponseResolve({
-					'header': null,
+					'header': self.lastCommandHeader,
 					'payload': self.TCPBufIn.eraseRead(self.awaitingPayload - 2),
 				})
 
 				// Erase \r\n
 				self.TCPBufIn.eraseRead(2);
+
+				self.lastCommandHeader = null;
 
 				self.awaitingPayload = -1;
 				continue
@@ -760,7 +766,7 @@ const TCPSchedAsync = class{
 					'---',
 					'Current buf size is:', self.TCPBufIn.buf.length
 				)
-				continue
+				break
 			}
 
 			const offs = self.TCPBufIn.buf.indexOf(self.LINEBREAK);
@@ -771,7 +777,7 @@ const TCPSchedAsync = class{
 				self.TCPBufIn.eraseRead(offs)
 			)
 
-			// Erase \r\n
+			// Erase trailing \r\n
 			self.TCPBufIn.eraseRead(2);
 
 			self.nprintL(1, 'Header data:', headerData);
@@ -804,6 +810,7 @@ const TCPSchedAsync = class{
 			if (funcName == 'XML'){
 				const payloadLen = int(headerData.split(' ')[1]);
 				self.nprintL(1, 'XML payload len:', payloadLen);
+				self.lastCommandHeader = headerData.split(' ')[0];
 				self.awaitingPayload = payloadLen;
 				continue
 			}
@@ -835,6 +842,7 @@ const TCPSchedAsync = class{
 						continue
 					}
 
+					self.lastCommandHeader = headerData.slice(2).join(' ');
 					self.awaitingPayload = payloadLen;
 					self.nprintL(1,
 						'XMLTEXT payload: Setting payload await size to', self.awaitingPayload
@@ -874,8 +882,6 @@ const TCPSchedAsync = class{
 				self.nprintL(1, 'Popped', item, self);
 				const result = await self.treatCMD(item.data);
 				self.nprintL(1, 'Got result of', item, 'which is', result, self);
-
-				self.nprintL(1, 'Returning result...', self)
 
 				item.resolve(
 					result
@@ -921,7 +927,7 @@ const TCPSchedAsync = class{
 		if (!self.enabled){
 			const msg = 'Cannot run commands on a destroyed schedule';
 			self.nerr(msg, self);
-			throw new Error(msg)
+			throw new Error(msg);
 		}
 
 		self.nprintL(1, 'Scheduling', data);
