@@ -1,6 +1,6 @@
 const archiver = require('archiver');
 const AdmZip = require('adm-zip');
-
+const zlib = require('zlib');
 
 // Change this and you're FUCKED
 const PHANTOM_LAYER_NAME = 'ce6a85bee07f133';
@@ -9,14 +9,26 @@ const PHANTOM_LAYER_NAME = 'ce6a85bee07f133';
 const PHANTOM_IMG_NAME = 'ee5ade7fcc7e478';
 
 // Edit the file it reads and you're FUCKED
-const PHANTOM_IMG_BUF = app_root.join('assets/blank.jpg').readFileSync();
+// const PHANTOM_IMG_BUF = app_root.join('assets/blank.jpg').readFileSync();
 
-// const TPLATES = ksys.tplates.sys_tplates.wrangler;
-// const TPLATES = new Proxy({}, new class{
-// 	get(target, prop, receiver){
-// 		return ksys.tplates.sys_tplates.wrangler[prop];
-// 	}
-// })
+// Edit this and you're FUCKED
+const PHANTOM_IMG_BUF = Buffer.from([
+	255,216,255,224,0,16,74,70,73,70,0,1,1,0,0,1,0,1,0,0,255,219,
+	0,67,0,32,33,33,51,36,51,81,48,48,81,66,47,47,47,66,39,28,28,
+	28,28,39,34,23,23,23,23,23,34,17,12,12,12,12,12,12,17,12,12,12,
+	12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,
+	12,12,12,12,255,219,0,67,1,34,51,51,52,38,52,34,24,24,34,20,14,
+	14,14,20,20,14,14,14,14,20,17,12,12,12,12,12,17,17,12,12,12,12,
+	12,12,17,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,12,
+	12,12,12,12,12,12,12,12,12,12,255,192,0,17,8,0,4,0,4,3,1,34,0,2,
+	17,1,3,17,1,255,196,0,21,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,6,
+	255,196,0,20,16,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,196,0,20,
+	1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,255,196,0,20,17,1,0,0,0,0,0,
+	0,0,0,0,0,0,0,0,0,0,0,255,218,0,12,3,1,0,2,17,3,17,0,63,0,159,0,
+	31,255,217,
+])
+
+
 const TPLATES = ksys_placeholder(
 	() => ksys.tplates.sys_tplates.wrangler
 )
@@ -189,46 +201,63 @@ const GTZipFile = class{
 
 	static MUTE_NPRINT = false;
 
-	// Protocol ID (8)
-	// Protocol-based payload
+	// NEVER compress phantom payloads smaller than this
+	COMPRESSION_CAP = (1024 ** 2) * 3;
 
-	// Protocol PHANTOM1:
-	// KB sys offs (4)
-	// KB sys len (4)
-	// File count (4)
+	// Compression efficiency <-> time spent factor
+	COMPRESSION_QUALITY = 3;
 
-	// File offs (4)
-	// File path len (4)
-	// File meta len (4)
-	// File data len (4)
-
-	// ...
-
-	// Files n shit
+	/*
+		Protocol ID (8)
+		Protocol-based payload
 
 
-	// Protocol PHANTOM2:
-	// Header len (4)
-	// Header data...
 
-	// Byte content...
+		===========================
+			Protocol PHANTOM1:
+			KB sys offs (4)
+			KB sys len (4)
+			File count (4)
 
-	// Header data:
-	// {
-	//     'files': [
-	//         {
-	//             'meta_len':  (4),
-	//             'flen':      (4),
-	//         },
-	//         ...
-	//     ],
-	//     'meta': {
-	//          'len': (4),
-	//      },
-	// }
+			File offs (4)
+			File path len (4)
+			File meta len (4)
+			File data len (4)
 
-	// Files are sequential. No need for offsets.
-	// meta always comes last. Only len is needed.
+			...
+
+			Files n shit
+		===========================
+
+
+
+		===========================
+			Protocol PHANTOM2:
+			Header len (4)
+			Header data...
+
+			Byte content...
+
+
+			Header data:
+			{
+			    'files': [
+			        {
+			            'meta_len':  (4),
+			            'flen':      (4),
+			        },
+			        ...
+			    ],
+			    'meta': {
+			         'len': (4),
+			     },
+			}
+
+			Files are sequential. No need for offsets.
+			meta always comes last. Only len is needed.
+		===========================
+	*/
+
 
 	// _src is a dict:
 	//     - fpath = absolute file path to the target gtzip
@@ -503,6 +532,7 @@ const GTZipFile = class{
 		return self._phantom_img_uid
 	}
 
+	// ZIP file object, which points to the phantom .jpg image
 	$phantom_img_zip_pointer(self){
 		if (self._phantom_img_zip_pointer){
 			return self._phantom_img_zip_pointer
@@ -556,19 +586,30 @@ const GTZipFile = class{
 		)
 		self.nprint('PHANTOM2 Header:', header);
 
+		let payload_buf = phantom_buf;
+
+		if (header?.meta?.compression?.method == 'zlib.brotli'){
+			payload_buf = new BytesIO(
+				zlib.brotliDecompressSync(phantom_buf.read())
+			);
+			self.nprint('Decompressing...');
+		}else{
+			self.nprint('No compression detected');
+		}
+
 		// Read files
 		for (const fdata of header.files){
 			const phantom_file = new GTZPhantomFile({
 				'parent': self,
-				'meta': JSON.parse(phantom_buf.read(fdata.meta_len)),
-				'buf': phantom_buf.read(fdata.flen),
+				'meta': JSON.parse(payload_buf.read(fdata.meta_len)),
+				'buf': payload_buf.read(fdata.flen),
 			});
 
 			self._kb_data.files[phantom_file.fid] = phantom_file;
 		}
 
 		// Read meta
-		self._kb_data.meta = JSON.parse(phantom_buf.read(header.meta.len));
+		self._kb_data.meta = JSON.parse(payload_buf.read(header.meta.len));
 
 		return self._kb_data
 	}
@@ -598,6 +639,13 @@ const GTZipFile = class{
 			payload_buf.write(fdata_buf);
 		}
 
+		let need_compression = payload_buf.getvalue().length > self.COMPRESSION_CAP;
+		if (need_compression){
+			header_data['meta']['compression'] = {
+				'method': 'zlib.brotli',
+			}
+		}
+
 		// Write meta
 		// const kb_meta = self.kb_data.meta.to_buf();
 		const kb_meta = Buffer.from(JSON.stringify(self.kb_data.meta));
@@ -611,7 +659,24 @@ const GTZipFile = class{
 		phantom_buf.write('PHANTOM2');
 		phantom_buf.write(self.to_int32(header_buf.length));
 		phantom_buf.write(header_buf);
-		phantom_buf.write(payload_buf);
+
+		// phantom_buf.write(payload_buf);
+
+		const payload_buf_raw = payload_buf.getvalue()
+
+		if (need_compression){
+			self.nprint('Compressing...');
+			phantom_buf.write(
+				zlib.brotliCompressSync(payload_buf_raw, {
+					'params': {
+						[zlib.constants.BROTLI_PARAM_QUALITY]: self.COMPRESSION_QUALITY,
+						[zlib.constants.BROTLI_PARAM_SIZE_HINT]: payload_buf_raw.length,
+					}
+				})
+			);
+		}else{
+			phantom_buf.write(payload_buf_raw);
+		}
 
 		return phantom_buf.getvalue();
 	}
@@ -762,24 +827,24 @@ const GTZPhantomFile = class{
 	// todo: Files should only exist in groups.
 
 	/*
-	constructor(parent, meta=null, buf=null){
-		const self = ksys.util.cls_pwnage.remap(this);
-		ksys.util.nprint(self, '#64FF6F');
+		constructor(parent, meta=null, buf=null){
+			const self = ksys.util.cls_pwnage.remap(this);
+			ksys.util.nprint(self, '#64FF6F');
 
-		self.parent = parent;
+			self.parent = parent;
 
-		self.meta = Buffer.isBuffer(meta) ? JSON.parse(meta) : meta;
-		self.buf = buf || Buffer.alloc(0);
-		self.dead = false;
+			self.meta = Buffer.isBuffer(meta) ? JSON.parse(meta) : meta;
+			self.buf = buf || Buffer.alloc(0);
+			self.dead = false;
 
-		self._fpath = tidy_phantom_fpath(
-			self.meta.fpath || ksys.util.rnd_uuid()
-		);
+			self._fpath = tidy_phantom_fpath(
+				self.meta.fpath || ksys.util.rnd_uuid()
+			);
 
-		delete self.meta['fpath'];
+			delete self.meta['fpath'];
 
-		self._editor_dom = null;
-	}
+			self._editor_dom = null;
+		}
 	*/
 
 	static DEFAULT_GRP = 'main';
