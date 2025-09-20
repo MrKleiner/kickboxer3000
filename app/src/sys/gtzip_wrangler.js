@@ -1,6 +1,12 @@
 const archiver = require('archiver');
 const AdmZip = require('adm-zip');
 const zlib = require('zlib');
+const child_process = require('child_process');
+// const e_util = require('util');
+// const execp = e_util.promisify(exec);
+const fontkit = require('fontkit');
+
+
 
 // Change this and you're FUCKED
 const PHANTOM_LAYER_NAME = 'ce6a85bee07f133';
@@ -32,6 +38,142 @@ const PHANTOM_IMG_BUF = Buffer.from([
 const TPLATES = ksys_placeholder(
 	() => ksys.tplates.sys_tplates.wrangler
 )
+
+
+const fontPacker = class{
+	constructor(){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#96FFF4',
+		);
+
+		self._fontMap = null;
+	}
+
+	// List all the fonts installed in the system
+	static listAllInstalledFonts(){
+		const filePaths = new Set();
+
+		// Do the registry first
+		for (const hive of ['HKLM', 'HKCU']){
+			const regPath = `${hive}\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts`;
+			// const { stdout } = await execp(`reg query "${regPath}"`);
+			const stdout = child_process.execSync(
+				`reg query "${regPath}"`,
+				{encoding: 'utf8'}
+			);
+			for (const line of stdout.split(/\r?\n/)){
+				if (!line.includes(':')){continue};
+				const lsplit = line.split(':');
+				filePaths.add(
+					[lsplit.at(-2).at(-1), lsplit.at(-1)].join(':').trim()
+				)
+			}
+		}
+
+		// Lookup basic font folders
+		const fontDirs = [
+			Path(process.env.WINDIR, 'Fonts'),
+			Path(process.env.LOCALAPPDATA, 'Microsoft', 'Windows', 'Fonts'),
+		]
+
+		for (const fdir of fontDirs){
+			for (const fpath of fdir.globSync('*.*')){
+				if (!fpath.isFileSync()){continue};
+				filePaths.add(str(fpath));
+			}
+		}
+
+		return filePaths
+	}
+
+	// List all the fonts used in a .gtzip file
+	// Accepts EITHER:
+	//      - An instance of >GTZipFile<
+	//      - A DOM tree with querySelectorAll capabilities
+	static listTitleFonts(srcData){
+		let targetXML = null;
+
+		if (srcData instanceof GTZipFile){
+			targetXML = srcData.doc_xml;
+		}
+
+		if (((srcData instanceof Document) || (srcData?.constructor?.name == 'XMLDocument')) && srcData?.querySelectorAll){
+			targetXML = srcData;
+		}
+
+		if (!targetXML){
+			throw new Error(
+				`Supplied data must be either of type >GTZipFile< OR >Document<, but got >${srcData?.constructor?.name}<`
+			)
+		}
+
+		const fontFamilies = new Set();
+
+		for (const XMLTag of targetXML.querySelectorAll('[FontFamily]')){
+			const familyName = XMLTag?.getAttribute?.('FontFamily');
+			if (familyName){
+				fontFamilies.add(familyName);
+			}
+		}
+
+		return fontFamilies
+	}
+
+	$fontMap(self){
+		if (self._fontMap){
+			return self._fontMap
+		}
+
+		const fpaths = self.constructor.listAllInstalledFonts();
+		self._fontMap = [];
+
+		for (const fpath of fpaths){
+			let fontData = null;
+
+			try{
+				fontData = fontkit.openSync(fpath);
+			}catch{
+				continue
+			}
+
+			for (const font of (fontData.fonts || [fontData]) ){
+				self._fontMap.push([
+					[font.familyName, font.subfamilyName, font.fullName],
+					fpath,
+				])
+			}
+		}
+
+		return self._fontMap
+	}
+
+	packFonts(self, targetGTzip){
+		const traversedFilePaths = new Set();
+
+		for (const fontFamilyName of self.constructor.listTitleFonts(targetGTzip)){
+			for (let [nameVariants, fontFilePath] of self.fontMap){
+				// todo: name variants often point to the same file
+				for (const variantName of nameVariants){
+					if (variantName.includes(fontFamilyName) && !traversedFilePaths.has(fontFilePath)){
+						traversedFilePaths.add(fontFilePath);
+
+						fontFilePath = Path(fontFilePath);
+						targetGTzip.add_file({
+							'buf': fontFilePath.readFileSync(),
+							'meta': {
+								'grp':   'fonts',
+								'fname': fontFilePath.basename,
+								'ftype': 'font',
+							}
+						})
+					}
+				}
+			}
+		}
+	}
+}
+
 
 
 const create_xml_tag = function(xml, tag_name, attrs=null, content=null){
@@ -176,6 +318,10 @@ const BytesIO = class {
 		return self._buffer;
 	}
 
+	$buf(self){
+		return self._buffer
+	}
+
 	// Optional: Truncate the buffer to a given size.
 	truncate(self, size) {
 		if (size === undefined) {
@@ -205,7 +351,7 @@ const GTZipFile = class{
 	COMPRESSION_CAP = (1024 ** 2) * 3;
 
 	// Compression efficiency <-> time spent factor
-	COMPRESSION_QUALITY = 3;
+	COMPRESSION_QUALITY = 1;
 
 	/*
 		Protocol ID (8)
@@ -270,7 +416,7 @@ const GTZipFile = class{
 		const src = _src || {};
 
 		const get_fucked = (
-			  `FATAL: Failed to initialize ${self.constructor.name}.`
+			  `FATAL: Failed to initialize ${self.constructor.name}. `
 			+ `You're fucked: One of GTZip titles is now FUCKED`
 		)
 
@@ -614,9 +760,9 @@ const GTZipFile = class{
 		return self._kb_data
 	}
 
-	// Create a legit .jpg image with all the phantom data embedded into it
+	// Create a legit .jpg image buffer with all the phantom data embedded into it
 	// and return it as a buffer
-	to_phantom_buf(self){
+	to_phantom_buf(self, force_compress=false, force_no_compress=false){
 		const payload_buf = new BytesIO();
 		const header_data = {
 			'files': [],
@@ -639,8 +785,16 @@ const GTZipFile = class{
 			payload_buf.write(fdata_buf);
 		}
 
-		let need_compression = payload_buf.getvalue().length > self.COMPRESSION_CAP;
-		if (need_compression){
+		const compression_enabled = (
+			(
+				(payload_buf.buf.length > self.COMPRESSION_CAP) ||
+				((payload_buf.buf.length > 3) && force_compress)
+			)
+			&&
+			!force_no_compress
+		);
+
+		if (compression_enabled){
 			header_data['meta']['compression'] = {
 				'method': 'zlib.brotli',
 			}
@@ -662,9 +816,9 @@ const GTZipFile = class{
 
 		// phantom_buf.write(payload_buf);
 
-		const payload_buf_raw = payload_buf.getvalue()
+		const payload_buf_raw = payload_buf.getvalue();
 
-		if (need_compression){
+		if (compression_enabled){
 			self.nprint('Compressing...');
 			phantom_buf.write(
 				zlib.brotliCompressSync(payload_buf_raw, {
@@ -683,7 +837,13 @@ const GTZipFile = class{
 
 	// Collapse everything into a .zip archive
 	// and return byte buffer of the resulting .zip archive
-	to_zip_buf(self, as_buf=true){
+	to_zip_buf(self, _prms=null){
+		const prms = Object.assign({
+			'as_buf': true,
+			'force_compress': false,
+			'force_no_compress': false,
+		}, _prms)
+
 		const serializer = new XMLSerializer();
 
 		self.zip_buf.updateFile(
@@ -703,14 +863,16 @@ const GTZipFile = class{
 			Buffer.from(serializer.serializeToString(self.res_xml))
 		);
 
-		self.phantom_img_zip_pointer.setData(self.to_phantom_buf());
+		self.phantom_img_zip_pointer.setData(
+			self.to_phantom_buf(prms.force_compress, prms.force_no_compress)
+		);
 
 		// for (const entry of self.zip_buf.getEntries()){
 		// 	entry.header.versionMadeBy = 0x00;
 		// 	entry.header.method = 0;
 		// }
 
-		if (as_buf){
+		if (prms.as_buf){
 			return self.zip_buf.toBuffer();
 		}else{
 			return self.zip_buf
@@ -864,7 +1026,9 @@ const GTZPhantomFile = class{
 			'.svg',
 		],
 		'font': [
+			'.otf',
 			'.ttf',
+			'.ttc',
 			'.woff',
 			'.woff2',
 		],
@@ -1418,8 +1582,9 @@ const GTZipDB = class{
 module.exports = {
 	GTZipFile,
 	GTZPhantomFile,
-	// GTZipFileEditor,
+	fontPacker,
 	GTZipDB,
+	// GTZipFileEditor,
 }
 
 
