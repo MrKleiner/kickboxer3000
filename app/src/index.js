@@ -41,6 +41,7 @@ const electron = require('electron');
 const cls_pwnage = require('./sys/class_pwnage.js');
 // Some common KickBoxer Node util
 const kbn_util = require('./kbn/kbn_util.js');
+const kbnc = require('./kbn/kbn_connect.js');
 const Path = kbn_util.Path;
 
 // AT-AT Node
@@ -49,6 +50,7 @@ const atat_n = require('./kbn/node_atat.js');
 // App's root dir
 const KB_ROOT = Path(__dirname);
 
+const IS_DEV = kbn_util.isDev();
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) { // eslint-disable-line global-require
@@ -143,7 +145,12 @@ const KickBoxer3000 = class{
 
 	IPC_MAP = Object.freeze([
 		['kbn.main.reload', 'reload_main_window'],
+		['kbnc.start', 'kbnc_start'],
 	]);
+
+	IS_DEV = IS_DEV;
+
+	APP_ROOT = KB_ROOT;
 
 	constructor(){
 		const self = kbn_util.nprint(cls_pwnage.remap(this));
@@ -155,6 +162,9 @@ const KickBoxer3000 = class{
 		self.atat_n = new atat_n.NodeAtAtBundestag(self);
 		self.atat_n.init_ipc();
 
+		// KickBoxer Connect
+		self.kbnc = null;
+
 		// Basic VMIX shit
 		self.vmix = new BasicVMIX(self);
 		self.vmix.init_ipc();
@@ -163,10 +173,10 @@ const KickBoxer3000 = class{
 	init_ipc(self){
 		for (const ipc_prms of self.IPC_MAP){
 			const [ipc_id, tgt_func] = ipc_prms;
-			electron.ipcMain.handle(ipc_id, function(event, args){
+			electron.ipcMain.handle(ipc_id, async function(event, args){
 				self.nprint('IPC msg:', args);
 				if (self[tgt_func]){
-					self[tgt_func](args);
+					return await self[tgt_func](args);
 				}else{
 					self.nprint('Invalid IPC CMD:', ipc_id);
 				}
@@ -261,6 +271,18 @@ const KickBoxer3000 = class{
 
 	reload_main_window(self){
 		self.main_window.reload();
+	}
+
+	async test_get_file_icon(self, fuck){
+		return (await electron.app.getFileIcon(fuck, {'size': 'normal'})).toDataURL()
+	}
+
+	async kbnc_start(self){
+		if (!self.kbnc){
+			self.kbnc = new kbnc.KBNConnectSocketServer(self);
+		}
+
+		return await self.kbnc.maintainConnection();
 	}
 
 	create_tray(self){

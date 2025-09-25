@@ -59,7 +59,7 @@ burn_ico_to_exe(
 szipper.pack(
 	project / 'app' / 'out' / 'KickBoxer3000-win32-x64',
 	tmp_folder / 'kb_data.7z',
-	exclude=['db'],
+	exclude=['db', 'isdev.fuck'],
 	echo=True,
 )
 

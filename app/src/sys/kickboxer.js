@@ -135,6 +135,9 @@ const ksys_placeholder = function(placeholder){
 // ksys = most of the core functions
 const ksys = {
 	util: {
+		isDev: function(){
+			return app_root.join('isdev.fuck').isFileSync();
+		},
 		cls_pwnage: require('./sys/class_pwnage.js'),
 		str_ops:    require('./sys/string_ops.js'),
 		// translit: require('./sys/transliteration.js'),
@@ -157,10 +160,12 @@ const ksys = {
 	psych_ward:     require('./sys/psych_ward.js'),
 	visual_basic:   require('./sys/visual_basic.js'),
 	vmix_tcp:       require('./sys/vmix_tcp.js'),
+	kbnc:           require('./sys/kbnc.js'),
 
 	// Global events listeners
 	binds:   {},
 };
+
 
 // todo: this is getting out of hand
 // ksys.gtzip_wrangler = require('./sys/gtzip_wrangler.js');
@@ -273,12 +278,11 @@ ksys.util.eval_xml = function(xml_str){
 // -------------------------
 //      sleep for n ms
 // -------------------------
-ksys.util.sleep = function(amt=500, ref='a') {
+ksys.util.sleep = function(amt=500){
 	return new Promise(function(resolve, reject){
-	    // window.mein_sleep[ref] = setTimeout(function () {
-	    const abc = setTimeout(function () {
+		setTimeout(function(){
 			resolve(true)
-	    }, amt);
+		}, amt);
 	});
 }
 
@@ -544,7 +548,7 @@ ksys.util.reload = function(){
 	ipcRenderer.invoke('kbn.main.reload', { key: 'value' });
 }
 
-ksys.util.nprint = function(cls, color, extras='', cls_name_override=null){
+ksys.util.nprint = function(cls, color=null, extras='', cls_name_override=null){
 	const nprint_name = (
 		cls.constructor.NPRINT_NAME ||
 		cls.constructor.name ||
@@ -552,7 +556,7 @@ ksys.util.nprint = function(cls, color, extras='', cls_name_override=null){
 		'NPRINT_UNKNOWN_CLASS'
 	)
 
-	const console_color = (color == '?') ? ksys.util.rnd_hex(true) : color;
+	const console_color = color || '#ffffff';
 
 	const nprint_prefix = `%c[${nprint_name}]`;
 	const nprint_console_style = `color: ${console_color};` + extras;
@@ -762,12 +766,22 @@ ksys.util.promise = function(){
 	return promise_data;
 }
 
+ksys.util.flatPromise = function(){
+	return ksys.util.promise();
+}
+
 ksys.util.rnd_hex = function(hashtag=false){
 	// Generate a random integer between 0 and 0xFFFFFF
 	const rnd_int = Math.floor(Math.random() * 0x1000000);
 	// Convert to hexadecimal and pad with leading zeros if necessary
 	const hex_str = rnd_int.toString(16).padStart(6, '0');
 	return (hashtag ? '#' : '') + hex_str;
+}
+
+ksys.util.toInt32 = function(num){
+	const buf = Buffer.allocUnsafe(4);
+	buf.writeUint32LE(num);
+	return buf
 }
 
 // A dictionary where key is whatever a class' property returns
@@ -990,6 +1004,9 @@ const sys_load = function(nm, save_state=true)
 	// Init Visual Basic
 	ksys.visual_basic.m_init()
 
+	// Init Visual Basic
+	ksys.kbnc.m_init()
+
 	// resync switches
 	// ksys.switches.resync()
 
@@ -1051,7 +1068,7 @@ async function app_init()
 	// todo: this is basically useless
 	if (ksys.context.global.cache['been_warned'] != true){
 		ksys.fbi.warn_critical(
-			'Do not forget to turn on alpha channel on the required outputs (sdi/ndi)!'
+			'Do not forget to turn on alpha channel on the required outputs (SDI/NDI)!'
 		)
 	}
 
@@ -1063,7 +1080,7 @@ async function app_init()
 
 	// starting page is ip:port selector
 	// this page gets overwritten with the homepage if ip:port is valid
-	sys_load('starting_page', false)
+	sys_load('starting_page', false);
 
 	// init pgview
 	ksys.pgview.reload()

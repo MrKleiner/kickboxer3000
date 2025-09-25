@@ -1196,12 +1196,13 @@ card vis feedback on list items
 	flex-direction: column;
 	padding: 15px;
 
-	height: 420px;
+	height: 270px;
 	width: 410px;
 	position: relative;
 }
 
 #replacement .replacement_team .replacement_list player-picker{
+	min-height: 50px;
 	height: -webkit-fill-available;
 }
 
@@ -1463,7 +1464,7 @@ Records themselves
 #score_ctrl .score_ctrl_team club-score-record .score_author img.self_score_indicator
 {
 	position: absolute;
-	right: 5px;
+	right: 130px;
 	height: 27px;
 	width: 27px;
 	opacity: 0.3;
@@ -2620,11 +2621,14 @@ tab.tab_hidden
 
 #replacement #replacement_buttons
 {
+	position: absolute;
 	display: flex;
 	flex-direction: row;
 	justify-content: center;
 	align-items: center;
 	/*margin-top: 75px;*/
+	width: 100%;
+	top: 50px;
 }
 
 
@@ -2812,11 +2816,21 @@ tab.tab_hidden
 }
 
 
+#layout_previews{
+	display: flex;
+	flex-direction: column;
+}
 
-
-
-
-
+#layout_previews img{
+	background: url('../../assets/alpha_checkerboard.svg');
+	background-size: 10px;
+	background-attachment: fixed;
+	/*background: url("C:/Users/DrHax/Desktop/sackrat.png");*/
+	aspect-ratio: 16/9;
+	width: 500px;
+	/*height: 250px;*/
+	margin-top: 30px;
+}
 
 
 
@@ -3189,10 +3203,36 @@ tab.tab_hidden
 
 #ffmpeg_path,
 #image_magick_path,
-#resources_location
+#resources_location,
+#field_layout_template_fpath
 {
 	width: 450px;
 }
+
+
+general-cfg-ctrl .prm_preset_btn{
+	width: 120px;
+	margin-left: 20px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /*
@@ -3707,4 +3747,11 @@ player-param option{
 
 [btname="save_current_stats"]{
 	margin-bottom: 10px;
+}
+
+
+#toggle_cfg_vis{
+	margin-left: 20px;
+	margin-bottom: 10px;
+	width: 200px;
 }

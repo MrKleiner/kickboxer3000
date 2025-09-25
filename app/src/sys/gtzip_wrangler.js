@@ -92,8 +92,9 @@ const fontPacker = class{
 	//      - An instance of >GTZipFile<
 	//      - A DOM tree with querySelectorAll capabilities
 	static listTitleFonts(srcData){
+		/*
 		let targetXML = null;
-
+		
 		if (srcData instanceof GTZipFile){
 			targetXML = srcData.doc_xml;
 		}
@@ -105,6 +106,15 @@ const fontPacker = class{
 		if (!targetXML){
 			throw new Error(
 				`Supplied data must be either of type >GTZipFile< OR >Document<, but got >${srcData?.constructor?.name}<`
+			)
+		}
+		*/
+
+		const targetXML = srcData?.doc_xml || srcData;
+		if (!targetXML?.querySelectorAll){
+			self.nerr('Invalid srcData:', srcData);
+			throw new Error(
+				`Supplied data must be an XML document with querySelectorAll support`
 			)
 		}
 
@@ -348,9 +358,9 @@ const GTZipFile = class{
 	static MUTE_NPRINT = false;
 
 	// NEVER compress phantom payloads smaller than this
-	COMPRESSION_CAP = (1024 ** 2) * 3;
+	COMPRESSION_CAP = (1024 ** 2) * 2;
 
-	// Compression efficiency <-> time spent factor
+	// Compression efficiency <-> time spent factor (0-11)
 	COMPRESSION_QUALITY = 1;
 
 	/*

@@ -41,6 +41,12 @@
 	background-color: #4578B8;
 }
 
+[ksys_scrollbar_hidden]::-webkit-scrollbar{
+	width: 0 !important;
+	height: 0 !important;
+}
+
+
 *:not(
 	input,
 	textarea,
@@ -1019,6 +1025,13 @@ sys buttons
 	/*box-shadow: 0px 5px 18px -3px rgba(0, 0, 0, 1);*/
 	box-shadow: 0px 0px 22px -5px rgba(0, 0, 0, 0.75);
 	border-bottom: 1px solid rgb(60, 60, 60);
+	/*overflow-x: scroll;*/
+	/*overflow-y: auto;*/
+}
+
+~~::-webkit-scrollbar{
+	width: 0 !important;
+	height: 0 !important;
 }
 
 ~~ sys-tab
@@ -1035,6 +1048,7 @@ sys buttons
 	background: #1F2020;
 	border: 1px solid rgb(100, 100, 100);
 	border-top-width: 0px;
+	flex-shrink: 0;
 }
 
 ~~ sys-tab:hover
@@ -1818,6 +1832,7 @@ body.hintsys_warn_ctritical{
 }
 
 ~~ .psych_ward_results .psych_ward_title{
+	position: relative;
 	display: flex;
 	flex-direction: row;
 	margin-top: 15px;
@@ -1852,11 +1867,22 @@ body.hintsys_warn_ctritical{
 	width: 150px;
 }
 
+~~ .presence_icons{
+	display: flex;
+	position: absolute;
+	right: 0px;
+	bottom: 0px;
+	margin: 10px;
+}
 
+~~ .presence_icons .presence{
+	width: 30px;
+	height: 30px;
+}
 
-
-
-
+~~ .presence_icons .presence:not(:last-child){
+	margin-right: 10px;
+}
 
 
 
@@ -1902,6 +1928,7 @@ body.hintsys_warn_ctritical{
 	font-size: 19px;
 	padding: 7px 20px 7px 20px;
 }
+
 
 ~~ .columns{
 	display: flex;
@@ -2018,6 +2045,7 @@ body.hintsys_warn_ctritical{
 	display: flex;
 	flex-direction: column;
 	align-items: center;
+	padding-bottom: 10px;
 }
 
 ~~ .ctrl_general .overlay_ctrl{
@@ -2043,6 +2071,7 @@ body.hintsys_warn_ctritical{
 }
 
 ~~ .ctrl_specific{
+	position: relative;
 	overflow-y: scroll;
 }
 
@@ -2051,7 +2080,30 @@ body.hintsys_warn_ctritical{
 	margin-top: 10px;
 }
 
+~~ .preview{
+	aspect-ratio: 16/9;
+	width: 200px;
 
+	background: url('../../assets/alpha_checkerboard.svg');
+	background-size: 10px;
+	background-attachment: fixed;
+
+	align-self: center;
+
+	margin-top: 10px;
+}
+
+#vb_fullscreen_preview{
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	width: 100vw;
+	height: 100vh;
+	background: url('../../assets/alpha_checkerboard.svg');
+	background-size: 10px;
+	background-attachment: fixed;
+	z-index: 99999;
+}
 
 
 
@@ -2102,4 +2154,57 @@ body.hintsys_warn_ctritical{
 	opacity: 0.5 !important;
 	/*pointer-events: none !important;*/
 	outline: 1px solid red !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+/*
+=========================================
+                  KBNC
+=========================================
+!~~ .kbnc_main
+*/
+
+~~{
+	width: fit-content;
+	display: flex;
+	flex-direction: column;
+	margin-left: 20px;
+	margin-bottom: 40px;
+}
+
+~~ .kbnc_ctrl{
+	display: flex;
+	flex-direction: row;
+}
+
+
+~~ .ctrl_btn{
+	text-align: center;
+	padding: 10px 30px 10px 30px;
+	font-size: 20px;
+	margin: 10px;
+}
+
+~~ .kbnc_status{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+~~ .current_cmd_id, ~~ .current_status{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 10px;
+	width: 50%;
 }

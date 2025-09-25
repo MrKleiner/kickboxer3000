@@ -11,7 +11,7 @@ const _ticker = {
 };
 
 
-
+const STFU = true;
 
 
 
@@ -348,12 +348,14 @@ const KbAtCMDGateway = class{
 	static async exec_cmd(addr, cmd_id, data_chunks){
 		const test = lizard.rndwave();
 		for (const retry of range(2)){
-			console.warn(
-				'exec_cmd: retry №', retry + 1, 'of', 2,
-				'Sending cmd', cmd_id,
-				'With data', data_chunks,
-				test
-			);
+			if (!STFU){
+				console.warn(
+					'exec_cmd: retry №', retry + 1, 'of', 2,
+					'Sending cmd', cmd_id,
+					'With data', data_chunks,
+					test
+				);
+			}
 
 			const linear_lock = create_promise_lock();
 			const skt = dgram.createSocket('udp4');
@@ -405,16 +407,19 @@ const KbAtCMDGateway = class{
 			setTimeout(
 				function(){
 					if (!recv_status.received){
-						console.error(
-							'exec_cmd: Timed out on waiting for the reply',
-							'on retry №', retry + 1, 'of', 2, '. Where payload had the following data:',
-							'Command id:', cmd_id, 'Payload:', data_chunks,
-							test
-						)
+						if (!STFU){
+							console.error(
+								'exec_cmd: Timed out on waiting for the reply',
+								'on retry №', retry + 1, 'of', 2, '. Where payload had the following data:',
+								'Command id:', cmd_id, 'Payload:', data_chunks,
+								test
+							)
+						}
+
 						// Todo: use a special class instead of 'timed_out' string ?
 						recv_status.error = 'timed_out';
 
-						// important todo: this craches the AT-AT
+						// important todo: this crashes the AT-AT
 						// try{
 						// 	skt.close();
 						// }catch(e){
@@ -1024,11 +1029,14 @@ _ticker.kb_at.clear_receivers = async function(){
 		[ksys.context.global.cache.vmix_ip, int(ksys.context.global.cache.atat_port)],
 		10,
 	)
-	// todo: change to print
-	console.error(
-		'Commandeered AT-AT to clear all receivers',
-		cmd_exec_reply_clear
-	)
+	
+	if (!STFU){
+		// todo: change to print
+		console.error(
+			'Commandeered AT-AT to clear all receivers',
+			cmd_exec_reply_clear
+		)
+	}
 }
 
 // Perform a couple VERY important actions

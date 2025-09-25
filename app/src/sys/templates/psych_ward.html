@@ -5,16 +5,17 @@
 			<div class="durka">ДУРКА</div>
 			<img src="./assets/psych_ward.webp">
 		</div>
-		<div class="psych_ward_cfg_item">
+		<div class="psych_ward_cfg_item kbsys_hidden">
 			<div class="cfg_label">Remote</div>
-			<input type="text" class="remote_dir" placeholder="Can NOT be empty" onchange_vis_feed>
+			<input type="text" class="remote_dir" value="/" placeholder="Can NOT be empty" onchange_vis_feed>
 		</div>
 		<div class="psych_ward_cfg_item">
 			<div class="cfg_label">Local</div>
 			<input type="text" class="local_dir" placeholder="CAN be empty" onchange_vis_feed>
 		</div>
-		<sysbtn class="hard_reload_all" kbhint="Hard reload all the specified titles">Hard Reload All</sysbtn>
+		<sysbtn class="hard_reload_all" kbhint="Hard reload all the specified titles">Ballistic Reload All</sysbtn>
 		<sysbtn class="redraw" kbhint="Redraw titles from the list">Redraw</sysbtn>
+		<sysbtn class="check_presence_all" kbhint="Check whether the target titles are present in VMIX and local PC">Check Presence All</sysbtn>
 		<textarea placeholder="Gtzip names without .gtzip extension" class="flist" onchange_vis_feed></textarea>
 		<div class="psych_ward_viewer">
 			<div class="psych_ward_results" subtle_box></div>
@@ -31,12 +32,15 @@
 			<div class="title_name"></div>
 			<div class="title_ctrl">
 				<sysbtn
-					kbhint="Remove this title from the project and then re-add it"
+					kbhint="Drastic measures: Send the title file to the PC with VMIX, remove the title from the project and then re-add it"
 					class="hard_reload"
-				>Hard Reload</sysbtn>
+				>Ballistic Reload</sysbtn>
 			</div>
 		</div>
-
+		<div class="presence_icons">
+			<img contain class="presence vmix kbsys_hidden_opacity" src="./assets/vmix_icon.png">
+			<img contain class="presence pc kbsys_hidden_opacity" src="./assets/desktop_icon.svg">
+		</div>
 	</div>
 </template>
 

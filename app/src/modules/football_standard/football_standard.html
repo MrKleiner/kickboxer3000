@@ -32,6 +32,7 @@
 	<tab class="tab_hidden" tabid="fucking_docs">
 		<md-packer></md-packer>
 		<http-resource-proxy-control></http-resource-proxy-control>
+		<kbnc-ctrl></kbnc-ctrl>
 		<div id="role_editor" kbhint="Changes are saved and propagated automatically"></div>
 		<div id="sequencer" kbhint="Determines most timings, such as for how long should a yellow/red card indicator be on screen. Changes are saved and propagated automatically. This is some important shit - don't fuck with it"></div>
 		<psych-ward></psych-ward>
@@ -81,7 +82,18 @@
 			<f-param display_name="Full club name" fpid="club_name" translit_default="0" format_default="all_upper"></f-param>
 		</string-formatting>
 
+		<sysbtn id="toggle_cfg_vis" onclick="$this.toggle_config_vis()">Toggle Config Visibility</sysbtn>
+
 		<general-cfg subtle_box>
+			<general-cfg-entry kbhint="Hold ALT">
+				<general-cfg-label>Preset</general-cfg-label>
+				<general-cfg-ctrl>
+					<sysbtn class="prm_preset_btn" onclick="$this.apply_preset('regular', event)">Regular</sysbtn>
+					<sysbtn class="prm_preset_btn" onclick="$this.apply_preset('cup', event)">Cup</sysbtn>
+					<sysbtn class="prm_preset_btn" onclick="$this.apply_preset('amp', event)">AMP</sysbtn>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
 			<general-cfg-entry kbhint="Absolute path to ffmpeg.exe">
 				<general-cfg-label>FFMPEG</general-cfg-label>
 				<general-cfg-ctrl>
@@ -100,6 +112,13 @@
 				<general-cfg-label>Resources</general-cfg-label>
 				<general-cfg-ctrl>
 					<input type="text" id="resources_location" onchange_vis_feed>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Absolute path to Field Layout template">
+				<general-cfg-label>Field Layout Template</general-cfg-label>
+				<general-cfg-ctrl>
+					<input type="text" id="field_layout_template_fpath" onchange_vis_feed>
 				</general-cfg-ctrl>
 			</general-cfg-entry>
 
@@ -272,6 +291,39 @@
 				</general-cfg-ctrl>
 			</general-cfg-entry>
 
+			<general-cfg-entry kbhint="Max. players per page in lineup condensed title">
+				<general-cfg-label>Lineup Condensed</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="lineup_condensed_max_players_per_page_switch" kbswitch_style="default">
+						<div
+							kbhint="2"
+							kbswitch_item
+							two
+						>2</div>
+						<div
+							kbhint="3"
+							kbswitch_item
+							three
+						>3</div>
+						<div
+							kbhint="4"
+							kbswitch_item
+							four
+						>4</div>
+						<div
+							kbhint="5"
+							kbswitch_item
+							five
+						>5</div>
+						<div
+							kbhint="6"
+							kbswitch_item
+							six
+						>6</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
 			<general-cfg-entry kbhint="Hide main clock when showing extra clock">
 				<general-cfg-label>Main Clock Visibility</general-cfg-label>
 				<general-cfg-ctrl>
@@ -388,6 +440,47 @@
 	</tab>
 
 	<tab class="tab_hidden" tabid="misc_titles">
+
+		<div id="referee_ctrl" subtle_box kbhint="Referee">
+			<h1>Referee</h1>
+			<div id="referee_ctrl_body">
+				<div id="referee_array">
+					<div class="referee_box" subtle_box>
+						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_1_upper">
+						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_1_lower">
+					</div>
+					<div class="referee_box" subtle_box>
+						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_2_upper">
+						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_2_lower">
+					</div>
+					<div class="referee_box" subtle_box>
+						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_3_upper">
+						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_3_lower">
+					</div>
+					<div class="referee_box" subtle_box>
+						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_4_upper">
+						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_4_lower">
+					</div>
+				</div>
+
+				<div id="referee_ctrl_buttons">
+					<vmixbtn
+						seq_info="update+vis_show"
+						btname="show_misc_title"
+						onclick="$this.show_misc_title('referee')"
+					>Show Referee</vmixbtn>
+
+					<vmixbtn
+						seq_info="vis_hide"
+						btname="hide_misc_title"
+						onclick="$this.hide_misc_title('referee')"
+					>Hide Referee</vmixbtn>
+				</div>
+
+				<sysbtn id="referee_to_defaults_btn" onclick="$this.set_referee_to_default()">Apply Defaults</sysbtn>
+			</div>
+		</div>
+
 
 		<div class="misc_title_pair">
 			<div id="commenter_ctrl" subtle_box kbhint="Today's commenter">
@@ -518,46 +611,6 @@
 			</div>
 		</div>
 
-		<div id="referee_ctrl" subtle_box kbhint="Referee">
-			<h1>Referee</h1>
-			<div id="referee_ctrl_body">
-				<div id="referee_array">
-					<div class="referee_box" subtle_box>
-						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_1_upper">
-						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_1_lower">
-					</div>
-					<div class="referee_box" subtle_box>
-						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_2_upper">
-						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_2_lower">
-					</div>
-					<div class="referee_box" subtle_box>
-						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_3_upper">
-						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_3_lower">
-					</div>
-					<div class="referee_box" subtle_box>
-						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_4_upper">
-						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_4_lower">
-					</div>
-				</div>
-
-				<div id="referee_ctrl_buttons">
-					<vmixbtn
-						seq_info="update+vis_show"
-						btname="show_misc_title"
-						onclick="$this.show_misc_title('referee')"
-					>Show Referee</vmixbtn>
-
-					<vmixbtn
-						seq_info="vis_hide"
-						btname="hide_misc_title"
-						onclick="$this.hide_misc_title('referee')"
-					>Hide Referee</vmixbtn>
-				</div>
-
-				<sysbtn id="referee_to_defaults_btn" onclick="$this.set_referee_to_default()">Apply Defaults</sysbtn>
-			</div>
-		</div>
-
 	</tab>
 
 	<tab class="tab_hidden" tabid="layout_buttons">
@@ -651,6 +704,11 @@
 						>Coach OFF</vmixbtn>
 					</div>
 
+				</div>
+
+				<div id="layout_previews">
+					<img contain id="layout_preview_home" src="./assets/alpha_checkerboard.svg">
+					<img contain id="layout_preview_guest" src="./assets/alpha_checkerboard.svg">
 				</div>
 
 				<div id="guest_layout_ctrl" class="layout_buttons_field_ctrl_command">
@@ -765,9 +823,9 @@
 						click_timeout="2000"
 						>
 						<img draggable="false" contain class="punish_card_vis" src="./assets/ball.png">
-						<div class="punish_card_title">SCORE!</div>
+						<div class="punish_card_title">GOAL!</div>
 					</vmixbtn>
-					<vmixbtn seq_info="vis_hide" btname="scored_off" onclick="$this.hide_scored_title()">OFF</vmixbtn>
+					<vmixbtn seq_info="auto_tweaks+auto_seq" btname="auto_score" onclick="$this.add_score_from_cards_panel(true)">AUTO GOAL</vmixbtn>
 				</div>
 
 			</div>

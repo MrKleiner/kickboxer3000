@@ -4,6 +4,7 @@ $this.counter = {};
 
 $this.load = function(){
 	$this.main_clock_id = 'sambo.main';
+	$this.clock_feed = qsel('#timer_feedback');
 	$this.player_data_schema = new Set();
 	$this.pair_list = new Map();
 
@@ -1034,11 +1035,13 @@ $this.clock_show = async function(resume=true){
 $this.clock_tick_event = async function(data){
 	const time = data.time;
 
-	$('#timer_feedback').text(
-		`${str(time.clock.minutes).padStart(2, '0')}:${str(time.clock.seconds).padStart(2, '0')}`
+	$this.clock_feed.textContent = (
+		str(time.clock.minutes).padStart(2, '0') + ':' +
+		str(time.clock.seconds).padStart(2, '0')
 	);
 
-	if (time.total.seconds <= 9){
+	// if (time.total.seconds <= 9){
+	if (time.tick <= 9){
 		await $this.clock_hide();
 		await ksys.util.sleep(1500);
 		// await $this.clock_stop();
@@ -1070,12 +1073,9 @@ $this.set_round_amount = function(){
 
 $this.set_round = async function(r, reset=false){
 	// store current round number
-	ksys.context.module.prm('active_round', r);
+	ksys.context.module.prm('current_round', r);
 
-	await $this.titles.timer.set_text(
-		'info_text',
-		`${ksys.context.module.cache.active_round || 1} OF ${ksys.context.module.cache.round_amount}`
-	);
+	await $this.titles.timer.set_text('round', `ROUND ${str(r).trim()}`);
 
 	if (reset == true){
 		await $this.clock_reset();

@@ -6,11 +6,15 @@ const sys_data = {};
 
 
 const PsychWardTitle = class{
-	// This gets multiplied by HARD_RELOAD_WAIT_CAP
+	static NPRINT_LEVEL = 5;
+
+	// This (basically) gets multiplied by HARD_RELOAD_WAIT_CAP
 	HARD_RELOAD_SLEEP = 275;
 
 	// Waiting forever is fucking stupid
 	HARD_RELOAD_WAIT_CAP = 50;
+
+	HARD_RELOAD_RETRY_CAP = 2;
 
 	constructor(psych_ward, cfg){
 		const self = ksys.util.nprint(
@@ -40,18 +44,29 @@ const PsychWardTitle = class{
 		}
 
 		self._dom = self.tplates.title_unit({
-			'preview_img': 'img.preview_img',
-			'title_name':  '.title_name',
-			'hard_reload': 'sysbtn.hard_reload',
+			'preview_img':    'img.preview_img',
+			'title_name':     '.title_name',
+			'hard_reload':    'sysbtn.hard_reload',
+			'vmix_presence':  '.presence.vmix',
+			'local_presence': '.presence.pc',
 		})
 
 		self._dom.index.hard_reload.onclick = async function(){
-			await self.hard_reload();
-			ksys.info_msg.send_msg(
-				`Reloaded ${self.title_name}`,
-				'ok',
-				4000
-			);
+			if ( !!(await self.hard_reload()) ){
+				ksys.info_msg.send_msg(
+					`Reloaded ${self.title_name}`,
+					'ok',
+					3500
+				);
+			}else{
+				ksys.info_msg.send_msg(
+					`FATAL: Could not reload ${self.title_name}`,
+					'err',
+					7000
+				);
+			}
+
+			await self.check_for_presence();
 		}
 
 		self._dom.root.onmouseover = function(){
@@ -62,36 +77,69 @@ const PsychWardTitle = class{
 	}
 
 	async count_duplicates(self){
-		return (await vmix.talker.project()).querySelectorAll(`inputs [title="${self.title_name}"]`).length
+		return (
+			(await vmix.talker.project())
+			.querySelectorAll(`inputs [title="${self.title_name}"]`)
+			.length
+		)
 	}
 
-	async hard_reload(self){
+	async hard_reload(self, wait_factor=1, retries_factor=1){
+		const kbnc = ksys.kbnc.KBNC.sysData().currentClient;
+
+		const remotePath = Path(
+			'C:/custom/vmix_assets/current_titles',
+			self.local_fpath.basename
+		)
+
+		const kbncResult = await kbnc.runCMD('generic.write_file', {
+			'header': {
+				'fpath': str(remotePath),
+			},
+			'payload': self.local_fpath.readFileSync(),
+		})
+		await kbncResult.result();
+
 		let count_last = await self.count_duplicates();
+
+		let retries = 0;
 
 		while (count_last > 0){
 			self.nprint('Removing', self.title_name);
+
+			if (retries >= Math.ceil(self.HARD_RELOAD_RETRY_CAP * retries_factor)){
+				return false
+			}
+
 			// Commandeer VMIX to remove the title
 			await vmix.talker.talk({
 				'Function': `RemoveInput`,
 				'Input': self.title_name,
 			})
+
 			// Wait for VMIX to remove this duplicate
-			for (const i of range(self.HARD_RELOAD_WAIT_CAP)){
+			const retry_cap = Math.ceil(self.HARD_RELOAD_WAIT_CAP * wait_factor);
+			for (const i of range(retry_cap)){
 				await ksys.util.sleep(self.HARD_RELOAD_SLEEP);
 				const new_count = await self.count_duplicates();
 				if (count_last != new_count){
 					count_last = new_count;
 					break
 				}
-				self.nprint('Waiting...', `${i}/${self.HARD_RELOAD_WAIT_CAP}`);
+				self.nprint('Waiting...', `${i+1}/${retry_cap}`);
 			}
+
+			// Don't wait forever
+			retries += 1
 		}
 
 		// Re-add self
 		await vmix.talker.talk({
 			'Function': `AddInput`,
-			'Value': `Title|${str(self.remote_fpath)}`,
+			'Value': `Title|${str(remotePath)}`,
 		})
+
+		return true
 	}
 
 	redraw(self){
@@ -112,6 +160,26 @@ const PsychWardTitle = class{
 		self.dom.index.preview_img.src = URL.createObjectURL(
 			new Blob([gtz_file.zip_buf.readFile('thumbnail.png')])
 		);
+
+		self.nprint(gtz_file, gtz_file.kb_data);
+	}
+
+	async check_for_presence(self, src_xml=null){
+		const vmix_presence = !!(src_xml || (await vmix.talker.project())).querySelector(
+			`inputs [title="${self.title_name}"]`
+		)
+
+		const local_presence = self.local_fpath?.isFileSync?.();
+
+		self.dom.index.vmix_presence.classList.toggle(
+			'kbsys_hidden_opacity',
+			!vmix_presence
+		)
+
+		self.dom.index.local_presence.classList.toggle(
+			'kbsys_hidden_opacity',
+			!local_presence
+		)
 	}
 }
 
@@ -155,6 +223,7 @@ const PsychWard = class{
 			// Buttons
 			'hard_reload_all':  'sysbtn.hard_reload_all',
 			'redraw':           'sysbtn.redraw',
+			'check_presence':   'sysbtn.check_presence_all',
 		})
 
 		self._editor_dom.index.local_dir.onchange = function(){
@@ -182,10 +251,20 @@ const PsychWard = class{
 				9000
 			);
 		}
+
 		self._editor_dom.index.redraw.onclick = function(){
 			self.redraw();
 			ksys.info_msg.send_msg(
 				'Done',
+				'ok',
+				3000
+			);
+		}
+
+		self._editor_dom.index.check_presence.onclick = async function(){
+			await self.check_presence_all();
+			ksys.info_msg.send_msg(
+				'Done Checking',
 				'ok',
 				3000
 			);
@@ -257,6 +336,8 @@ const PsychWard = class{
 		self.editor_dom.index.flist.value = cfg.flist;
 
 		self.redraw();
+
+		self.check_presence_all();
 	}
 
 	read_input(self){
@@ -331,16 +412,41 @@ const PsychWard = class{
 		try{
 			self.lock_gui();
 			for (const title of self.titles){
-				await title.hard_reload();
-				ksys.info_msg.send_msg(
-					`Reloaded ${title.title_name}`,
-					'ok',
-					1000
-				);
+				if ( !!(await title.hard_reload()) ){
+					ksys.info_msg.send_msg(
+						`Reloaded ${title.title_name}`,
+						'ok',
+						1000
+					);
+				}else{
+					ksys.info_msg.send_msg(
+						`FATAL: Could not reload ${title.title_name}`,
+						'err',
+						7000
+					);
+				}
 			}
-		}catch{}
+			await self.check_presence_all();
+		}catch(e){
+			self.nerr(e);
+		}finally{
+			self.unlock_gui();
+		}
+	}
 
-		self.unlock_gui();
+	async check_presence_all(self){
+		const project_xml = await vmix.talker.project();
+
+		try{
+			self.lock_gui();
+			for (const title of self.titles){
+				await title.check_for_presence(project_xml);
+			}
+		}catch(e){
+			self.nprint(e);
+		}finally{
+			self.unlock_gui();
+		}
 	}
 }
 

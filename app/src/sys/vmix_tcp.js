@@ -1,7 +1,23 @@
 const net = require('net');
 
 
-// ksys.context.global.cache.vmix_ip
+try{
+	str('fuck');
+}catch{
+	var str = function(inp){
+		try {
+			if (inp){
+				if (inp.toString){
+					return inp.toString()
+				}
+			}
+			return `${inp}`
+		}catch{
+			return `${inp}`
+		}
+	}
+}
+
 
 const BytesIO = class {
 	constructor(initialData) {
@@ -565,9 +581,9 @@ const TCPSchedActivators = class extends TCPSched{
 
 
 const consumableBuffer = class{
-    constructor(){
-		const self = ksys.util.nprint(
-			ksys.util.cls_pwnage.remap(this),
+    constructor(pwn=null, nprint=null){
+		const self = (nprint || ksys.util.nprint)(
+			(pwn || ksys.util.cls_pwnage.remap)(this),
 			'#FEFF84',
 		);
 
@@ -576,6 +592,10 @@ const consumableBuffer = class{
 
     write(self, data){
         self.buf = Buffer.concat([self.buf, data]);
+    }
+
+    clear(self){
+    	self.buf = Buffer.alloc(0);
     }
 
     eraseRead(self, amount){
@@ -590,18 +610,27 @@ const TCPSchedAsync = class{
 	TCP_API_PORT = 8099;
 	LINEBREAK = new Buffer([13, 10]);
 
+	HANG_TIMEOUT_DUR = 3000;
+
+	DO_PAUSE = false;
+
 	static NPRINT_LEVEL = 5;
 
-	constructor(vmix_ip){
-		const self = ksys.util.nprint(
-			ksys.util.cls_pwnage.remap(this),
-			'#FEFF84',
-		);
+	constructor(vmix_ip, pwn, nprint, flatPromise){
+		// const self = ksys.util.nprint(
+		// 	ksys.util.cls_pwnage.remap(this),
+		// 	'#FEFF84',
+		// );
+
+		const self = (pwn || ksys.util.cls_pwnage.remap)(this);
+		(nprint || ksys.util.nprint)(self);
 
 		self.VMIXIP = vmix_ip;
 
+		self.flatPromise = (flatPromise || ksys.util.promise);
+
 		// Raw stream buffer sent by VMIX
-		self.TCPBufIn = new consumableBuffer();
+		self.TCPBufIn = new consumableBuffer(pwn, nprint);
 
 		// Pending outcoming TCP commands
 		self.pendingCommands = [];
@@ -617,7 +646,7 @@ const TCPSchedAsync = class{
 
 		// When this is false - the class tries to not do anything, such as
 		// reconnecting to TCP API, executing callbacks and so on.
-		self.enabled = true;
+		self.enabled = false;
 
 		// Commands are executed in a sync manner.
 		// This indicates whether execution schedule is running
@@ -636,22 +665,24 @@ const TCPSchedAsync = class{
 		self.connectionExistsPromise = null;
 		self.connectionExistsResolve = null;
 
+		self.hangTimeout = null;
+
 
 		self.UTF8TextDecoder = new TextDecoder('utf-8');
-		self.DOMParser = new DOMParser();
+		// self.DOMParser = new DOMParser();
 
 		self.awaitingPayload = -1;
 	}
 
 	createConnectionBrokenPromise(self){
-		const [promise, resolve] = ksys.util.promise();
+		const [promise, resolve] = self.flatPromise();
 
 		self.connectionBrokenPromise = promise;
 		self.connectionBrokenResolve = resolve;
 	}
 
 	createLastCommandResponsePromise(self){
-		const [promise, resolve] = ksys.util.promise();
+		const [promise, resolve] = self.flatPromise();
 
 		self.lastCommandResponsePromise = promise;
 		self.lastCommandResponseResolve = resolve;
@@ -670,7 +701,7 @@ const TCPSchedAsync = class{
 
 				if (!self.enabled){return};
 
-				const [cepPromise, cepResolve, cepReject] = ksys.util.promise();
+				const [cepPromise, cepResolve, cepReject] = self.flatPromise();
 
 				self.connectionExistsPromise = cepPromise;
 				self.connectionExistsResolve = cepResolve;
@@ -686,13 +717,21 @@ const TCPSchedAsync = class{
 				self.client.on('data', (data) => {
 					self.nprintL(1, 'Received', data);
 
-					self.treatServerData(data);
+					if (self.DO_PAUSE){
+						self.client.pause();
+						self.treatServerData(data);
+						self.client.resume();
+					}else{
+						self.treatServerData(data);
+					}
 				});
 
 				self.client.on('close', () => {
 					self.nprintL(10, 'Connection closed');
 
-					self.lastCommandResponseResolve({
+					clearTimeout(self.hangTimeout);
+
+					self.lastCommandResponseResolve?.({
 						'header':  null,
 						'payload': null,
 					});
@@ -718,6 +757,8 @@ const TCPSchedAsync = class{
 		// Aka .connectionBrokenPromise must be created synchronously before
 		// trying to establish the TCP connection
 		self.createConnectionBrokenPromise();
+
+		self.enabled = true;
 
 		// Begin maintaining the TCP connection
 		self.maintainConnection();
@@ -880,12 +921,23 @@ const TCPSchedAsync = class{
 			while (self.pendingCommands.length){
 				const item = self.pendingCommands.shift();
 				self.nprintL(1, 'Popped', item, self);
+
+				self.hangTimeout = setTimeout(function(){
+					self.nerr('Hang detected', self);
+					self.lastCommandResponseResolve({
+						'header':  null,
+						'payload': null,
+					});
+				}, self.HANG_TIMEOUT_DUR)
+
 				const result = await self.treatCMD(item.data);
 				self.nprintL(1, 'Got result of', item, 'which is', result, self);
 
 				item.resolve(
 					result
 				)
+
+				clearTimeout(self.hangTimeout);
 
 				self.nprintL(1, 'Done with', item, self);
 			}
@@ -931,12 +983,13 @@ const TCPSchedAsync = class{
 		}
 
 		self.nprintL(1, 'Scheduling', data);
-		const [promise, resolve, reject] = ksys.util.promise();
+		const [promise, resolve, reject] = self.flatPromise();
 
 		const fname = data['Function'];
 		delete data['Function'];
 
-		let payload = `FUNCTION ${fname} ${vmix.talker.create_url(data, false, false)}\r\n`;
+		// let payload = `FUNCTION ${fname} ${vmix.talker.create_url(data, false, false)}\r\n`;
+		let payload = `FUNCTION ${fname} ${new URLSearchParams(data || {}).toString()}\r\n`;
 
 		if (fname == 'XML'){
 			payload = 'XML\r\n';

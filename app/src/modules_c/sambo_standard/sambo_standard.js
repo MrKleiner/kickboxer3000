@@ -7,6 +7,7 @@ window.kbmodules.sambo_standard.counter = {};
 
 window.kbmodules.sambo_standard.load = function(){
 	window.kbmodules.sambo_standard.main_clock_id = 'sambo.main';
+	window.kbmodules.sambo_standard.clock_feed = qsel('#timer_feedback');
 	window.kbmodules.sambo_standard.player_data_schema = new Set();
 	window.kbmodules.sambo_standard.pair_list = new Map();
 
@@ -1037,11 +1038,13 @@ window.kbmodules.sambo_standard.clock_show = async function(resume=true){
 window.kbmodules.sambo_standard.clock_tick_event = async function(data){
 	const time = data.time;
 
-	$('#timer_feedback').text(
-		`${str(time.clock.minutes).padStart(2, '0')}:${str(time.clock.seconds).padStart(2, '0')}`
+	window.kbmodules.sambo_standard.clock_feed.textContent = (
+		str(time.clock.minutes).padStart(2, '0') + ':' +
+		str(time.clock.seconds).padStart(2, '0')
 	);
 
-	if (time.total.seconds <= 9){
+	// if (time.total.seconds <= 9){
+	if (time.tick <= 9){
 		await window.kbmodules.sambo_standard.clock_hide();
 		await ksys.util.sleep(1500);
 		// await window.kbmodules.sambo_standard.clock_stop();
@@ -1073,12 +1076,9 @@ window.kbmodules.sambo_standard.set_round_amount = function(){
 
 window.kbmodules.sambo_standard.set_round = async function(r, reset=false){
 	// store current round number
-	ksys.context.module.prm('active_round', r);
+	ksys.context.module.prm('current_round', r);
 
-	await window.kbmodules.sambo_standard.titles.timer.set_text(
-		'info_text',
-		`${ksys.context.module.cache.active_round || 1} OF ${ksys.context.module.cache.round_amount}`
-	);
+	await window.kbmodules.sambo_standard.titles.timer.set_text('round', `ROUND ${str(r).trim()}`);
 
 	if (reset == true){
 		await window.kbmodules.sambo_standard.clock_reset();

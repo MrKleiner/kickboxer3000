@@ -57,6 +57,10 @@ const VisualBasicTextField = class{
 			self.field_name.replaceAll('.Text', ''),
 			self.val
 		)
+
+		await ksys.util.sleep(200);
+
+		await self.vb_item.redraw_preview();
 	}
 
 	$type_switch(self){
@@ -133,7 +137,6 @@ const VisualBasicTextField = class{
 
 
 
-
 const VisualBasicItem = class{
 	ICONS = Object.freeze({
 		'image':           './assets/image_icon.svg',
@@ -146,6 +149,8 @@ const VisualBasicItem = class{
 		'colour':          './assets/color_palette_icon.svg',
 		'virtualset':      './assets/scene_icon.svg',
 		'browser':         './assets/browser_icon.svg',
+		'replay':          './assets/replay_icon.svg',
+		'replaypreview':   './assets/replay_preview_icon.svg',
 	});
 
 	constructor(vb, params){
@@ -203,6 +208,10 @@ const VisualBasicItem = class{
 			'ov_4':          '.ov_4',
 		})
 
+		if (self.visual_name.includes('KBNC_SYS_DATA')){
+			self._dom_list_item.root.classList.add('kbsys_locked');
+		}
+
 		if (self.input_type in self.ICONS){
 			self._dom_list_item.index.input_type.src = self.ICONS[self.input_type];
 		}
@@ -213,6 +222,7 @@ const VisualBasicItem = class{
 			self.select();
 			await self.refresh();
 			self.vb.save();
+			self.redraw_preview();
 		}
 
 		self._dom_list_item.root.oncontextmenu = function(){
@@ -243,6 +253,8 @@ const VisualBasicItem = class{
 
 			// Place for the input specific control panel
 			'specific': '.ctrl_specific',
+
+			'preview':  'img.preview',
 		})
 
 		for (const i of range(4)){
@@ -267,6 +279,20 @@ const VisualBasicItem = class{
 			await self.vb.redraw_overlay_occupation();
 
 			self._dom_ctrl.index.overlay_ctrl.classList.remove('kbsys_locked');
+		}
+
+		self._dom_ctrl.index.preview.onmousedown = function(){
+			const pootis = $(`
+				<img
+					contain
+					id="vb_fullscreen_preview"
+					src="${self._dom_ctrl.index.preview.src}"
+				>
+			`)[0];
+			document.body.append(pootis);
+			pootis.onmouseup = function(){
+				pootis?.remove?.();
+			}
 		}
 
 		return self._dom_ctrl
@@ -390,6 +416,29 @@ const VisualBasicItem = class{
 				}
 			}
 		}
+	}
+
+	async redraw_preview(self){
+		const kbnc = ksys.kbnc.KBNC.sysData().currentClient;
+		if (!kbnc.enabled){return};
+
+		await vmix.talker.talk({
+			'Function': 'SnapshotInput',
+			'Value': 'C:\\custom\\vmix_assets\\buf.png',
+			'Input': self.visual_name,
+		})
+
+		await ksys.util.sleep(125);
+
+		const msg = await kbnc.runCMD('generic.read_file', {
+			'header': {
+				'fpath': 'C:\\custom\\vmix_assets\\buf.png',
+			},
+		})
+
+		self.dom_ctrl.index.preview.src = URL.createObjectURL(
+			new Blob([(await msg.result()).payload])
+		);
 	}
 }
 

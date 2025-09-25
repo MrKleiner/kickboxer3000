@@ -1,25 +1,46 @@
-const cls_pwnage = require('../sys/class_pwnage.js');
 const vmix_tcp = require('../sys/vmix_tcp.js');
-const kbn_util = require('../kbn/kbn_util.js');
 const net = require('net');
 const fastq = require('fastq');
 
-try{
-	str('fuck');
-}catch{
-	var str = function(inp){
-		try {
-			if (inp){
-				if (inp.toString){
-					return inp.toString()
-				}
-			}
-			return `${inp}`
-		}catch{
-			return `${inp}`
+const kbn_util = (
+	(process.type == 'browser') ?
+	require('../kbn/kbn_util.js') : ksys.util
+);
+
+const cls_pwnage = (
+	(process.type == 'browser') ?
+	require('../sys/class_pwnage.js') : ksys.util.cls_pwnage
+)
+
+if (process.type == 'browser'){
+	var Path = kbn_util.Path;
+}
+
+var str = function(inp){
+	try {
+		if (inp?.toString){
+			return inp.toString()
 		}
+		return `${inp}`
+	}catch{
+		return `${inp}`
 	}
 }
+
+const IS_DEV = kbn_util.isDev();
+
+
+const nprintLevels = {
+	'payloadStreamWrite':    IS_DEV ? 0 : 5,
+	'KBNConnectMSG':         IS_DEV ? 0 : 5,
+	'KBNConnectSocketSched': IS_DEV ? 0 : 5,
+}
+
+
+
+
+
+
 
 
 
@@ -62,6 +83,8 @@ const consumableBuffer = class{
 const payloadStreamWrite = class{
 	CHUNK_SIZE = 8192;
 
+	static NPRINT_LEVEL = nprintLevels.payloadStreamWrite;
+
 	constructor(payloadLength, dataIter){
 		const self = kbn_util.nprint(cls_pwnage.remap(this));
 
@@ -75,8 +98,9 @@ const payloadStreamWrite = class{
 		}
 	}
 
-	*iterBuf(self){
+	*iterBuf(self, onProg=null){
 		let offs = 0;
+		const total = self.srcBuf.length;
 		while (true){
 			const chunk = self.srcBuf.slice(
 				offs,
@@ -86,6 +110,7 @@ const payloadStreamWrite = class{
 				break
 			}
 			yield chunk;
+			onProg?.(offs / total, total, offset);
 			offs += self.CHUNK_SIZE;
 		}
 	}
@@ -94,7 +119,10 @@ const payloadStreamWrite = class{
 
 
 const KBNConnectMSG = class{
-	constructor(sched, MSGData){
+
+	static NPRINT_LEVEL = nprintLevels.KBNConnectMSG;
+
+	constructor(sched, MSGData, onProg=null){
 		const self = kbn_util.nprint(cls_pwnage.remap(this));
 
 		// The parent schedule
@@ -106,6 +134,9 @@ const KBNConnectMSG = class{
 
 		// Cannot send the same message twice
 		self.payloadSent = false;
+
+		// Send progress callback
+		self.onProg = onProg;
 
 		// Result promises only make sense if it's an exec type message
 		// Response cannot have a response
@@ -203,7 +234,7 @@ const KBNConnectMSG = class{
 			kbn_util.toInt32(headerData.length)
 		)
 		await self.sched.writeBytes(headerData);
-		for (const chunk of payloadBuf.iterBuf()){
+		for (const chunk of payloadBuf.iterBuf(self.onProg)){
 			await self.sched.writeBytes(chunk);
 		}
 		// await self.sched.writeBytes(payloadBuf);
@@ -243,8 +274,14 @@ const KBNConnectSocketSched = class{
 		}
 
 	*/
+
+	static NPRINT_LEVEL = nprintLevels.KBNConnectSocketSched;
+
 	constructor(skt, msgExec, callbacks=null){
-		const self = kbn_util.nprint(cls_pwnage.remap(this));
+		const self = kbn_util.nprint(
+			cls_pwnage.remap(this),
+			'#1DFF42'
+		);
 
 		// Callbacks
 		const onDeath = callbacks?.onDeath;
@@ -394,10 +431,10 @@ const KBNConnectSocketSched = class{
 
 		while (self.enabled){
 			try{
-				self.nprint('Awaiting message...');
+				self.nprintL(1, 'Awaiting message...');
 				// Header is always present regardless of context
 				const msgHeader = await self.readHeader();
-				self.nprint('Read header:', msgHeader);
+				self.nprintL(1, 'Read header:', msgHeader);
 
 				// Pull the message ID out of the dictionary for extra safety
 				const MSGID = msgHeader.sys.MSGID;
@@ -408,7 +445,11 @@ const KBNConnectSocketSched = class{
 
 				let offs = 0;
 				for await (const chunk of self.readBytesStream(msgPayload.length)){
-					// self.nprint('Reading chunk:', chunk.length, [str(chunk).slice(0, 16)]);
+					self.nprintL(0,
+						'Reading chunk:',
+						chunk.length,
+						[str(chunk.slice(0, 16))]
+					);
 					offs += chunk.copy(msgPayload, offs);
 				}
 
@@ -455,16 +496,18 @@ const KBNConnectSocketSched = class{
 
 			}catch(err){
 				// Todo: what kind of exceptions can go here and what do they mean?
+
 				// self.nprint(`${err.prototype.constructor.name}`, err);
 				self.nerr(`>${err?.constructor?.name}<`, '\n', err);
 
 				if (err instanceof ConnectionAborted){
 					self.nerr('Connection collapsed:', '\n', err);
-					self.rejectPending();
-					try{self.terminate()}catch{};
-					self.onDeath(err);
-					return
 				}
+
+				self.rejectPending();
+				try{self.terminate()}catch{};
+				self.onDeath(err);
+				return
 			}
 		}
 	}
@@ -500,7 +543,7 @@ const KBNConnectSocketSched = class{
 
 	// Scedule a message to be sent,
 	// which contains data to be executed by the other side
-	async schedMSGExec(self, MSGData){
+	async schedMSGExec(self, MSGData, onProg=null){
 		const MSGID = self.lastCMDID++;
 
 		const msg = new KBNConnectMSG(self, {
@@ -512,7 +555,7 @@ const KBNConnectSocketSched = class{
 				'extra': MSGData.header,
 			},
 			'payload': MSGData.payload,
-		})
+		}, onProg)
 
 		self.MSGDictExec.set(MSGID, msg);
 		await self.MSGOutSched.push(msg);
@@ -524,21 +567,43 @@ const KBNConnectSocketSched = class{
 		self.onDeath(new ConnectionAborted(
 			'Socket force terminated'
 		));
-		await self.skt.destroy();
+		try{await self.skt.destroy()}catch{};
 		self.rejectPending();
 	}
 }
 
 
 
-const TESTCMDHandler = function(MSGData){
-	return {
-		'header': {
-			'payloadLengthEcho': MSGData.payload.length,
-			'headerEcho': MSGData?.header?.CMDID,
-		},
-		'payload': kbn_util.rnd_uuid(),
+const KBNCMDHandler = function(MSGData){
+	if (MSGData.header.CMDID == 'generic.write_file'){
+		const fpath = Path(MSGData.header.fpath);
+		fpath.parent().makeDirSync();
+		fpath.writeFileSync(MSGData.payload);
+
+		return {
+			'header': true,
+			'payload': `Wrote ${str(fpath)}`,
+		}
 	}
+
+	if (MSGData.header.CMDID == 'generic.read_file'){
+		return {
+			'header': true,
+			'payload': Path(MSGData.header.fpath).readFileSync(),
+		}
+	}
+
+	if (MSGData.header.CMDID == 'generic.globDir'){
+		return {
+			'header': true,
+			'payload': (
+				[...Path(MSGData.header.fpath).globSync(MSGData.header.pattern || '*')]
+				.map(function(i){return str(i)})
+			),
+		}
+	}
+
+	throw new Error('Unknown command');
 }
 
 
@@ -581,6 +646,9 @@ const KBNConnectSocketServer = class{
 
 		// Security key
 		self.key = kbn_util.rnd_uuid();
+
+		// Connected client port
+		self.serverPort = null;
 
 		// Because nodejs hasn't got easy to use XML API
 		// and 3mb of js code just to bring it back is fucking retarded.
@@ -635,15 +703,31 @@ const KBNConnectSocketServer = class{
 		}
 	}
 
-	async setConnectionData(self, port){
+	async setConnectionData(self, port=null){
 		await self.ensurePhantomInput();
 
 		await self.VMIXTCP.runCmd({
 			'Function':     'SetText',
 			'Input':        'KBNC_SYS_DATA.gtzip',
 			'SelectedName': '0.Text',
-			'Value':        `${self.key}:${port}`,
+			'Value':        `${self.key}:${port || self.serverPort}`,
 		})
+	}
+
+	async maintainConnectionData(self){
+		// await kbn_util.sleep(3500);
+		while (self.enabled){
+			const XPATHResult = await self.VMIXTCP.runCmd({
+				'Function': 'XMLTEXT',
+				'Value':    'vmix/inputs/input[@title="KBNC_SYS_DATA.gtzip"]',
+			})
+
+			if (!XPATHResult.payload.includes('KBNC_SYS_DATA.gtzip')){
+				await self.setConnectionData(self.serverPort);
+			}
+
+			await kbn_util.sleep(3500);
+		}
 	}
 
 	async msgInExec(self, MSGData){
@@ -678,7 +762,7 @@ const KBNConnectSocketServer = class{
 			}
 		}
 
-		return await TESTCMDHandler(MSGData);
+		return await KBNCMDHandler(MSGData);
 	}
 
 	createClientConnection(self, skt){
@@ -713,7 +797,7 @@ const KBNConnectSocketServer = class{
 	maintainConnection(self){
 		if (self.connectionMaintained){
 			self.nprint('Tried maintaining connection twice in a row');
-			return
+			return 'Server already running';
 		}
 
 		self.nprint('Maintaining connection...');
@@ -722,7 +806,6 @@ const KBNConnectSocketServer = class{
 
 		return new Promise(async function(resolve, reject){
 			let [serverExistsPromise, serverExistsResolve] = kbn_util.flatPromise();
-			let [clientConnectedPromise, clientConnectedResolve] = kbn_util.flatPromise();
 
 			while (self.enabled){
 				try{
@@ -738,8 +821,10 @@ const KBNConnectSocketServer = class{
 					self.server.listen(0, '0.0.0.0', async function(){
 						const port = self.server.address().port;
 						self.nprint('Listening on port', port);
+						self.serverPort = port;
 						await self.setConnectionData(port);
-						resolve();
+						self.maintainConnectionData();
+						resolve(true);
 					})
 
 					await serverExistsPromise;
@@ -750,7 +835,6 @@ const KBNConnectSocketServer = class{
 			}
 		})
 	}
-
 }
 
 
@@ -758,4 +842,5 @@ const KBNConnectSocketServer = class{
 
 module.exports = {
 	KBNConnectSocketServer,
+	KBNConnectSocketSched,
 }

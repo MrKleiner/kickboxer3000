@@ -22,7 +22,7 @@ szipper.pack(
 	# include package.json for proper versioning
 	[project / 'app' / 'src', project / 'app' / 'package.json'],
 	tmp_folder / 'patch_data.7z',
-	['bins', 'db'],
+	['bins', 'db', 'isdev.fuck'],
 )
 
 # create icon for the patcher

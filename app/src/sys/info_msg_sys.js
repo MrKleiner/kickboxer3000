@@ -1,6 +1,10 @@
 const msgsys = {};
 
 
+const MSG_POOL_DOM = qsel('hintsys-bar #hintsys_bar_msgs');
+
+
+
 // Todo: the magic circle timing is half-broken
 // It's not broken. It's simply impossible to trigger a function
 // faster than n-whatever milliseconds.
@@ -149,6 +153,11 @@ const InfoMessage = class{
 
 // the "new" keyword is stoopid
 const send_msg = function(text, msg_type='warn', dur=1000){
+	for (const msg of qselAll('hintsys-bar #hintsys_bar_msgs .kbmsg')){
+		if (msg.innerText == text){
+			return
+		}
+	}
 	return new InfoMessage(text, msg_type, dur)
 }
 

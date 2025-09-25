@@ -13,11 +13,10 @@ const global_params = {
 };
 
 
+const IS_DEV = ksys.util.isDev();
 
 
-// ============================
-//        New, definitive
-// ============================
+
 const HTTPResourceProxySecurityWhitelist = class{
 	// Whitelist
 	// Token
@@ -168,6 +167,8 @@ const HTTPResourceProxySecurityToken = class{
 
 	static TOKEN_LEN = 8;
 
+	static NPRINT_LEVEL = 5;
+
 	constructor(server, params=null){
 		const self = ksys.util.nprint(
 			ksys.util.cls_pwnage.remap(this),
@@ -210,7 +211,7 @@ const HTTPResourceProxySecurityToken = class{
 
 	map_fpath(self, tgt_fpath){
 		const fpath = Path(tgt_fpath);
-		self.nprint('Mapping tokenized fpath:', tgt_fpath, fpath.withStem(fpath.stem + self.token))
+		self.nprintL(1, 'Mapping tokenized fpath:', tgt_fpath, fpath.withStem(fpath.stem + self.token))
 		return {
 			'fpath': fpath.withStem(fpath.stem + self.token),
 		}
@@ -222,7 +223,7 @@ const HTTPResourceProxySecurityToken = class{
 		const token = fpath_data.stem.slice(slice_size);
 		const fpath = fpath_data.withStem(fpath_data.stem.slice(0, slice_size));
 
-		self.nprint('Resolving:', token, fpath_data, fpath, self);
+		self.nprintL(1, 'Resolving:', token, fpath_data, fpath, self);
 
 		if (token != self.token){
 			self.nprint('Resolve failed:', token, fpath_data, fpath, self);
@@ -241,7 +242,7 @@ const HTTPResourceProxySecurityToken = class{
 }
 
 const HTTPResourceProxy = class{
-	static LOG_REQUESTS = true;
+	static LOG_REQUESTS = IS_DEV;
 
 	static SECURITY_METHODS = Object.freeze([
 		HTTPResourceProxySecurityWhitelist,
@@ -249,6 +250,7 @@ const HTTPResourceProxy = class{
 		HTTPResourceProxySecurityToken,
 	]);
 
+	static NPRINT_LEVEL = 3;
 
 	constructor(params=null){
 		const self = ksys.util.nprint(
@@ -321,7 +323,7 @@ const HTTPResourceProxy = class{
 	}
 
 	static module_init(){
-		const placeholder = document.querySelector('http-resource-proxy-control');
+		const placeholder = qsel('http-resource-proxy-control');
 		if (placeholder){
 			placeholder.replaceWith(
 				(new HTTPResourceProxyControlPanel({'resource_proxy': global_params.resource_proxy})).dom.root
@@ -493,10 +495,14 @@ const HTTPResourceProxy = class{
 			.lower()
 			.trim()
 		);
-		self.nprint('RAW:', path_raw)
+		
+		(self.constructor.LOG_REQUESTS ? self.nprint('RAW:', path_raw) : null);
+
 		const mem_buf = sys_data.mem_bufs[path_raw];
 		if (mem_buf){
-			self.nprint('Returning memory buffer:', path_raw);
+			if (self.constructor.LOG_REQUESTS){
+				self.nprint('Returning memory buffer:', path_raw);
+			}
 			res.statusCode = 200;
 			res.write(mem_buf);
 			res.end();
@@ -514,7 +520,11 @@ const HTTPResourceProxy = class{
 			res.statusCode = 404;
 			res.write(`File doesn't exist`);
 			res.end();
-			self.nwarn('File (validated)', str(validation.fpath), `doesn't exist`);
+			self.nwarn(
+				'File (validated)',
+				str(validation.fpath),
+				`doesn't exist`
+			);
 		}
 	}
 }
@@ -659,6 +669,13 @@ const VMIXTitle = class{
 	ADV_LETTERS = true;
 	ADV_LETTERS_ARRAY = 'ыъэё';
 
+	// This (basically) gets multiplied by HARD_RELOAD_WAIT_CAP
+	HARD_RELOAD_SLEEP = 275;
+
+	// Waiting forever is fucking stupid
+	HARD_RELOAD_WAIT_CAP = 50;
+
+	HARD_RELOAD_RETRY_CAP = 2;
 
 	// timings are in the following format:
 	// {
@@ -669,7 +686,12 @@ const VMIXTitle = class{
 	// }
 
 	constructor(title_name, gt_format=true){
-		const self = ksys.util.cls_pwnage.remap(this);
+		// const self = ksys.util.cls_pwnage.remap(this);
+
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#C67DFF',
+		);
 
 		self.last_overlay = null;
 		self.timings = null;
@@ -890,6 +912,60 @@ const VMIXTitle = class{
 		}
 	}
 
+	async count_duplicates(self){
+		return (
+			(await vmix.talker.project())
+			.querySelectorAll(`inputs [title="${self.title_name}"]`)
+			.length
+		)
+	}
+
+	// async hard_reload(self, wait_factor=1, retries_factor=1){
+	async hard_reload(self, params){
+		let count_last = await self.count_duplicates();
+
+		let retries = 0;
+
+		while (count_last > 0){
+			self.nprint('Removing', self.title_name);
+
+			if (retries >= Math.ceil(self.HARD_RELOAD_RETRY_CAP * (params.retries_factor || 1))){
+				return false
+			}
+
+			// Commandeer VMIX to remove the title
+			await vmix.talker.talk({
+				'Function': `RemoveInput`,
+				'Input': self.title_name,
+			})
+
+			// Wait for VMIX to remove this duplicate
+			const retry_cap = Math.ceil(
+				self.HARD_RELOAD_WAIT_CAP * (params.wait_factor || 1)
+			);
+
+			for (const i of range(retry_cap)){
+				await ksys.util.sleep(self.HARD_RELOAD_SLEEP);
+				const new_count = await self.count_duplicates();
+				if (count_last != new_count){
+					count_last = new_count;
+					break
+				}
+				self.nprint('Waiting...', `${i+1}/${retry_cap}`);
+			}
+
+			// Don't wait forever
+			retries += 1
+		}
+
+		// Re-add self
+		await vmix.talker.talk({
+			'Function': `AddInput`,
+			'Value': `Title|${str(params.gtz_fpath)}`,
+		})
+
+		return true
+	}
 
 	// todo: these manipulations (pause/resume render) require
 	// beyond sattelite manufacturing precision,
@@ -911,12 +987,11 @@ const VMIXTitle = class{
 		})
 	}
 
-
 	async set_text_color(self, field_name, hex_color){
 		await vmix.talker.talk({
-			'Function': 'SetTextColour',
-			'Value': `#${str(hex_color).replaceAll('#', '')}`,
-			'Input': self.title_name,
+			'Function':     'SetTextColour',
+			'Value':        `#${str(hex_color).replaceAll('#', '')}`,
+			'Input':        self.title_name,
 			'SelectedName': field_name + (self.gtformat ? '.Text' : ''),
 		})
 	}

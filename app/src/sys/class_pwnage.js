@@ -22,19 +22,25 @@ const remap = function(self, exclude){
 
 		if (original_func.constructor.name == 'AsyncFunction'){
 			self[func_name] = async function(){
-				return await original_func(self, ...arguments)
+				return await original_func.call(self, self, ...arguments)
 			}
 		}
 
 		if (original_func.constructor.name == 'Function'){
 			self[func_name] = function(){
-				return original_func(self, ...arguments)
+				return original_func.call(self, self, ...arguments)
 			}
 		}
 
 		if (original_func.constructor.name == 'GeneratorFunction'){
 			self[func_name] = function(){
-				return original_func(self, ...arguments)
+				return original_func.call(self, self, ...arguments)
+			}
+		}
+
+		if (original_func.constructor.name == 'AsyncGeneratorFunction'){
+			self[func_name] = function(){
+				return original_func.call(self, self, ...arguments)
 			}
 		}
 	}
@@ -290,7 +296,7 @@ const pwn = function(self, prms=null){
 			}
 
 			// Whether it's a real get/set
-			const is_real_gs = desc.get || desc.set;
+			const is_real_gs = !!(desc.get || desc.set);
 
 			// Determine whether this function is a bootleg get/set thing.
 			// It's said, that get/set can be remapped, but paranoia stats
@@ -332,8 +338,6 @@ const pwn = function(self, prms=null){
 						bootleg_gs_dict[real_name]['get'] = tgt_func;
 					}
 				}
-
-				delete self[func_name];
 			}
 		}
 
@@ -375,6 +379,8 @@ const pwn = function(self, prms=null){
 				};
 			}
 		}
+
+		self[fname][PURE_PWNAGE] = true;
 	}
 
 	// Bootleg getters and setters
@@ -386,12 +392,14 @@ const pwn = function(self, prms=null){
 			prop_desc.get = function(){
 				return gs_get.call(self, self);
 			};
+			prop_desc.get[PURE_PWNAGE] = true;
 		}
 
 		if (gs_set){
 			prop_desc.set = function(tgt_val){
 				return gs_set.call(self, self, tgt_val);
 			};
+			prop_desc.set[PURE_PWNAGE] = true;
 		}
 
 		Object.defineProperty(self, gs_name, prop_desc);
@@ -403,14 +411,16 @@ const pwn = function(self, prms=null){
 
 		if (gs_get){
 			gs_data.get = function(){
-				return gs_get.call(self, self);
+				return gs_get.call(self);
 			};
+			gs_data.get[PURE_PWNAGE] = true;
 		}
 
 		if (gs_set){
 			gs_data.set = function(tgt_val){
-				return gs_set.call(self, self, tgt_val);
+				return gs_set.call(self, tgt_val);
 			};
+			gs_data.set[PURE_PWNAGE] = true;
 		}
 
 		Object.defineProperty(self, gs_name, gs_data);

@@ -249,6 +249,26 @@ $this.load = async function(){
 					'margin': 100,
 				},
 			}),
+			// field layout
+			'team_layout_home': new vmix.title({
+				'title_name': 'command_layout_home.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 25,
+					'frames_in': 50,
+					'margin': 100,
+				},
+			}),
+			// field layout
+			'team_layout_guest': new vmix.title({
+				'title_name': 'command_layout_guest.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 25,
+					'frames_in': 50,
+					'margin': 100,
+				},
+			}),
 
 			// field layout condensed
 			'lineup_condensed': new vmix.title({
@@ -559,6 +579,19 @@ $this.load = async function(){
 
 
 	// --------------------------
+	// Field Layout template location
+	// --------------------------
+	{
+		$this.field_layout_template_fpath = document.querySelector('#field_layout_template_fpath');
+		$this.field_layout_template_fpath.value = mctx.cache.field_layout_template_fpath || '/';
+		$this.field_layout_template_fpath.onchange = function(){
+			$this.field_layout_template_fpath.value = $this.field_layout_template_fpath.value.replaceAll('"', '');
+			ksys.context.module.prm('field_layout_template_fpath', $this.field_layout_template_fpath.value);
+		}
+	}
+
+
+	// --------------------------
 	// Title schema switch
 	// --------------------------
 	{
@@ -587,6 +620,45 @@ $this.load = async function(){
 			$this.persistent_header = new $this.PersistentHeader();
 			await $this.persistent_header.pages.pull_page_from_vmix();
 		}
+	}
+
+
+	// --------------------------
+	// Lineup Condensed max players per page switch
+	// --------------------------
+	{
+		// Important todo: GTZ Shape is the only one that works
+		$this.lineup_condensed_max_players_per_page = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': mctx.cache.lineup_condensed_max_players_per_page || 4,
+			'dom_array': [
+				{
+					'id': 2,
+					'dom': qsel('#lineup_condensed_max_players_per_page_switch [two]'),
+				},
+				{
+					'id': 3,
+					'dom': qsel('#lineup_condensed_max_players_per_page_switch [three]'),
+				},
+				{
+					'id': 4,
+					'dom': qsel('#lineup_condensed_max_players_per_page_switch [four]'),
+				},
+				{
+					'id': 5,
+					'dom': qsel('#lineup_condensed_max_players_per_page_switch [five]'),
+				},
+				{
+					'id': 6,
+					'dom': qsel('#lineup_condensed_max_players_per_page_switch [six]'),
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				print('Saved lineup condensed schema:', schema_id);
+				ksys.context.module.prm('lineup_condensed_max_players_per_page', schema_id);
+			}
+		});
 	}
 
 
@@ -964,6 +1036,32 @@ $this.load = async function(){
 
 		$this.update_team_colors();
 		$this.resource_index.score_manager.resync_score_on_title()
+
+		qsel('general-cfg').classList.toggle(
+			'kbsys_hidden',
+			!ksys.context.module.prm('config_vis')
+		)
+
+		ksys.btns.toggle({
+			'show_home_field_layout':    false,
+			'show_guest_field_layout':   false,
+		})
+
+		for (const dom of qselAll('#layout_preview_home, #layout_preview_guest')){
+			dom.onmousedown = function(){
+				const pootis = $(`
+					<img
+						contain
+						id="vb_fullscreen_preview"
+						src="${dom.src}"
+					>
+				`)[0];
+				document.body.append(pootis);
+				pootis.onmouseup = function(){
+					pootis?.remove?.();
+				}
+			}
+		}
 	}
 
 
@@ -2811,7 +2909,7 @@ $this.TeamLineupColorPicker = class{
 		self._text_color_switch = new ksys.switches.KBSwitch({
 			'multichoice': false,
 			'can_be_empty': false,
-			'set_default': 'white',
+			'set_default': 'black',
 			'dom_array': [
 				{
 					'id': 'white',
@@ -6745,6 +6843,7 @@ $this.forward_field_layout_to_vmix = async function(team){
 	const tgt_side = str(team).lower();
 	const tgt_field = $this.resource_index.side?.[tgt_side]?.field;
 	const suffix = $this.resource_index.side?.[tgt_side]?.club?.is_enemy ? 'guest' : 'home';
+	const kbnc = ksys.kbnc.KBNC.sysData().currentClient;
 
 	if (!tgt_field){
 		ksys.info_msg.send_msg('Lineup does not exist for this side', 'warn', 9000);
@@ -6753,18 +6852,96 @@ $this.forward_field_layout_to_vmix = async function(team){
 
 	// Switch off all buttons responsible for showing the title on screen
 	ksys.btns.toggle({
-		'show_home_field_layout':    false,
-		'hide_home_field_layout':    false,
+		// 'show_home_field_layout':    false,
+		// 'hide_home_field_layout':    false,
 
-		'show_guest_field_layout':   false,
-		'hide_guest_field_layout':   false,
+		// 'show_guest_field_layout':   false,
+		// 'hide_guest_field_layout':   false,
 
 		'prepare_home_team_layout':  false,
 		'prepare_guest_team_layout': false,
 	})
 
 	// get target vmix title
-	const title = $this.titles.team_layout;
+	const title = $this.titles[`team_layout_${suffix}`];
+
+
+	// ========================================
+	// YOU COMPLETE AND UTTER IMBECILES.
+	// Absolute TWATS.
+	// ========================================
+
+	const template_gtz = Path($this.field_layout_template_fpath.value);
+
+	// Check whether the file exists
+	if (!template_gtz.isFileSync()){
+		ksys.info_msg.send_msg(
+			'Specify template location first ("Field Layout Template" parameter in config)',
+			'warn',
+			11000
+		);
+		ksys.btns.toggle({
+			'prepare_home_team_layout':  true,
+			'prepare_guest_team_layout': true,
+		})
+		return
+	}
+
+	const gtz_file = new ksys.gtzip_wrangler.GTZipFile({
+		'fpath': template_gtz,
+	});
+
+	// Check whether it vaguely resembles a .gtzip file
+	try{
+		gtz_file.doc_xml.querySelector(`Composition`).getAttribute('Width');
+	}catch{
+		ksys.info_msg.send_msg(
+			`The specified Field Layout template file doesn't seem to resemble a valid .gtzip file`,
+			'warn',
+			11000
+		);
+		ksys.btns.toggle({
+			'prepare_home_team_layout':  true,
+			'prepare_guest_team_layout': true,
+		})
+		return
+	}
+
+	// Delete unused cells
+	for (const cell of tgt_field.iter_cells()){
+		if (!cell.player){
+			gtz_file.doc_xml.querySelector(`Layer[Name="plr_${cell.id}"]`)?.remove?.();
+			print('Removing', `Layer[Name="plr_${cell.id}"]`);
+		}
+	}
+
+	// Write new simplified file
+	const modified_gtz_fpath = template_gtz.withBasename(
+		`command_layout_${suffix}.gtzip`
+	);
+
+	// modified_gtz_fpath.writeFileSync(
+	// 	gtz_file.to_zip_buf()
+	// );
+
+	const kbncResult = await kbnc.runCMD('generic.write_file', {
+		'header': {
+			'fpath': str(modified_gtz_fpath),
+		},
+		'payload': gtz_file.to_zip_buf(),
+	})
+	await kbncResult.result();
+
+	// Reload the modified GTZ file in VMIX
+	await title.hard_reload({
+		'gtz_fpath': modified_gtz_fpath,
+	});
+
+	// important todo: is this level of paranoia really needed?
+	await ksys.util.sleep(100);
+
+	// ========================================
+
 
 	// important todo: this implies proxy is always active
 	vmix.util.HTTPResourceProxy.reg_buf([
@@ -6828,6 +7005,97 @@ $this.forward_field_layout_to_vmix = async function(team){
 				'plist': tgt_field.lineup.main_players,
 				'slot_type': 'm',
 			},
+			// {
+			// 	'plist': tgt_field.lineup.reserve_players,
+			// 	'slot_type': 'r',
+			// },
+		]
+		for (const list_data of data_mapping){
+			for (const player_idx of range(11)){
+
+				const player = list_data.plist.at(player_idx);
+
+				const player_num = player?.player_num || '';
+				const player_surname = ksys.strf.params.players.format(player?.surname || '')
+
+				// player number
+				await title.set_text(
+					`plist_num_${list_data.slot_type}_${player_idx + 1}`,
+					player_num
+				)
+				// player surname
+				await title.set_text(
+					`plist_pname_${list_data.slot_type}_${player_idx + 1}`,
+					player_surname
+				);
+			}
+		}
+	}
+
+	if ($this.cmd_layout_mains_schema_switch.selected == 'shared'){
+		// important todo: this is shit
+		const mains_list_nums = [];
+		const mains_list_names = [];
+		for (const player_idx of range(11)){
+			const player = tgt_field.lineup.main_players.at(player_idx);
+			if (player){
+				mains_list_nums.push(player.player_num);
+				mains_list_names.push(
+					ksys.strf.params.players.format(player.surname)
+				);
+			}
+		}
+
+		await title.set_text(
+			'main_nums',
+			mains_list_nums.join('\n')
+		)
+		await title.set_text(
+			'main_names',
+			mains_list_names.join('\n')
+		)
+	}
+
+
+	if ($this.cmd_layout_reserves_schema_switch.selected == 'shared'){
+		// important todo: this is shit
+		const list_nums = [];
+		const list_names = [];
+		for (const player_idx of range(11)){
+			const player = tgt_field.lineup.reserve_players.at(player_idx);
+			if (player){
+				list_nums.push(player.player_num);
+				list_names.push(
+					ksys.strf.params.players.format(player.surname)
+				);
+			}
+		}
+
+		await title.set_text(
+			'sub_nums',
+			list_nums.join('\n')
+		)
+		await title.set_text(
+			'sub_names',
+			list_names.join('\n')
+		)
+
+		await title.set_text(
+			'subs_numbers',
+			list_nums.join('\n')
+		)
+		await title.set_text(
+			'subs_names',
+			list_names.join('\n')
+		)
+	}
+
+	if ($this.cmd_layout_reserves_schema_switch.selected == 'dedicated'){
+		const data_mapping = [
+			// {
+			// 	'plist': tgt_field.lineup.main_players,
+			// 	'slot_type': 'm',
+			// },
 			{
 				'plist': tgt_field.lineup.reserve_players,
 				'slot_type': 'r',
@@ -6853,30 +7121,6 @@ $this.forward_field_layout_to_vmix = async function(team){
 				);
 			}
 		}
-	}
-
-	if ($this.cmd_layout_reserves_schema_switch.selected == 'shared'){
-		// important todo: this is shit
-		const mains_list_nums = [];
-		const mains_list_names = [];
-		for (const player_idx of range(11)){
-			const player = tgt_field.lineup.reserve_players.at(player_idx);
-			if (player){
-				mains_list_nums.push(player.player_num);
-				mains_list_names.push(
-					ksys.strf.params.players.format(player.surname)
-				);
-			}
-		}
-
-		await title.set_text(
-			'subs_numbers',
-			mains_list_nums.join('\n')
-		)
-		await title.set_text(
-			'subs_names',
-			mains_list_names.join('\n')
-		)
 	}
 
 
@@ -6908,34 +7152,63 @@ $this.forward_field_layout_to_vmix = async function(team){
 
 	// Enable buttons responsible for showing the team's layout which was just prepared
 	{
-		ksys.btns.pool[`show_${tgt_side}_field_layout`].toggle(true)
-		ksys.btns.pool[`hide_${tgt_side}_field_layout`].toggle(true)
+		ksys.btns.pool[`show_${tgt_side}_field_layout`].toggle(true);
+		ksys.btns.pool[`hide_${tgt_side}_field_layout`].toggle(true);
 
 		// do these two in batch
-		ksys.btns.pool[`prepare_home_team_layout`].toggle(true)
-		ksys.btns.pool[`prepare_guest_team_layout`].toggle(true)
+		ksys.btns.pool[`prepare_home_team_layout`].toggle(true);
+		ksys.btns.pool[`prepare_guest_team_layout`].toggle(true);
 	}
+
+	const previewPath = modified_gtz_fpath.withBasename(
+		`command_layout_preview_${suffix}.png`
+	);
+
+	await vmix.talker.talk({
+		'Function': 'SnapshotInput',
+		'Value': str(previewPath),
+		'Input': `command_layout_${suffix}.gtzip`,
+	})
+
+
+	await ksys.util.sleep(1000);
+
+
+	const previewResult = await kbnc.runCMD('generic.read_file', {
+		'header': {
+			'fpath': str(previewPath),
+		},
+	})
+
+	qsel(`#layout_preview_${suffix}`).src = URL.createObjectURL(
+		new Blob([(await previewResult.result()).payload])
+	);
 }
 
 
 $this.show_field_layout = async function(team){
 	ksys.btns.pool[`show_${team}_field_layout`].toggle(false)
 
-	await $this.titles.team_layout.overlay_in()
+	const tgt_title = $this.titles[`team_layout_${team}`];
 
-	await ksys.util.sleep($this.sequencer.sequences.field_layout.items.hold_main.dur);
+	await tgt_title.overlay_in()
 
-	await $this.titles.team_layout.page(1);
+	await ksys.util.sleep(
+		$this.sequencer.sequences.field_layout.items.hold_main.dur
+	);
 
-	ksys.btns.pool[`show_${team}_field_layout`].toggle(true)
+	await tgt_title.page(1);
+
+	ksys.btns.pool[`show_${team}_field_layout`].toggle(true);
 }
+
 
 $this.hide_field_layout = async function(){
 	ksys.btns.toggle({
 		'hide_home_field_layout':    false,
 		'hide_guest_field_layout':   false,
 	})
-	await $this.titles.team_layout.overlay_out()
+	await $this.titles.team_layout.overlay_out();
 	ksys.btns.toggle({
 		'hide_home_field_layout':    true,
 		'hide_guest_field_layout':   true,
@@ -7047,7 +7320,7 @@ $this._show_field_layout_condensed = async function(team){
 }
 
 $this.show_field_layout_condensed = async function(team){
-	const max_per_page = 3;
+	const max_per_page = int($this.lineup_condensed_max_players_per_page.selected);
 	const tgt_side = str(team).lower();
 	const tgt_lineup = $this.resource_index.side?.[tgt_side]?.lineup;
 	const role_gropus = {};
@@ -7092,7 +7365,7 @@ $this.show_field_layout_condensed = async function(team){
 
 	await $this.titles.lineup_condensed.set_text(
 		'club_name',
-		tgt_lineup.club.club_name || ''
+		(tgt_lineup.club.club_name || '').upper()
 	)
 
 	// todo: this is stupid
@@ -7662,6 +7935,269 @@ $this.stack_substitute = function(){
 }
 
 
+$this.toggle_config_vis = function(){
+	const current_state = ksys.context.module.prm('config_vis');
+	ksys.context.module.prm('config_vis', !current_state);
+
+	qsel('general-cfg').classList.toggle('kbsys_hidden', current_state)
+}
+
+$this.apply_preset = function(preset_id, evt=null){
+	if (evt && !evt.altKey){
+		ksys.info_msg.send_msg(
+			`Hold ALT`,
+			'warn',
+			4000
+		);
+
+		return
+	}
+
+	let params = [];
+
+	if (preset_id == 'cup'){
+		ksys.db.module.write('_psych_ward.kbcfg', JSON.stringify({
+			'remote_dir': 'C:/custom/vmix_assets/football/cup_vbet_2026/titles',
+			'local_dir':  'C:/custom/vmix_assets/football/cup_vbet_2026/titles',
+			'flist':      [
+				'penalties',
+				'lineup_condensed',
+				'persistent_header',
+				'coach_lower_third',
+				'commenter',
+				'commenter_x2',
+				'scored',
+				'final_scores',
+				'Half_Substitution',
+				'Half_Substitution2',
+				'Half_Substitution3',
+				'info_2',
+				'match_substitution1',
+				'match_substitution2',
+				'match_substitution3',
+				'red_card',
+				'referee',
+				'splash',
+				'tape',
+				'water_time',
+				'ycbr',
+				'yellow_card',
+				'weather',
+				// 'command_layout',
+			].join('\n'),
+		}));
+
+		params = [
+			[
+				'resources_location',
+				'C:/custom/vmix_assets/football/cup_vbet_2026/res',
+			],
+			[
+				'field_layout_template_fpath',
+				'C:/custom/vmix_assets/football/cup_vbet_2026/titles/command_layout.gtzip',
+			],
+			[
+				'red_card_schema_switch',
+				'color',
+			],
+			[
+				'pname_schema',
+				'surname',
+			],
+			[
+				'title_schema',
+				'separate',
+			],
+			[
+				'cmd_layout_mains_schema',
+				'shared',
+			],
+			[
+				'cmd_layout_reserves_schema',
+				'shared',
+			],
+			[
+				'commenter_schema',
+				'2girls2cups',
+			],
+			[
+				'final_scores_color_schema',
+				'masked',
+			],
+			[
+				'timer_team_color_schema_switch',
+				'masked',
+			],
+			[
+				'lineup_condensed_max_players_per_page',
+				3,
+			],
+			[
+				'timer_display_schema',
+				'fuck_shit',
+			],
+			[
+				'timer_main_clock_vis_schema',
+				'extra_only',
+			],
+		];
+	}
+
+	if (preset_id == 'regular'){
+		ksys.db.module.write('_psych_ward.kbcfg', JSON.stringify({
+			'remote_dir': 'C:/custom/vmix_assets/football/vbet_22_07_2025/titles',
+			'local_dir':  'C:/custom/vmix_assets/football/vbet_22_07_2025/titles',
+			'flist':      [
+				'coach_lower_third',
+				'commenter',
+				'final_scores',
+				'Half_Substitution',
+				'Half_Substitution2',
+				'Half_Substitution3',
+				'info_1',
+				'info_2',
+				'lineup_condensed',
+				'penalties',
+				'persistent_header',
+				'referee',
+				'splash',
+				'tape',
+				'water_time',
+			].join('\n'),
+		}));
+
+		params = [
+			[
+				'resources_location',
+				'C:/custom/vmix_assets/football/vbet_22_07_2025/res',
+			],
+			[
+				'field_layout_template_fpath',
+				'C:/custom/vmix_assets/football/vbet_22_07_2025/titles/command_layout.gtzip',
+			],
+			[
+				'red_card_schema_switch',
+				'color',
+			],
+			[
+				'pname_schema',
+				'surname',
+			],
+			[
+				'title_schema',
+				'paged',
+			],
+			[
+				'cmd_layout_mains_schema',
+				'dedicated',
+			],
+			[
+				'cmd_layout_reserves_schema',
+				'shared',
+			],
+			[
+				'commenter_schema',
+				'2girls1cup',
+			],
+			[
+				'final_scores_color_schema',
+				'bitmap',
+			],
+			[
+				'timer_team_color_schema_switch',
+				'bitmap',
+			],
+			[
+				'lineup_condensed_max_players_per_page',
+				4,
+			],
+			[
+				'timer_display_schema',
+				'normal',
+			],
+			[
+				'timer_main_clock_vis_schema',
+				'both',
+			],
+		];
+	}
+
+	if (preset_id == 'amp'){
+		ksys.db.module.write('_psych_ward.kbcfg', JSON.stringify({
+			'remote_dir': 'C:/custom/vmix_assets/football/amp_29_08_2025/titles',
+			'local_dir':  'C:/custom/vmix_assets/football/amp_29_08_2025/titles',
+			'flist':      [
+				'final_scores',
+				'persistent_header',
+				'scored',
+				'splash',
+			].join('\n'),
+		}));
+
+		params = [
+			[
+				'resources_location',
+				'C:/custom/vmix_assets/football/amp_29_08_2025/res',
+			],
+			[
+				'field_layout_template_fpath',
+				'C:/custom/vmix_assets/football/amp_29_08_2025/titles/command_layout.gtzip',
+			],
+			[
+				'red_card_schema_switch',
+				'color',
+			],
+			[
+				'pname_schema',
+				'surname',
+			],
+			[
+				'title_schema',
+				'paged',
+			],
+			[
+				'cmd_layout_mains_schema',
+				'dedicated',
+			],
+			[
+				'cmd_layout_reserves_schema',
+				'shared',
+			],
+			[
+				'commenter_schema',
+				'2girls1cup',
+			],
+			[
+				'final_scores_color_schema',
+				'bitmap',
+			],
+			[
+				'timer_team_color_schema_switch',
+				'bitmap',
+			],
+			[
+				'lineup_condensed_max_players_per_page',
+				4,
+			],
+			[
+				'timer_display_schema',
+				'normal',
+			],
+			[
+				'timer_main_clock_vis_schema',
+				'both',
+			],
+		];
+	}
+
+
+	for (const [paramID, paramVal] of params){
+		ksys.context.module.prm(paramID, paramVal);
+	}
+
+	ksys.util.reload();
+}
+
 
 
 
@@ -7933,6 +8469,10 @@ $this.extra_time_vis = async function(state){
 			await $this.titles.timer.toggle_text('base_ticker', false);
 		}
 
+		if ($this.title_schema_switch.selected == 'paged'){
+			await $this.titles.timer.set_shape_color('main_time_bg', 'D80D8300');
+		}
+
 		await $this.titles.timer.toggle_text('time_added', true);
 		await $this.titles.timer.toggle_text('extra_ticker', true);
 		await $this.titles.timer.toggle_img('extra_time_bg', true);
@@ -7941,6 +8481,10 @@ $this.extra_time_vis = async function(state){
 	if (state == false){
 		await $this.titles.timer.toggle_text('base_ticker', true);
 		await $this.titles.timer.toggle_img('main_time_bg', true);
+
+		if ($this.title_schema_switch.selected == 'paged'){
+			await $this.titles.timer.set_shape_color('main_time_bg', 'D80D83FF');
+		}
 
 		await $this.titles.timer.toggle_text('time_added', false);
 		await $this.titles.timer.toggle_text('extra_ticker', false);
@@ -8855,7 +9399,7 @@ $this.timer_fset.builtin.stop_extra_time = async function(){
 // ================================
 
 // todo: add sanity check for player's side
-$this.add_score_from_cards_panel = async function(){
+$this.add_score_from_cards_panel = async function(auto=false){
 	const player = $this.resource_index.card_player_filter?.selected_entry?.player;
 
 	if (!player){
@@ -8867,11 +9411,11 @@ $this.add_score_from_cards_panel = async function(){
 		return
 	}
 
-	const side = player.club.is_enemy ? 'guest' : 'home';
+	const side = player.club.is_enemy ? (auto ? 'home' : 'guest') : (auto ? 'guest' : 'home');
 	const score_list = $this.resource_index.score_manager.sides[side].score_list
-	score_list.add_score(
-		player
-	)
+	score_list.add_score(player, {
+			'autogoal': auto,
+	})
 
 	// Show the title
 	if ($this.title_schema_switch.selected == 'separate'){
@@ -8885,6 +9429,12 @@ $this.add_score_from_cards_panel = async function(){
 		await $this.titles.gscore.set_text(
 			'player_name',
 			ksys.strf.params.players.format(player.surname)
+		)
+
+		// Set header text
+		await $this.titles.gscore.set_text(
+			'header',
+			auto ? 'АВТОГОЛ' : 'АВТОР ГОЛУ'
 		)
 
 		// Set time
@@ -8919,7 +9469,7 @@ $this.add_score_from_cards_panel = async function(){
 		);
 
 		await $this.persistent_header.event({
-			'header': 'АВТОР ГОЛУ',
+			'header': auto ? 'АВТОГОЛ' : 'АВТОР ГОЛУ',
 			'upper_text': ksys.strf.params.players.format(player.surname),
 			'lower_text': `${time.base}'` + time_suffix + ' ХВИЛИНА',
 			// 'icon': null,
