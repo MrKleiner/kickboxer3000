@@ -598,9 +598,9 @@ const TCPSchedActivators = class extends TCPSched{
 
 
 const consumableBuffer = class{
-    constructor(pwn=null, nprint=null){
-		const self = (nprint || ksys.util.nprint)(
-			(pwn || ksys.util.cls_pwnage.remap)(this),
+    constructor(){
+		const self = kbn_util.nprint(
+			cls_pwnage.remap(this),
 			'#FEFF84',
 		);
 
