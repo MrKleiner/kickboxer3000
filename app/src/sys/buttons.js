@@ -210,18 +210,29 @@ const timeout = function(cmd){
 	for (const btname in cmd){
 		const btn = pool[btname];
 		if (!btn){
+			// console.warn('Cannot find button', btname)
+			// continue
+			pool[btname] = new vmixbtn(`[btname="${btname}"]`);
+			btn = pool[btname];
+		}
+		if (!btn){
 			console.warn('Cannot find button', btname)
 			continue
 		}
 
-		btn.timeout(cmd[btname])
+		btn?.timeout?.(cmd[btname])
 	}
 }
 
 
 const adv_timeout = function(btn_ids){
 	for (const btname in btn_ids){
-		const btn = pool[btname];
+		let btn = pool[btname];
+		if (!btn){
+			pool[btname] = new vmixbtn(`[btname="${btname}"]`);
+			btn = pool[btname];
+		}
+
 		if (!btn){
 			console.warn('Cannot find button', btname)
 			continue
@@ -238,6 +249,8 @@ const adv_timeout = function(btn_ids){
 
 		btn.elem.append(pie_dom);
 
+		print('Timing out for', btn_ids[btname], 'ms')
+
 		pie.launch_anim(btn_ids[btname] || 500)
 		.then((value) => {
 			if (!pie.get_stuck){
@@ -251,13 +264,18 @@ const adv_timeout = function(btn_ids){
 
 const toggle = function(cmd){
 	for (const btname in cmd){
-		const btn = pool[btname];
+		let btn = pool[btname];
+		if (!btn){
+			pool[btname] = new vmixbtn(`[btname="${btname}"]`);
+			btn = pool[btname];
+		}
+
 		if (!btn){
 			console.warn('Cannot find button', btname)
 			continue
 		}
 
-		btn.toggle(cmd[btname])
+		btn?.toggle?.(cmd[btname])
 	}
 }
 
