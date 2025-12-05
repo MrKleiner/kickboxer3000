@@ -6,6 +6,9 @@ const electron = require('electron');
 const cls_pwnage = require('../sys/class_pwnage.js');
 const pathlib = require('pathlib-js').default;
 const crypto_em = require('crypto');
+const AdmZip = require('adm-zip');
+const fs = require('fs');
+const child_proc = require('child_process');
 
 
 // Rapid transit IPC pipe
@@ -196,6 +199,147 @@ const isDev = function(){
 }
 
 
+const dlFileProgressive = async function(params){
+	const fpath = Path(params.targetFilePath);
+	await fpath.unlink();
+
+	const res = await fetch(params.srcURL);
+
+	if (!res.ok){
+		throw new Error(`HTTP ${res.status}`)
+	};
+
+	await fpath.open({
+		'flags': 'a',
+		'ensureExists': true,
+	});
+
+	const reader = res.body.getReader();
+
+	let done = false;
+
+	const total = parseInt(
+		res.headers.get('Content-Length') || 0
+	);
+	let prog = 0;
+
+	while (!done) {
+		const {value, done: readDone} = await reader.read();
+		done = readDone;
+		if (value) {
+			prog += value.length;
+			params?.dlProgressCallback?.(prog / total);
+
+			await fpath.write(
+				value, 0, value.length, null, false
+			);
+		}
+	}
+
+	await fpath.close();
+
+	return true
+}
+
+
+const downloadFFMPEG = async function(params){
+	console.log('Downloading FFMPEG...');
+
+	const targetDir = Path(params.targetDir);
+
+	fs.mkdirSync(targetDir.toString(), {
+		recursive: true
+	})
+
+	const dlFilepath = targetDir.join('dl.zip');
+	const ffmpegFilePath = targetDir.join('ffmpeg.exe');
+	const ffprobeFilePath = targetDir.join('ffprobe.exe');
+	const ffplayFilePath = targetDir.join('ffplay.exe');
+
+	await ffmpegFilePath.unlink();
+	await ffprobeFilePath.unlink();
+	await ffplayFilePath.unlink();
+
+	await dlFileProgressive({
+		'srcURL': 'https://github.com/GyanD/codexffmpeg/releases/download/8.0.1/ffmpeg-8.0.1-full_build.zip',
+		'targetFilePath': dlFilepath,
+		'dlProgressCallback': params.dlProgressCallback,
+	})
+
+	const zipBuf = new AdmZip(
+		await dlFilepath.readFile()
+	)
+
+	await ffmpegFilePath.writeFile(
+		zipBuf.readFile('ffmpeg-8.0.1-full_build/bin/ffmpeg.exe')
+	)
+	await ffprobeFilePath.writeFile(
+		zipBuf.readFile('ffmpeg-8.0.1-full_build/bin/ffprobe.exe')
+	)
+	await ffplayFilePath.writeFile(
+		zipBuf.readFile('ffmpeg-8.0.1-full_build/bin/ffplay.exe')
+	)
+
+	await dlFilepath.unlink();
+}
+
+
+const runProc = async function(bin_path, params, pipe_data, buf_only=false){
+	const text_decoder = new TextDecoder();
+
+	const [promise, resolve, reject] = flatPromise();
+	const stdio = {'stdio': pipe_data?.proc_params}
+	const proc = child_proc.spawn(
+		bin_path,
+		params,
+		pipe_data ? stdio : {}
+	);
+
+	const status = {
+		'stdout': [],
+		'stderr': [],
+		'stdbuf': [],
+		'exit_code': null,
+	}
+
+	proc.stdout.on('data', function(data){
+		if (!buf_only){
+			try{status.stdout.push(text_decoder.decode(data))}catch{};
+		}
+		status.stdbuf.push(data);
+	})
+
+	proc.stderr.on('data', function(data){
+		try{status.stderr.push(text_decoder.decode(data))}catch{};
+	})
+
+	proc.on('close', function(code){
+		status.exit_code = code;
+		resolve(true);
+	})
+
+	if (pipe_data){
+		let idx = 3;
+		for (const pipe_buf of pipe_data.bufs){
+			proc.stdio[idx].write(
+				Buffer.from(pipe_buf)
+			)
+			proc.stdio[idx].end();
+			idx += 1;
+		}
+	}
+
+	await promise;
+
+	return {
+		'stderr': status.stderr,
+		'stdout': status.stdout,
+		'stdbuf': Buffer.concat(status.stdbuf),
+		'code':   status.exit_code,
+	}
+}
+
+
 module.exports = {
 	Autobahn,
 	sleep,
@@ -206,6 +350,9 @@ module.exports = {
 	toInt32,
 	rnd_uuid,
 	isDev,
+	dlFileProgressive,
+	downloadFFMPEG,
+	runProc,
 }
 
 
