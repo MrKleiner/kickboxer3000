@@ -1,6 +1,11 @@
 const vmix_tcp = require('../sys/vmix_tcp.js');
 const net = require('net');
 const fastq = require('fastq');
+const child_proc = require('child_process');
+const electron = require('electron')
+const http = require('http');
+
+
 
 const kbn_util = (
 	(process.type == 'browser') ?
@@ -16,12 +21,10 @@ if (process.type == 'browser'){
 	var Path = kbn_util.Path;
 }
 
-var str = function(inp){
-	try {
-		if (inp?.toString){
-			return inp.toString()
-		}
-		return `${inp}`
+const str = function(inp){
+	// return (inp?.toString?.() || `${inp}`);
+	try{
+		return inp.toString()
 	}catch{
 		return `${inp}`
 	}
@@ -34,6 +37,123 @@ const nprintLevels = {
 	'payloadStreamWrite':    IS_DEV ? 0 : 5,
 	'KBNConnectMSG':         IS_DEV ? 0 : 5,
 	'KBNConnectSocketSched': IS_DEV ? 0 : 5,
+}
+
+
+
+const VMIXDiscovery = class{
+	STR_PRESENCE = Object.freeze([
+		Buffer.from('vmix'),
+		Buffer.from('version'),
+		Buffer.from('<'),
+		Buffer.from('</'),
+		Buffer.from('>'),
+	])
+
+	TIMEOUT_MS = 2000;
+
+	constructor(){
+		const self = kbn_util.nprint(
+			cls_pwnage.remap(this),
+			'#35FF73'
+		);
+
+		// self.currentPort = 0;
+		// self.requestPool = [];
+	}
+
+	validateResponse(self, buf){
+		for (const tgtStringBuf of self.STR_PRESENCE){
+			if (buf.indexOf(tgtStringBuf) == -1){
+				return false
+			}
+		}
+
+		return true
+	}
+
+	async readResponse(self, res){
+		const [readPromise, readResolve, readReject]
+		= kbn_util.flatPromise();
+
+		let buf = Buffer.alloc(0);
+
+		res.on('data', function(chunk){
+			buf = Buffer.concat([buf, chunk]);
+		});
+
+		res.on('end', function(){
+			readResolve(buf)
+		})
+
+		res.on('error', function(){
+			readResolve(false)
+		})
+
+		return (await readPromise)
+	}
+
+	async probeAddress(self, addr, port){
+		const [probePromise, probeResolve, probeReject]
+		= kbn_util.flatPromise();
+
+		try{
+			let req = null;
+
+			const timeoutHandle = setTimeout(
+				function(){
+					probeResolve(false);
+					req.destroy(new Error('timeout'));
+				},
+				self.TIMEOUT_MS
+			);
+
+			req = http.request(`http://${addr}:${port}/API/?Function=`, async function(res){
+				if (self.validateResponse(await self.readResponse(res))){
+					probeResolve(port)
+				}
+			});
+
+			req.on('error', function(){
+				clearTimeout(timeoutHandle);
+				probeResolve(false);
+			});
+
+			req.end();
+		}catch{
+			probeResolve(false)
+		}
+
+		return (await probePromise)
+	}
+
+	async discover(self, addr){
+		if (!addr){
+			throw new Error('Invalid address');
+		}
+
+		let currentPort = 1;
+		let requestPool = [];
+
+		while (currentPort <= 65535){
+			while (requestPool.length < 500){
+				requestPool.push(
+					self.probeAddress(addr, currentPort++)
+				)
+			}
+
+			self.nprintL(5, currentPort);
+		
+			for (const rq of requestPool){
+				const port = await rq;
+				if (port){
+					return port;
+				}
+			}
+
+			requestPool.length = 0;
+		}
+	}
 }
 
 
@@ -73,6 +193,10 @@ const consumableBuffer = class{
     }
 
     eraseRead(self, amount){
+    	if (amount <= 0){
+    		return Buffer.alloc(0)
+    	}
+
         const data = self.buf.slice(0, amount);
         self.buf = self.buf.slice(amount);
         return data
@@ -100,6 +224,7 @@ const payloadStreamWrite = class{
 
 	*iterBuf(self, onProg=null){
 		let offs = 0;
+		let sent = 0;
 		const total = self.srcBuf.length;
 		while (true){
 			const chunk = self.srcBuf.slice(
@@ -109,9 +234,27 @@ const payloadStreamWrite = class{
 			if (!chunk.length){
 				break
 			}
+			sent += chunk.length;
 			yield chunk;
-			onProg?.(offs / total, total, offset);
+
 			offs += self.CHUNK_SIZE;
+
+			try{
+				// onProg?.(offs / total, total, offs);
+				onProg?.({
+					// 0-1 progress factor
+					'prog': sent / total,
+					// Payload size
+					'total': total,
+					// Total amount of bytes sent
+					'sent': sent,
+					// The size of the chunk that was just sent
+					'chunk': chunk.length,
+				});
+			}catch(e){
+				self.nerr(e);
+			}
+
 		}
 	}
 }
@@ -280,7 +423,7 @@ const KBNConnectSocketSched = class{
 	constructor(skt, msgExec, callbacks=null){
 		const self = kbn_util.nprint(
 			cls_pwnage.remap(this),
-			'#1DFF42'
+			'#35FF73'
 		);
 
 		// Callbacks
@@ -325,6 +468,7 @@ const KBNConnectSocketSched = class{
 	// Reject all the pending messages
 	// Likely due to a fatal network error
 	rejectPending(self){
+		self.MSGOutSched.kill()
 		for (const [MSGID, msg] of [...self.MSGDictExec.entries()]){
 			msg.rejectResult(
 				'FATAL: Network collapse of sorts'
@@ -505,7 +649,7 @@ const KBNConnectSocketSched = class{
 				}
 
 				self.rejectPending();
-				try{self.terminate()}catch{};
+				try{await self.terminate()}catch{};
 				self.onDeath(err);
 				return
 			}
@@ -574,7 +718,7 @@ const KBNConnectSocketSched = class{
 
 
 
-const KBNCMDHandler = function(MSGData){
+const KBNCMDHandler = async function(MSGData){
 	if (MSGData.header.CMDID == 'generic.write_file'){
 		const fpath = Path(MSGData.header.fpath);
 		fpath.parent().makeDirSync();
@@ -598,8 +742,96 @@ const KBNCMDHandler = function(MSGData){
 			'header': true,
 			'payload': (
 				[...Path(MSGData.header.fpath).globSync(MSGData.header.pattern || '*')]
-				.map(function(i){return str(i)})
+				.map(async function(i){return [str(i), await i.isDirectory()]})
 			),
+		}
+	}
+
+	if (MSGData.header.CMDID == 'generic.explorer_dir'){
+		await child_proc.spawn('cmd', ['/c', 'start', '""', '/MAX', MSGData.header.dir_path], {
+		    detached: true,
+		    windowsHide: true
+		});
+		return {
+			'header': true,
+		}
+	}
+
+	if (MSGData.header.CMDID == 'generic.show_msg'){
+		electron.dialog.showMessageBox({
+			type: 'none',
+			buttons: ['OK'],
+			defaultId: 0,
+			title: MSGData.header.msgTitle,
+			message: MSGData.header.msgContent
+		});
+
+		return {
+			'header': true,
+		}
+	}
+
+	if (MSGData.header.CMDID == 'generic.show_msg_sync'){
+		await electron.dialog.showMessageBox({
+			type: 'none',
+			buttons: ['OK'],
+			defaultId: 0,
+			title: MSGData.header.msgTitle,
+			message: MSGData.header.msgContent
+		});
+
+		return {
+			'header': true,
+		}
+	}
+
+	if (MSGData.header.CMDID == 'file.append'){
+		const fpath = Path(MSGData.header.fpath);
+
+		await fpath.open({
+			'flags': 'a',
+			'ensureExists': true,
+		});
+
+		const buf = MSGData.payload || Buffer.alloc(0);
+
+		await fpath.write(
+			buf, 0, buf.length, null, false
+		);
+
+		await fpath.close();
+
+		return {
+			'header': true,
+		}
+	}
+
+	if (MSGData.header.CMDID == 'file.delete'){
+		await Path(MSGData.header.fpath).delete();
+
+		return {
+			'header': true,
+		}
+	}
+
+	if (MSGData.header.CMDID == 'ffprobe'){
+		const procParams = [
+			'-v',            'quiet',
+			'-print_format', 'json',
+			'-show_format',
+			'-show_streams',
+			MSGData.payload,
+		]
+
+		const probeResult = await kbn_util.runProc(
+			str(kbn_util.Path(__dirname).parent().join('bins', 'ffmpeg', 'ffprobe.exe')),
+			procParams,
+			null
+		)
+
+		return {
+			'header': true,
+			'payload': probeResult.stdout.join(''),
 		}
 	}
 
@@ -653,23 +885,42 @@ const KBNConnectSocketServer = class{
 		// Because nodejs hasn't got easy to use XML API
 		// and 3mb of js code just to bring it back is fucking retarded.
 		// Fucking morons
-		self.VMIXTCP = new vmix_tcp.TCPSchedAsync(
-			'127.0.0.1',
-			cls_pwnage.remap,
-			kbn_util.nprint,
-			kbn_util.flatPromise
+		// (TCP API supports XPATH)
+		// self.VMIXTCP = new vmix_tcp.TCPSchedAsync(
+		// 	'127.0.0.1',
+		// 	cls_pwnage.remap,
+		// 	kbn_util.nprint,
+		// 	kbn_util.flatPromise
+		// )
+		self.VMIXTCP = new vmix_tcp.VMIXTCP(
+			'127.0.0.1'
 		)
 
 		// Launch VMIX TCP
-		self.VMIXTCP.startMaintainingConnection();
+		self.VMIXTCP.maintainConnection();
+	}
+
+	runTCPCMDOnTimeout(self, cmdName, cmdArgs=null){
+		return new Promise(async function(resolve, reject){
+			const timeoutHandle = setTimeout(reject, 1750);
+			try{
+				resolve(
+					await self.VMIXTCP.runCMD(cmdName, cmdArgs).result()
+				)
+			}catch(e){
+				reject(e)
+			}finally{
+				clearTimeout(timeoutHandle);
+			}
+		})
 	}
 
 	async checkPhantomInput(self){
-		await self.VMIXTCP.connectionBrokenPromise;
-		const result = await self.VMIXTCP.runCmd({
-			'Function': 'XMLTEXT',
-			'Value':    '//input[@title="KBNC_SYS_DATA.gtzip"]/@key',
-		})
+		const result = await self.runTCPCMDOnTimeout('XML');
+
+		// Bootleg way of counting the amount of certain tags in XML
+		// Arguably, this is faster than properly evaluating XML
+		return (str(result?.payload || '')?.split('title="KBNC_SYS_DATA.gtzip"').length || 1) - 1
 
 		if (result?.payload?.split?.('-')?.length == 5){
 			return true
@@ -679,16 +930,33 @@ const KBNConnectSocketServer = class{
 	}
 
 	async ensurePhantomInput(self){
-		await self.VMIXTCP.connectionBrokenPromise;
+		let phantomInputCount = await self.checkPhantomInput();
 
-		if (await self.checkPhantomInput()){
+		if (phantomInputCount == 1){
 			return
 		}
 
-		await self.VMIXTCP.runCmd({
-			'Function': 'AddInput',
-			'Value':    'Title|' + str(self.kbn.APP_ROOT.join('assets', 'KBNC_SYS_DATA.gtzip')),
-		})
+		if (phantomInputCount > 1){
+			while (phantomInputCount > 1){
+				await self.runTCPCMDOnTimeout('RemoveInput', {
+					'Input':    'KBNC_SYS_DATA.gtzip',
+				})
+
+				phantomInputCount = await self.checkPhantomInput();
+
+				await kbn_util.sleep(500);
+			}
+		}
+
+		phantomInputCount = await self.checkPhantomInput();
+
+		if (phantomInputCount == 0){
+			await self.runTCPCMDOnTimeout('AddInput', {
+				'Value': 'Title|' + str(
+					self.kbn.APP_ROOT.join('assets', 'KBNC_SYS_DATA.gtzip')
+				),
+			})
+		}
 
 		// Wait for input to fully appear
 		let i = 0;
@@ -706,8 +974,7 @@ const KBNConnectSocketServer = class{
 	async setConnectionData(self, port=null){
 		await self.ensurePhantomInput();
 
-		await self.VMIXTCP.runCmd({
-			'Function':     'SetText',
+		await self.runTCPCMDOnTimeout('SetText', {
 			'Input':        'KBNC_SYS_DATA.gtzip',
 			'SelectedName': '0.Text',
 			'Value':        `${self.key}:${port || self.serverPort}`,
@@ -715,18 +982,18 @@ const KBNConnectSocketServer = class{
 	}
 
 	async maintainConnectionData(self){
-		// await kbn_util.sleep(3500);
 		while (self.enabled){
-			const XPATHResult = await self.VMIXTCP.runCmd({
-				'Function': 'XMLTEXT',
-				'Value':    'vmix/inputs/input[@title="KBNC_SYS_DATA.gtzip"]',
-			})
+			try{
+				self.nprintL(0, 'Checking connection data');
 
-			if (!XPATHResult.payload.includes('KBNC_SYS_DATA.gtzip')){
+				await self.VMIXTCP.connection();
+
 				await self.setConnectionData(self.serverPort);
-			}
 
-			await kbn_util.sleep(3500);
+				await kbn_util.sleep(3500);
+			}catch(e){
+				self.nprint(e);
+			}
 		}
 	}
 
@@ -772,6 +1039,8 @@ const KBNConnectSocketServer = class{
 			return
 		}
 
+		self.nprint('Accepting connection', skt)
+
 		const sched = new KBNConnectSocketSched(
 			skt,
 			self.msgInExec,
@@ -796,9 +1065,15 @@ const KBNConnectSocketServer = class{
 
 	maintainConnection(self){
 		if (self.connectionMaintained){
-			self.nprint('Tried maintaining connection twice in a row');
+			self.nwarn('Tried maintaining connection twice in a row');
 			return 'Server already running';
 		}
+
+		// todo: this is NOT supposed to be here
+		try{
+			Path('C:/custom/vmix_assets').makeDirSync();
+			Path('C:/custom/vmix_assets/kbnc').makeDirSync();
+		}catch{}
 
 		self.nprint('Maintaining connection...');
 
@@ -822,7 +1097,6 @@ const KBNConnectSocketServer = class{
 						const port = self.server.address().port;
 						self.nprint('Listening on port', port);
 						self.serverPort = port;
-						await self.setConnectionData(port);
 						self.maintainConnectionData();
 						resolve(true);
 					})
@@ -830,7 +1104,7 @@ const KBNConnectSocketServer = class{
 					await serverExistsPromise;
 					[serverExistsPromise, serverExistsResolve] = kbn_util.flatPromise();
 				}catch(e){
-					self.nprint(e);
+					self.nwarn(e);
 				}
 			}
 		})
@@ -840,7 +1114,11 @@ const KBNConnectSocketServer = class{
 
 
 
+
+
+
 module.exports = {
 	KBNConnectSocketServer,
 	KBNConnectSocketSched,
+	VMIXDiscovery,
 }
