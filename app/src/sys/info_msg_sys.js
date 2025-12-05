@@ -129,19 +129,21 @@ const InfoMessage = class{
 		// box-shadow: inset 0px 0px 77px 45px rgba(255, 200, 0, 1);
 		let shadow_size = 97;
 
-		for (const i of range(4)){
-			document.body.style.boxShadow = `inset 0px 0px ${shadow_size}px ${shadow_size}px ${color}`;
-			document.querySelector('html').style.filter = 'invert(1)'
-			await ksys.util.sleep(50);
-			document.body.style.boxShadow = `inset 0px 0px ${shadow_size/2}px ${shadow_size/2}px ${color}`;
-			document.querySelector('html').style.filter = ''
-			await ksys.util.sleep(50);
-		}
+		if (!ksys.util.isDev()){
+			for (const i of range(4)){
+				document.body.style.boxShadow = `inset 0px 0px ${shadow_size}px ${shadow_size}px ${color}`;
+				document.querySelector('html').style.filter = 'invert(1)'
+				await ksys.util.sleep(50);
+				document.body.style.boxShadow = `inset 0px 0px ${shadow_size/2}px ${shadow_size/2}px ${color}`;
+				document.querySelector('html').style.filter = ''
+				await ksys.util.sleep(50);
+			}
 
-		for (const i of range(shadow_size)){
-			document.body.style.boxShadow = `inset 0px 0px ${shadow_size}px ${shadow_size}px ${color}`;
-			await ksys.util.sleep(10);
-			shadow_size -= 1;
+			for (const i of range(shadow_size)){
+				document.body.style.boxShadow = `inset 0px 0px ${shadow_size}px ${shadow_size}px ${color}`;
+				await ksys.util.sleep(10);
+				shadow_size -= 1;
+			}
 		}
 
 		shadow_size -= 1;
@@ -154,7 +156,7 @@ const InfoMessage = class{
 // the "new" keyword is stoopid
 const send_msg = function(text, msg_type='warn', dur=1000){
 	for (const msg of qselAll('hintsys-bar #hintsys_bar_msgs .kbmsg')){
-		if (msg.innerText == text){
+		if ((msg.innerText == text) && (msg_type == 'warn')){
 			return
 		}
 	}
