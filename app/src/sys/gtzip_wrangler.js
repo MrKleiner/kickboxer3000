@@ -158,8 +158,16 @@ const fontPacker = class{
 		return self._fontMap
 	}
 
-	packFonts(self, targetGTzip){
+	packFonts(self, targetGTzip, wipeOtherFonts=false){
 		const traversedFilePaths = new Set();
+
+		if (wipeOtherFonts){
+			for (const file of Object.values(targetGTzip.kb_data.files)){
+				if (file.grp == 'fonts'){
+					targetGTzip.del_file(file);
+				}
+			}
+		}
 
 		for (const fontFamilyName of self.constructor.listTitleFonts(targetGTzip)){
 			for (let [nameVariants, fontFilePath] of self.fontMap){
@@ -169,14 +177,26 @@ const fontPacker = class{
 						traversedFilePaths.add(fontFilePath);
 
 						fontFilePath = Path(fontFilePath);
-						targetGTzip.add_file({
-							'buf': fontFilePath.readFileSync(),
-							'meta': {
-								'grp':   'fonts',
-								'fname': fontFilePath.basename,
-								'ftype': 'font',
+
+						if (fontFilePath.isFileSync()){
+							const fbuf = fontFilePath.readFileSync();
+							let isUnique = true;
+							for (const file of Object.values(targetGTzip.kb_data.files)){
+								if (file.buf.equals(fbuf)){
+									isUnique = false;
+								}
 							}
-						})
+							if (isUnique){
+								targetGTzip.add_file({
+									'buf': fbuf,
+									'meta': {
+										'grp':   'fonts',
+										'fname': fontFilePath.basename,
+										'ftype': 'font',
+									},
+								})
+							}
+						}
 					}
 				}
 			}
@@ -389,9 +409,8 @@ const GTZipFile = class{
 
 		===========================
 			Protocol PHANTOM2:
-			Header len (4)
+			Header len (4 (int LE))
 			Header data...
-
 			Byte content...
 
 
@@ -405,8 +424,8 @@ const GTZipFile = class{
 			        ...
 			    ],
 			    'meta': {
-			         'len': (4),
-			     },
+			        'len': (4),
+			    },
 			}
 
 			Files are sequential. No need for offsets.
@@ -478,6 +497,8 @@ const GTZipFile = class{
 		self._phantom_img_zip_pointer = null;
 		self._phantom_img_uid = null;
 		self._kb_data = null;
+
+		self._real_files = null;
 	}
 
 	// Fucking MORONS
@@ -782,23 +803,26 @@ const GTZipFile = class{
 		// Write files
 		for (const fdata of Object.entries(self.kb_data.files)){
 			const [fpath, file] = fdata;
-			const [fmeta_buf, fdata_buf] = file.to_buf();
 
-			header_data.files.push({
-				// 'offs': payload_buf.tell(),
-				// 'fpath': str(fpath),
-				'meta_len': fmeta_buf.length,
-				'flen': fdata_buf.length,
-			})
+			if (!file.dead){
+				const [fmeta_buf, fdata_buf] = file.to_buf();
 
-			payload_buf.write(fmeta_buf);
-			payload_buf.write(fdata_buf);
+				header_data.files.push({
+					// 'offs': payload_buf.tell(),
+					// 'fpath': str(fpath),
+					'meta_len': fmeta_buf.length,
+					'flen': fdata_buf.length,
+				})
+
+				payload_buf.write(fmeta_buf);
+				payload_buf.write(fdata_buf);
+			}
 		}
 
 		const compression_enabled = (
 			(
 				(payload_buf.buf.length > self.COMPRESSION_CAP) ||
-				((payload_buf.buf.length > 3) && force_compress)
+				((payload_buf.buf.length > 8) && force_compress)
 			)
 			&&
 			!force_no_compress
