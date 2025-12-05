@@ -22,6 +22,9 @@ const KBNC = class{
 
 		[self.clientConnectedPromise, self.clientConnectedResolve, self.clientConnectedReject]
 		= [null, null, null];
+
+		[self.connectionPromise, self.connectionResolve, self.connectionReject]
+		= ksys.util.flatPromise();
 	}
 
 	static sysData(){
@@ -195,12 +198,20 @@ const KBNC = class{
 							self.nprint('Connected to KBNC');
 
 							self.dom.index.current_status.textContent = 'Connected';
+
+							self?.connectionResolve?.();
 						}
 					)
 
 					await self.clientConnectedPromise;
+
+					self?.connectionReject?.('Connection Ended');
+
+					[self.connectionPromise, self.connectionResolve, self.connectionReject]
+					= ksys.util.flatPromise();
 				}catch(e){
 					self.nwarn(e);
+					self?.connectionReject?.(e);
 				}
 
 				await ksys.util.sleep(1000);
@@ -208,14 +219,14 @@ const KBNC = class{
 		})
 	}
 
-	async runCMD(self, CMDID, data){
+	async runCMD(self, CMDID, data, onProg=null){
 		return await self.sktSched.schedMSGExec({
 			'header': {
 				'CMDID': CMDID,
 				...(data.header || {}),
 			},
 			'payload': data.payload,
-		})
+		}, onProg)
 	}
 }
 
