@@ -836,7 +836,10 @@ window.kbmodules.kickboxing_standard.vs_onn = async function(){
 		})
 		return
 	}
-	window.kbmodules.kickboxing_standard.titles.vs.overlay_in(1);
+	ksys.btns.adv_timeout({
+		'vs_onn': window.kbmodules.kickboxing_standard.titles.vs.anim_durations[null],
+	})
+	await window.kbmodules.kickboxing_standard.titles.vs.overlay_in(1);
 }
 
 window.kbmodules.kickboxing_standard.vs_off = async function(){
@@ -847,17 +850,30 @@ window.kbmodules.kickboxing_standard.vs_off = async function(){
 		})
 		return
 	}
-	window.kbmodules.kickboxing_standard.titles.vs.overlay_out(1);
+
+	ksys.btns.adv_timeout({
+		'vs_off': window.kbmodules.kickboxing_standard.titles.vs.anim_durations['TransitionOut'],
+	})
+
+	await window.kbmodules.kickboxing_standard.titles.vs.overlay_out(1);
 }
 
 
 
 window.kbmodules.kickboxing_standard.player_onn = async function(){
-	window.kbmodules.kickboxing_standard.titles.personal.overlay_in(1);
+	ksys.btns.adv_timeout({
+		'player_onn': window.kbmodules.kickboxing_standard.titles.personal.anim_durations[null],
+	})
+
+	await window.kbmodules.kickboxing_standard.titles.personal.overlay_in(1);
 }
 
 window.kbmodules.kickboxing_standard.player_off = async function(){
-	window.kbmodules.kickboxing_standard.titles.personal.overlay_out(1);
+	ksys.btns.adv_timeout({
+		'player_off': window.kbmodules.kickboxing_standard.titles.personal.anim_durations['TransitionOut'],
+	})
+
+	await window.kbmodules.kickboxing_standard.titles.personal.overlay_out(1);
 }
 
 

@@ -21,6 +21,7 @@ if (process.type == 'browser'){
 const str = function(inp=''){
 	return (inp?.toString?.() || `${inp}`);
 }
+
 const int = parseInt;
 
 
@@ -1053,6 +1054,7 @@ const TCPSchedAsync = class{
 const DEBUG_NPRINT_LVL = 7;
 
 
+
 const ConnectionAborted = class extends Error{
 	constructor(e){
 		super(e);
@@ -1072,7 +1074,7 @@ const UnexpectedResponse = class extends Error{
 		this.name = 'UnexpectedResponse';
 		this.code = 'KB_ERRUNEXPECTEDRESPONSE';
 		if (Error.captureStackTrace){
-			Error.captureStackTrace(this, ConnectionAborted);
+			Error.captureStackTrace(this, UnexpectedResponse);
 		}
 	}
 }
@@ -1085,7 +1087,7 @@ const FatalIntegrityError = class extends Error{
 		this.name = 'FatalIntegrityError';
 		this.code = 'KB_ERRFATALINTEGRITY';
 		if (Error.captureStackTrace){
-			Error.captureStackTrace(this, ConnectionAborted);
+			Error.captureStackTrace(this, FatalIntegrityError);
 		}
 	}
 }
@@ -1125,212 +1127,18 @@ const VMIXTCPCMDInstance = class{
 		[self.donePromise, self.doneResolve, self.doneReject]
 		= kbn_util.flatPromise();
 
-		// Resolved once the command was fully executed
+		// Resolved once the command was fully sent
 		[self.sendPromise, self.sendResolve, self.sendReject]
 		= kbn_util.flatPromise();
 	}
 
-	async _readResponse(self, headerData){
-		await self.sendPromise;
-
-		self.nprintL(0, 'Reading response...');
-
-		if (!self.CMDSent){
-			const msg = 'Tried reading CMD result before it was sent';
-			self.doneReject(
-				new FatalIntegrityError(msg)
-			);
-			throw new FatalIntegrityError(msg);
-		}
-
-		const headerParts = headerData.split(' ');
-		const responseCmdName = headerParts.shift();
-		const responseCmdStatus = headerParts.shift();
-
-		// ER seems to always mean there was an error.
-		// VMIX Error that is...
-		// aka 0 fucks given
-		if (responseCmdStatus == 'ER'){
-			self.doneResolve({
-				'VMIXOK': false,
-				'payload': headerParts.join(' '),
-			})
-			return
-		}
-
-		// If there's no payload to read - header IS the payload
-		const headerIsPayload = (
-			(['FUNCTION', 'SUBSCRIBE'].includes(responseCmdName)) || (
-				// The FUCKING XMLTEXT SHIT only SOMETIMES has payload len in it...
-				// These times being when payload contains line breaks...
-				// You FUCKING TWATS
-				(responseCmdName == 'XMLTEXT')
-				&& responseCmdStatus == 'OK'
-			)
-		)
-		if (headerIsPayload){
-			self.doneResolve({
-				'VMIXOK': true,
-				'payload': headerParts.join(' '),
-			})
-			return
-		}
-
-		// OTHERWISE - status HAS TO BE the payload length
-		let payloadLen = null;
-		try{
-			// So, try evaluating it into an integer...
-			// It wouldn't have been too big of a surprise if
-			// payload len was a fucking float.
-			// Cunts.
-			payloadLen = int(responseCmdStatus);
-		}catch{}
-
-		if (!(payloadLen > 0)){
-			const msg = [
-				`The response to this CMD (${self.cmdName})`,
-				`was supposed to have payload length in it`,
-				str(headerData)
-			]
-
-			self.doneReject(new FatalIntegrityError(
-				msg.join(' ')
-			))
-
-			throw new FatalIntegrityError(
-				msg.join(' ')
-			)
-		}
-
-		// Now read the payload.
-		// Payload len DOES include \r\n
-		const payloadBuf = await self.VMIXTCP.readBytes(payloadLen - 2);
-		// Read leading \r\n into the void
-		// Yes, payloads with data len still have leading \r\n
-		await self.VMIXTCP.readBytes(2);
-
-		self.doneResolve({
-			'VMIXOK': true,
-			// todo: It DOES SEEM like VMIX ONLY ever returns utf-8 data,
-			// but it's impossible to be sure with these fucking morons.
-			// 'payload': payloadBuf,
-			'payload': self.VMIXTCP.UTF8TextDecoder.decode(
-				payloadBuf
-			),
-		})
-	}
-
-	async *__readResponse(self, headerData){
-		await self.sendPromise;
-
-		self.nprintL(0, 'Reading response...');
-
-		if (!self.CMDSent){
-			const msg = 'Tried reading CMD result before it was sent';
-			self.doneReject(
-				new FatalIntegrityError(msg)
-			);
-			throw new FatalIntegrityError(msg);
-		}
-
-		const headerParts = headerData.split(' ');
-		const responseCmdName = headerParts.shift();
-		const responseCmdStatus = headerParts.shift();
-
-		// ER seems to always mean there was an error.
-		// VMIX Error that is...
-		// aka 0 fucks given
-		if (responseCmdStatus == 'ER'){
-			self.doneResolve({
-				'VMIXOK': false,
-				'payload': headerParts.join(' '),
-			})
-			return
-		}
-
-		// If there's no payload to read - header IS the payload
-		const headerIsPayload = (
-			(['FUNCTION', 'SUBSCRIBE'].includes(responseCmdName)) || (
-				// The FUCKING XMLTEXT SHIT only SOMETIMES has payload len in it...
-				// These times being when payload contains line breaks...
-				// You FUCKING TWATS
-				(responseCmdName == 'XMLTEXT')
-				&& (responseCmdStatus == 'OK')
-			)
-		)
-		if (headerIsPayload){
-			self.doneResolve({
-				'VMIXOK': true,
-				'payload': headerParts.join(' '),
-			})
-			return
-		}
-
-		// OTHERWISE - status HAS TO BE the payload length.
-		// So, try evaluating it into an integer...
-		// It wouldn't have been too big of a surprise if
-		// payload len was a fucking float.
-		// Cunts.
-		const payloadLen = int(responseCmdStatus);
-
-		// It HAS to evaluate into a valid integer
-		if (!Number.isInteger(payloadLen)){
-			const msg = [
-				`The response to this CMD (${self.cmdName} -> ${responseCmdName})`,
-				`was supposed to have payload length in it`,
-				str(headerData)
-			]
-			self.doneReject(new FatalIntegrityError(
-				msg.join(' ')
-			))
-			throw new FatalIntegrityError(
-				msg.join(' ')
-			)
-		}
-
-		let payloadBuf = null;
-
-		while (true){
-			payloadBuf = await self.VMIXTCP.readHeader(false);
-			if (payloadBuf.indexOf('ACTS ') == 0){
-				self.nprintL(0, 'Intermediate fucking ACTS shit:', [str(payloadBuf)]);
-				await self.VMIXTCP.readBytes(2);
-				yield payloadBuf;
-				payloadBuf = null;
-			}else{
-				break
-			}
-		}
-
-		payloadBuf = Buffer.concat([
-			Buffer.from(payloadBuf || ''),
-			await self.VMIXTCP.readBytes(
-				(payloadLen - (Buffer.byteLength(payloadBuf || ''))) - 2
-			),
-		]);
-
-		self.nprintL(0, 'Got payload buf:', payloadBuf);
-
-		await self.VMIXTCP.readBytes(2);
-
-		self.nprintL(0, 'Truncated leading 2 bytes of payload');
-
-		self.doneResolve({
-			'VMIXOK': true,
-			// todo: It DOES SEEM like VMIX ONLY ever returns utf-8 data,
-			// but it's impossible to be sure with these fucking morons.
-			// 'payload': payloadBuf,
-			'payload': self.VMIXTCP.UTF8TextDecoder.decode(
-				payloadBuf
-			),
-		})
-	}
-
 	async *readResponse(self, headerData){
+		// Make sure not to read a response to some other random command
 		await self.sendPromise;
 
-		self.nprintL(0, 'Reading response...');
+		self.nprintL(0, 'Reading response body...');
 
+		// No response to read if the command was not sent
 		if (!self.CMDSent){
 			const msg = 'Tried reading CMD result before it was sent';
 			self.doneReject(
@@ -1343,23 +1151,34 @@ const VMIXTCPCMDInstance = class{
 		const responseCmdName = headerParts.shift();
 		const responseCmdStatus = headerParts.shift();
 
+		self.nprintL(0,
+			'Read response body:',
+			responseCmdName,
+			responseCmdStatus,
+			headerParts
+		);
+
 		// ER seems to always mean there was an error.
 		// VMIX Error that is...
 		// aka 0 fucks given
 		if (responseCmdStatus == 'ER'){
-			self.doneResolve({
+			self.nprintL(0, 'Response header is response body', responseCmdStatus);
+			self.resultData = {
 				'VMIXOK': false,
 				'payload': headerParts.join(' '),
-			})
+			}
+			self.doneResolve(self.resultData)
 			return
 		}
 
 		// OK means there was no error AND header IS the payload
 		if (responseCmdStatus == 'OK'){
-			self.doneResolve({
+			self.nprintL(0, 'Response header is response body', responseCmdStatus);
+			self.resultData = {
 				'VMIXOK': true,
 				'payload': headerParts.join(' '),
-			})
+			}
+			self.doneResolve(self.resultData)
 			return
 		}
 
@@ -1397,6 +1216,9 @@ const VMIXTCPCMDInstance = class{
 		// starts with 'ACTS '. If it does - fuck you muppets.
 		// If it DOESN'T - that's a chunk of a payload.
 
+		// todo: What if XMLTEXT returns a payload with length specified
+		// AND it begins with 'ACTS ' ?
+
 		let payloadBuf = null;
 
 		while (true){
@@ -1431,13 +1253,13 @@ const VMIXTCPCMDInstance = class{
 
 		self.nprintL(0, 'Got payload buf:', payloadBuf);
 
-		// EVEN payloads with data len specified have trailing \r\n
+		// EVEN payloads with data len SPECIFIED have trailing \r\n
 		// Erase this useless fucking shit
 		await self.VMIXTCP.readBytes(2);
 
 		self.nprintL(0, 'Truncated leading 2 bytes of payload');
 
-		self.doneResolve({
+		self.resultData = {
 			'VMIXOK': true,
 			// todo: It DOES SEEM like VMIX ONLY ever returns utf-8 data,
 			// but it's impossible to be sure with these fucking morons.
@@ -1445,7 +1267,8 @@ const VMIXTCPCMDInstance = class{
 			'payload': self.VMIXTCP.UTF8TextDecoder.decode(
 				payloadBuf
 			),
-		})
+		}
+		self.doneResolve(self.resultData)
 	}
 
 	async send(self){
@@ -1501,8 +1324,67 @@ const VMIXTCPCMDInstance = class{
 			'Command aborted'
 		));
 	}
+
+	async retry(self){
+		self.CMDSent = false;
+		await self.send();
+	}
 }
 
+
+const _debugProgressiveFileWrite = class{
+	constructor(fpath){
+		const self = kbn_util.nprint(
+			cls_pwnage.remap(this),
+			'#FFFFFF',
+		);
+
+		self.fpath = ksys.util.Path(fpath);
+
+		self.close();
+
+		self.fpath.unlinkSync()
+
+		self.fpath.openSync({
+			'flags': 'a',
+			'ensureExists': true,
+		});
+	}
+
+	write(self, buf){
+		self.fpath.writeSync(
+			buf, 0, buf.length, null, false
+		);
+	}
+
+	close(self){
+		try{self.fpath.closeSync()}catch{}
+	}
+}
+
+
+const debugProgressiveFileWrite = class{
+	constructor(fpath){
+		const self = kbn_util.nprint(
+			cls_pwnage.remap(this),
+			'#FFFFFF',
+		);
+
+		self.fpath = ksys.util.Path(fpath);
+
+		self.fpath.unlinkSync();
+	}
+
+	write(self, buf){
+		fs.appendFileSync(
+			str(self.fpath), buf
+		)
+	}
+
+	close(self){
+		return
+	}
+}
 
 
 const VMIXTCP = class{
@@ -1519,7 +1401,7 @@ const VMIXTCP = class{
 	// Delay between automatic reconnection retries
 	AUTO_RECONNECT_INTERVAL = 750;
 
-	// \r\n in a form of a buffer.
+	// \r\n in form of a buffer.
 	// Electron's buffers have .indexOf() function:
 	//     It accepts another buffer as an input and searches for the offset
 	//     of the first occurence of the provided sequence
@@ -1539,6 +1421,9 @@ const VMIXTCP = class{
 
 		// Callback functions, such as when the connection dies
 		self.callbacks = callbacks || {};
+
+		self.activatorsCallback = null;
+		self.awaitActivatorCompletion = false;
 
 		// Don't do shit when this is false
 		self.enabled = true;
@@ -1592,8 +1477,43 @@ const VMIXTCP = class{
 		// Resolved once connection is established
 		[self.connectionPromise, self.connectionResolve, self.connectionReject]
 		= kbn_util.flatPromise();
+	}
 
-		// self.debug = new consumableBuffer();
+	writeDebugDump(self, filePath){
+		self.debug = true;
+
+		const fpath = ksys.util.Path(filePath);
+		const targetDir = fpath.parent();
+		const fileExt = fpath.suffixes.join('');
+		const fileName = fpath.stem;
+
+		self.debugIN = new debugProgressiveFileWrite(
+			fpath.withBasename(`${fileName}.IN${fileExt}`)
+		);
+		self.debugOUT = new debugProgressiveFileWrite(
+			fpath.withBasename(`${fileName}.OUT${fileExt}`)
+		);
+		self.debugCOMP = new debugProgressiveFileWrite(
+			fpath.withBasename(`${fileName}.COMP${fileExt}`)
+		);
+	}
+
+	saveDebugDump(self, filePath){
+		return
+		const fpath = ksys.util.Path(filePath);
+		const targetDir = fpath.parent();
+		const fileExt = fpath.suffixes.join('');
+		const fileName = fpath.stem;
+
+		fpath.withBasename(`${fileName}.IN${fileExt}`).writeSync(
+			self.debugIN.buf
+		)
+		fpath.withBasename(`${fileName}.OUT${fileExt}`).writeSync(
+			self.debugOUT.buf
+		)
+		fpath.withBasename(`${fileName}.COMP${fileExt}`).writeSync(
+			self.debugCOMP.buf
+		)
 	}
 
 	runCallback(self, callbackID, onlyOnce=true, ...callbackArgs){
@@ -1609,7 +1529,7 @@ const VMIXTCP = class{
 			try{
 				await callbackFunction?.(...callbackArgs);
 			}catch(e){
-				throw e;
+				self.nerr(e);
 			}finally{
 				resolve();
 			}
@@ -1620,18 +1540,32 @@ const VMIXTCP = class{
 	// Does a bunch of extra shit as opposed to self.skt.write,
 	// which, naturally, IS A FUCKING INDECISIVE TWAT
 	writeBytes(self, tgtBuf){
-		if (tgtBuf.length <= 0){
-			return
+		if (!Buffer.isBuffer(tgtBuf)){
+			self.nerr(tgtBuf);
+			throw new Error(
+				'Cannot write anything that is not a buffer'
+			)
 		}
 
+		if (tgtBuf.length <= 0){
+			return true
+		}
+
+		self.debugOUT?.write?.(tgtBuf);
+		self.debugCOMP?.write?.(tgtBuf);
+
 		return new Promise(function(resolve, reject){
-			const sktInternalBufOk = self.skt.write(tgtBuf, 'utf8', function(err){
-				if (err){
-					reject(err);
-				}else{
-					resolve(sktInternalBufOk);
-				}
-			});
+			try{
+				const sktInternalBufOk = self.skt.write(tgtBuf, 'utf8', function(err){
+					if (err){
+						reject(err);
+					}else{
+						resolve(sktInternalBufOk);
+					}
+				});
+			}catch(e){
+				reject(e);
+			}
 		})
 	}
 
@@ -1656,7 +1590,8 @@ const VMIXTCP = class{
 
 			self.TCPBufIn.write(value);
 
-			// self.debug.write(value);
+			self?.debugIN?.write?.(value);
+			self?.debugCOMP?.write?.(value);
 		}
 
 		return self.TCPBufIn.eraseRead(nBytes);
@@ -1695,7 +1630,8 @@ const VMIXTCP = class{
 				);
 			}
 
-			// self.debug.write(value);
+			self.debugIN?.write?.(value);
+			self.debugCOMP?.write?.(value);
 
 			// Buffer resulting data
 			self.TCPBufIn.write(value);
@@ -1716,7 +1652,10 @@ const VMIXTCP = class{
 		}
 
 		try{
-			await self?.activatorsCallback?.(activatorData);
+			const activatorPromise = self?.activatorsCallback?.(activatorData);
+			if (self.awaitActivatorCompletion){
+				await activatorPromise
+			}
 		}catch(e){
 			self.nerr(e);
 		}
@@ -1735,6 +1674,10 @@ const VMIXTCP = class{
 		self.nwarnL(3, 'Perma death, because:', reason);
 		// Don't try reconnecting or do any other shit anymore
 		self.enabled = false;
+		// Reject promise used to wait for a connection to establish
+		self?.connectionReject?.(reason || new ConnectionAborted(
+			'Died permanently'
+		));
 		// Destroy the underlying TCP socket
 		self.skt?.destroy?.();
 		// No longer connected
@@ -1747,10 +1690,10 @@ const VMIXTCP = class{
 		// Try aborting current CMD just in case
 		self?.currentCMD?.abort?.();
 		self.currentCMD = null;
-		// Reject promise used to wait for a connection to establish
-		self?.connectionReject?.(reason || new ConnectionAborted(
-			'Died permanently'
-		));
+
+		self.debugIN?.close?.();
+		self.debugOUT?.close?.();
+		self.debugCOMP?.close?.();
 	}
 
 	establishConnection(self){
@@ -1758,6 +1701,10 @@ const VMIXTCP = class{
 			throw new Error(
 				`Cannot maintain connection while VMIX IP is invalid: ${self.VMIXIP}`
 			);
+		}
+
+		if (!self.enabled){
+			throw new Error('Cannot reconnect when disabled');
 		}
 
 		return new Promise(async function(resolve, reject){
@@ -1784,18 +1731,22 @@ const VMIXTCP = class{
 				// Sync-like reading
 				self.sktIter = self.skt[Symbol.asyncIterator]();
 
-				// Check if it's actually VMIX, because WHO KNOWS....
+				// Check if it's actually VMIX, because WHO KNOWS...
 				const headerData = await self.readHeader();
 
 				self.nprint('Init header data:', headerData);
 
 				if (!headerData.startsWith('VERSION')){
-					reject(new UnexpectedResponse([
+					const msg = [
 						`Whatever runs at ${self.VMIXIP}:${self.TCP_API_PORT}`,
 						`does NOT seem to be VMIX, BECAUSE upon establishing connection`,
 						`it must've sent data, which starts with UTF-8 text >VERSION<, but got:`,
-						`>${str(headerData).slice(0, 16)}<`,
-					].join(' ')))
+						`>${str(headerData).slice(0, 32)}<`,
+					].join(' ');
+
+					self.nerrL(7, msg);
+
+					reject(new UnexpectedResponse(msg));
 					return
 				}
 
@@ -1814,10 +1765,15 @@ const VMIXTCP = class{
 			await self?.currentCMD?.sendPromise;
 
 			// Header must be read here, because it can be an activator
+			self.nprintL(0, 'Awaiting header');
 			const headerData = await self.readHeader();
 			self.nprintL(0, 'Read header:', [str(headerData.slice(0, 128))]);
 			if (headerData.startsWith('ACTS')){
-				await self.activatorEvent(headerData.slice(5));
+				self.nprintL(0, 'Triggering activatorEvent')
+				const activatorPromise = self.activatorEvent(headerData.slice(5));
+				if (self.awaitActivatorCompletion){
+					await activatorPromise
+				}
 				continue
 			}
 
@@ -1838,7 +1794,11 @@ const VMIXTCP = class{
 			// await self.currentCMD.readResponse(headerData);
 
 			for await (const intermediateACT of self.currentCMD.readResponse(headerData)){
-				await self.activatorEvent(intermediateACT.slice(5));
+				self.nprintL(0, 'Intermediate ACT:', intermediateACT);
+				const activatorPromise = self.activatorEvent(intermediateACT.slice(5));
+				if (self.awaitActivatorCompletion){
+					await activatorPromise
+				}
 			}
 		}
 	}
@@ -1854,6 +1814,7 @@ const VMIXTCP = class{
 			await cmd.donePromise;
 		}catch(e){
 			self.nerrL(0, e);
+			cmd.sendReject(e);
 			cmd.doneReject(e);
 			// Reject pending commands, because:
 			/*
@@ -1875,15 +1836,16 @@ const VMIXTCP = class{
 	// Continuously maintain connection to the VMIX TCP Server
 	async maintainConnection(self){
 		if (self.connectionMaintained){
-			self.nerr('Tried maintaining connection multiple times');
-			return false
+			const msg = 'Already meaintaining connection';
+			self.nerr(msg);
+			throw new Error(msg);
 		}
 
 		self.connectionMaintained = true;
 
 		while (self.enabled){
 			try{
-				// This throws an error if no valid connection could be made
+				// This throws an error if no valid connection could be established
 				const connectionRetryResult = await self.establishConnection();
 
 				// Establishing connection may or may not take just long enough
@@ -1907,19 +1869,23 @@ const VMIXTCP = class{
 					self.nerrL(5, 'Socket stream reading errored:', readError);
 				}
 
-				self.fuck = false;
-
 				// If auto reconnect is NOT enabled - stop
 				if (!self.AUTO_RECONNECT){
 					await self.permaDeathEvent(readError);
 					break
 				}
 			}catch(e){
+				// This will only get executed if connection process fails.
+				// Errors which happen while there's an active connection
+				// are caught separately
 				self.nerrL(5, 'Failed to reconnect:', e);
 				await self.runCallback('reconnectFail', false, e);
 			}finally{
 				// No longer connected
 				self.connected = false;
+
+				// If somebody's waiting for a connection - tough shit
+				self?.connectionReject?.();
 
 				// Create connection promise
 				[self.connectionPromise, self.connectionResolve, self.connectionReject]
@@ -1968,14 +1934,18 @@ const VMIXTCP = class{
 		));
 	}
 
-	async subscribeActivators(self, activatorsCallback){
+	async subscribeActivators(self, activatorsCallback, awaitCompletion=false){
 		self.activatorsCallback = activatorsCallback;
+		self.awaitActivatorCompletion = awaitCompletion;
 		return await self.runCMD('SUBSCRIBE ACTS').result();
 	}
 
 	runCMD(self, cmdName, cmdArgs=null){
 		const cmd = new VMIXTCPCMDInstance(self, cmdName, cmdArgs);
 
+		// Yes, connection must normally be awaited before executing commands,
+		// but at the same time it'd be stupid to raise errors if the system
+		// is 5 picoseconds away from a successful connection
 		if (self.connected){
 			self.MSGOutSched.push(cmd);
 		}else{
@@ -1984,6 +1954,12 @@ const VMIXTCP = class{
 				if (self.enabled){
 					self.MSGOutSched.push(cmd);
 				}
+			})
+			.catch(function(e){
+				self.nwarnL(0,
+					`Couldn't schedule a command due to an error:`, e
+				)
+				cmd.abort();
 			})
 		}
 		return cmd

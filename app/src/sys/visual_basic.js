@@ -1,5 +1,20 @@
 
 
+ICON_DICT = Object.freeze({
+	'image':           './assets/image_icon.svg',
+	'gt':              './assets/gt_title_icon.svg',
+	'video':           './assets/video_icon.svg',
+	'videolist':       './assets/playlist_icon.svg',
+	'capture':         './assets/camera_icon.svg',
+	'ndi':             './assets/ndi_icon.svg',
+	'desktopcapture':  './assets/desktop_icon.svg',
+	'colour':          './assets/color_palette_icon.svg',
+	'virtualset':      './assets/scene_icon.svg',
+	'browser':         './assets/browser_icon.svg',
+	'replay':          './assets/replay_icon.svg',
+	'replaypreview':   './assets/replay_preview_icon.svg',
+});
+
 
 
 const VisualBasicTextField = class{
@@ -138,20 +153,8 @@ const VisualBasicTextField = class{
 
 
 const VisualBasicItem = class{
-	ICONS = Object.freeze({
-		'image':           './assets/image_icon.svg',
-		'gt':              './assets/gt_title_icon.svg',
-		'video':           './assets/video_icon.svg',
-		'videolist':       './assets/playlist_icon.svg',
-		'capture':         './assets/camera_icon.svg',
-		'ndi':             './assets/ndi_icon.svg',
-		'desktopcapture':  './assets/desktop_icon.svg',
-		'colour':          './assets/color_palette_icon.svg',
-		'virtualset':      './assets/scene_icon.svg',
-		'browser':         './assets/browser_icon.svg',
-		'replay':          './assets/replay_icon.svg',
-		'replaypreview':   './assets/replay_preview_icon.svg',
-	});
+
+	ICONS = ICON_DICT;
 
 	constructor(vb, params){
 		const self = ksys.util.nprint(
@@ -419,26 +422,31 @@ const VisualBasicItem = class{
 	}
 
 	async redraw_preview(self){
-		const kbnc = ksys.kbnc.KBNC.sysData().currentClient;
-		if (!kbnc.enabled){return};
+		try{
+			const kbnc = ksys.kbnc.KBNC.sysData().currentClient;
+			if (!kbnc?.enabled){return};
 
-		await vmix.talker.talk({
-			'Function': 'SnapshotInput',
-			'Value': 'C:\\custom\\vmix_assets\\buf.png',
-			'Input': self.visual_name,
-		})
+			await vmix.talker.talk({
+				'Function': 'SnapshotInput',
+				'Value':    'C:\\custom\\vmix_assets\\buf.png',
+				'Input':    self.visual_name,
+			})
 
-		await ksys.util.sleep(125);
+			await ksys.util.sleep(125);
 
-		const msg = await kbnc.runCMD('generic.read_file', {
-			'header': {
-				'fpath': 'C:\\custom\\vmix_assets\\buf.png',
-			},
-		})
+			const msg = await kbnc.runCMD('generic.read_file', {
+				'header': {
+					'fpath': 'C:\\custom\\vmix_assets\\buf.png',
+				},
+			})
 
-		self.dom_ctrl.index.preview.src = URL.createObjectURL(
-			new Blob([(await msg.result()).payload])
-		);
+			self.dom_ctrl.index.preview.src = URL.createObjectURL(
+				new Blob([(await msg.result()).payload])
+			);
+		}catch(e){
+			self.nerr('Failed to redraw dynamic preview:', e);
+		}
+
 	}
 }
 
@@ -648,8 +656,6 @@ const VisualBasic = class{
 
 
 
-
-
 const m_init = async function(){
 	const tgt_editor = qsel('visual-basic');
 	if (!tgt_editor){return};
@@ -672,4 +678,5 @@ const m_init = async function(){
 module.exports = {
 	VisualBasic,
 	m_init,
+	ICON_DICT,
 }

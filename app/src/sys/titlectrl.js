@@ -326,7 +326,11 @@ const HTTPResourceProxy = class{
 		const placeholder = qsel('http-resource-proxy-control');
 		if (placeholder){
 			placeholder.replaceWith(
-				(new HTTPResourceProxyControlPanel({'resource_proxy': global_params.resource_proxy})).dom.root
+				(new HTTPResourceProxyControlPanel({
+					'resource_proxy': global_params.resource_proxy,
+				}))
+				.dom
+				.root
 			);
 		}
 	}
@@ -756,6 +760,16 @@ const VMIXTitle = class{
 		return null
 	}
 
+	$anim_durations(self){
+		for (const title of (ksys?.psych_ward?.PsychWard?.SYSDATA?.current_editor?.titles || [])){
+			if (title.title_name.lower() == self.title_name.lower()){
+				return title.anim_durations
+			}
+		}
+
+		return {}
+	}
+
 	// Pul this title's XML data from VMIX
 	async pull_xml(self){
 		return self.select_from_xml(
@@ -790,10 +804,10 @@ const VMIXTitle = class{
 		})
 	}
 
-	async set_img_src(self, img_name, newsrc){
+	async set_img_src(self, img_name, newsrc, force_no_proxy=false){
 		let img_src;
 
-		if (ksys.context.global.cache.resource_proxy_enabled){
+		if (ksys.context.global.cache.resource_proxy_enabled && !force_no_proxy){
 			img_src = global_params.resource_proxy.map_fpath(newsrc);
 		}else{
 			img_src = newsrc;
@@ -829,6 +843,14 @@ const VMIXTitle = class{
 			'Input': self.title_name,
 		})
 
+		if (self.anim_durations[null]){
+			await ksys.util.sleep(
+				self.anim_durations[null]
+			)
+
+			return
+		}
+
 		if (self.timings && wait){
 			const margin = (self.timings.margin || 0) + 500;
 			await ksys.util.sleep(((self.timings.frames_in / self.timings.fps)*1000) + margin)
@@ -845,6 +867,14 @@ const VMIXTitle = class{
 			'Function': `${overlay_variant}${target_overlay}` + suffix,
 			'Input': self.title_name,
 		})
+
+		if (self.anim_durations['TransitionOut']){
+			await ksys.util.sleep(
+				self.anim_durations['TransitionOut']
+			)
+
+			return
+		}
 
 		if (self.timings && wait){
 			const margin = (self.timings.margin || 0) + 500
@@ -961,10 +991,39 @@ const VMIXTitle = class{
 		// Re-add self
 		await vmix.talker.talk({
 			'Function': `AddInput`,
-			'Value': `Title|${str(params.gtz_fpath)}`,
+			'Value': `${params.add_as || 'Title'}|${str(params.gtz_fpath)}`,
 		})
 
 		return true
+	}
+
+	async close(self){
+		let count_last = await self.count_duplicates();
+		if (count_last <= 0){
+			return true
+		}
+		while (count_last > 0){
+			self.nprint('Closing', self.title_name);
+
+			// Commandeer VMIX to remove the title
+			await vmix.talker.talk({
+				'Function': `RemoveInput`,
+				'Input': self.title_name,
+			})
+
+			// Wait for VMIX to fully remove it
+			for (const i of range(15)){
+				await ksys.util.sleep(self.HARD_RELOAD_SLEEP);
+				const new_count = await self.count_duplicates();
+				if (count_last != new_count){
+					count_last = new_count;
+					break
+				}
+				self.nprint('Waiting...', `${i+1}/${15}`);
+			}
+		}
+
+		return false
 	}
 
 	// todo: these manipulations (pause/resume render) require
@@ -1015,6 +1074,51 @@ const VMIXTitle = class{
 		if (anim_dur){
 			await ksys.util.sleep(anim_dur);
 		}
+	}
+
+	async play_anim(self, tgt_anim){
+		await vmix.talker.talk({
+			'Function': 'TitleBeginAnimation',
+			'Value': tgt_anim,
+			'Input': self.title_name,
+		})
+
+		const VMIXAnimName = (tgt_anim == null) ? 'TransitionIn' : tgt_anim;
+
+		if (self.anim_durations[VMIXAnimName]){
+			await ksys.util.sleep(
+				self.anim_durations[VMIXAnimName]
+			)
+		}
+
+	}
+
+	replace(self, tgt_title, hold=false){
+		const [animPromise, animResolve] = ksys.util.flatPromise();
+
+		const seqTime = ksys.util.sum([
+			self.anim_durations['TransitionOut'],
+			tgt_title.anim_durations[null],
+
+			(hold ? tgt_title.anim_durations['TransitionOut'] : 0),
+			(hold ? self.anim_durations[null] : 0),
+			(hold ? hold : 0),
+		]);
+
+		(async function(){
+			await self.overlay_out();
+			await tgt_title.overlay_in();
+
+			if (hold){
+				await ksys.util.sleep(hold);
+				await tgt_title.overlay_out();
+				await self.overlay_in();
+			}
+
+			animResolve();
+		})();
+
+		return [animPromise, seqTime]
 	}
 }
 

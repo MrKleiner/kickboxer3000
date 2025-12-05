@@ -1,7 +1,7 @@
 (function() {
 
 const _lizard = {
-	info: `Lizard's toybox. Version 1.19`,
+	info: `Lizard's toybox. Version 1.21`,
 	obsolete: {},
 };
 
@@ -77,6 +77,19 @@ const _lizard = {
 		return _lizard.strToUTF8Arr(this)
 	}
 
+	// String.prototype.join = function(arrayElements){
+	// 	return arrayElements.join(this)
+	// }
+
+	window.str = function(inp=''){
+		try{
+			return inp.toString()
+		}catch{
+			return `${inp}`
+		}
+	}
+
+	/*
 	window.str = function (inp){
 		try {
 			if (inp){
@@ -89,6 +102,7 @@ const _lizard = {
 			return `${inp}`
 		}
 	}
+	*/
 }
 
 // -----------------------
@@ -127,7 +141,7 @@ const _lizard = {
 	// 	return Array.from(_to_set);
 	// }
 
-	// Implement Array.at for sets
+	// Implement Array.at for sets, because sets preserve insertion order
 	Set.prototype.at = function(index) {
 		if (Math.abs(index) > this.size){
 			return

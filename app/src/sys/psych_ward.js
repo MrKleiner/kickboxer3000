@@ -35,6 +35,20 @@ const PsychWardTitle = class{
 
 		self.tplates = ksys.tplates.sys_tplates.psych_ward;
 
+		self.gtz_file = null;
+
+		self.anim_durations = new Proxy({}, {
+			get(target, prop, receiver){
+				if (!(prop in target)){
+					target[prop] = self.calc_anim_dur(
+						(prop == 'null') ? null : prop
+					);
+				}
+
+				return target[prop];
+			}
+		});
+
 		self._dom = null;
 	}
 
@@ -49,6 +63,7 @@ const PsychWardTitle = class{
 			'hard_reload':    'sysbtn.hard_reload',
 			'vmix_presence':  '.presence.vmix',
 			'local_presence': '.presence.pc',
+			'edit':           '.edit_in_gtz_designer',
 		})
 
 		self._dom.index.hard_reload.onclick = async function(){
@@ -69,11 +84,55 @@ const PsychWardTitle = class{
 			await self.check_for_presence();
 		}
 
-		self._dom.root.onmouseover = function(){
-			self.psych_ward.editor_dom.index.thumbnail.src = self._dom.index.preview_img.src;
+		if (ksys.util.isDev()){
+			self._dom.index.edit.classList.remove('kbsys_hidden');
+			self._dom.index.edit.onclick = self.gtz_edit;
 		}
 
+		self._dom.root.onmouseover = self.display_vis_info;
+
 		return self._dom
+	}
+
+	display_vis_info(self){
+		self.psych_ward.editor_dom.index.thumbnail.src = self._dom.index.preview_img.src;
+		const anims_info_lines = [
+			['IN',  self.anim_durations[null].toFixed(3)],
+			['OUT', self.anim_durations['TransitionOut'].toFixed(3)],
+			[' ',   ' '],
+		];
+
+		let page_idx = 1;
+		while (self.gtz_file.doc_xml.querySelector(`[Type="Page${page_idx}"]`)){
+			anims_info_lines.push([
+				`PAGE ${page_idx}`, self.anim_durations[`Page${page_idx}`].toFixed(3),
+			])
+
+			page_idx += 1;
+		}
+
+		self.psych_ward.editor_dom.index.facts_anims.textContent = (
+			anims_info_lines
+			.map(function(line){
+				const [label, line_data] = line;
+				return `${label.padEnd(16)}:  ${line_data}`;
+			})
+			.join('\n')
+		);
+
+		let phantom_len = 0;
+		for (const file of Object.values(self.gtz_file.kb_data.files)){
+			phantom_len += file.buf.length;
+		}
+
+		const phantom_len_kb = Math.floor(phantom_len / 1024);
+		const phantom_len_bytes = phantom_len - (1024 * phantom_len_kb);
+
+		self.psych_ward.editor_dom.index.facts_phantom.textContent = [
+			'PHANTOM:',
+			`${Object.values(self.gtz_file.kb_data.files).length} FILES`,
+			`@ ${phantom_len_kb}.${phantom_len_bytes} KB`,
+		].join('\n');
 	}
 
 	async count_duplicates(self){
@@ -153,15 +212,15 @@ const PsychWardTitle = class{
 		}
 
 		// If file is present on local machine - show the preview
-		const gtz_file = new ksys.gtzip_wrangler.GTZipFile({
+		self.gtz_file = new ksys.gtzip_wrangler.GTZipFile({
 			'fpath': self.local_fpath,
 		});
 
 		self.dom.index.preview_img.src = URL.createObjectURL(
-			new Blob([gtz_file.zip_buf.readFile('thumbnail.png')])
+			new Blob([self.gtz_file.zip_buf.readFile('thumbnail.png')])
 		);
 
-		self.nprint(gtz_file, gtz_file.kb_data);
+		// self.nprint(self.gtz_file, self.gtz_file.kb_data);
 	}
 
 	async check_for_presence(self, src_xml=null){
@@ -180,6 +239,39 @@ const PsychWardTitle = class{
 			'kbsys_hidden_opacity',
 			!local_presence
 		)
+	}
+
+	calc_anim_dur(self, anim_type){
+		for (const storyboard of self.gtz_file.doc_xml.querySelectorAll('Storyboard')){
+			if (storyboard.getAttribute('Type') == anim_type){
+				const durations = [];
+				for (const item of storyboard.querySelectorAll('[Delay], [Duration]')){
+					if (item.nodeName == 'None'){continue};
+
+					durations.push(
+						float(item.getAttribute('Delay') || 0) +
+						float(item.getAttribute('Duration') || 0)
+					)
+				}
+
+				return (durations.sort().pop() || 0.5) * 1000
+			}
+		}
+
+		return 0.5
+	}
+
+	gtz_edit(self){
+		// "C:\Program Files (x86)\vMix\GT\GTDesigner.exe"
+
+		const child = spawn('C:\\Program Files (x86)\\vMix\\GT\\GTDesigner.exe', [self.local_fpath], {
+			detached: true,
+			stdio: 'ignore',
+			windowsHide: true
+		})
+
+		// Detach from parent so the parent can exit and Node will not wait
+		child.unref()
 	}
 }
 
@@ -203,6 +295,10 @@ const PsychWard = class{
 		// self._remote_dir = null;
 	}
 
+	static get SYSDATA(){
+		return sys_data
+	}
+
 	$editor_dom(self){
 		if (self._editor_dom){
 			return self._editor_dom
@@ -217,13 +313,18 @@ const PsychWard = class{
 			'flist':      'textarea.flist',
 
 			// Visual output
-			'results':    '.psych_ward_results',
-			'thumbnail':  'img.title_thumbnail',
+			'results':       '.psych_ward_results',
+			'thumbnail':     '.title_thumbnail img',
+			'facts_anims':   '.title_facts .anims',
+			'facts_phantom': '.title_facts .phantom',
 
 			// Buttons
-			'hard_reload_all':  'sysbtn.hard_reload_all',
-			'redraw':           'sysbtn.redraw',
-			'check_presence':   'sysbtn.check_presence_all',
+			'install_fonts':         'sysbtn.install_fonts',
+			'pack_fonts':            'sysbtn.pack_fonts',
+			'hard_reload_all':       'sysbtn.hard_reload_all',
+			'redraw':                'sysbtn.redraw',
+			'check_presence':        'sysbtn.check_presence_all',
+			'render_hires_previews': 'sysbtn.render_hires_previews',
 		})
 
 		self._editor_dom.index.local_dir.onchange = function(){
@@ -252,6 +353,24 @@ const PsychWard = class{
 			);
 		}
 
+		self._editor_dom.index.pack_fonts.onclick = async function(){
+			await self.pack_all_fonts();
+			ksys.info_msg.send_msg(
+				'Done Packing Fonts',
+				'ok',
+				7000
+			);
+		}
+
+		self._editor_dom.index.install_fonts.onclick = async function(){
+			await self.install_fonts();
+			ksys.info_msg.send_msg(
+				'Done installing fonts',
+				'ok',
+				7000
+			);
+		}
+
 		self._editor_dom.index.redraw.onclick = function(){
 			self.redraw();
 			ksys.info_msg.send_msg(
@@ -268,6 +387,24 @@ const PsychWard = class{
 				'ok',
 				3000
 			);
+		}
+
+		self._editor_dom.index.render_hires_previews.onclick = async function(){
+			await self.render_hires_previews();
+		}
+
+		self._editor_dom.index.thumbnail.onmousedown = function(){
+			const pootis = $(`
+				<img
+					contain
+					id="vb_fullscreen_preview"
+					src="${self._editor_dom.index.thumbnail.src}"
+				>
+			`)[0];
+			document.body.append(pootis);
+			pootis.onmouseup = function(){
+				pootis?.remove?.();
+			}
 		}
 
 		return self._editor_dom
@@ -405,6 +542,8 @@ const PsychWard = class{
 				self.editor_dom.index.results.append(psych_ward_title.dom.root);
 			}
 		}
+
+		self.check_presence_all();
 	}
 
 	// Hard reload all titles in VMIX
@@ -444,6 +583,145 @@ const PsychWard = class{
 			}
 		}catch(e){
 			self.nprint(e);
+		}finally{
+			self.unlock_gui();
+		}
+	}
+
+	async pack_all_fonts(self){
+		const font_packer = new ksys.gtzip_wrangler.fontPacker();
+
+		try{
+			self.lock_gui();
+			for (const title of self.titles){
+				const gtz_title = new ksys.gtzip_wrangler.GTZipFile({
+					'fpath': title.local_fpath,
+				})
+
+				await font_packer.packFonts(gtz_title, true);
+
+				Path(title.local_fpath).writeFileSync(
+					gtz_title.to_zip_buf()
+				);
+			}
+		}catch(e){
+			self.nprint(e);
+		}finally{
+			self.unlock_gui();
+		}
+	}
+
+	async install_fonts(self){
+		try{
+			self.lock_gui();
+			const kbnc = ksys.kbnc.KBNC.sysData().currentClient;
+			for (const title of self.titles){
+				const gtz_title = new ksys.gtzip_wrangler.GTZipFile({
+					'fpath': title.local_fpath,
+				})
+
+				for (const file of Object.values(gtz_title.kb_data.files)){
+					if (file.grp == 'fonts'){
+						const writeFileResult = await kbnc.runCMD('generic.write_file', {
+							'header': {
+								'fpath': `C:/custom/vmix_assets/kbnc/fonts/${file.fname}`,
+							},
+							'payload': file.buf,
+						})
+						self.nprint(
+							'Write font result:',
+							await writeFileResult.result()
+						)
+					}
+				}
+			}
+
+			await (await kbnc.runCMD('generic.explorer_dir', {
+				'header': {
+					'dir_path': `C:/custom/vmix_assets/kbnc/fonts`,
+				},
+			})).result()
+
+			await ksys.util.sleep(2000);
+
+			await (await kbnc.runCMD('generic.show_msg', {
+				'header': {
+					'msgTitle': 'KickBoxer 3000 INFO',
+					'msgContent': [
+						'Ctrl + A -> Shift + RMB -> Install For All Users',
+						'Ctrl + A -> Shift + Delete',
+					].join('\n'),
+				},
+			})).result()
+
+		}catch(e){
+			self.nprint(e);
+		}finally{
+			self.unlock_gui();
+		}
+	}
+
+	async render_hires_previews(self){
+		try{
+			self.lock_gui();
+			const kbnc = ksys.kbnc.KBNC.sysData().currentClient;
+			if (!kbnc?.enabled){return};
+
+			for (const title of self.titles){
+				if ( !!(await title.hard_reload()) ){
+					await ksys.util.sleep(1000);
+
+					const titleControl = new vmix.title(title.title_name);
+
+					await titleControl.overlay_in(1);
+
+					await ksys.util.sleep(500);
+
+					await vmix.talker.talk({
+						'Function': 'SnapshotInput',
+						'Value': 'C:\\custom\\vmix_assets\\buf.png',
+						'Input': title.title_name,
+					})
+
+					await ksys.util.sleep(1000);
+
+					const msg = await kbnc.runCMD('generic.read_file', {
+						'header': {
+							'fpath': 'C:\\custom\\vmix_assets\\buf.png',
+						},
+					})
+
+					const gtz_file = new ksys.gtzip_wrangler.GTZipFile({
+						'fpath': title.local_fpath,
+					});
+
+					gtz_file.zip_buf.getEntry('thumbnail.png').setData(
+						(await msg.result()).payload
+					)
+
+					Path(title.local_fpath).writeFileSync(
+						gtz_file.to_zip_buf()
+					)
+
+					await ksys.util.sleep(500);
+
+					ksys.info_msg.send_msg(
+						`Rendered ${title.title_name}`,
+						'ok',
+						1000
+					);
+				}else{
+					ksys.info_msg.send_msg(
+						`FATAL: Could not render ${title.title_name}`,
+						'err',
+						7000
+					);
+				}
+			}
+
+			self.redraw();
+		}catch(e){
+			self.nerr(e);
 		}finally{
 			self.unlock_gui();
 		}

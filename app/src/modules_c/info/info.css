@@ -10,11 +10,12 @@
 	flex-wrap: wrap;
 }
 
-#asset_info{
+#asset_info, #asset_info_css{
 	margin: 15px;
 	font-size: 20px;
 	color: white;
 	/*user-select: text !important;*/
+	font-family: 'ibm_plex';
 }
 
 [tabid="asset_list"] img{

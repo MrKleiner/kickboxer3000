@@ -1,0 +1,110 @@
+
+
+
+<template id="volume_slider">
+	<div class="volume_slider" subtle_box>
+		<div class="meters"></div>
+		<div class="slider_label"></div>
+		<div class="slider_array">
+			<div class="master_sliders"></div>
+			<div class="adv_sliders" regular_box></div>
+		</div>
+	</div>
+</template>
+
+
+
+<template id="vol_slider_instance">
+	<div class="slider_instance">
+		<div class="chan_label"></div>
+		<div style="position: relative;">
+			<div class="slider_body" horizontal>
+				<div class="slider_fill slider_fill_main"></div>
+				<div class="slider_fill slider_fill_phantom kbsys_hidden"></div>
+				<div class="val_display"></div>
+				<img src="./assets/pause_icon.svg" class="pause_icon kbsys_hidden" contain>
+				<input type="range" min="0" max="100" step="1">
+			</div>
+			<div class="marker kbsys_hidden">
+				<div class="marker_line"></div>
+				<div class="marker_text">Sample Data</div>
+			</div>
+		</div>
+	</div>
+</template>
+
+
+<template id="audio_meter">
+	<div class="audio_meter">
+		<div class="level_gradient"></div>
+		<div class="fill"></div>
+	</div>
+</template>
+
+
+
+
+<template id="anode_picker_item">
+	<div class="anode_picker_item" subtle_box>
+		<img class="icon" contain>
+		<div class="name"></div>
+	</div>
+</template>
+
+
+
+<!-- anode = AudioNODE -->
+<template id="audio_mixer">
+	<div class="audio_mixer">
+		<div class="active_anodes" subtle_box kb_thin_scrollbar></div>
+		<div class="mixer_config">
+			<div class="btns" subtle_box>
+
+				<div class="col left">
+					<sysbtn class="cfg_btn resync">Resync</sysbtn>
+					<sysbtn class="cfg_btn terminate">Terminate</sysbtn>
+					<sysbtn class="cfg_btn deselect_all">Deselect All</sysbtn>
+				</div>
+
+				<div class="col right">
+					<div class="labeled_param">
+						<div class="label">Updates Per Second</div>
+						<div class="param_data">
+							<div class="fps_switch" kbswitch_style="default">
+								<div kbswitch_item fps="3">3</div>
+								<div kbswitch_item fps="11">11</div>
+								<div kbswitch_item fps="24">24</div>
+								<div kbswitch_item fps="30">30</div>
+							</div>
+						</div>
+					</div>
+					<div class="labeled_param">
+						<div class="label">Fade Duration MS</div>
+						<div class="param_data">
+							<input type="number" noctrl class="fade_dur" value="1000" onchange_vis_feed>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+			<div class="timeout_indicator_wrapper">
+				<div class="timeout_indicator">
+					<div class="timeout_indicator_fill"></div>
+				</div>
+				<img src="" class="warn_triangle">
+			</div>
+
+
+			<div class="anode_picker" subtle_box kb_thin_scrollbar></div>
+		</div>
+	</div>
+</template>
+
+
+
+
+
+
+
+

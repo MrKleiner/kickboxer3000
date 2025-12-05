@@ -1,6 +1,7 @@
 <div id="football_standard">
 
 	<tabsys>
+		<sys-tab match_id="quick_input">Quick Input</sys-tab>
 		<sys-tab match_id="visual_basic">Visual Basic</sys-tab>
 		<sys-tab match_id="fucking_docs">Other</sys-tab>
 		<!-- <sys-tab match_id="stats_db">Stats DB</sys-tab> -->
@@ -609,6 +610,116 @@
 					</div>
 				</div>
 			</div>
+
+			<div id="weather_ctrl" subtle_box kbhint="Weather forecast: Cold as hell. It's space, bitches... what did yall expect?">
+				<h1>Weather</h1>
+				<div id="weather_ctrl_body" subtle_box>
+					<input
+						type="text"
+						field_id="weather_header_lower"
+						onchange_vis_feed
+						placeholder="СТАДІОН «ЧОРНОМОРЕЦЬ»"
+						kbhint="Lower header text. No post-formatting applied"
+					>
+					<div id="weather_clouds">
+						<img
+							contain
+							onclick="window.kbmodules.football_standard.set_weather_icon('cloudy')"
+							icon_id="cloudy"
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.football_standard.set_weather_icon('moon')" 
+							icon_id="moon" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.football_standard.set_weather_icon('partly_cloudy')" 
+							icon_id="partly_cloudy" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.football_standard.set_weather_icon('partly_raining')" 
+							icon_id="partly_raining" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.football_standard.set_weather_icon('rain')" 
+							icon_id="rain" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.football_standard.set_weather_icon('snow')" 
+							icon_id="snow" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.football_standard.set_weather_icon('sun')" 
+							icon_id="sun" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.football_standard.set_weather_icon('thunder')" 
+							icon_id="thunder" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+					</div>
+					<div id="weather_params">
+						<div class="weather_param temperature">
+							<img contain icon_id="temperature" src="./assets/question_mark_circled_icon.svg">
+							<input
+								type="text"
+								field_id="weather_param_temperature"
+								onchange_vis_feed
+								placeholder="28"
+								kbhint="Temperature. ° is added automatically"
+							>
+						</div>
+
+						<div class="weather_param humidity">
+							<img contain icon_id="humidity" src="./assets/question_mark_circled_icon.svg">
+							<input
+								type="text"
+								field_id="weather_param_humidity"
+								onchange_vis_feed
+								placeholder="33"
+								kbhint="Humidity. % is added automatically"
+							>
+						</div>
+
+						<div class="weather_param wind_speed">
+							<img contain icon_id="wind" src="./assets/question_mark_circled_icon.svg">
+							<input
+								type="text"
+								field_id="weather_param_wind_speed"
+								onchange_vis_feed
+								placeholder="18"
+								kbhint="Wind speed. М/C is added automatically"
+							>
+						</div>
+					</div>
+					<div id="weather_ctrl_buttons">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_misc_title"
+							onclick="window.kbmodules.football_standard.show_misc_title('weather')"
+						>Show Weather</vmixbtn>
+
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_misc_title"
+							onclick="window.kbmodules.football_standard.hide_misc_title('weather')"
+						>Hide Weather</vmixbtn>
+					</div>
+				</div>
+			</div>
 		</div>
 
 	</tab>
@@ -686,7 +797,7 @@
 						<vmixbtn
 							seq_info="vis_hide"
 							btname="hide_home_field_layout"
-							onclick="window.kbmodules.football_standard.hide_field_layout()"
+							onclick="window.kbmodules.football_standard.hide_field_layout('home')"
 						>Field Layout OFF</vmixbtn>
 					</div>
 
@@ -750,7 +861,7 @@
 						<vmixbtn
 							seq_info="vis_hide"
 							btname="hide_guest_field_layout"
-							onclick="window.kbmodules.football_standard.hide_field_layout()"
+							onclick="window.kbmodules.football_standard.hide_field_layout('guest')"
 						>Field Layout OFF</vmixbtn>
 					</div>
 
@@ -1077,7 +1188,9 @@
 	</tab>
 
 
-
+	<tab tabid="quick_input">
+		<remote-inputs></remote-inputs>
+	</tab>
 
 
 

@@ -30,6 +30,28 @@ window.kbmodules.welcome.edit_vmix_ip_addr = function(){
 		return
 	}
 
+	const ipNumbers = ip_data[0].split('.');
+
+	if (ipNumbers.length != 4){
+		ksys.info_msg.send_msg(
+			`Invalid address data: >${ip_data[0]}:${ip_data[1]}<`,
+			'warn',
+			4000
+		);
+		return
+	}
+
+	for (const num of ipNumbers){
+		if (!Number.isInteger(num)){
+			ksys.info_msg.send_msg(
+				`Invalid address data: >${ip_data[0]}:${ip_data[1]}<`,
+				'warn',
+				4000
+			);
+			return
+		}
+	}
+
 	ksys.context.global.cache['vmix_ip'] = ip_data[0];
 	ksys.context.global.cache['vmix_port'] = ip_data[1] || '';
 	ksys.context.global.save()

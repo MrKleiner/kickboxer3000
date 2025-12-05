@@ -107,6 +107,33 @@ vtalker.project = async function(raw=false) {
 }
 
 
+vtalker.presetFilePath = async function(){
+	const fpathRaw = (await vtalker.project()).querySelector('vmix > preset').textContent.trim();
+	if (fpathRaw){
+		return Path(fpathRaw)
+	}else{
+		return null
+	}
+}
+
+vtalker.presetXML = async function(){
+	const presetFilePath = await vtalker.presetFilePath();
+
+	if (!presetFilePath){return null};
+
+	const msg = await ksys.KBNClient.runCMD('generic.read_file', {
+		'header': {
+			'fpath': str(presetFilePath),
+		},
+	})
+
+	return (new DOMParser()).parseFromString(
+		(await msg.result()).payload,
+		'application/xml'
+	)
+}
+
+
 // OverlayInput1Out
 // Globally turn overlay 1 off
 vtalker.overlay_out = async function(ov_num){

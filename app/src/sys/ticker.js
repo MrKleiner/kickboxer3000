@@ -1025,6 +1025,7 @@ const _bury_bodies = function(){
 }
 
 _ticker.kb_at.clear_receivers = async function(){
+	return
 	const cmd_exec_reply_clear = await KbAtCMDGateway.exec_cmd(
 		[ksys.context.global.cache.vmix_ip, int(ksys.context.global.cache.atat_port)],
 		10,
@@ -1041,7 +1042,8 @@ _ticker.kb_at.clear_receivers = async function(){
 
 // Perform a couple VERY important actions
 _ticker.kb_at.sys_restart = async function(){
-	// First - kill all watcher
+	return
+	// First - kill all watchers
 	for (const status_watcher of kb_atat_listen_pool){
 		try{
 			status_watcher.terminate();
@@ -1059,6 +1061,7 @@ _ticker.kb_at.sys_restart = async function(){
 
 // This function ensures, that such phantom problems do not happen.
 _ticker.kb_at.StatusWatcher = function(){
+	return
 	// important todo: does it make sense, that this is here?
 	_bury_bodies();
 

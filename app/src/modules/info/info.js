@@ -33,6 +33,7 @@ $this.list_assets = function(){
 			`)[0];
 			elem.onclick = function(){
 				$('#asset_info').text(`./${app_root.relative(file)}`);
+				$('#asset_info_css').text(`../../${app_root.relative(file)}`);
 			}
 			elem.oncontextmenu = function(){
 				if (is_bright){

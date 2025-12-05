@@ -13,13 +13,22 @@
 			<div class="cfg_label">Local</div>
 			<input type="text" class="local_dir" placeholder="CAN be empty" onchange_vis_feed>
 		</div>
+		<sysbtn class="install_fonts" kbhint="Install used fonts onto VMIX PC">Install Fonts</sysbtn>
+		<sysbtn class="pack_fonts" kbhint="Pack used fonts into .gtz files">Pack Fonts</sysbtn>
 		<sysbtn class="hard_reload_all" kbhint="Hard reload all the specified titles">Ballistic Reload All</sysbtn>
 		<sysbtn class="redraw" kbhint="Redraw titles from the list">Redraw</sysbtn>
 		<sysbtn class="check_presence_all" kbhint="Check whether the target titles are present in VMIX and local PC">Check Presence All</sysbtn>
+		<sysbtn class="render_hires_previews">Render Hires Previews</sysbtn>
 		<textarea placeholder="Gtzip names without .gtzip extension" class="flist" onchange_vis_feed></textarea>
 		<div class="psych_ward_viewer">
 			<div class="psych_ward_results" subtle_box></div>
-			<img src="./assets/psych_ward.webp" class="title_thumbnail" contain>
+			<div class="title_thumbnail">
+				<img src="./assets/psych_ward.webp" contain>
+				<div class="title_facts" regular_box>
+					<div class="anims"></div>
+					<div class="phantom"></div>
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
@@ -30,11 +39,12 @@
 		<img src="./assets/psych_ward.webp" class="preview_img" contain>
 		<div class="title_data">
 			<div class="title_name"></div>
-			<div class="title_ctrl">
+			<div class="title_ctrl" flex_row>
 				<sysbtn
 					kbhint="Drastic measures: Send the title file to the PC with VMIX, remove the title from the project and then re-add it"
 					class="hard_reload"
 				>Ballistic Reload</sysbtn>
+				<sysbtn class="edit_in_gtz_designer kbsys_hidden">Edit</sysbtn>
 			</div>
 		</div>
 		<div class="presence_icons">

@@ -1,0 +1,68 @@
+
+
+
+<template id="team_lineup_color_picker">
+	<lineup-color-picker>
+		<div class="palette" regular_box>
+			<input value="ffffff" type="color" class="color_picker">
+			<input type="text" class="color_code" onchange_vis_feed monospace_ibm>
+		</div>
+
+		<div class="text_color_label">Text Colour:</div>
+		<div class="text_color_switch" kbswitch_style="default">
+			<div
+				kbhint="Solid white colour"
+				kbswitch_item
+				white
+			>White</div>
+			<div
+				kbhint="Solid black colour"
+				kbswitch_item
+				black
+			>Black</div>
+		</div>
+	</lineup-color-picker>
+</template>
+
+
+
+
+<template id="fouls">
+	<div class="team_fouls">
+		<div class="fouls_head kbsys_hidden"></div>
+		<input type="number" noctrl onchange_vis_feed class="fouls_counter">
+		<div class="fouls_ctrl">
+			<sysbtn class="foul_ctrl_btn add">+1</sysbtn>
+			<sysbtn class="foul_ctrl_btn subtract">-1</sysbtn>
+		</div>
+		<sysbtn class="fouls_reset">Reset</sysbtn>
+	</div>
+</template>
+
+
+
+
+
+
+<template id="volume_slider">
+	<div class="volume_slider" subtle_box>
+		<div class="slider_label"></div>
+		<div class="slider_array"></div>
+	</div>
+</template>
+
+
+
+<template id="vol_slider_instance">
+	<div class="slider_instance">
+		<div class="chan_label"></div>
+		<div class="slider_body" horizontal>
+			<div class="slider_fill"></div>
+			<div class="val_display"></div>
+			<img src="./assets/pause_icon.svg" class="pause_icon kbsys_hidden" contain>
+			<input type="range" min="0" max="100" step="1">
+		</div>	
+	</div>
+</template>
+
+

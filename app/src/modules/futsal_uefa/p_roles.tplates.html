@@ -1,0 +1,56 @@
+
+
+
+
+<!-- DOM of the full role name -->
+<template id="visfeed_full">
+	<div class="player_role_visfeed player_role_full"></div>
+</template>
+
+<!-- DOM of the short role name-->
+<template id="visfeed_short">
+	<div class="player_role_visfeed player_role_short"></div>
+</template>
+
+
+<template id="role_selector">
+	<select></select>
+</template>
+
+
+<template id="role_selector_option">
+	<option></option>
+</template>
+
+
+
+<template id="role_editor">
+	<div id="player_role_editor" regular_box>
+		<div class="editor_header">
+			<div class="header_text">Player Roles</div>
+			<sysbtn class="editor_btn create_role">Create Role</sysbtn>
+		</div>
+		<div class="role_pool"></div>
+	</div>
+</template>
+
+
+<template id="role_instance">
+	<div class="player_role_instance">
+		<img contain class="icon kbsys_hidden_opacity" src="./assets/question_mark_icon.svg">
+		<input onchange_vis_feed class="name_input full" type="text" placeholder="Full">
+		<input onchange_vis_feed class="name_input altr" type="text" placeholder="Alternative">
+		<input onchange_vis_feed class="name_input short" type="text" placeholder="Short">
+		<div class="priority_cbox" kbhint="Show this role on the first page of the condensed lineup" kbswitch_style="default">
+			<div class="priority_cbox_content" kbswitch_item>Priority</div>
+		</div>
+	</div>
+</template>
+
+
+
+
+
+
+
+

@@ -547,6 +547,15 @@ $this.load = async function(){
 					'margin': 5,
 				}
 			}),
+			'weather': new vmix.title({
+				'title_name': 'weather.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 5,
+				}
+			}),
 		};
 	}
 
@@ -1062,6 +1071,18 @@ $this.load = async function(){
 				}
 			}
 		}
+
+		for (const img of qselAll('#weather_ctrl_body [icon_id]')){
+			img.src = str(Path(
+				$this.resources_location.value,
+				'icons',
+				`${img.getAttribute('icon_id')}.png`
+			))
+		}
+
+		qsel(`#weather_clouds [icon_id="${mctx.cache.weather_icon}"]`)
+		?.classList
+		?.add?.('weather_clouds_active');
 	}
 
 
@@ -1361,6 +1382,16 @@ $this.load = async function(){
 					document.querySelector('[tabid="misc_titles"] [field_id="referee_4_lower"]'),
 				],
 				'values': misc_titles_data.referee,
+			}),
+			'weather': new $this.MiscTitle({
+				'title_id': 'weather',
+				'dom_list': [
+					qsel('[tabid="misc_titles"] [field_id="weather_header_lower"]'),
+					qsel('[tabid="misc_titles"] [field_id="weather_param_temperature"]'),
+					qsel('[tabid="misc_titles"] [field_id="weather_param_humidity"]'),
+					qsel('[tabid="misc_titles"] [field_id="weather_param_wind_speed"]'),
+				],
+				'values': misc_titles_data.weather,
 			}),
 		})
 	}
@@ -7203,12 +7234,14 @@ $this.show_field_layout = async function(team){
 }
 
 
-$this.hide_field_layout = async function(){
+$this.hide_field_layout = async function(team){
+	const tgt_title = $this.titles[`team_layout_${team}`];
+
 	ksys.btns.toggle({
 		'hide_home_field_layout':    false,
 		'hide_guest_field_layout':   false,
 	})
-	await $this.titles.team_layout.overlay_out();
+	await tgt_title.overlay_out();
 	ksys.btns.toggle({
 		'hide_home_field_layout':    true,
 		'hide_guest_field_layout':   true,
@@ -7638,6 +7671,39 @@ $this.show_misc_title = async function(tgt_title){
 			$this.misc_titles.water_time.fields.water_time_lower_text.value
 		)
 		await $this.titles.water_time.overlay_in();
+	}
+	if (tgt_title == 'weather'){
+		if (ksys.context.module.cache.weather_icon){
+			await $this.titles.weather.set_img_src(
+				'clouds',
+				str(Path(
+					$this.resources_location.value,
+					'icons',
+					`${ksys.context.module.cache.weather_icon}.png`
+				))
+			)
+		}
+
+		await $this.titles.weather.set_text(
+			'header_lower',
+			($this.misc_titles.weather.fields.weather_header_lower.value || '')
+		)
+		await $this.titles.weather.set_text(
+			'temp',
+			($this.misc_titles.weather.fields.weather_param_temperature.value || '') + '°'
+		)
+		await $this.titles.weather.set_text(
+			'humidity',
+			($this.misc_titles.weather.fields.weather_param_humidity.value || '') + '%'
+		)
+		await $this.titles.weather.set_text(
+			'wind',
+			($this.misc_titles.weather.fields.weather_param_wind_speed.value || '') + ' М/С'
+		)
+
+
+
+		await $this.titles.weather.overlay_in();
 	}
 }
 
@@ -8199,6 +8265,13 @@ $this.apply_preset = function(preset_id, evt=null){
 }
 
 
+$this.set_weather_icon = async function(tgt_icon){
+	ksys.context.module.prm('weather_icon', tgt_icon);
+	for (const icon of qselAll('#weather_clouds [icon_id]')){
+		icon.classList.remove('weather_clouds_active');
+	}
+	qsel(`#weather_clouds [icon_id="${tgt_icon}"]`).classList.add('weather_clouds_active');
+}
 
 
 
@@ -9713,11 +9786,24 @@ $this.show_score_summary = async function(){
 	await $this.titles.final_scores.toggle_img('anim_full', false)
 	await $this.titles.final_scores.toggle_img('anim_half', false)
 
-	const need_rows = Math.max(score_summary.home.length || 0, score_summary.guest.length || 0).clamp(1, 5)
-	// todo: hardcoded path. Too bad.
+	const need_rows = Math.max(score_summary.home.length || 0, score_summary.guest.length || 0).clamp(1, 9);
+	
+	let scores_bg_image = null;
+
+	for (const i of range(need_rows+1)){
+		scores_bg_image = Path(
+			$this.resources_location.value,
+			'final_scores',
+			`${need_rows - i}.png`
+		)
+		if (scores_bg_image.isFileSync()){
+			break
+		}
+	}
+
 	$this.titles.final_scores.set_img_src(
 		'upper_bg',
-		Path($this.resources_location.value, 'final_scores').join(`${need_rows}.png`)
+		str(scores_bg_image)
 	)
 
 

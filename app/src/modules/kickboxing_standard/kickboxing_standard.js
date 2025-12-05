@@ -833,7 +833,10 @@ $this.vs_onn = async function(){
 		})
 		return
 	}
-	$this.titles.vs.overlay_in(1);
+	ksys.btns.adv_timeout({
+		'vs_onn': $this.titles.vs.anim_durations[null],
+	})
+	await $this.titles.vs.overlay_in(1);
 }
 
 $this.vs_off = async function(){
@@ -844,17 +847,30 @@ $this.vs_off = async function(){
 		})
 		return
 	}
-	$this.titles.vs.overlay_out(1);
+
+	ksys.btns.adv_timeout({
+		'vs_off': $this.titles.vs.anim_durations['TransitionOut'],
+	})
+
+	await $this.titles.vs.overlay_out(1);
 }
 
 
 
 $this.player_onn = async function(){
-	$this.titles.personal.overlay_in(1);
+	ksys.btns.adv_timeout({
+		'player_onn': $this.titles.personal.anim_durations[null],
+	})
+
+	await $this.titles.personal.overlay_in(1);
 }
 
 $this.player_off = async function(){
-	$this.titles.personal.overlay_out(1);
+	ksys.btns.adv_timeout({
+		'player_off': $this.titles.personal.anim_durations['TransitionOut'],
+	})
+
+	await $this.titles.personal.overlay_out(1);
 }
 
 

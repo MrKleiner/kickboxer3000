@@ -1,52 +1,1556 @@
-<futsal-advanced>
+<div id="football_standard">
+
 	<tabsys>
-		<sys-tab match_id="cfg" default>Setup</sys-tab>
-		<sys-tab match_id="ctrl" default>Control</sys-tab>
+		<sys-tab match_id="sliders">Sliders</sys-tab>
+		<sys-tab match_id="quick_input">Quick Input</sys-tab>
+		<sys-tab match_id="visual_basic">Visual Basic</sys-tab>
+		<sys-tab match_id="fucking_docs">Other</sys-tab>
+		<!-- <sys-tab match_id="stats_db">Stats DB</sys-tab> -->
+		<sys-tab match_id="club_def" default>Clubs</sys-tab>
+		<sys-tab match_id="team_lineup">Config/Lists</sys-tab>
+		<sys-tab match_id="teams_layouts">Layout</sys-tab>
+		<sys-tab match_id="misc_titles">Misc Titles</sys-tab>
+		<sys-tab match_id="layout_buttons">Layout Ctrl</sys-tab>
+		<sys-tab match_id="punisher">Cards/Goals/Fouls</sys-tab>
+		<sys-tab match_id="replacement">Substitute</sys-tab>
+		<sys-tab match_id="timer_and_scores">Timer</sys-tab>
+		<sys-tab match_id="stats">Stats</sys-tab>
+		<sys-tab quick_access match_id="stats_buttons">Stats Counter</sys-tab>
 	</tabsys>
 
-	<tab tabid="cfg" tabname="Setup" default>
-		<div class="basic_cfg_unit" id="global_table_cfg" subtle_box>
-			<div class="basic_cfg_unit_header" id="global_table_cfg_header">Tournament Table CFG</div>
-			<input onchange="window.kbmodules.futsal_advanced.save_global_table_cfg()" type="text" placeholder="Json URL" id="global_table_url">
-		</div>
+	<div regular_box id="timer_feedback">
+		<div id="timer_feedback_main">--:--</div>
+		<div id="timer_feedback_extra">--:--</div>
+	</div>
 
-		<div class="basic_cfg_unit" id="stats_cfg" subtle_box>
-			<div class="basic_cfg_unit_header" id="stats_cfg_header">Statistics</div>
-			<input onchange="window.kbmodules.futsal_advanced.save_stats_data()" type="text" placeholder="Json URL" id="stats_url">
-			<textarea resize="vertical" onchange="window.kbmodules.futsal_advanced.save_stats_data()" id="stats_data_map"></textarea>
+	<div regular_box class="ticker_status_fatal_fail" id="ticker_service_status">
+		<div id="ticker_service_status_indicator"></div>
+	</div>
+
+	<tab tabid="sliders" tabname="Sliders">
+		<vmixbtn onclick="window.kbmodules.futsal_advanced.VMIXTCP_VolumeMirror()">RESYNC</vmixbtn>
+		<div id="volume_sliders_body"></div>
+	</tab>
+
+	<tab class="tab_hidden" tabid="visual_basic">
+		<visual-basic></visual-basic>
+	</tab>
+
+	<tab tabid="quick_input">
+		<remote-inputs></remote-inputs>
+	</tab>
+
+	<tab class="tab_hidden" tabid="fucking_docs">
+		<md-packer></md-packer>
+		<http-resource-proxy-control></http-resource-proxy-control>
+		<kbnc-ctrl></kbnc-ctrl>
+		<div id="role_editor" kbhint="Changes are saved and propagated automatically"></div>
+		<div id="sequencer" kbhint="Determines most timings, such as for how long should a yellow/red card indicator be on screen. Changes are saved and propagated automatically. This is some important shit - don't fuck with it"></div>
+		<psych-ward></psych-ward>
+	</tab>
+
+	<!-- <tab class="tab_hidden" tabid="stats_db"></tab> -->
+
+	<tab class="tab_hidden" tabid="club_def">
+		<div id="club_definition">
+			<club-control-global subtle_box>
+				<div id="load_existing_club_dropdown">
+					<label>Load Club</label>
+				</div>
+
+				<sysbtn
+				 btname="create_new_club"
+				 onclick="window.kbmodules.futsal_advanced.create_new_club()"
+				 kbhint="This action automatically saves active club"
+				>New Club</sysbtn>
+				
+				<sysbtn btname="load_club_from_file">Load From File</sysbtn>
+				
+				<sysbtn btname="save_club_to_file" onclick="window.kbmodules.futsal_advanced.save_club_to_file()">Save to File</sysbtn>
+				
+				<div id="club_ctrl_save_to_file_target">
+					<input class="tgtdir" type="text" placeholder="Target Directory">
+					<input class="tgtfname" type="text" placeholder="Filename + .clubdef">
+				</div>
+
+				<sysbtn
+				 btname="delete_current_club"
+				 kbhint="Hold CTRL (Because there's no Ctrl + Z for this)"
+				 onclick="window.kbmodules.futsal_advanced.delete_current_club(event)"
+				 mod_key="ctrl"
+				>Delete Current Club</sysbtn>
+
+			</club-control-global>
 		</div>
 	</tab>
 
-	<tab tabid="ctrl" tabname="Control">
-		<div class="simple_ctrl_box" id="global_table_ctrl" subtle_box>
-			<div class="simple_ctrl_box_header" id="global_table_ctrl_header">Tournament Table</div>
-			<div class="simple_ctrl_box_btns" id="global_table_ctrl_btns">
-				<vmixbtn onclick="window.kbmodules.futsal_advanced.update_global_table()">Update Tournament Table</vmixbtn>
-				<vmixbtn onclick="window.kbmodules.futsal_advanced.global_table_vis(true)">Show Tournament Table</vmixbtn>
-				<vmixbtn onclick="window.kbmodules.futsal_advanced.global_table_vis(false)">Hide Tournament Table</vmixbtn>
-			</div>
-		</div>
 
-		<div class="simple_ctrl_box" id="stats_ctrl" subtle_box>
-			<div class="simple_ctrl_box_header" id="stats_ctrl_header">Statistics</div>
-			<div class="simple_ctrl_box_btns" id="stats_ctrl_btns">
-				<vmixbtn onclick="window.kbmodules.futsal_advanced.update_stats()">Update Statistics</vmixbtn>
-				<vmixbtn onclick="window.kbmodules.futsal_advanced.stats_vis(true)">Show Statistics</vmixbtn>
-				<vmixbtn onclick="window.kbmodules.futsal_advanced.stats_vis(false)">Hide Statistics</vmixbtn>
-			</div>
-			<div id="individual_stats"></div>
+	<tab tabid="team_lineup">
+
+		<string-formatting>
+			<f-param display_name="Coach" fpid="coach" translit_default="0" format_default="all_upper"></f-param>
+			<f-param display_name="Players" fpid="players" translit_default="0" format_default="all_upper"></f-param>
+			<f-param display_name="Full club name" fpid="club_name" translit_default="0" format_default="all_upper"></f-param>
+		</string-formatting>
+
+		<sysbtn id="toggle_cfg_vis" onclick="window.kbmodules.futsal_advanced.toggle_config_vis()">Toggle Config Visibility</sysbtn>
+
+		<general-cfg subtle_box>
+			<general-cfg-entry kbhint="Hold ALT">
+				<general-cfg-label>Preset</general-cfg-label>
+				<general-cfg-ctrl>
+					<sysbtn class="prm_preset_btn" onclick="window.kbmodules.futsal_advanced.apply_preset('regular', event)">Regular</sysbtn>
+					<sysbtn class="prm_preset_btn" onclick="window.kbmodules.futsal_advanced.apply_preset('cup', event)">Cup</sysbtn>
+					<sysbtn class="prm_preset_btn" onclick="window.kbmodules.futsal_advanced.apply_preset('amp', event)">AMP</sysbtn>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Absolute path to ffmpeg.exe">
+				<general-cfg-label>FFMPEG</general-cfg-label>
+				<general-cfg-ctrl>
+					<input type="text" id="ffmpeg_path" onchange_vis_feed>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Absolute path to magick.exe">
+				<general-cfg-label>Image Magick</general-cfg-label>
+				<general-cfg-ctrl>
+					<input type="text" id="image_magick_path" onchange_vis_feed>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Resources location, such as card and ball images">
+				<general-cfg-label>Resources</general-cfg-label>
+				<general-cfg-ctrl>
+					<input type="text" id="resources_location" onchange_vis_feed>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Absolute path to Field Layout template">
+				<general-cfg-label>Field Layout Template</general-cfg-label>
+				<general-cfg-ctrl>
+					<input type="text" id="field_layout_template_fpath" onchange_vis_feed>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Determines how cards are handled">
+				<general-cfg-label>Red Card Schema</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="card_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Red cards are images"
+							kbswitch_item
+							images
+						>Images</div>
+						<div
+							kbhint="Red cards are GT shapes"
+							kbswitch_item
+							color
+						>Colour</div>
+					</div>
+					<input type="color" id="red_card_schema_color" kbhint="Red card colour in the timer title">
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Determines how player names are displayed">
+				<general-cfg-label>Player Name Schema</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="pname_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Just the surname"
+							kbswitch_item
+							surname
+						>Surname</div>
+						<div
+							kbhint="Prefixed with the first letter of whatever is in the player's name field: Grzegorz Brzęczyszczykiewicz -> G. Brzęczyszczykiewicz"
+							kbswitch_item
+							prefixed
+						>Prefixed</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Determines how titles are displayed">
+				<general-cfg-label>Title Schema</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="title_schema_switch" kbswitch_style="default">
+						<div
+							class="title_schema_item"
+							kbhint="Everything is a separate title"
+							kbswitch_item
+							separate
+						>Separate</div>
+						<div
+							class="title_schema_item"
+							kbhint="Things are group into a single titles with pages"
+							kbswitch_item
+							paged
+						>Paged</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Main player list in the lineup title schema. One slot per player VS 2 massive text fields">
+				<general-cfg-label>Lineup Mains</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="lineup_mains_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Names and numbers are stored in 2 massive text fields"
+							kbswitch_item
+							shared
+						>Shared</div>
+						<div
+							kbhint="Every slot is a dedicated text field"
+							kbswitch_item
+							dedicated
+						>Dedicated</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Reserve player list in the lineup title schema. One slot per player VS 2 massive text fields">
+				<general-cfg-label>Lineup Reserves</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="lineup_reserves_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Names and numbers are stored in 2 massive text fields"
+							kbswitch_item
+							shared
+						>Shared</div>
+						<div
+							kbhint="Every slot is a dedicated text field"
+							kbswitch_item
+							dedicated
+						>Dedicated</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="2 commenter fields in a single title VS 2 titles for 1 commenter and 2 commenters">
+				<general-cfg-label>Commenter Schema</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="commenter_schema_switch" kbswitch_style="default">
+						<div
+							class="commenter_schema_item"
+							kbhint="2 Potential commenters, all in one title"
+							kbswitch_item
+							girls2cup1
+						>2 in 1</div>
+						<div
+							class="commenter_schema_item"
+							kbhint="A title for 1 commenter + a title for 2 commenters"
+							kbswitch_item
+							girls2cup2
+						>2 in 2</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Team colour in the final scores schema. PNG VS Masked Shape: PNG as in a PNG of appropriate colour must be generated. Masked Shape as in a GTZ shape (the colour of which can be changed directly) with a bitmap mask">
+				<general-cfg-label>Final Scores Colours</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="final_scores_color_schema_switch" kbswitch_style="default">
+						<div
+							class="final_scores_color_schema_item"
+							kbhint="Pre-generated bitmap"
+							kbswitch_item
+							bitmap
+						>Bitmap</div>
+						<div
+							class="final_scores_color_schema_item"
+							kbhint="Masked GTZ shape"
+							kbswitch_item
+							masked
+						>Masked</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Team colour in persistent header">
+				<general-cfg-label>Timer Team Colours</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="timer_team_color_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Pre-generated bitmap"
+							kbswitch_item
+							bitmap
+						>Bitmap</div>
+						<div
+							kbhint="Masked GTZ shape"
+							kbswitch_item
+							masked
+						>Masked</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Идите нахуй">
+				<general-cfg-label>Timer Display</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="timer_display_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Everything as usual"
+							kbswitch_item
+							normal
+						>Normal</div>
+						<div
+							kbhint="Говно бомжа"
+							kbswitch_item
+							fuck_shit
+						>Хуйня</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Max. players per page in lineup condensed title">
+				<general-cfg-label>Lineup Condensed</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="lineup_condensed_max_players_per_page_switch" kbswitch_style="default">
+						<div
+							kbhint="2"
+							kbswitch_item
+							two
+						>2</div>
+						<div
+							kbhint="3"
+							kbswitch_item
+							three
+						>3</div>
+						<div
+							kbhint="4"
+							kbswitch_item
+							four
+						>4</div>
+						<div
+							kbhint="5"
+							kbswitch_item
+							five
+						>5</div>
+						<div
+							kbhint="6"
+							kbswitch_item
+							six
+						>6</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry kbhint="Hide main clock when showing extra clock">
+				<general-cfg-label>Main Clock Visibility</general-cfg-label>
+				<general-cfg-ctrl>
+					<div id="timer_main_clock_vis_schema_switch" kbswitch_style="default">
+						<div
+							kbhint="Show both extra and main clock"
+							kbswitch_item
+							both
+						>Main + Extra</div>
+						<div
+							kbhint="Only show extra clock when extra time is active"
+							kbswitch_item
+							extra_only
+						>Extra Only</div>
+					</div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry id="timersys_switch" kbhint="Hold CTRL. This will terminate and re-create all timers">
+				<general-cfg-label>Timer system</general-cfg-label>
+				<general-cfg-ctrl>
+					<kb-radio-switch
+						kb_style="default"
+						kb_layout="horizontal"
+						kb_default="builtin"
+						display_name="Timer System"
+						mod_key="ctrlKey"
+						kb_switch_id="timer_system"
+						onchange="window.kbmodules.futsal_advanced.update_selected_timer_system(event)"
+					>
+						<kb-radio-switch-entry kb_param_id="builtin">Built-in</kb-radio-switch-entry>
+						<kb-radio-switch-entry kb_param_id="at_at">AT-AT</kb-radio-switch-entry>
+					</kb-radio-switch>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry>
+				<general-cfg-label>AT-AT Port</general-cfg-label>
+				<general-cfg-ctrl>
+					<input id="atat_port_input" noctrl type="number" min="1" max="65535" monospace_ibm>
+					<sysbtn
+						btname="update_atat_port"
+						kbhint="Hold ALT. The KB AT-AT service will be restarted"
+						onclick="window.kbmodules.futsal_advanced.update_atat_port(event)"
+						click_timeout="700"
+						mod_key="alt"
+					>Update AT-AT port</sysbtn>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry>
+				<general-cfg-label>AT-AT Return Address</general-cfg-label>
+				<general-cfg-ctrl id="atat_ctrl">
+					<input id="atat_return_addr_input" noctrl type="text" monospace_ibm>
+					<sysbtn
+						btname="update_atat_return_addr"
+						kbhint="Hold ALT. The KB AT-AT service will be restarted"
+						onclick="window.kbmodules.futsal_advanced.update_atat_return_addr(event)"
+						click_timeout="700"
+						mod_key="alt"
+					>Update</sysbtn>
+					<sysbtn
+						btname="atat_auto_addr"
+						kbhint="Try determining the right value automatically"
+						onclick="window.kbmodules.futsal_advanced.atat_auto_return_addr(event)"
+					>Auto</sysbtn>
+					<!-- >Update AT-AT Return Address</sysbtn> -->
+					<div id="atat_ip_addr_picker" monospace_ibm></div>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+			<general-cfg-entry>
+				<general-cfg-label>Round Duration</general-cfg-label>
+				<general-cfg-ctrl>
+					<input id="round_duration" noctrl type="number" onchange_vis_feed>
+				</general-cfg-ctrl>
+			</general-cfg-entry>
+
+		</general-cfg>
+
+		<lineup-global-control subtle_box>
+			<sysbtn
+				btname="save_current_stats"
+				kbhint="Save current data for use in the tournament table"
+				onclick="window.kbmodules.futsal_advanced.save_match_results(event)"
+			>Save Match Stats</sysbtn>
+			<sysbtn
+				btname="init_new_match"
+				kbhint="Wipe previous match stats: cards, scores, stats, etc. Hold CTRL"
+				onclick="window.kbmodules.futsal_advanced.init_new_match(event)"
+				mod_key="ctrl"
+			>New Match</sysbtn>
+			
+			<home-club-selector class="lineup_global_ctrl_param">
+				<label>Home club</label>
+			</home-club-selector>
+			<guest-club-selector class="lineup_global_ctrl_param">
+				<label>Guest club</label>
+			</guest-club-selector>
+		</lineup-global-control>
+
+		<div id="team_lineup">
+			<home-club-lineup></home-club-lineup>
+			<guest-club-lineup></guest-club-lineup>
 		</div>
 	</tab>
 
-	<template id="individual_stat_tplate">
-		<div class="ind_stat">
-			<div class="ind_stat_name"></div>
-			<vmixbtn class="show_ind_stat">Show</vmixbtn>
-			<vmixbtn class="hide_ind_stat">Hide</vmixbtn>
+
+	<tab class="tab_hidden" tabid="teams_layouts">
+		<div id="teams_layouts">
+			<home-field-layout subtle_box class="lineup_field_layout"></home-field-layout>
+			<guest-field-layout subtle_box class="lineup_field_layout"></guest-field-layout>
+		</div>
+	</tab>
+
+	<tab class="tab_hidden" tabid="misc_titles">
+
+		<div id="referee_ctrl" subtle_box kbhint="Referee">
+			<h1>Referee</h1>
+			<div id="referee_ctrl_body">
+				<div id="referee_array">
+					<div class="referee_box" subtle_box>
+						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_1_upper">
+						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_1_lower">
+					</div>
+					<div class="referee_box" subtle_box>
+						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_2_upper">
+						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_2_lower">
+					</div>
+					<div class="referee_box" subtle_box>
+						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_3_upper">
+						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_3_lower">
+					</div>
+					<div class="referee_box" subtle_box>
+						<input type="text" placeholder="Name" onchange_vis_feed field_id="referee_4_upper">
+						<input type="text" placeholder="Job title" onchange_vis_feed field_id="referee_4_lower">
+					</div>
+				</div>
+
+				<div id="referee_ctrl_buttons">
+					<vmixbtn
+						seq_info="update+vis_show"
+						btname="show_misc_title"
+						onclick="window.kbmodules.futsal_advanced.show_misc_title('referee')"
+					>Show Referee</vmixbtn>
+
+					<vmixbtn
+						seq_info="vis_hide"
+						btname="hide_misc_title"
+						onclick="window.kbmodules.futsal_advanced.hide_misc_title('referee')"
+					>Hide Referee</vmixbtn>
+				</div>
+
+				<sysbtn id="referee_to_defaults_btn" onclick="window.kbmodules.futsal_advanced.set_referee_to_default()">Apply Defaults</sysbtn>
+			</div>
+		</div>
+
+
+		<div class="misc_title_pair">
+			<div id="commenter_ctrl" subtle_box kbhint="Today's commenter">
+				<h1>Commenter</h1>
+				<div id="commenter_ctrl_body" subtle_box>
+					<input type="text" field_id="commenter_name_1" onchange_vis_feed placeholder="FIRST commenter">
+					<input type="text" field_id="commenter_name_2" onchange_vis_feed placeholder="SECOND commenter">
+					<div id="commenter_ctrl_buttons">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_commenter"
+							onclick="window.kbmodules.futsal_advanced.show_misc_title('commenter')"
+						>Show Commenter</vmixbtn>
+						
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_commenter"
+							onclick="window.kbmodules.futsal_advanced.hide_misc_title(['commenter', 'commenter_x2'])"
+						>Hide Commenter</vmixbtn>
+
+					</div>
+				</div>
+			</div>
+
+			<div id="tape_ctrl" subtle_box kbhint="The endlessly scrolling bar...">
+				<h1>Tape</h1>
+				<div id="tape_ctrl_body" subtle_box>
+					<textarea field_id="tape" kbhint="Line breaks are replaced with whitespaces" onchange_vis_feed></textarea>
+					<div id="tape_ctrl_buttons">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_misc_title"
+							onclick="window.kbmodules.futsal_advanced.show_misc_title('tape')"
+						>Show Tape</vmixbtn>
+						
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_misc_title"
+							onclick="window.kbmodules.futsal_advanced.hide_misc_title('tape')"
+						>Hide Tape</vmixbtn>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="misc_title_pair">
+			<div id="info_1_ctrl" subtle_box kbhint="1 line of text with background in the lower part of the screen">
+				<h1>Info 1</h1>
+				<div id="info_1_ctrl_body" subtle_box>
+					<input type="text" field_id="info_1" kbhint="No post-formatting applied" onchange_vis_feed>
+					<div id="info_1_ctrl_buttons">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_misc_title"
+							onclick="window.kbmodules.futsal_advanced.show_misc_title('info_1')"
+						>Show Info 1</vmixbtn>
+
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_misc_title"
+							onclick="window.kbmodules.futsal_advanced.hide_misc_title('info_1')"
+						>Hide Info 1</vmixbtn>
+					</div>
+				</div>
+			</div>
+
+			<div id="info_2_ctrl" subtle_box kbhint="2 lines of text with background in the lower part of the screen">
+				<h1>Info 2</h1>
+				<div id="info_2_ctrl_body" subtle_box>
+					<input
+						type="text"
+						field_id="info_2_upper"
+						onchange_vis_feed
+						placeholder="Upper line"
+						kbhint="No post-formatting applied"
+					>
+					<input
+						type="text"
+						field_id="info_2_lower"
+						onchange_vis_feed
+						placeholder="Lower line"
+						kbhint="No post-formatting applied"
+					>
+					<div id="info_2_ctrl_buttons">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_misc_title"
+							onclick="window.kbmodules.futsal_advanced.show_misc_title('info_2')"
+						>Show Info 2</vmixbtn>
+
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_misc_title"
+							onclick="window.kbmodules.futsal_advanced.hide_misc_title('info_2')"
+						>Hide Info 2</vmixbtn>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+		<div class="misc_title_pair">
+			<div id="water_ctrl" subtle_box kbhint="C₂H₅OH">
+				<h1>Water Time</h1>
+				<div id="info_1_ctrl_body" subtle_box>
+					<input
+						type="text"
+						field_id="water_time_lower_text"
+						onchange_vis_feed
+						placeholder="СТАДІОН «ЧОРНОМОРЕЦЬ»"
+						kbhint="No post-formatting applied"
+					>
+					<div id="water_ctrl_buttons">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_misc_title"
+							onclick="window.kbmodules.futsal_advanced.show_misc_title('water_time')"
+						>Show Water</vmixbtn>
+
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_misc_title"
+							onclick="window.kbmodules.futsal_advanced.hide_misc_title('water_time')"
+						>Hide Water</vmixbtn>
+					</div>
+				</div>
+			</div>
+
+			<div id="weather_ctrl" subtle_box kbhint="Weather forecast: Cold as hell. It's space, bitches... what did yall expect?">
+				<h1>Weather</h1>
+				<div id="weather_ctrl_body" subtle_box>
+					<input
+						type="text"
+						field_id="weather_header_lower"
+						onchange_vis_feed
+						placeholder="СТАДІОН «ЧОРНОМОРЕЦЬ»"
+						kbhint="Lower header text. No post-formatting applied"
+					>
+					<div id="weather_clouds">
+						<img
+							contain
+							onclick="window.kbmodules.futsal_advanced.set_weather_icon('cloudy')"
+							icon_id="cloudy"
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.futsal_advanced.set_weather_icon('moon')" 
+							icon_id="moon" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.futsal_advanced.set_weather_icon('partly_cloudy')" 
+							icon_id="partly_cloudy" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.futsal_advanced.set_weather_icon('partly_raining')" 
+							icon_id="partly_raining" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.futsal_advanced.set_weather_icon('rain')" 
+							icon_id="rain" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.futsal_advanced.set_weather_icon('snow')" 
+							icon_id="snow" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.futsal_advanced.set_weather_icon('sun')" 
+							icon_id="sun" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+						<img
+							contain
+							onclick="window.kbmodules.futsal_advanced.set_weather_icon('thunder')" 
+							icon_id="thunder" 
+							src="./assets/question_mark_circled_icon.svg"
+						>
+					</div>
+					<div id="weather_params">
+						<div class="weather_param temperature">
+							<img contain icon_id="temperature" src="./assets/question_mark_circled_icon.svg">
+							<input
+								type="text"
+								field_id="weather_param_temperature"
+								onchange_vis_feed
+								placeholder="28"
+								kbhint="Temperature. ° is added automatically"
+							>
+						</div>
+
+						<div class="weather_param humidity">
+							<img contain icon_id="humidity" src="./assets/question_mark_circled_icon.svg">
+							<input
+								type="text"
+								field_id="weather_param_humidity"
+								onchange_vis_feed
+								placeholder="33"
+								kbhint="Humidity. % is added automatically"
+							>
+						</div>
+
+						<div class="weather_param wind_speed">
+							<img contain icon_id="wind" src="./assets/question_mark_circled_icon.svg">
+							<input
+								type="text"
+								field_id="weather_param_wind_speed"
+								onchange_vis_feed
+								placeholder="18"
+								kbhint="Wind speed. М/C is added automatically"
+							>
+						</div>
+					</div>
+					<div id="weather_ctrl_buttons">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_misc_title"
+							onclick="window.kbmodules.futsal_advanced.show_misc_title('weather')"
+						>Show Weather</vmixbtn>
+
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_misc_title"
+							onclick="window.kbmodules.futsal_advanced.hide_misc_title('weather')"
+						>Hide Weather</vmixbtn>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</tab>
+
+	<tab class="tab_hidden" tabid="layout_buttons">
+		<div id="layout_buttons">
+			<h1>Splash (VS) Control</h1>
+			<div id="layout_buttons_vs_ctrl">
+				<div id="layout_buttons_vs_ctrl_head">
+					<div class="layout_buttons_vs_ctrl_head_minititle">Upmost Header</div>
+					<input onchange="window.kbmodules.futsal_advanced.save_vs_sublines()" type="text" id="vs_text_main_header">
+					<div class="layout_buttons_vs_ctrl_head_minititle">Upper Line</div>
+					<input onchange="window.kbmodules.futsal_advanced.save_vs_sublines()" type="text" id="vs_text_bottom_upper">
+					<div class="layout_buttons_vs_ctrl_head_minititle">Lower Line</div>
+					<input onchange="window.kbmodules.futsal_advanced.save_vs_sublines()" type="text" id="vs_text_bottom_lower">
+				</div>
+
+				<div id="layout_buttons_vs_ctrl_body">
+					<vmixbtn
+						seq_info="update+vis_show"
+						btname="show_splash"
+						onclick="window.kbmodules.futsal_advanced.show_vs_title()"
+					>Show VS</vmixbtn>
+					
+					<vmixbtn
+						seq_info="vis_hide"
+						btname="hide_splash"
+						onclick="window.kbmodules.futsal_advanced.hide_vs_title()"
+					>Hide VS</vmixbtn>
+
+				</div>
+			</div>
+
+
+			<h1>Field Layout Control + Coach</h1>
+			<div id="layout_buttons_field_ctrl">
+
+				<div id="home_layout_ctrl" class="layout_buttons_field_ctrl_command">
+					<!-- Header with team logo and name -->
+					<div class="layout_ctrl_head">
+						<img style="height: 100px" src="./assets/red_cross.png">
+					</div>
+
+					<vmixbtn
+						onclick="window.kbmodules.futsal_advanced.forward_field_layout_to_vmix('home')"
+						seq_info="update"
+						class="prepare_team_layout kbsys_hidden"
+						btname="prepare_home_team_layout"
+					>Prepare Layout</vmixbtn>
+
+					<div flex_row>
+						<vmixbtn
+							onclick="window.kbmodules.futsal_advanced.show_field_layout_condensed('home')"
+							seq_info="update+vis_show"
+							class="lineup_condensed_btn"
+							btname="show_home_team_layout_conensed"
+						>Show Lineup Condensed</vmixbtn>
+						<vmixbtn
+							onclick="window.kbmodules.futsal_advanced.hide_field_layout_condensed()"
+							seq_info="vis_hide"
+							class="lineup_condensed_btn"
+							btname="hide_home_team_layout_conensed"
+						>Hide Lineup Condensed</vmixbtn>
+					</div>
+
+
+					<div class="layout_ctrl_body">
+						<vmixbtn
+							off
+							seq_info="update+vis_show"
+							btname="show_home_field_layout"
+							onclick="window.kbmodules.futsal_advanced.show_field_layout('home')"
+						>Field Layout ONN</vmixbtn>
+						
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_home_field_layout"
+							onclick="window.kbmodules.futsal_advanced.hide_field_layout()"
+						>Field Layout OFF</vmixbtn>
+					</div>
+
+					<div class="team_layout_coach_ctrl">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_coach_home_team"
+							onclick="window.kbmodules.futsal_advanced.show_coach('home')"
+						>Coach ONN</vmixbtn>
+						
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_coach_home_team"
+							onclick="window.kbmodules.futsal_advanced.hide_coach('home')"
+						>Coach OFF</vmixbtn>
+					</div>
+
+				</div>
+
+				<div id="layout_previews" class="kbsys_hidden">
+					<img contain id="layout_preview_home" src="./assets/alpha_checkerboard.svg">
+					<img contain id="layout_preview_guest" src="./assets/alpha_checkerboard.svg">
+				</div>
+
+				<div id="guest_layout_ctrl" class="layout_buttons_field_ctrl_command">
+					<!-- Header with team logo and name -->
+					<div class="layout_ctrl_head">
+						<img style="height: 100px" src="./assets/red_cross.png">
+					</div>
+
+					<vmixbtn
+						onclick="window.kbmodules.futsal_advanced.forward_field_layout_to_vmix('guest')"
+						seq_info="update"
+						class="prepare_team_layout kbsys_hidden"
+						btname="prepare_guest_team_layout"
+					>Prepare Layout</vmixbtn>
+
+					<div flex_row>
+						<vmixbtn
+							onclick="window.kbmodules.futsal_advanced.show_field_layout_condensed('guest')"
+							seq_info="update+vis_show"
+							class="lineup_condensed_btn"
+							btname="show_guest_team_layout_conensed"
+						>Show Lineup Condensed</vmixbtn>
+						<vmixbtn
+							onclick="window.kbmodules.futsal_advanced.hide_field_layout_condensed()"
+							seq_info="vis_hide"
+							class="lineup_condensed_btn"
+							btname="hide_guest_team_layout_conensed"
+						>Hide Lineup Condensed</vmixbtn>
+					</div>
+
+					<div class="layout_ctrl_body">
+						<vmixbtn
+							off
+							seq_info="update+vis_show"
+							btname="show_guest_field_layout"
+							onclick="window.kbmodules.futsal_advanced.show_field_layout('guest')"
+						>Field Layout ONN</vmixbtn>
+						
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_guest_field_layout"
+							onclick="window.kbmodules.futsal_advanced.hide_field_layout()"
+						>Field Layout OFF</vmixbtn>
+					</div>
+
+					<div class="team_layout_coach_ctrl">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="show_coach_guest_team"
+							onclick="window.kbmodules.futsal_advanced.show_coach('guest')"
+						>Coach ONN</vmixbtn>
+						
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_coach_guest_team"
+							onclick="window.kbmodules.futsal_advanced.hide_coach('guest')"
+						>Coach OFF</vmixbtn>
+					</div>
+				</div>
+
+			</div>
+
+
+		</div>
+	</tab>
+
+	<tab class="tab_hidden" tabid="punisher">
+		<div id="cards_and_goals">
+			<div id="cg_player_picker"></div>
+
+			<div
+				regular_box
+				nosel
+				id="red_card_counter"
+				kbhint="To manually add/subtract - hover the cards, hold ALT and press LMB/RMB. Selected players are not taken into account"
+				>
+				<vmixbtn
+					off
+					titled
+					abs_pos
+					seq_info="auto_tweaks"
+					btname="pardon_yellow_card"
+					onclick="window.kbmodules.futsal_advanced.pardon_player()"
+				>PARDON</vmixbtn>
+			</div>
+
+
+			<div regular_box id="cg_buttons">
+<!-- 				<div id="cg_buttons_cards">
+					<div id="cg_buttons_turn_onn">
+						<vmixbtn off seq_info="auto_tweaks+auto_seq" titled btname="yellow_card" onclick="window.kbmodules.futsal_advanced.hand_card('yellow')">
+							<img draggable="false" contain class="punish_card_vis" src="./assets/yellow_card.png">
+							<div class="punish_card_title">YELLOW</div>
+						</vmixbtn>
+						<vmixbtn off seq_info="auto_tweaks+auto_seq" titled btname="red_card" onclick="window.kbmodules.futsal_advanced.hand_card('red')">
+							<img draggable="false" contain class="punish_card_vis" src="./assets/red_card.png">
+							<div class="punish_card_title">RED</div>
+						</vmixbtn>
+					</div>
+
+					<div id="cg_buttons_turn_off">
+						<vmixbtn seq_info="vis_hide" btname="kill_card" onclick="window.kbmodules.futsal_advanced.hide_card()">OFF</vmixbtn>
+					</div>
+				</div> -->
+
+				<div id="timer_ctrl_base_resume" regular_box>
+					<div id="timer_resume_ctrl">
+						<div id="base_timer_resume_input" kbhint="Seconds can be left unfilled">
+							<input class="minutes" noctrl type="number" placeholder="MM">
+							:
+							<input class="seconds" noctrl type="number" placeholder="SS">
+						</div>
+						<vmixbtn
+							seq_info="update+play"
+							btname="continue_from_time"
+							onclick="window.kbmodules.futsal_advanced.timer_ctrl.resume_main_timer_from_offset()"
+							off
+						>Start From</vmixbtn>
+
+						<sysbtn class="start_from_edit add" onclick="window.kbmodules.futsal_advanced.edit_main_clock_offset(1)">+</sysbtn>
+						<sysbtn class="start_from_edit subtract" onclick="window.kbmodules.futsal_advanced.edit_main_clock_offset(-1)">-</sysbtn>
+					</div>
+					<div id="main_clock_start_pause">
+						<div flex_row>
+							<vmixbtn
+								seq_info="pause"
+								btname="pause_main_clock"
+								onclick="window.kbmodules.futsal_advanced.timer_ctrl.pause()"
+							>PAUSE</vmixbtn>
+							<vmixbtn
+								seq_info="resume"
+								btname="resume_main_clock"
+								onclick="window.kbmodules.futsal_advanced.timer_ctrl.resume()"
+							>RESUME</vmixbtn>
+						</div>
+						<div flex_column>
+							<vmixbtn
+								horizontal
+								seq_info="vis_show"
+								btname="show_timeout_title"
+								onclick="window.kbmodules.futsal_advanced.timeout_vis(true)"
+							>TIMEOUT ON</vmixbtn>
+							<vmixbtn
+								horizontal
+								seq_info="vis_show"
+								btname="hide_timeout_title"
+								onclick="window.kbmodules.futsal_advanced.timeout_vis(false)"
+							>TIMEOUT OFF</vmixbtn>
+						</div>
+					</div>
+				</div>
+
+				<div id="cg_buttons_score">
+					<vmixbtn
+						titled
+						seq_info="auto_tweaks+auto_seq"
+						btname="scored"
+						onclick="window.kbmodules.futsal_advanced.add_score_from_cards_panel()"
+						click_timeout="2000"
+						>
+						<img draggable="false" contain class="punish_card_vis" src="./assets/ball.png">
+						<div class="punish_card_title">GOAL!</div>
+					</vmixbtn>
+					<vmixbtn seq_info="auto_tweaks+auto_seq" btname="auto_score" onclick="window.kbmodules.futsal_advanced.add_score_from_cards_panel(true)">AUTO GOAL</vmixbtn>
+
+					<div id="cg_buttons_cards">
+						<vmixbtn off seq_info="auto_tweaks+auto_seq" titled btname="yellow_card" onclick="window.kbmodules.futsal_advanced.hand_card('yellow')">
+							<img draggable="false" contain class="punish_card_vis" src="./assets/yellow_card.png">
+							<div class="punish_card_title"></div>
+						</vmixbtn>
+						<vmixbtn off seq_info="auto_tweaks+auto_seq" titled btname="red_card" onclick="window.kbmodules.futsal_advanced.hand_card('red')">
+							<img draggable="false" contain class="punish_card_vis" src="./assets/red_card.png">
+							<div class="punish_card_title"></div>
+						</vmixbtn>
+						<vmixbtn seq_info="vis_hide" btname="kill_card" onclick="window.kbmodules.futsal_advanced.hide_card()">OFF</vmixbtn>
+					</div>
+
+				</div>
+
+			</div>
+		</div>
+	</tab>
+
+	<tab class="tab_hidden" tabid="replacement">
+		<div id="replacement">
+			<div id="replacement_buttons">
+				<vmixbtn
+					horizontal
+					seq_info="auto_seq"
+					btname="exec_replacement_sequence_match"
+					onclick="window.kbmodules.futsal_advanced.exec_substitute('match')"
+				>Single during MATCH</vmixbtn>
+
+				<vmixbtn
+					horizontal
+					seq_info="auto_seq"
+					btname="exec_replacement_sequence_break"
+					onclick="window.kbmodules.futsal_advanced.exec_substitute('break')"
+				>Single during BREAK</vmixbtn>
+
+				<!--
+				<vmixbtn
+					halfsize
+					off
+					seq_info="auto_tweaks"
+					btname="shadow_player_swap"
+				>Shadow swap</vmixbtn>
+				-->
+				<!-- <vmixbtn btname="exec_replacement_sequences" onclick="window.kbmodules.futsal_advanced.start_base_timer()">AAA</vmixbtn> -->
+			</div>
+			<div id="replacement_teams">
+				<div home class="replacement_team" id="replacement_team1">
+					<div class="replacement_team_head"></div>
+					<div class="replacement_team_body">
+						<div leaving class="replacement_leaving replacement_list"></div>
+						<!-- <div class="replacement_vis_que">&lt;</div> -->
+						<div class="replacement_vis_que">
+							<img contain src="./assets/icon_arrow_left.svg">
+							<img contain src="./assets/icon_arrow_left.svg">
+							<img contain src="./assets/icon_arrow_left.svg">
+						</div>
+						<div inbound class="replacement_incoming replacement_list"></div>
+					</div>
+					<sysbtn
+						class="stack_substitute"
+						onclick="window.kbmodules.futsal_advanced.stack_substitute()"
+					>Stack</sysbtn>
+					<!-- <div class="subs_stack" subtle_box></div> -->
+				</div>
+				<div guest class="replacement_team" id="replacement_team2">
+					<div class="replacement_team_head"></div>
+					<div class="replacement_team_body">
+						<div leaving class="replacement_leaving replacement_list"></div>
+						<!-- <div class="replacement_vis_que">&lt;</div> -->
+						<div class="replacement_vis_que">
+							<img contain src="./assets/icon_arrow_left.svg">
+							<img contain src="./assets/icon_arrow_left.svg">
+							<img contain src="./assets/icon_arrow_left.svg">
+						</div>
+						<div inbound class="replacement_incoming replacement_list"></div>
+					</div>
+					<sysbtn
+						class="stack_substitute"
+						onclick="window.kbmodules.futsal_advanced.stack_substitute()"
+					>Stack</sysbtn>
+					<!-- <div class="subs_stack" subtle_box></div> -->
+				</div>
+			</div>
+		</div>
+	</tab>
+
+
+
+
+	<tab class="tab_hidden" tabid="timer_and_scores">
+		<div id="timer_and_scores">
+			<div id="timer_ctrl">
+				<div regular_box id="timer_ctrl_base">
+					<div id="timer_ctrl_base_launchers">
+						<vmixbtn
+							seq_info="update+play"
+							btname="launch_main_timer_r1"
+							onclick="window.kbmodules.futsal_advanced.timer_ctrl.start_base_timer(1)"
+							off
+						>Start Time 1</vmixbtn>
+						<vmixbtn
+							seq_info="update+play"
+							btname="launch_main_timer_r2"
+							onclick="window.kbmodules.futsal_advanced.timer_ctrl.start_base_timer(2)"
+							off
+						>Start Time 2</vmixbtn>
+					</div>
+
+					<div id="timer_ctrl_base_visibility">
+						<vmixbtn
+							seq_info="vis_show"
+							btname="show_main_timer"
+							onclick="window.kbmodules.futsal_advanced.main_timer_vis(true)"
+						>Show Main Timer</vmixbtn>
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="hide_main_timer"
+							onclick="window.kbmodules.futsal_advanced.main_timer_vis(false)"
+						>Hide Main Timer</vmixbtn>
+					</div>
+				</div>
+
+				<box class="kbsys_hidden" regular_box style="flex-direction: row; display: flex; margin-left: 10px; align-items: center;">
+					<div id="timer_ctrl_additional">
+						<input onchange_vis_feed onchange="window.kbmodules.futsal_advanced.update_extra_time_amount()" type="number" noctrl placeholder="MINUTES">
+						<!-- <vmixbtn seq_info="update+play+vis_show" btname="launch_extra_timer" onclick="window.kbmodules.futsal_advanced.launch_extra_time()">Launch Extra Time</vmixbtn> -->
+						<vmixbtn
+							halfsize
+							seq_info="stop"
+							btname="stop_extra_timer"
+							onclick="window.kbmodules.futsal_advanced.timer_ctrl.stop_extra_time()"
+							off
+						>Terminate Extra Time</vmixbtn>
+					</div>
+
+					<vmixbtn seq_info="vis_show" btname="show_extra_time" onclick="window.kbmodules.futsal_advanced.extra_time_vis(true)">Show Extra Time</vmixbtn>
+					<vmixbtn seq_info="vis_hide" btname="hide_extra_timer" onclick="window.kbmodules.futsal_advanced.extra_time_vis(false)">Hide Extra Time</vmixbtn>
+				</box>
+
+			</div>
+
+		</div>
+	</tab>
+
+
+
+	<tab class="tab_hidden" tabid="stats">
+		<div id="score_ctrl" regular_box>
+
+			<div id="score_ctrl_player_search"></div>
+
+			<div class="score_ctrl_team" id="score_ctrl_home"></div>
+
+			<div class="score_ctrl_team" id="score_ctrl_guest"></div>
+		</div>
+
+		<div id="score_ctrl_buttons">
+			<vmixbtn
+				seq_info="update+vis_show"
+				btname="show_score_results"
+				onclick="window.kbmodules.futsal_advanced.show_score_summary()"
+			>Show scores</vmixbtn>
+
+			<vmixbtn
+				seq_info="vis_hide"
+				btname="hide_score_results"
+				onclick="window.kbmodules.futsal_advanced.hide_score_summary(false)"
+			>Hide scores</vmixbtn>
+
+			<vmixbtn
+				kbhint="Hold ALT"
+				seq_info="auto_tweaks"
+				btname="mod_score_author"
+				onclick="window.kbmodules.futsal_advanced.mod_score_author(event)"
+				style="margin-left: 50px;"
+				mod_key="alt"
+			>Modify Author</vmixbtn>
+		</div>
+
+		<div id="team_stats_tables" class="kbsys_hidden">
+
+			<!-- Team L -->
+			<div class="team_stats_table_container">
+				<div class="team_stats_table_header" id="team_stats_theader_home">
+					<img contain vis_feedback="team1_logo" src="./assets/red_cross.png">
+					<h1 vis_feedback="team1_name">_home</h1>
+				</div>
+				<div class="team_stats_table tstats_table_1"></div>
+			</div>
+			<!-- Team R -->
+			<div class="team_stats_table_container">
+				<div class="team_stats_table_header" id="team_stats_theader_guest">
+					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png">
+					<h1 vis_feedback="team2_name">_guest</h1>
+				</div>
+				<div class="team_stats_table tstats_table_2"></div>
+			</div>
+
+		</div>
+
+		<div id="stats_ctrl_btns" class="kbsys_hidden">
+			<vmixbtn seq_info="update+vis_show" btname="show_team_stats" onclick="window.kbmodules.futsal_advanced.show_team_stats()">Show stats</vmixbtn>
+			<vmixbtn seq_info="vis_hide" btname="hide_team_stats" onclick="window.kbmodules.futsal_advanced.hide_team_stats()">Hide stats</vmixbtn>
+		</div>
+
+		<div id="penalty_panel" class="kbsys_hidden">
+			<div id="penalty_panel_header">Penalties</div>
+			<div id="penalty_pools"></div>
+
+			<vmixbtn
+			 onclick="window.kbmodules.futsal_advanced.show_penalty_title()"
+			 seq_info="update+vis_show"
+			 >Show Penalties</vmixbtn>
+
+			<vmixbtn
+			 onclick="window.kbmodules.futsal_advanced.hide_penalty_title()"
+			 seq_info="vis_hide"
+			 >Hide Penalties</vmixbtn>
+		</div>
+
+	</tab>
+
+
+
+	<!-- buttons for quick addition/subtraction -->
+	<tab class="tab_hidden" tabid="stats_buttons">
+		<div id="stats_buttons">
+
+			<!-- Team L -->
+			<div class="team_stats" regular_box>
+				<div class="team_stats_head" id="team_stats_btn_ctrl_home">
+					<img contain vis_feedback="team1_logo" src="./assets/red_cross.png">
+					<h1 vis_feedback="team1_name">_home</h1>
+				</div>
+				<div class="team_stats_buttons tstats_buttons_team_1"></div>
+			</div>
+			<!-- Team R -->
+			<div class="team_stats" regular_box>
+				<div class="team_stats_head" id="team_stats_btn_ctrl_guest">
+					<img contain vis_feedback="team2_logo" src="./assets/red_cross.png">
+					<h1 vis_feedback="team2_name">_guest</h1>
+				</div>
+				<div class="team_stats_buttons tstats_buttons_team_2"></div>
+			</div>
+
+		</div>
+	</tab>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	<!-- TEMPLATES -->
+
+	<!-- Club control, like coach, playerbase ... -->
+	<template id="club_def_template">
+		<club-def>
+
+			<!-- Base params, like name, coach... -->
+			<club-base-params subtle_box>
+
+				<!-- Club logo feedback -->
+				<img contain class="club_def_logo_visfeedback" src="">
+
+				<!-- Basically, buttons -->
+				<club-def-actions>
+					<sysbtn
+						btname="save_club_definition"
+						kbhint="Save the club under current club title to the local database. Duplicate name WILL overwrite previous file"
+						onclick="window.kbmodules.futsal_advanced.save_club_to_local_db(false)"
+					>Save Club Data</sysbtn>
+				</club-def-actions>
+
+
+				<club-param prmname="logo">
+					<div class="club_base_param_label">Club Logo</div>
+					<input type="file">
+				</club-param>
+
+				<club-param prmname="title">
+					<div class="club_base_param_label">Club Title</div>
+					<input type="text">
+				</club-param>
+
+				<club-param prmname="title_shorthand">
+					<div class="club_base_param_label">Title Shorthand</div>
+					<input type="text">
+				</club-param>
+
+				<club-param prmname="main_coach">
+					<div class="club_base_param_label">Main Coach</div>
+					<input type="text">
+				</club-param>
+
+				<club-param prmname="main_coach_title_short" kbhint="Short variant of this person's role in this club">
+					<div class="club_base_param_label">Coach Title SHORT</div>
+					<input type="text">
+				</club-param>
+
+				<club-param prmname="main_coach_title_long" kbhint="This person's role in this club with extra description">
+					<div class="club_base_param_label">Coach Title LONG</div>
+					<input type="text">
+				</club-param>
+
+				<club-param prmname="description" kbhint="This club's description">
+					<div class="club_base_param_label">Description</div>
+					<input type="text">
+				</club-param>
+
+				<club-param prmname="init_from_url">
+					<div class="club_base_param_label">URL</div>
+					<input type="text">
+					<sysbtn>Init From URL</sysbtn>
+				</club-param>
+
+			</club-base-params>
+
+			<!-- Playerbase definition -->
+			<club-playerbase kbhint="Delete player: ALT + RMB">
+				<input type="text" class="player_editor_search" placeholder="Quick Search">
+				<sysbtn btname="register_player_in_club">Add</sysbtn>
+				<playerbase-pool></playerbase-pool>
+			</club-playerbase>
+
+		</club-def>
+	</template>
+
+
+	<!-- Club's visual header: A combo of logo + title -->
+	<template id="club_header_template">
+		<club-header>
+			<img contain src="">
+			<club-header-title></club-header-title>
+		</club-header>
+	</template>
+
+
+	<!-- GENERIC PLAYER LIST ITEM -->
+	<template id="generic_player_list_item_template">
+		<player class="generic_player_list_item">
+			<img contain class="player_club_logo" src="">
+			<div class="player_number"></div>
+			<div class="player_surname"></div>
+			<div class="player_role"></div>
+		</player>
+	</template>
+
+
+	<!-- Player config box -->
+	<template id="generic_player_config_template">
+		<player-config class="generic_player_cfg_box">
+
+			<!-- name -->
+			<player-param prmname="player_name">
+				<div class="player_param_label">Name</div>
+				<input type="text" class="player_param_input">
+			</player-param>
+
+			<!-- surname -->
+			<player-param prmname="player_surname">
+				<div class="player_param_label">Surname</div>
+				<input type="text" class="player_param_input">
+			</player-param>
+
+			<!-- number -->
+			<player-param prmname="player_num">
+				<div class="player_param_label">Number</div>
+				<input type="text" class="player_param_input">
+			</player-param>
+
+			<!-- role -->
+			<player-param prmname="player_role">
+				<div class="player_param_label">Role</div>
+				<!-- <input type="text" class="player_param_input"> -->
+
+			</player-param>
+
+
+		</player-config>
+	</template>
+
+
+	<!-- Lineup main control panel -->
+	<template id="club_match_lineup_template">
+		<club-lineup>
+
+			<side-indicator></side-indicator>
+
+			<lineup-config>
+
+				<sysbtn
+				 kbhint="Open this club for editing in the club panel"
+				 btname="edit_club_from_lineup"
+				>Edit this club</sysbtn>
+
+				<lineup-param class="lineup_param_add_hover" prmname="tshirt_color" kbhint="&quot;Ну дизайнер титрiв вирiшив, що красивiше буде лише з одним кольором&quot;">
+					<div class="param_label">T-Shirt Colour</div>
+					<div class="param_content"></div>
+				</lineup-param>
+				<!--
+				<lineup-param class="lineup_param_add_hover" prmname="shorts_color" kbhint="I RAN OUT OF TIME: BOTH NEED TO BE SET TO THE SAME VALUE !!!!!!!!!!!!">
+					<div class="param_label">T-Shirt Colour B</div>
+					<div class="param_content"></div>
+				</lineup-param>
+				 -->
+				<lineup-param class="lineup_param_add_hover" prmname="gk_color">
+					<div class="param_label">Goalkeeper Colour</div>
+					<div class="param_content"></div>
+				</lineup-param>
+
+				<lineup-param class="lineup_param_add_hover" prmname="roster">
+					<div class="param_label">Roster</div>
+					<div class="param_content"><input type="text"></div>
+				</lineup-param>
+			</lineup-config>
+
+			<lineup-lists>
+
+				<lineup-player-picker></lineup-player-picker>
+
+				<lineup-main kbhint="Main players. ALT + RMB to remove a player from the list" lineup_list>
+					<sysbtn btname="append_player_to_main_lineup">Add Here</sysbtn>
+					<lineup-pool></lineup-pool>
+					<img contain class="club_side_indicator" src="./assets/flying_rocket.svg">
+				</lineup-main>
+
+				<lineup-reserve kbhint="Reserve players. ALT + RMB to remove a player from the list" lineup_list>
+					<sysbtn btname="append_player_to_reserve_lineup">Add Here</sysbtn>
+					<lineup-pool></lineup-pool>
+					<img invert_rgb contain class="club_side_indicator" src="./assets/bench.png">
+				</lineup-reserve>
+
+			</lineup-lists>
+
+		</club-lineup>
+	</template>
+
+	<!-- colour picker template -->
+	<template id="team_lineup_color_picker_template">
+		<lineup-color-picker>
+			<input type="color">
+			<div class="color_code"></div>
+		</lineup-color-picker>
+	</template>
+
+
+	<!-- Player filter box -->
+	<template id="player_picker_template">
+		<player-picker>
+			<input type="text" class="player_picker_input">
+			<player-picker-result></player-picker-result>
+		</player-picker>
+	</template>
+
+	<!-- Dropdown selector for existing clubs -->
+	<template id="club_selector_dropdown_template">
+		<select></select>
+	</template>
+
+	<!-- Field layout -->
+	<template id="field_layout_template">
+		<field-layout>
+			<field-layout-header></field-layout-header>
+			<field-layout-body>
+				<field-layout-picker></field-layout-picker>
+				<field-layout-grid kbhint="ALT + RMB to remove a player from the field"></field-layout-grid>
+			</field-layout-body>
+		</field-layout>
+	</template>
+
+	<!-- Stat log row element (unused) -->
+	<template id="stat_table_row_element">
+		<stat-table-row>
+			<stat-row-col colname="stat_name">--</stat-row-col>
+			<stat-row-col colname="stat_time">--</stat-row-col>
+			<stat-row-col colname="stat_player">--</stat-row-col>
+		</stat-table-row>
+	</template>
+
+	<!-- Red card counters -->
+	<template id="red_card_control_template">
+		<div class="red_card_counter">
+			<div class="red_card_counter_head"></div>
+			<div subtle_box class="red_card_counter_pool">
+				<img contain class="rcard1" src="./assets/red_card.png">
+				<img contain class="rcard2" src="./assets/red_card.png">
+				<img contain class="rcard3" src="./assets/red_card.png">
+			</div>
 		</div>
 	</template>
 
-</futsal-advanced>
+	<!-- Today's score list for a club -->
+	<template id="club_score_list_template">
+		<club-score kbhint="Hold alt and click RMB to delete a record">
+			<club-score-header></club-score-header>
+			<club-score-list></club-score-list>
+			<club-score-buttons>
+				<sysbtn class="club_score_add_record add_score_with_player">Add with player</sysbtn>
+				<sysbtn class="club_score_add_record add_score_blank">Add Blank</sysbtn>
+			</club-score-buttons>
+		</club-score>
+	</template>
 
+	<!-- A goal record template -->
+	<template id="club_score_record_template">
+		<club-score-record subtle_box>
+			<input onclick="this.select()" class="score_timestamp" type="text">
+			<div class="score_author"></div>
 
+			<score-record-flags>
 
+				<record-flag flag_name="auto_goal">
+					<record-flag-label>АГ:</record-flag-label>
+					<input type="checkbox">
+				</record-flag>
+
+				<record-flag flag_name="penalty">
+					<record-flag-label>П:</record-flag-label>
+					<input type="checkbox">
+				</record-flag>
+
+			</score-record-flags>
+
+		</club-score-record>
+	</template>
+
+	<!-- Penalty pool template -->
+	<template id="penalty_pool_template">
+		<div class="penalty_pool">
+			<div regular_box class="pool_header"></div>
+			<div regular_box class="pool_table"></div>
+		</div>
+	</template>
+
+	<template id="penalty_list_row_template">
+		<div class="penalty_list_row">
+			<div class="penalty_idx"></div>
+			<label class="penalty_cbox">
+				<input class="penalty_yes" type="checkbox">
+				YES
+			</label>
+
+			<label class="penalty_cbox">
+				<input class="penalty_no" type="checkbox">
+				NO
+			</label>
+		</div>
+	</template>
+
+</div>

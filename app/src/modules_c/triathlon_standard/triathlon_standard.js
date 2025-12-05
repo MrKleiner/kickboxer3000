@@ -235,6 +235,10 @@ window.kbmodules.triathlon_standard.DataSRC = class{
 
 
 window.kbmodules.triathlon_standard.BasicTable = class{
+	CACHE_IMAGES = true;
+
+	DEV_SHUFFLE = false;
+
 	constructor(data_src){
 		print('Creating BasicTable', data_src)
 		const self = this;
@@ -246,13 +250,21 @@ window.kbmodules.triathlon_standard.BasicTable = class{
 
 		self._ctrl_gui = null;
 
-		self.vmix_title = null;
+		self._vmix_title = null;
 
 		self.link_vmix_title();
 	}
 
 	link_vmix_title(self){
-		self.vmix_title = new vmix.title({
+
+	}
+
+	$vmix_title(self){
+		if (self._vmix_title){
+			return self._vmix_title
+		}
+
+		self._vmix_title = new vmix.title({
 			'title_name': self.data_src.get_field('vmix_title_name') || 'table_main.gtzip',
 			'default_overlay': 2,
 			'timings': {
@@ -261,6 +273,8 @@ window.kbmodules.triathlon_standard.BasicTable = class{
 				'margin': 50,
 			},
 		})
+
+		return self._vmix_title
 	}
 
 	$ctrl_gui(self){
@@ -301,7 +315,7 @@ window.kbmodules.triathlon_standard.BasicTable = class{
 		for (let line of self.data_src.get_field('data_map').split('\n')){
 			line = line.trim();
 			if (!line || line.startsWith('//')){continue};
-			print('Line:', line)
+			print('Line:', line);
 
 			// First, resolve object path
 			if (line.startsWith('object_path')){
@@ -396,6 +410,21 @@ window.kbmodules.triathlon_standard.BasicTable = class{
 		}
 
 		const evaluated_data = JSON.parse(response.payload);
+
+		if (self.DEV_SHUFFLE){
+			function shuffleInPlace(arr){
+				for (let i = arr.length - 1; i > 0; i--) {
+					const j = Math.floor(Math.random() * (i + 1));
+					[arr[i], arr[j]] = [arr[j], arr[i]];
+				}
+				return arr;
+			}
+
+			const evaluated_data = shuffleInPlace(
+				JSON.parse(response.payload)
+			);
+		}
+
 		print('Evaluated Payload data:', evaluated_data)
 		self.data_cache = self.create_table_data(evaluated_data);
 		return true
@@ -421,10 +450,42 @@ window.kbmodules.triathlon_standard.BasicTable = class{
 			);
 		}
 
+		const title_xml = (await vmix.talker.project()).querySelector(
+			`input[title="${self.data_src.get_field('vmix_title_name')}"]`
+		)
+
 		for (const [vmix_title_key, text, text_case, translit] of self.data_cache){
-			await self.vmix_title.set_text(
+			let field_content = ksys.util.str_ops.format(text, text_case, translit);
+
+			// Whether this field is an image field
+			const is_img = (
+				title_xml
+				.querySelector(`[name*="${vmix_title_key}."]`)
+				?.nodeName?.lower?.() == 'image'
+			)
+
+			const func_name = is_img ? 'set_img_src' : 'set_text';
+
+			// todo: This IS needed, but why ?
+			if (self.CACHE_IMAGES && (func_name == 'set_img_src')){
+				field_content = [
+					self.data_src.get_field('vmix_title_name').replaceAll('.', '_'),
+					vmix_title_key,
+				].join('_').lower();
+
+				vmix.util.HTTPResourceProxy.reg_buf([
+					field_content,
+					Buffer.from(
+						await (await (await fetch(text)).blob()).arrayBuffer()
+					)
+				]);
+			}
+
+			await self.vmix_title[func_name](
 				vmix_title_key,
-				ksys.util.str_ops.format(text, text_case, translit)
+				field_content,
+				// Force no proxy
+				// true
 			);
 		}
 

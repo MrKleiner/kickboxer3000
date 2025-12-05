@@ -146,6 +146,7 @@ const KickBoxer3000 = class{
 	IPC_MAP = Object.freeze([
 		['kbn.main.reload', 'reload_main_window'],
 		['kbnc.start', 'kbnc_start'],
+		['kb.ffmpeg.dl.running', 'announce_ffmpeg_status'],
 	]);
 
 	IS_DEV = IS_DEV;
@@ -267,6 +268,8 @@ const KickBoxer3000 = class{
 		self.main_window.on('closed', () => {
 			self.main_window = null;
 		});
+
+		self.announce_ffmpeg_status();
 	}
 
 	reload_main_window(self){
@@ -283,6 +286,15 @@ const KickBoxer3000 = class{
 		}
 
 		return await self.kbnc.maintainConnection();
+	}
+
+	announce_ffmpeg_status(self){
+		self?.main_window?.webContents?.postMessage?.(
+			'kb.ffmpeg.dl.running',
+			!!self.downloadingFFMPEG
+		);
+
+		return null
 	}
 
 	create_tray(self){
@@ -326,6 +338,48 @@ const KickBoxer3000 = class{
 		self.nprint('Created Tray Menu');
 	}
 
+	async ensure_ffmpeg(self){
+		self.nprint('Ensuring FFMPEG');
+		const ffmpegDir = KB_ROOT.join('bins', 'ffmpeg');
+
+		const ffmpegPresent = (
+			await ffmpegDir.join('ffmpeg.exe').isFile() &&
+			await ffmpegDir.join('ffprobe.exe').isFile() &&
+			await ffmpegDir.join('ffplay.exe').isFile()
+		)
+
+		self.nprint('FFMPEG presence:', ffmpegPresent);
+
+		if (ffmpegPresent){return};
+
+		self.downloadingFFMPEG = true;
+
+		while (true){
+			try{
+				await kbn_util.downloadFFMPEG({
+					'targetDir': ffmpegDir,
+					'dlProgressCallback': function(prog){
+						self.main_window?.webContents?.postMessage?.(
+							'kb.ffmpeg.dl.prog',
+							prog
+						);
+					}
+				})
+
+				break
+			}catch(e){
+				self.nprint('FFMPEG DL Error:', e);
+				console.trace(e);
+			}
+
+			await kbn_util.sleep(2000);
+		}
+
+		self.downloadingFFMPEG = false;
+
+		self.announce_ffmpeg_status();
+	}
+
 	// Some essential shit
 	run(self){
 		// What to do when all the browser windows got closed/crashed/whatever
@@ -355,6 +409,19 @@ const KickBoxer3000 = class{
 		// This instance does the following if another instance is opened
 		electron.app.on('second-instance', function(event, argv, workDir){
 			self.nprint('Second instance attempted. Reusing this one');
+			
+			// important todo: this is a temp fix
+			if (process.argv.includes('--kbnc')){
+				electron.dialog.showMessageBoxSync({
+					type: 'none',
+					buttons: ['OK'],
+					defaultId: 0,
+					title: 'KickBoxer3000 Connect Status:',
+					message: 'Already Running',
+				});
+				return
+			}
+
 			// If the window already exists - simply focus on it
 			if (self.main_window){
 				self.nprint('Window already exists. Focusing');
@@ -388,12 +455,14 @@ const KickBoxer3000 = class{
 
 		// Create tray menu
 		self.create_tray();
+
+		self.ensure_ffmpeg();
 	}
 }
 
 
 
-const main = function(){
+const main = async function(){
 	// If this is a second instance - terminate the process without any further actions
 	if (!electron.app.requestSingleInstanceLock()){
 		console.log('Second instance detected. Terminating');
@@ -409,7 +478,31 @@ const main = function(){
 	kickboxer.rebuild_module_index();
 	kickboxer.init_ipc();
 	kickboxer.run();
-	kickboxer.create_main_window();
+
+	if (process.argv.includes('--kbnc')){
+	// if (true){
+		const result = await kickboxer.kbnc_start();
+		if (result == true){
+			electron.dialog.showMessageBoxSync({
+				type: 'none',
+				buttons: ['OK'],
+				defaultId: 0,
+				title: 'KickBoxer3000 Connect Status:',
+				message: 'VMIX SERVER OK'
+			});
+		}else{
+			electron.dialog.showMessageBoxSync({
+				type: 'none',
+				buttons: ['OK'],
+				defaultId: 0,
+				title: 'KickBoxer3000 Connect Status:',
+				message: `ERROR/WARNING: ${str(result)}`,
+			});
+		}
+
+	}else{
+		kickboxer.create_main_window();
+	}
 }
 
 

@@ -1,0 +1,402 @@
+<kbstandard>
+	<tabsys>
+		<sys-tab match_id="quick_input">Quick Input</sys-tab>
+		<sys-tab match_id="visual_basic">Visual Basic</sys-tab>
+		<sys-tab match_id="config">Config</sys-tab>
+		<sys-tab match_id="ctrl" default>Control</sys-tab>
+	</tabsys>
+
+	<tab tabid="quick_input">
+		<remote-inputs></remote-inputs>
+	</tab>
+
+	<tab class="tab_hidden" tabid="visual_basic">
+		<visual-basic></visual-basic>
+	</tab>
+
+	<tab tabid="config" tabname="Config" default>
+		<md-packer></md-packer>
+
+		<string-formatting>
+			<f-param display_name="Players" fpid="players" translit_default="1" format_default="all_upper"></f-param>
+			<f-param display_name="Labels" fpid="labels" translit_default="1" format_default="all_upper"></f-param>
+		</string-formatting>
+
+		<div id="param_list" regular_box>
+			<div param_row res_loc_row>
+				<div row_label>Resources Location</div>
+				<input type="text" res_path placeholder="Absolute path to a folder. Quotation marks allowed">
+				<sysbtn btname="save_res_path" onclick="window.kbmodules.kickboxing_advanced.save_res_path()">Save Path</sysbtn>
+			</div>
+
+			<div param_row timer_has_vs_row>
+				<label row_label>
+					Timer Contains VS
+					<input timer_has_vs type="checkbox">
+				</label>
+			</div>
+
+			<div param_row vs_as_movs_row>
+				<label row_label>
+					Pre-Rendered VS
+					<input vs_as_movs type="checkbox">
+				</label>
+			</div>
+
+			<!--
+ 			<div param_row res_loc_row>
+				<div row_label>Resources Location</div>
+				<input type="text" res_path placeholder="Absolute path to a folder. Quotation marks allowed">
+				<sysbtn btname="save_res_path" onclick="window.kbmodules.kickboxing_advanced.save_res_path()">Save Path</sysbtn>
+			</div>
+			-->
+		</div>
+
+		<div
+			id="schema_cfg"
+			regular_box
+			kbhint="Changes are saved automatically. Hold Alt and click RMB to delete a schema entry"
+			>
+			<div id="schema_cfg_header">Player Data Schema</div>
+			<div id="schema_cfg_ctrl">
+				<sysbtn onclick="window.kbmodules.kickboxing_advanced.add_schema_entry()">Add Entry</sysbtn>
+				<sysbtn onclick="window.kbmodules.kickboxing_advanced.save_schema()">Save Schema</sysbtn>
+			</div>
+			<div id="schema_cfg_list"></div>
+		</div>
+
+		<div id="special_clauses_list" regular_box>
+			<h3>Special clauses</h3>
+			<div selectable_recursive>
+				<div>flag</div>
+				<div>record</div>
+			</div>
+		</div>
+
+		<kbnc-ctrl></kbnc-ctrl>
+
+		<http-resource-proxy-control></http-resource-proxy-control>
+
+		<psych-ward></psych-ward>
+	</tab>
+
+
+	<tab tabid="ctrl" tabname="Control" default row>
+		<div subtle_box id="ctrl_side">
+
+			<div id="ctrl_top_row" flex_row>
+				<div id="title_ctrl" regular_box>
+					<div row>
+						<vmixbtn seq_info="vis_hide" btname="vs_off" onclick="window.kbmodules.kickboxing_advanced.vs_off()">VS OFF</vmixbtn>
+						<vmixbtn seq_info="vis_show" btname="vs_onn" onclick="window.kbmodules.kickboxing_advanced.vs_onn(this)">VS ON</vmixbtn>
+					</div>
+
+					<div row>
+						<vmixbtn seq_info="vis_hide" btname="player_off" onclick="window.kbmodules.kickboxing_advanced.player_off(this)">Player OFF</vmixbtn>
+						<vmixbtn seq_info="vis_show" btname="player_onn" onclick="window.kbmodules.kickboxing_advanced.player_onn(this)">Player ON</vmixbtn>
+					</div>
+				</div>
+
+				<div id="event_announcements" regular_box flex_col>
+					<div flex_row>
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="main_event_onn"
+							onclick="window.kbmodules.kickboxing_advanced.main_event_vis(true)"
+						>MAIN <br> ONN</vmixbtn>
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="comain_event_onn"
+							onclick="window.kbmodules.kickboxing_advanced.comain_event_vis(true)"
+						>CO-MAIN<br> ONN</vmixbtn>
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="main_w_comain_event_onn"
+							onclick="window.kbmodules.kickboxing_advanced.main_w_comain_event_vis(true)"
+						>+MAIN <br> +CO-MAIN <br> ONN</vmixbtn>
+					</div>
+					<vmixbtn
+						seq_info="vis_hide"
+						btname="all_events_off"
+						onclick="window.kbmodules.kickboxing_advanced.hide_events()"
+					>OFF</vmixbtn>
+				</div>
+
+				<div id="undercard_ctrl" regular_box flex_col>
+					<div flex_row>
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="undercard_onn_1"
+							onclick="window.kbmodules.kickboxing_advanced.undercard_show(0)"
+						>UNDERCARD <br> 1</vmixbtn>
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="undercard_onn_2"
+							onclick="window.kbmodules.kickboxing_advanced.undercard_show(1)"
+						>UNDERCARD <br> 2</vmixbtn>
+					</div>
+					<vmixbtn
+						seq_info="vis_hide"
+						btname="undercard_off"
+						onclick="window.kbmodules.kickboxing_advanced.undercard_hide()"
+					>OFF</vmixbtn>
+				</div>
+
+			</div>
+
+			<div id="timer_ctrl" flex_row>
+
+				<div regular_box flex_col>
+					<div row>
+						<vmixbtn
+							bottom
+							seq_align="vertical"
+							btname=""
+							seq_info="alive+<+cond+vis_show+resume+>+<+else+update+play+vis_show+>"
+							onclick="window.kbmodules.kickboxing_advanced.clock_show()"
+							>
+							<span>ONN, Start</span>
+						</vmixbtn>
+						<vmixbtn btname="" seq_info="vis_hide+pause" onclick="window.kbmodules.kickboxing_advanced.clock_hide(true)">OFF, Pause</vmixbtn>
+
+						<div regular_box id="timer_feedback">--:--</div>
+					</div>
+
+					<div row>
+						<vmixbtn btname="" seq_info="stop+update" onclick="window.kbmodules.kickboxing_advanced.clock_reset()">Reset</vmixbtn>
+						<vmixbtn btname="" seq_info="pause" onclick="window.kbmodules.kickboxing_advanced.clock_pause(true)">Pause</vmixbtn>
+						<vmixbtn btname="" seq_info="resume" onclick="window.kbmodules.kickboxing_advanced.clock_resume(false)">Resume</vmixbtn>
+					</div>
+
+					<div row flex_row align_flex_end>
+						<div flex_col row_center_h>
+							<div flex_row row_center_h id="set_time_cfg">
+								<input id="set_time_minutes" noctrl type="number" placeholder="MM">
+								<input id="set_time_seconds" noctrl type="number" placeholder="SS">
+							</div>
+							<vmixbtn btname="" seq_info="update+resume" onclick="window.kbmodules.kickboxing_advanced.clock_fire_offset()">Set Time</vmixbtn>
+						</div>
+						
+						<div id="round_config">
+							<div id="round_selector" kbhint="Round Number (+Kill, Update and Reset timer)"></div>
+
+							<div id="round_cfg_fields">
+								<div id="round_duration_cfg_field" class="round_cfg_field">
+									<div class="field_label">Duration</div>
+									<input minutes noctrl type="number" placeholder="MM">
+									<input seconds noctrl type="number" placeholder="SS">
+									<sysbtn
+										onclick="window.kbmodules.kickboxing_advanced.set_clock_duration()"
+										btname="set_round_duration"
+										>Set Duration</sysbtn>
+								</div>
+
+								<div id="round_amount_fields" class="round_cfg_field">
+									<div class="field_label">Quantity</div>
+									<input round_amount noctrl type="number">
+									<sysbtn onclick="window.kbmodules.kickboxing_advanced.set_round_amount()" btname="set_round_duration">Set Quantity</sysbtn>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div flex_col>
+					<div regular_box flex_col id="winner_ctrl">
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="winner_red"
+							titled
+						><span>-</span></vmixbtn>
+						<vmixbtn
+							seq_info="update+vis_show"
+							btname="winner_blu"
+							titled
+						><span>-</span></vmixbtn>
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="winner_off"
+							onclick="window.kbmodules.kickboxing_advanced.hide_winner()"
+						>OFF</vmixbtn>
+					</div>
+				</div>
+
+				<div flex_col id="judges_ctrl">
+					<div regular_box flex_col>
+						<div flex_row>
+							<vmixbtn
+								seq_info="vis_show"
+								btname="judges_onn"
+								onclick="window.kbmodules.kickboxing_advanced.show_judges()"
+							>JUDGES <br> ONN</vmixbtn>
+							<vmixbtn
+								seq_info="vis_show"
+								btname="referee_onn"
+								onclick="window.kbmodules.kickboxing_advanced.show_referee()"
+							>REFEREE <br> ONN</vmixbtn>
+						</div>
+						<div flex_row>
+							<vmixbtn
+								seq_info="update+vis_show"
+								btname="upcoming_center"
+								onclick="window.kbmodules.kickboxing_advanced.upcoming_show('center')"
+							>UPCOMING <br> CENTER</vmixbtn>
+							<vmixbtn
+								seq_info="update+vis_show"
+								btname="upcoming_corner"
+								onclick="window.kbmodules.kickboxing_advanced.upcoming_show('corner')"
+							>UPCOMING <br> CORNER</vmixbtn>
+						</div>
+						<vmixbtn
+							seq_info="vis_hide"
+							btname="judges_off"
+							onclick="window.kbmodules.kickboxing_advanced.judges_off()"
+						>OFF</vmixbtn>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<div id="player_pool_side">
+			<div id="player_pool" subtle_box>
+				<div id="player_pool_ctrl">
+					<sysbtn onclick="window.kbmodules.kickboxing_advanced.toggle_edit_mode()">Toggle Edit Mode</sysbtn>
+					<sysbtn onclick="window.kbmodules.kickboxing_advanced.toggle_preview_mode()">Toggle Preview Mode</sysbtn>
+					<sysbtn
+						edit_visible
+						btname="flip_pair_colors"
+						kbhint="This does ABSOLUTELY NOTHING besides flipping colours that you see in the controller"
+						onclick="window.kbmodules.kickboxing_advanced.flip_colors()">
+						Flip Colours (COSMETIC!)
+					</sysbtn>
+					<sysbtn
+						edit_visible
+						btname="flip_pair_sides"
+						kbhint="This will flip all the pairs, including photos"
+						onclick="window.kbmodules.kickboxing_advanced.flip_sides()">
+						Flip Sides
+					</sysbtn>
+					<sysbtn
+						edit_visible
+						btname="flip_pair_photos"
+						kbhint="This will ONLY flip photos in the pairs"
+						onclick="window.kbmodules.kickboxing_advanced.flip_photos()">
+						Flip Photos
+					</sysbtn>
+					<div id="player_pool_ctrl_bind_btns">
+						<sysbtn
+							edit_visible
+							btname="bind_photo_ids"
+							kbhint="Long story short: This ABSOLUTELY HAS TO BE FUCKING clicked RIGHT AFTER the initial data input (misuse WILL lead to fatal datastructure corruption)"
+							onclick="window.kbmodules.kickboxing_advanced.bind_photo_ids()">
+							Bind Photo Indexes
+						</sysbtn>
+						<sysbtn
+							edit_visible
+							btname="unbind_photo_ids"
+							onclick="window.kbmodules.kickboxing_advanced.unbind_photo_ids()">
+							Unbind Photo Indexes
+						</sysbtn>
+					</div>
+				</div>
+
+				<div id="player_list" subtle_box class="red_vs_blu">
+					<sysbtn edit_visible onclick="window.kbmodules.kickboxing_advanced.add_pair()">Add Pair</sysbtn>
+				</div>
+			</div>
+		</div>
+
+	</tab>
+
+
+
+
+	<template id="kb_player_template">
+		<div class="kb_player">
+			<div edit_hidden class="vis_display"></div>
+			<div edit_visible class="player_data_shared"></div>
+			<div preview_visible edit_visible class="player_data"></div>
+		</div>
+	</template>
+
+	<template id="kb_player_data_entry_template">
+		<div class="data_entry">
+			<div class="data_entry_label"></div>
+			<input type="text" class="data_entry_input" placeholder="Text">
+		</div>
+	</template>
+
+	<template id="kb_player_data_entry_template_text_area">
+		<div class="data_entry">
+			<div class="data_entry_label"></div>
+			<textarea type="text" class="data_entry_input" placeholder="Text"></textarea>
+		</div>
+	</template>
+
+	<template id="kb_player_shared_data_entry_template">
+		<div class="data_entry">
+			<div class="data_entry_label"></div>
+			<input type="text" class="data_entry_input" placeholder="Text">
+		</div>
+	</template>
+
+	<template id="kb_player_pair_template">
+		<div class="player_pair">
+			<div class="pair_header">
+				<div edit_visible class="pair_ctrl">
+					<sysbtn class="move_pair_up">
+						<img src="./assets/icon_arrow_left.svg">
+					</sysbtn>
+					<sysbtn class="move_pair_down">
+						<img src="./assets/icon_arrow_left.svg">
+					</sysbtn>
+					<sysbtn class="flip_players">
+						<img src="./assets/swap_icon.svg">
+					</sysbtn>
+					<sysbtn class="flip_photos">
+						<img src="./assets/t-shirt.png">
+					</sysbtn>
+					<sysbtn class="del_pair" kbhint="Hold Alt">
+						<img src="./assets/trash.svg">
+					</sysbtn>
+				</div>
+				<div class="pair_num"></div>
+			</div>
+			<div class="pair_players"></div>
+			<input type="number" edit_visible noctrl class="round_amount" placeholder="Round amount">
+		</div>
+	</template>
+
+	<template id="schema_list_entry_template">
+		<div class="schema_list_entry">
+			<input class="schema_data_input field_label" type="text" placeholder="Field Label">
+			<input class="schema_data_input suffix" type="text" placeholder="Suffix">
+			<input class="schema_data_input idname" type="text" placeholder="ID">
+
+			<label flex_row row_center_v>
+				<input class="schema_data_input is_image" type="checkbox">
+				Is Image
+			</label>
+
+			<label flex_row row_center_v>
+				<input class="schema_data_input is_shared" type="checkbox">
+				Shared
+			</label>
+
+			<label flex_row row_center_v>
+				<input class="schema_data_input is_text_area" type="checkbox">
+				Text Area
+			</label>
+		</div>
+	</template>
+
+
+	<template id="round_selector_item_template">
+		<div class="round_selector_item"></div>
+	</template>
+
+</kbstandard>
+
+
+

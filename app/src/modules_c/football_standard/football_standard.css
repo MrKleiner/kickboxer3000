@@ -3671,8 +3671,94 @@ player-param option{
 
 
 
+/*
+!~~ #weather_ctrl
+*/
+#weather_ctrl{
+	margin-top: 50px;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-start;
+	align-items: center;
+	padding: 20px;
+	height: 500px;
+}
+
+#weather_ctrl_body{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px;
+}
+
+#weather_ctrl_body input{
+	width: 650px;
+	/*height: 200px;*/
+	font-size: 21px;
+	margin: 15px 0px 25px 0px;
+}
+
+#weather_ctrl_buttons{
+	display: flex;
+	flex-direction: row;
+}
+
+#weather_ctrl_buttons vmixbtn{
+	width: 200px;
+	height: 200px;
+	font-size: 30px;
+}
 
 
+#weather_params{
+	display: flex;
+	flex-direction: row;
+	margin: 20px 0px 40px 0px;
+}
+
+#weather_params .weather_param{
+	display: flex;
+	flex-direction: row;
+	height: 30px;
+	justify-content: center;
+	align-items: center;
+	margin-left: 40px;
+}
+
+#weather_params .weather_param img{
+	height: 100%;
+}
+
+#weather_params .weather_param input{
+	margin: 0px 0px 0px 15px;
+	width: 60px;
+}
+
+#weather_clouds{
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	width: 70%;
+}
+
+#weather_clouds img{
+	padding: 4px;
+	width: 40px;
+	height: 40px;
+}
+
+#weather_clouds img:hover{
+	outline: 2px solid white;
+}
+
+
+#weather_clouds img:active{
+	outline: 2px solid lime;
+}
+
+.weather_clouds_active{
+	outline: 2px solid cyan;
+}
 
 
 

@@ -154,6 +154,10 @@ img:not([candrag]){
 	-webkit-user-drag: none;
 }
 
+.kbsys_no_cursor, .kbsys_no_cursor *{
+	cursor: none !important;
+}
+
 
 
 #app_sys
@@ -668,7 +672,7 @@ vmix buttons
 
 ~~[horizontal]
 {
-	aspect-ratio: 2/1;
+	aspect-ratio: 2/1 !important;
 }
 
 
@@ -1179,6 +1183,13 @@ tab
 ~~[err]{
 	background: #792B2B;
 	outline-color: #FA4A32;
+}
+
+#ffmpeg_dl_prog{
+	font-family: 'ibm_plex';
+	outline: 1px solid #a4d3fb !important;
+	background: #283b58 !important;
+	white-space: pre;
 }
 
 
@@ -1745,6 +1756,7 @@ body.hintsys_warn_ctritical{
 	margin-bottom: 50px;
 	margin-right: 30px;
 	/*width: 850px;*/
+	padding-bottom: 150px;
 }
 
 ~~ .psych_ward_header{
@@ -1826,10 +1838,40 @@ body.hintsys_warn_ctritical{
 ~~ .title_thumbnail{
 	top: 70px;
 	margin-left: 50px;
+	margin-top: 30px;
 	position: sticky;
 	height: 400px;
-	width: 700px;
+	aspect-ratio: 16 / 9;
+	/*width: 700px;*/
 }
+
+~~ .title_thumbnail img{
+	width: 100%;
+	height: 100%;
+	background: url('../../assets/alpha_checkerboard.svg');
+	background-size: 12px;
+}
+
+~~ .title_facts{
+	display: flex;
+	flex-direction: row;
+	width: 100%;
+	justify-content: space-around;
+}
+
+~~ .title_facts .anims{
+	width: 40%;
+	white-space: pre;
+	font-family: 'ibm_plex';
+}
+
+~~ .title_facts .phantom{
+	width: 40%;
+	margin-left: 20px;
+	white-space: pre;
+	font-family: 'ibm_plex';
+}
+
 
 ~~ .psych_ward_results .psych_ward_title{
 	position: relative;
@@ -1854,8 +1896,13 @@ body.hintsys_warn_ctritical{
 }
 
 ~~ .psych_ward_results .psych_ward_title .preview_img{
-	width: 100px;
+	/*width: 100px;*/
 	height: 80px;
+
+	aspect-ratio: 16/9;
+
+	background: url('../../assets/alpha_checkerboard.svg');
+	background-size: 6px;
 }
 
 ~~ .psych_ward_results .psych_ward_title .title_name{
@@ -1884,7 +1931,11 @@ body.hintsys_warn_ctritical{
 	margin-right: 10px;
 }
 
-
+~~ .edit_in_gtz_designer{
+	/*width: fit-content !important;*/
+	margin-left: 20px;
+	width: 75px !important;
+}
 
 
 
@@ -2207,4 +2258,631 @@ body.hintsys_warn_ctritical{
 	align-items: center;
 	padding: 10px;
 	width: 50%;
+}
+
+
+
+
+
+
+
+
+
+
+/*
+=========================================
+                  Remote Inputs
+=========================================
+!~~ .swift_input
+*/
+
+
+~~{
+	display: flex;
+	flex-direction: column;
+	width: 1200px;
+	height: 700px;
+	align-items: center;
+	margin-left: 20px;
+}
+
+~~ .main_header{
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	height: 50px;
+	font-size: 30px;
+}
+
+~~ .split{
+	display: flex;
+	flex-direction: row;
+	width: 100%;
+	height: -webkit-fill-available;
+	justify-content: space-evenly;
+}
+
+~~ .upload_progress{
+	width: 100%;
+	height: 10px;
+	margin-top: 10px;
+	background: black;
+	border-radius: 5px;
+	outline: 2px solid #4D4D4D;
+	overflow: hidden;
+}
+
+~~ .upload_progress-fill{
+	width: 100%;
+	height: 100%;
+	transform-origin: left;
+}
+
+
+
+~~ .swift_input_instance.current{
+	outline-color: #FFFD61;
+}
+
+~~ .swift_input_instance.current .upload_progress-fill{
+	background: #FFF17C;
+}
+
+
+
+~~ .swift_input_instance.ok{
+	outline-color: #3FFF8C;
+}
+
+~~ .swift_input_instance.ok .upload_progress-fill{
+	background: #7CFF9E;
+}
+
+
+
+~~ .swift_input_instance.fail{
+	outline-color: #FF0000;
+}
+
+~~ .swift_input_instance.fail .upload_progress-fill{
+	background: #FF5B4F;
+}
+
+
+
+~~ .drag_area{
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 40%;
+	height: 90%;
+}
+
+~~ .drag_area.drag_hover{
+	outline: 5px dashed lime;
+}
+
+~~ .log{
+	display: flex;
+	flex-direction: column;
+	width: 55%;
+	height: 90%;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+~~ .swift_input_instance{
+	display: flex;
+	flex-direction: column;
+	margin: 10px;
+	padding: 5px;
+}
+
+~~ .swift_input_instance .fname{
+	font-family: 'ibm_plex';
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+=========================================
+              Audio Mixer
+=========================================
+!~~ audio-mixer-mirror
+*/
+
+
+~~ .slider_body{
+	margin: 50px;
+	position: relative;
+	/*background: red;*/
+	border-radius: 5px;
+	overflow: hidden;
+
+	background: #1A1A1A;
+	outline: 1px solid gray;
+
+
+}
+
+~~ .slider_body[horizontal]{
+	width: 700px;
+	height: 30px;
+}
+
+~~ .slider_body[vertical]{
+	width: 40px;
+	height: 700px;
+}
+
+~~ .slider_body:hover{
+	background: #222222;
+	outline: 1px solid #A1A1A1;
+}
+
+~~ .slider_body:active{
+	background: #0E0E0E;
+	outline-color: #C7C7C7;
+}
+
+~~ .slider_body input{
+	all: revert !important;
+	position: absolute !important;
+	height: 100% !important;
+	width: 100% !important;
+	opacity: 0 !important;
+	margin: 0px !important;
+}
+
+~~ .slider_body[vertical] input{
+	-webkit-appearance: slider-vertical !important;
+}
+
+~~ .slider_body input:active{
+	cursor: none !important;
+}
+
+~~ .slider_body .slider_fill{
+	position: absolute !important;
+	pointer-events: none;
+	/*height: 100%;*/
+	/*width: 30px;*/
+	background: #4772B3;
+}
+
+~~ .slider_body[horizontal] .slider_fill{
+	height: 100%;
+	left: 0px;
+}
+
+~~ .slider_body[vertical] .slider_fill{
+	width: 100%;
+	bottom: 0px;
+}
+
+~~ .slider_body .slider_fill_phantom{
+	background: #00ff23 !important;
+	mix-blend-mode: overlay;
+
+/*	background: white !important;
+	mix-blend-mode: difference;*/
+}
+
+~~ .marker{
+	transform: translate(-50%, -5px);
+	position: absolute;
+	z-index: 8192;
+}
+
+
+
+
+~~ .slider_body .val_display{
+	width: 100%;
+	height: 100%;
+	display: flex;
+	position: absolute;
+	justify-content: center;
+	align-items: center;
+	pointer-events: none;
+	text-shadow: 0px 0px 4px rgba(0, 0, 0, 1);
+	font-family: 'ibm_plex';
+}
+
+
+~~ .slider_body[vertical] .val_display{
+	z-index: 2048;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#vertical_slider input{
+	all: initial;
+	-webkit-appearance: slider-vertical;
+}
+
+
+
+~~ .volume_slider{
+	display: flex;
+	flex-direction: column;
+	margin: 5px;
+	/*margin: 20px 0px 0px 50px;*/
+	/*padding: 15px;*/
+}
+
+~~ .volume_slider:hover{
+	outline-color: rgba(200, 200, 200);
+}
+
+~~ .volume_slider.missing{
+	outline-color: #FF0000 !important;
+}
+
+~~ .volume_slider .slider_body{
+	margin: 0px;
+}
+
+~~ .volume_slider .slider_label{
+	font-family: 'ibm_plex';
+}
+
+~~ .volume_slider .chan_label{
+	font-family: 'ibm_plex';
+	font-weight: bold;
+	margin-right: 20px;
+	font-size: 20px;
+	width: 50px;
+}
+
+~~ .volume_slider .slider_instance{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin: 15px 5px 5px 5px;
+}
+
+~~ .slider_body .pause_icon{
+	position: absolute;
+	right: 0px;
+	height: 100%;
+	width: 30px;
+}
+
+~~ .volume_slider .meters{
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 10px;
+}
+
+~~ .volume_slider .audio_meter{
+	display: flex;
+	flex-direction: row;
+	height: 7px;
+	margin-top: 3px;
+	background: black;
+	position: relative;
+}
+
+~~ .volume_slider .audio_meter .fill{
+	display: flex;
+	flex-direction: row;
+	background: black;
+	height: 100%;
+	width: -webkit-fill-available;
+	transform: scaleX(0);
+	transform-origin: right;
+}
+
+
+~~ .volume_slider .audio_meter .level_gradient{
+	position: absolute;
+	left: 0px;
+	height: 100%;
+	width: -webkit-fill-available;
+	background: linear-gradient(90deg,
+		rgba(0, 128, 128, 1)   35%,
+		rgba(0, 128, 128, 1)   35%,
+
+		rgba(0, 192, 192, 1)   35%,
+		rgba(0, 192, 192, 1)   59%,
+
+		rgba(0, 255, 255, 1)   59%,
+		rgba(0, 255, 255, 1)   84%,
+
+		rgba(250, 255, 116, 1) 84%,
+		rgba(250, 255, 116, 1) 96%,
+
+		rgba(255, 0, 0, 1)     96%,
+		rgba(255, 0, 0, 1)     100%
+	);
+}
+
+
+~~ .volume_slider .meters{
+	padding: 15px 15px 0px 15px;
+}
+
+~~ .volume_slider .slider_label{
+	padding: 0px 15px 0px 15px;
+}
+
+~~ .volume_slider .master_sliders{
+	padding: 0px 15px 0px 15px;
+}
+
+
+~~ .volume_slider .adv_sliders{
+	border-top: 1px solid rgba(100, 100, 100);
+	padding: 15px;
+	margin-top: 15px;
+	outline: none;
+}
+
+~~ .volume_slider.no_adv .adv_sliders{
+	display: none !important;
+}
+
+~~ .volume_slider.no_adv{
+	padding-bottom: 15px;
+}
+
+#volume_ctrl_debug{
+	display: flex;
+	flex-direction: column;
+	position: fixed;
+	bottom: 0px;
+	right: 0px;
+	margin: 50px 70px 50px 50px;
+	padding: 10px;
+	font-family: 'ibm_plex';
+	white-space: pre;
+	background: black;
+}
+
+
+~~ .marker{
+	top: 0px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	pointer-events: none;
+}
+
+~~ .marker_line{
+	background: white;
+	width: 2px;
+	height: 55px;
+	box-shadow: 0px 0px 6px 2px rgba(0, 0, 0, 1);
+}
+
+~~ .marker_text{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 130px;
+	padding: 9px 5px 9px 5px;
+	background: black;
+	outline: 1px solid white;
+	border-radius: 5px;
+	font-family: 'ibm_plex';
+	filter: drop-shadow(0px 0px 5px black);
+	white-space: pre;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+~~{
+	display: flex;
+	flex-direction: row;
+	height: calc(100vh - 90px);
+	width: 99vw;
+	align-self: center;
+	margin: 3px;
+	overflow: hidden;
+	padding: 3px;
+}
+
+~~ .audio_mixer{
+	display: flex;
+	flex-direction: row;
+	width: 99%;
+	height: 99%;
+	justify-content: space-around;
+}
+
+~~ .active_anodes{
+	display: flex;
+	flex-direction: column;
+	width: 55%;
+	overflow-x: hidden;
+	overflow-y: scroll;
+}
+
+~~ .mixer_config{
+	display: flex;
+	flex-direction: column;
+	width: 44%;
+	align-items: center;
+}
+
+~~ .mixer_config .btns{
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	width: 99%;
+	padding: 5px 0px 5px 0px;
+}
+
+~~ .mixer_config .btns .col{
+	display: flex;
+	flex-direction: column;
+}
+
+~~ .mixer_config .btns .col.left{
+	display: flex;
+	flex-direction: column;
+	width: 27%;
+}
+
+~~ .mixer_config .btns .col.left sysbtn:not(:first-child){
+	margin-top: 10px;
+}
+
+~~ .mixer_config .btns .col.right{
+	width: 70%;
+}
+
+
+~~ .mixer_config .labeled_param{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	padding: 4px 0px 4px 7px;
+	height: 27px;
+}
+
+~~ .mixer_config .labeled_param:not(:first-child){
+	margin-top: 5px;
+}
+
+~~ .mixer_config .labeled_param:hover{
+	background: rgba(255, 255, 255, 0.1);
+}
+
+~~ .mixer_config .labeled_param .label{
+	width: 165px;
+}
+
+~~ .fps_switch [kbswitch_item]{
+	min-width: 0px;
+	width: 27px;
+}
+
+
+~~ .anode_picker{
+	display: flex;
+	flex-direction: column;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	width: 96%;
+	margin-top: 15px;
+	margin-bottom: 5px;
+	padding: 20px 10px 20px 5px;
+}
+
+~~ .anode_picker_item{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: 40px;
+	padding: 3px 0px 3px 7px;
+}
+
+~~ .anode_picker_item:hover{
+	outline-color: white;
+	background: black;
+}
+
+~~ .anode_picker_item.active{
+	outline-color: cyan;
+}
+
+~~ .anode_picker_item:active{
+	outline-color: lime;
+}
+
+~~ .anode_picker_item:not(:first-child){
+	margin-top: 6px;
+}
+
+~~ .anode_picker_item .icon{
+	height: 85%;
+	width: 40px;
+}
+
+~~ .anode_picker_item .name{
+	margin-left: 15px;
+}
+
+
+~~ .timeout_indicator_wrapper{
+	margin-top: 5px;
+	width: 90%;
+	position: relative;
+}
+
+~~ .timeout_indicator{
+	display: flex;
+	width: 100%;
+	height: 5px;
+	background: linear-gradient(90deg,
+		rgba(0, 0, 0, 1) 5%,
+		rgba(255, 0, 6, 1) 70%,
+		rgba(255, 0, 6, 1) 100%
+	);
+	border-radius: 999px;
+	overflow: hidden;
+}
+
+~~ .timeout_indicator_fill{
+	transform-origin: right;
+	height: 100%;
+	width: 100%;
+	background: black;
+}
+
+@keyframes timeout_blink_animation {
+	to {
+		visibility: hidden;
+	}
+}
+
+~~ .warn_triangle{
+	position: absolute;
+	width: 30px;
+	height: 30px;
+	right: -15px;
+	top: -15px;
+	filter: drop-shadow(0px 0px 19px #FF4F6C);
+	animation: timeout_blink_animation 0.1s steps(2, start) infinite;
+	opacity: 0;
 }

@@ -140,6 +140,8 @@ const ksys = {
 		},
 		cls_pwnage: require('./sys/class_pwnage.js'),
 		str_ops:    require('./sys/string_ops.js'),
+		'Path':     Path,
+		color_svg_dict: {},
 		// translit: require('./sys/transliteration.js'),
 	},
 	ticker:         require('./sys/ticker.js'),
@@ -159,12 +161,19 @@ const ksys = {
 	sequencer:      require('./sys/sequencing.js'),
 	psych_ward:     require('./sys/psych_ward.js'),
 	visual_basic:   require('./sys/visual_basic.js'),
-	vmix_tcp:       require('./sys/vmix_tcp.js'),
 	kbnc:           require('./sys/kbnc.js'),
+	get KBNClient(){
+		return ksys.kbnc.KBNC.sysData().currentClient;
+	},
+	remote_inputs:  require('./sys/remote_inputs.js'),
+	audio_mixer:    require('./sys/audio_mixer_mirror.js'),
 
 	// Global events listeners
 	binds:   {},
 };
+
+ksys.vmix_tcp = require('./sys/vmix_tcp.js');
+
 
 
 // todo: this is getting out of hand
@@ -784,6 +793,44 @@ ksys.util.toInt32 = function(num){
 	return buf
 }
 
+ksys.util.sum = function(nums){
+	let result = 0;
+
+	for (const n of nums){
+		result += int(n);
+	}
+
+	return result
+}
+
+
+ksys.util.svgWithColor = function(iconName, color){
+	const iconPath = app_root.join('assets', `${iconName}.svg`);
+	const iconID = str(iconPath) + str(color);
+
+	if (ksys.util.color_svg_dict[iconID]){
+		return ksys.util.color_svg_dict[iconID]
+	}
+
+	const iconData = (new DOMParser()).parseFromString(
+		app_root.join('assets', `${iconName}.svg`).readFileSync(),
+		'application/xml'
+	)
+
+	iconData.querySelector('svg').setAttribute('fill', color);
+
+	const iconBlobURL = URL.createObjectURL(
+		new Blob(
+			[(new XMLSerializer()).serializeToString(iconData)],
+			{type: 'image/svg+xml'}
+		)
+	);
+
+	ksys.util.color_svg_dict[iconID] = iconBlobURL;
+
+	return iconBlobURL
+}
+
 // A dictionary where key is whatever a class' property returns
 // Todo: this is some unused shit
 ksys.util.ClassDict = class{
@@ -958,6 +1005,14 @@ Set.prototype.at = function(index) {
 // AT-AT ticker is the first candidate to want this to be async.
 const sys_load = function(nm, save_state=true)
 {
+	print('Trying to unload', nm);
+	try{
+		ksys?.currentModule?.unload?.();
+	}catch(e){
+		console.warn('Error unloading module');
+		console.trace(e);
+	}
+
 	print('Trying to load', nm, save_state);
 	// load html layout of the module
 	const page = fs.readFileSync(
@@ -1007,11 +1062,17 @@ const sys_load = function(nm, save_state=true)
 	// Init Visual Basic
 	ksys.kbnc.m_init()
 
+	// Init remote inputs
+	ksys.remote_inputs.m_init()
+
 	// resync switches
 	// ksys.switches.resync()
 
 	// Init resource proxy
 	vmix.util.HTTPResourceProxy.module_init();
+
+	// Init audio mixer mirror
+	ksys.audio_mixer.m_init()
 
 	// wipe binds
 	ksys.binds = {};
@@ -1023,6 +1084,8 @@ const sys_load = function(nm, save_state=true)
 	// If requested module has a "load" function - execute it
 	try{
 		const module_loader = kbmodules[nm]?.load;
+
+		ksys.currentModule = kbmodules[nm];
 
 		if (module_loader){
 			module_loader()
@@ -1200,3 +1263,141 @@ document.addEventListener('focusin', function(evt){
 		tag.blur();
 	}
 })
+
+
+ipcRenderer.on('kb.ffmpeg.dl.running', function(evt, state){
+	if (!state){
+		qsel('#ffmpeg_dl_prog')?.remove?.();
+	}
+})
+
+ipcRenderer.on('kb.ffmpeg.dl.prog', function(evt, data){
+	let dlReportDOM = qsel('#ffmpeg_dl_prog');
+	if (!dlReportDOM){
+		dlReportDOM = ksys.tplates.sys_tplates.general.ffmpeg_dl_prog({}).root;
+		qsel('#hintsys_bar_msgs').append(dlReportDOM);
+	}
+
+	dlReportDOM.textContent = `FFMPEG DL: ${str(int(data * 100)).padEnd(3)}%`;
+})
+
+
+
+
+const dev_util = {
+	// Print XML from .vmix save file
+	async preset(skipLargeAttrs=true){
+		const xml = await vmix.talker.presetXML();
+
+		if (skipLargeAttrs){
+			for (const dom of xml.querySelectorAll('*')){
+				for (const attr of [...dom.attributes]){
+					if (attr?.value?.length > 2000){
+						dom.removeAttribute(attr.name);
+					}
+				}
+			}
+		}
+
+		print(xml);
+		return xml;
+	},
+
+	// Print XML returned by WEB API
+	get project(){
+		print(
+			vmix.talker.project()
+			.then(function(xml){
+				print(xml)
+			})
+		)
+	},
+
+	// List attributes from an arbitrary XML element
+	'listXMLAttrs': function(tgtXML, returnText=false){
+		let textRows = [];
+		for (const attr of tgtXML.attributes){
+			textRows.push([
+				attr.name,
+				attr.value,
+			])
+		}
+
+		let longest = 0;
+		for (const [attrName, attrVal] of textRows){
+			const attrNameLen = str(attrName).length
+			if (attrNameLen > longest){
+				longest = attrNameLen;
+			}
+		}
+
+		textRows = textRows.map(function(rowData){
+			const [attrName, attrVal] = rowData;
+			return `${attrName.padEnd(longest + 3)}:  ${attrVal.slice(0, 120).replaceAll('\n', '')}`;
+		})
+
+		if (returnText){
+			return textRows.join('\n')
+		}else{
+			print(textRows.join('\n'));
+		}
+	},
+
+	// List attributes of a specific XML element from WEB API
+	'listAPIAttrs': async function(targetSelector, returnText=false){
+		dev_util.listXMLAttrs(
+			(await vmix.talker.project()).querySelector(targetSelector)
+		)
+	},
+
+	// List all attributes of all inputs from WEB API
+	'listAllAPIAttrs': async function(clearConsole=false){
+		if (clearConsole){
+			console.clear();
+		}
+		for (const dom of (await vmix.talker.project()).querySelectorAll('inputs > input')){
+			console.groupCollapsed(
+				dom.getAttribute('title')
+			)
+			await dev_util.listAPIAttrs(
+				`[key="${dom.getAttribute('key')}"]`
+			)
+			console.groupEnd(
+				dom.getAttribute('title')
+			)
+		}
+	},
+
+	// List attributes of a specific XML element from current .vmix save file
+	'listPresetAttrs': async function(targetSelector){
+		const elem = (await vmix.talker.presetXML()).querySelector(targetSelector);
+
+		console.groupCollapsed('textContent');
+		print(elem.textContent);
+		console.groupEnd();
+
+		dev_util.listXMLAttrs(elem);
+	},
+
+	'listAllPresetAttrs': async function(clearConsole=true){
+		const xml = await dev_util.preset(true);
+		if (clearConsole){
+			console.clear();
+		}
+		for (const dom of xml.querySelectorAll('XML > Input')){
+			console.groupCollapsed(
+				dom.getAttribute('Title') || dom.getAttribute('OriginalTitle')
+			)
+
+			console.groupCollapsed('textContent');
+			print(dom.textContent);
+			console.groupEnd();
+
+			await dev_util.listXMLAttrs(dom);
+
+			console.groupEnd(
+				dom.getAttribute('Title') || dom.getAttribute('OriginalTitle')
+			)
+		}
+	},
+}
