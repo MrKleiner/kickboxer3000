@@ -2539,6 +2539,12 @@ body.hintsys_warn_ctritical{
 	/*padding: 15px;*/
 }
 
+~~ .volume_slider.loading{
+	outline-color: #FFDF61 !important;
+	pointer-events: none !important;
+	opacity: 0.5 !important;
+}
+
 ~~ .volume_slider:hover{
 	outline-color: rgba(200, 200, 200);
 }
@@ -2570,6 +2576,7 @@ body.hintsys_warn_ctritical{
 	margin: 15px 5px 5px 5px;
 }
 
+
 ~~ .slider_body .pause_icon{
 	position: absolute;
 	right: 0px;
@@ -2581,6 +2588,7 @@ body.hintsys_warn_ctritical{
 	display: flex;
 	flex-direction: column;
 	margin-bottom: 10px;
+	position: relative;
 }
 
 ~~ .volume_slider .audio_meter{
@@ -2625,6 +2633,32 @@ body.hintsys_warn_ctritical{
 		rgba(255, 0, 0, 1)     100%
 	);
 }
+
+~~ .volume_slider .db_marker_container{
+	/*display: flex;*/
+	/*flex-direction: row;*/
+	position: absolute;
+	width: -webkit-fill-available;
+	/*height: 100%;*/
+	margin-right: 15px;
+	z-index: 99;
+	background: red;
+}
+
+~~ .volume_slider .db_marker{
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	border-left: 1px solid #676767;
+	/*background: blue;*/
+	width: 30px;
+	height: 40px;
+	/*left: 50%;*/
+	padding-left: 5px;
+	color: #c7c7c7;
+}
+
 
 
 ~~ .volume_slider .meters{
