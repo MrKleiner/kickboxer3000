@@ -371,6 +371,315 @@ const BytesIO = class {
 }
 
 
+const DataSwitch = class{
+	constructor(prms){
+		const self = ksys.util.cls_pwnage.remap(this);
+		ksys.util.nprint(self, '#E764FF');
+
+		self.GTZFile =               params.GTZFile;
+		self._switchID =             params.switchID;
+		self._targetObjectSelector = params.targetObjectSelector;
+		self._targetObjectData =     undefined;
+	}
+
+	$switchID(self){
+		return self._switchID || 'DataSwitchGeneric';
+	}
+}
+
+
+const DataSwitchValue = class{
+	constructor(prms){
+		const self = ksys.util.cls_pwnage.remap(this);
+		ksys.util.nprint(self, '#E764FF');
+
+		self.parentSwitch = prms.parentSwitch;
+		self.GTZFile      = self.parentSwitch.GTZFile;
+		self.fdict        = self.GTZFile.kb_data.files;
+		self.dataType     = prms.dataType;
+		self._dataValue   = prms.dataValue;
+	}
+
+	$dataValue(self){
+		if (self.dataType == 'phantom_file'){
+			return self.fdict[self._dataValue]
+		}
+		if (self.dataType == 'text'){
+			return self._dataValue
+		}
+	}
+
+	$$dataValue(self, newVal){
+		if (self.dataType == 'phantom_file'){
+			self.fdict[self._dataValue]?.kill?.();
+			self.fdict[self._dataValue] = newVal;
+		}
+		if (self.dataType == 'text'){
+			self._dataValue = str(newVal);
+		}
+	}
+}
+
+
+
+
+
+
+
+const ImageSwitch = class{
+	ENABLE_VALUE_PRECACHE = true;
+
+	constructor(params){
+		const self = ksys.util.cls_pwnage.remap(this);
+		ksys.util.nprint(self, '#E764FF');
+
+		self.GTZFile =           params.GTZFile;
+		self._switchID =         params.switchID;
+		self._targetImageLayer = params.targetImageLayer;
+
+		self._values = null;
+	}
+
+
+	$switchID(self){
+		return self._switchID || 'IMSWGeneric';
+	}
+
+	$$switchID(self, newID){
+		delete self.GTZFile.imageSwitches[self.switchID];
+		const oldGroupID = self.grpID;
+		self._switchID = newID;
+		self.GTZFile.imageSwitches[newID] = self;
+		const newGroupID = self.grpID;
+
+		for (const phantomFile of Object.values(self.GTZFile.kb_data.files)){
+			if (phantomFile.grp == oldGroupID){
+				phantomFile.move(newGroupID);
+			}
+		}
+	}
+
+
+	$targetImageLayer(self){
+		return self._targetImageLayer || 'img_switch';
+	}
+
+	$$targetImageLayer(self, val){
+		self._targetImageLayer = val;
+		for (const file of Object.values(self.values)){
+			file.kill();
+		}
+		self.switchID = self.switchID;
+	}
+
+
+	$grpID(self){
+		return `imageSwitch.${self.switchID}.${self.targetImageLayer}`
+	}
+
+	$values(self){
+		if (self._values != null){
+			return self._values
+		}
+
+		const values = {};
+
+		if (self.ENABLE_VALUE_PRECACHE){
+			for (const phantomFile of Object.values(self.GTZFile.kb_data.files)){
+				if (phantomFile.grp == self.grpID){
+					values[phantomFile.fname] = phantomFile;
+				}
+			}
+		}
+
+		self._values = new Proxy(values, {
+			get(target, prop, receiver){
+				const file = self.GTZFile.kb_data.files[
+					`${self.grpID}/${prop}`
+				];
+
+				if (file){
+					target[prop] = file;
+				};
+
+				return file;
+			},
+
+			set(target, prop, val){
+				if (!val && self._values[prop]){
+					self.GTZFile.del_file(
+						self._values[prop]
+					)
+
+					delete target[prop]
+
+					return
+				}
+
+				const file = self.GTZFile.add_file({
+					'buf': val,
+					'meta': {
+						'grp':   self.grpID,
+						'fname': prop,
+					},
+				});
+
+				if (file){
+					target[prop] = file;
+				}
+			}
+		});
+
+		return self._values
+	}
+
+
+	kill(self){
+		// 1 - unreg related files
+		for (const file of Object.values(self.values)){
+			file.kill();
+		}
+
+		// 2 - unparent self
+		delete self.GTZFile.imageSwitches[self.switchID];
+	}
+}
+
+
+const textColorSwitch = class{
+	constructor(params){
+		const self = ksys.util.cls_pwnage.remap(this);
+		ksys.util.nprint(self, '#E764FF');
+
+		self.GTZFile =      params.GTZFile;
+		self._switchID =    params.switchID;
+		self._switchData =  null;
+
+		self._values = null;
+	}
+
+	$switchID(self){
+		return self._switchID || 'TCSWGeneric';
+	}
+
+	$$switchID(self, newID){
+		const kbmeta = self.GTZFile.kb_data.meta;
+		const switches = self.GTZFile.kb_data.meta.textColorSwitches;
+		const data = self.switchData;
+
+		delete switches[self.switchID];
+
+		self._switchID = newID;
+
+		switches[self.switchID] = data;
+	}
+
+	$targetTextLayer(self){
+		return self.switchData.targetTextLayer;
+	}
+
+	$$targetTextLayer(self, val){
+		self.switchData.targetTextLayer = val;
+	}
+
+	$switchData(self){
+		const kbmeta = self.GTZFile.kb_data.meta;
+		const switches = self.GTZFile.kb_data.meta.textColorSwitches;
+
+		switches[self.switchID] = switches[self.switchID] || {
+			'colorMap': {},
+			'targetTextLayer': null,
+		};
+
+		return switches[self.switchID]
+	}
+
+	$values(self){
+		if (self._values != null){
+			return self._values
+		}
+
+		self._values = self.switchData.colorMap;
+
+		return self._values;
+	}
+
+	kill(self){
+		delete self.GTZFile.kb_meta.textColorSwitches[self.switchID];
+	}
+}
+
+
+const GTZipImage = class{
+	constructor(prms){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#ADFEFF',
+		);
+
+		self.gtFile = prms.gtFile;
+		self.fileName = prms.fileName;
+		self._archivePointer = null;
+	}
+
+	$archivePointer(self){
+		if (self._archivePointer != null){
+			return self._archivePointer
+		}
+
+		self._archivePointer = self.gtFile.zip_buf.getEntry(self.fileName);
+
+		return self._archivePointer
+	}
+}
+
+
+const GTZipFileImageSequence = class{
+	constructor(prms){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#ADFEFF',
+		);
+
+		self.gtFile = prms.gtFile;
+		self.resourceSource = prms.resourceSource;
+
+		self._frames = null;
+	}
+
+	$frames(self){
+		if (self._frames != null){
+			return self._frames
+		}
+
+		self._frames = [];
+
+		for (const DOM of self.resourceSource.querySelectorAll('source')){
+			self._frames.push(
+				// self.gtFile.zip_buf.getEntry(DOM.getAttribute('guid'))
+				new GTZipImage({
+					'gtFile': self.gtFile,
+					'fileName': DOM.getAttribute('guid'),
+				})
+			)
+		}
+
+		return self._frames;
+	}
+
+	durationFromFPS(self, fps=50){
+		return ksys.util.roundFloat(
+			self.frames.length / fps, 3
+		)
+	}
+
+	FPSFromDuration(self, dur=2){
+		return ksys.util.roundFloat(
+			self.frames.length / dur, 2
+		)
+	}
+}
+
 
 const GTZipFile = class{
 	// The scope of my engineering genius literally knows no bounds
@@ -493,12 +802,16 @@ const GTZipFile = class{
 		self._ct_xml = null;
 		self._phantom_layer = null;
 		self._phantom_img = null;
+		self._imageSequences = null;
 
 		self._phantom_img_zip_pointer = null;
 		self._phantom_img_uid = null;
 		self._kb_data = null;
 
 		self._real_files = null;
+
+		self._imageSwitches = null;
+		self._textColorSwitches = null;
 	}
 
 	// Fucking MORONS
@@ -876,9 +1189,29 @@ const GTZipFile = class{
 			'as_buf': true,
 			'force_compress': false,
 			'force_no_compress': false,
+			'noPWN': false,
 		}, _prms)
 
 		const serializer = new XMLSerializer();
+
+		// important todo: this is a BAD place for doing this
+		if (!prms.noPWN){
+			// Enable visibility toggle on everything
+			for (const tgtDOM of self.doc_xml.querySelectorAll(`Image, TextBlock`)){
+				// self.nprint(tgtDOM);
+				const dataFlags = (
+					(tgtDOM.getAttribute('DataFlags') || '')
+					.split(',')
+					.map(function(i){return i.trim()})
+					.filter(function(i){return !!i})
+				)
+
+				if (dataFlags.includes('ShowVisible')){continue};
+
+				dataFlags.push('ShowVisible');
+				tgtDOM.setAttribute('DataFlags', dataFlags.join(', '));
+			}
+		}
 
 		self.zip_buf.updateFile(
 			'[Content_Types].xml',
@@ -928,6 +1261,7 @@ const GTZipFile = class{
 			'buf': fdata.buf,
 		})
 
+		self.kb_data.files[phantom_file.fid]?.kill();
 		self.kb_data.files[phantom_file.fid] = phantom_file;
 
 		return phantom_file
@@ -977,6 +1311,40 @@ const GTZipFile = class{
 	}
 
 
+	$imageSequences(self){
+		if (self._imageSequences != null){
+			return self._imageSequences
+		}
+
+		self._imageSequences = {};
+
+		for (const storyBoardEntry of self.doc_xml.querySelectorAll('Storyboard ImageSequence')){
+			const objectID = storyBoardEntry.getAttribute('Object');
+			if (!objectID){continue};
+
+			const bitmapSource = (
+				self.doc_xml
+				.querySelector(escape_backslashes(`Layer [Name="${objectID}"] Bitmap`))
+				?.getAttribute?.('Source')
+			);
+			if (!bitmapSource){continue};
+
+			self.nprint('imageSequences: Computed resource name:', bitmapSource)
+			const resourceSource = self.res_xml.querySelector(
+				escape_backslashes(`resource[filename="${bitmapSource}"]`)
+			)
+			if (!bitmapSource){continue};
+
+			self._imageSequences[bitmapSource] = new GTZipFileImageSequence({
+				'gtFile': self,
+				'resourceSource': resourceSource,
+			})
+		}
+
+		return self._imageSequences
+	}
+
+
 	$tags(self){
 		return self.kb_data.meta.tags || [];
 	}
@@ -1001,6 +1369,73 @@ const GTZipFile = class{
 		)
 
 		self.nprint('Updated tags to', self.kb_data.meta.tags);
+	}
+
+
+	$imageSwitches(self){
+		if (self._imageSwitches != null){
+			return self._imageSwitches
+		}
+
+		self._imageSwitches = {};
+
+		for (const phantomFile of Object.values(self.kb_data.files)){
+			const [switchMark, switchID, tgtLayer] = (phantomFile.grp || '').split('.');
+
+			if (switchMark != 'imageSwitch'){continue};
+
+			const imgSwitch = new ImageSwitch({
+				'GTZFile':          self,
+				'switchID':         switchID,
+				'targetImageLayer': tgtLayer,
+			});
+
+			if (!self._imageSwitches[switchID]){
+				self._imageSwitches[switchID] = imgSwitch;
+			}
+		}
+
+		return self._imageSwitches
+	}
+
+	createImageSwitch(self){
+		const imgSwitch = new ImageSwitch({
+			'GTZFile': self,
+		});
+
+		self.imageSwitches[imgSwitch.switchID] = imgSwitch;
+
+		return imgSwitch;
+	}
+
+
+	$textColorSwitches(self){
+		if (self._textColorSwitches != null){
+			return self._textColorSwitches
+		}
+
+		self.kb_data.meta['textColorSwitches'] ??= {};
+
+		self._textColorSwitches = new Proxy({}, {
+			get(target, prop, receiver){
+				if (!self.kb_data.meta.textColorSwitches[prop]){return};
+				return new textColorSwitch({
+					'GTZFile': self,
+					'switchID': prop,
+				})
+			},
+		});
+
+		return self._textColorSwitches
+	}
+
+	createTextColorSwitch(self){
+		self.kb_data.meta['textColorSwitches'] ??= {};
+
+		return new textColorSwitch({
+			'GTZFile': self,
+			'switchID': null,
+		})
 	}
 }
 
