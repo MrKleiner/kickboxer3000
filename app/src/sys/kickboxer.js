@@ -148,7 +148,7 @@ const ksys = {
 		str_ops:        require('./sys/string_ops.js'),
 		'Path':         Path,
 		color_svg_dict: {},
-		winPipePath:    '//./pipe/kickboxer3000winpipe'.replaceAll('/', '\\'),
+		winPipePath:    '//./pipe/kickboxer3000winpipe.png'.replaceAll('/', '\\'),
 
 		// translit: require('./sys/transliteration.js'),
 	},

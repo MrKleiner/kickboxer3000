@@ -163,7 +163,7 @@ const KickBoxer3000 = class{
 
 	BONJOUR_ID = 'kb3000-vmix-48c6-9d28-ed8e95902579';
 
-	WINPIPE_PATH = '//./pipe/kickboxer3000winpipe'.replaceAll('/', '\\');
+	WINPIPE_PATH = '//./pipe/kickboxer3000winpipe.png'.replaceAll('/', '\\');
 
 	constructor(){
 		const self = kbn_util.nprint(cls_pwnage.remap(this));
