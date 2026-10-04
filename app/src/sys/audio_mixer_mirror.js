@@ -3,9 +3,14 @@ const fastq = require('fastq');
 
 const SYS_DATA = {
 	'presetSaveSched': fastq.promise(async function(item){
-		const saveFilePath = (await vmix.talker.project()).querySelector('preset')?.textContent;
+		// const saveFilePath = (await vmix.talker.project()).querySelector('preset')?.textContent;
+		const saveFilePath = await vmix.talker.presetFilePath();
+
 		if (!saveFilePath){
-			item.reject();
+			// item.reject(new Error(
+			// 	'The preset was never saved'
+			// ));
+			item.resolve(null);
 			return
 		}
 
@@ -23,7 +28,7 @@ const SYS_DATA = {
 
 
 
-VOL_DICT = [
+const VOL_DICT = [
 	0,
 	9.999999E-07,
 	1.6E-05,
@@ -128,7 +133,7 @@ VOL_DICT = [
 	101,
 ]
 
-VOL_DICT_MONO = [
+const VOL_DICT_MONO = [
 	0,
 	9.999999E-09,
 	1.6E-07,
@@ -289,6 +294,7 @@ const animateLinear = function({
 		}
 	};
 }
+
 
 
 const animateLinearAwait = function({
@@ -565,7 +571,7 @@ const VolumeMeter = class{
 			float((await fastXPATH(self.valSelector))[1])
 		)
 
-		self.DOM.index.fill.style.transform = `scaleX(${1.0 -val})`;
+		self.DOM.index.fill.style.transform = `scaleX(${1.0 - val})`;
 	}
 
 	$DOM(self){
@@ -576,6 +582,8 @@ const VolumeMeter = class{
 		self._DOM = self.tplates.audio_meter({
 			'fill': '.fill',
 		})
+
+		self._DOM.index.fill.style.transform = 'scaleX(1.0)';
 
 		return self._DOM
 	}
@@ -866,6 +874,30 @@ const VolumeControlMirror = class{
 
 		self._DOM = null;
 		self._pickerDOM = null;
+
+		self._missing = true;
+	}
+
+	$missing(self){
+		return self._missing
+	}
+
+	$$missing(self, isMissing){
+		self._missing = Boolean(isMissing);
+
+		if (isMissing){
+			self.DOM.root.classList.add('missing');
+			self.DOM.root.classList.add('kbsys_locked');
+
+			// self.pickerDOM.root.classList.add('missing');
+			// self.pickerDOM.root.classList.add('kbsys_locked');
+		}else{
+			self.DOM.root.classList.remove('missing');
+			self.DOM.root.classList.remove('kbsys_locked');
+
+			self.pickerDOM.root.classList.remove('missing');
+			self.pickerDOM.root.classList.remove('kbsys_locked');
+		}
 	}
 
 	$active(self){
@@ -874,9 +906,22 @@ const VolumeControlMirror = class{
 
 	$$active(self, state){
 		self._active = Boolean(state);
+		const anodeDOM = self.DOM;
+		const pickerDOM = self.pickerDOM;
 
+		if (state){
+			anodeDOM.root.appendTo(
+				self.mirrorMain.DOM.index.active_anodes
+			)
+			pickerDOM.root.classList.add('active');
+		}else{
+			pickerDOM.root.classList.remove('active');
+			anodeDOM.root.remove();
+		}
+
+		/*
 		self.DOM.then(async function(anodeDOM){
-			const pickerDOM = await self.pickerDOM;
+			const pickerDOM = self.pickerDOM;
 			if (state){
 				anodeDOM.root.appendTo(
 					self.mirrorMain.DOM.index.active_anodes
@@ -887,6 +932,11 @@ const VolumeControlMirror = class{
 				anodeDOM.root.remove();
 			}
 		})
+		*/
+	}
+
+	async XPATHAttr(self, attrName){
+		return (await fastXPATH(`${self.rootSelector}/@${attrName}`)).pop();
 	}
 
 	async isMonoSeparate(self){
@@ -915,6 +965,10 @@ const VolumeControlMirror = class{
 		const chanConfig = [];
 
 		const presetXML = await vmix.talker.presetXML();
+		if (!presetXML){
+			return [1.0, 1.0]
+		}
+
 		const tgtDOM = presetXML.querySelector(`[Key="${uid}"]`);
 
 		if (tgtDOM.getAttribute('Type') == '0'){
@@ -953,18 +1007,24 @@ const VolumeControlMirror = class{
 		)
 	}
 
+	async getLabel(self){
+		if (!self.bus && !self.isMaster){
+			return (await fastXPATH(self.labelSelector))[1];
+		}
+		if (self.bus){
+			return `BUS  ${self.bus.id}`;
+		}
+		if (self.isMaster){
+			return 'MASTER';
+		}
+	}
+
 	async update(self){
-		const DOM = await self.DOM;
+		const DOM = self.DOM;
 
 		const [exists] = await fastXPATH(self.rootSelector);
-		if (!exists){
-			DOM.root.classList.add('missing');
-			DOM.root.classList.add('kbsys_locked');
-			return
-		}else{
-			DOM.root.classList.remove('missing');
-			DOM.root.classList.remove('kbsys_locked');
-		}
+		self.missing = !exists;
+		if (!exists){return};
 
 		for (const slider of self.sliderArray){
 			if (!slider.adv){
@@ -975,19 +1035,11 @@ const VolumeControlMirror = class{
 			await meter.update();
 		}
 
-		let label = null;
-		if (!self.bus && !self.isMaster){
-			label = (await fastXPATH(self.labelSelector))[1];
-		}
-		if (self.bus){
-			label = `BUS  ${self.bus.id}`;
-		}
-		if (self.isMaster){
-			label = 'MASTER';
-		}
+		const label = await self.getLabel();
 
 		DOM.index.name_label.textContent = label;
-		(await self.pickerDOM).index.name.textContent = label;
+		self.pickerDOM.index.name.textContent = label;
+		self.DOM.root.classList.remove('loading');
 	}
 
 	updateAdvancedSlider(self, sliderIDX, val){
@@ -999,65 +1051,9 @@ const VolumeControlMirror = class{
 		}
 	}
 
-	async $DOM(self){
+	$DOM(self){
 		if (self._DOM){
 			return self._DOM
-		}
-
-		const isMonoSeparate = await self.isMonoSeparate();
-		const UID = await self.pullUID();
-
-		// 
-		// Volume Sliders
-		// 
-		if (isMonoSeparate){
-			self.sliderArray.push(new VolumeSlider({
-				'valSelector': `${self.rootSelector}/@volumeF1`,
-				'monoConvert': true,
-				'label':       'L',
-				'volSetCMDID': 'SetVolumeChannel1',
-				'uid':         UID,
-			}))
-			self.sliderArray.push(new VolumeSlider({
-				'valSelector': `${self.rootSelector}/@volumeF2`,
-				'monoConvert': true,
-				'label':       'R',
-				'volSetCMDID': 'SetVolumeChannel2',
-				'uid':         UID,
-			}))
-		}else{
-			let setVolCMD = 'SetVolume';
-			if (self.bus){
-				setVolCMD = `SetBus${self.bus.id}Volume`;
-			}
-			if (self.isMaster){
-				setVolCMD = 'SetMasterVolume';
-			}
-
-			self.sliderArray.push(new VolumeSlider({
-				'valSelector': `${self.rootSelector}/@volume`,
-				'monoConvert': false,
-				'label':       'ALL',
-				'volSetCMDID': setVolCMD,
-				'uid':         UID,
-			}))
-		}
-
-		if (!self.bus && !self.isMaster){
-			const channelDefaults = await self.countChannels();
-			let idx = 0;
-			for (const defaultValue of channelDefaults){
-				idx += 1;
-				self.advSliderArray.push(new VolumeSlider({
-					'valSelector':  null,
-					'monoConvert':  false,
-					'defaultValue': defaultValue,
-					'label':        `CH  ${idx}`,
-					'volSetCMDID':  `SetVolumeChannelMixer${idx}`,
-					'uid':          UID,
-					'adv':          true,
-				}))
-			}
 		}
 
 		self._DOM = self.tplates.volume_slider({
@@ -1074,39 +1070,105 @@ const VolumeControlMirror = class{
 			DOMRoot.classList.add('no_adv');
 		}
 
-		// 
-		// Volume Meters
-		// 
-		for (const idx of range(2)){
-			const meter = new VolumeMeter({
-				'valSelector': `${self.rootSelector}/@meterF${idx + 1}`,
-			})
-
-			self.meterArray.push(meter);
-
-			DOMIDX.meter_array.append(meter.DOM.root);
+		for (const marker of DOMIDX.meter_array.querySelectorAll('.db_marker')){
+			marker.style.left = `${marker.getAttribute('offs')}%`;
 		}
+
+		const DOMConstructPromise = new Promise(async function(DOMConstructResolve){
+			const isMonoSeparate = await self.isMonoSeparate();
+			const UID = await self.pullUID();
+
+			// --------------------
+			//   Volume Sliders
+			// --------------------
+			if (isMonoSeparate){
+				self.sliderArray.push(new VolumeSlider({
+					'valSelector': `${self.rootSelector}/@volumeF1`,
+					'monoConvert': true,
+					'label':       'L',
+					'volSetCMDID': 'SetVolumeChannel1',
+					'uid':         UID,
+				}))
+				self.sliderArray.push(new VolumeSlider({
+					'valSelector': `${self.rootSelector}/@volumeF2`,
+					'monoConvert': true,
+					'label':       'R',
+					'volSetCMDID': 'SetVolumeChannel2',
+					'uid':         UID,
+				}))
+			}else{
+				let setVolCMD = 'SetVolume';
+				if (self.bus){
+					setVolCMD = `SetBus${self.bus.id}Volume`;
+				}
+				if (self.isMaster){
+					setVolCMD = 'SetMasterVolume';
+				}
+
+				self.sliderArray.push(new VolumeSlider({
+					'valSelector': `${self.rootSelector}/@volume`,
+					'monoConvert': false,
+					'label':       'ALL',
+					'volSetCMDID': setVolCMD,
+					'uid':         UID,
+				}))
+			}
+
+			if (!self.bus && !self.isMaster){
+				const channelDefaults = await self.countChannels();
+				let idx = 0;
+				for (const defaultValue of channelDefaults){
+					idx += 1;
+					self.advSliderArray.push(new VolumeSlider({
+						'valSelector':  null,
+						'monoConvert':  false,
+						'defaultValue': defaultValue,
+						'label':        `CH  ${idx}`,
+						'volSetCMDID':  `SetVolumeChannelMixer${idx}`,
+						'uid':          UID,
+						'adv':          true,
+					}))
+				}
+			}
+
+			// --------------------
+			//    Volume Meters
+			// --------------------
+			for (const idx of range(2)){
+				const meter = new VolumeMeter({
+					'valSelector': `${self.rootSelector}/@meterF${idx + 1}`,
+				})
+
+				self.meterArray.push(meter);
+
+				DOMIDX.meter_array.append(meter.DOM.root);
+			}
+
+			DOMConstructResolve(true);
+		})
 
 		DOMRoot.appendTo = function(target){
 			target.append(self._DOM.root);
 
-			for (const slider of self.sliderArray){
-				if (slider.adv){
-					slider.DOM.root.appendTo(DOMIDX.adv_sliders);
-				}else{
-					slider.DOM.root.appendTo(DOMIDX.slider_array);
+			DOMConstructPromise.then(function(){
+				for (const slider of self.sliderArray){
+					if (slider.adv){
+						slider.DOM.root.appendTo(DOMIDX.adv_sliders);
+					}else{
+						slider.DOM.root.appendTo(DOMIDX.slider_array);
+					}
 				}
-			}
 
-			for (const slider of self.advSliderArray){
-				slider.DOM.root.appendTo(DOMIDX.adv_sliders);
-			}
+				for (const slider of self.advSliderArray){
+					slider.DOM.root.appendTo(DOMIDX.adv_sliders);
+				}
+			})
 		}
 
 		return self._DOM
 	}
 
-	async $pickerDOM(self){
+	$pickerDOM(self){
 		if (self._pickerDOM){
 			return self._pickerDOM
 		}
@@ -1114,36 +1176,40 @@ const VolumeControlMirror = class{
 		self._pickerDOM = self.tplates.anode_picker_item({
 			'icon': '.icon',
 			'name': '.name',
-		})
+		});
 
 		const DOMIDX = self._pickerDOM.index;
 		const DOMRoot = self._pickerDOM.root;
 
-		if (self.bus){
-			DOMIDX.icon.src = './assets/sliders_icon.svg';
-		}
+		(async function(){
 
-		if (self.isMaster){
-			DOMIDX.icon.src = './assets/bus_master.svg';
-		}
-
-		if (!self.bus && !self.isMaster){
-			DOMIDX.icon.src = ksys.visual_basic.ICON_DICT[
-				(await fastXPATH(`${self.rootSelector}/@type`)).pop().lower()
-			]
-		}
-
-		DOMRoot.onclick = function(){
-			const state = !self.active;
-			self.active = state;
-			self.mirrorMain.selectionArray.delete(self);
-			if (state){
-				self.mirrorMain.selectionArray.add(self);
+			if (self.bus){
+				DOMIDX.icon.src = './assets/sliders_icon.svg';
 			}
-			self.mirrorMain.saveConfig();
-		}
 
-		await self.update();
+			if (self.isMaster){
+				DOMIDX.icon.src = './assets/bus_master.svg';
+			}
+
+			if (!self.bus && !self.isMaster){
+				DOMIDX.icon.src = ksys.visual_basic.ICON_DICT[
+					// (await fastXPATH(`${self.rootSelector}/@type`)).pop().lower()
+					(await self.XPATHAttr('type')).lower()
+				]
+			}
+
+			DOMRoot.onclick = function(){
+				const state = !self.active;
+				self.active = state;
+				self.mirrorMain.selectionArray.delete(self);
+				if (state){
+					self.mirrorMain.selectionArray.add(self);
+				}
+				self.mirrorMain.saveConfig();
+			}
+
+			DOMIDX.name.textContent = await self.getLabel();
+		})();
 
 		return self._pickerDOM
 	}
@@ -1185,6 +1251,12 @@ const AudioMixerMirror = class{
 		self.selectionArray = new Set();
 
 		self._DOM = null;
+	}
+
+	*iterAnodes(self){
+		for (const anode of [...self.busArray, ...Object.values(self.inputsDict)]){
+			yield anode
+		}
 	}
 
 	timeoutReset(self){
@@ -1233,7 +1305,7 @@ const AudioMixerMirror = class{
 		}
 
 		self.DOM.index.anode_picker.append(
-			(await anode.pickerDOM).root
+			anode.pickerDOM.root
 		)
 	}
 
@@ -1390,6 +1462,7 @@ const AudioMixerMirror = class{
 
 				self.timeoutStop(timeoutHandle);
 			}catch(e){
+				sleep = true;
 				await ksys.util.sleep(250);
 				console.error(e);
 			}
@@ -1569,6 +1642,7 @@ const AudioMixerMirror = class{
 		const DOMRoot = self._DOM.root;
 
 		DOMIDX.btn_terminate.onclick = self.terminate;
+
 		DOMIDX.btn_resync.onclick = async function(){
 			await resync(true);
 			SYS_DATA.mixer.DOM.root.appendTo(
@@ -1577,7 +1651,7 @@ const AudioMixerMirror = class{
 		};
 
 		DOMIDX.btn_deselect_all.onclick = function(){
-			for (const anode of [...self.busArray, ...Object.values(self.inputsDict)]){
+			for (const anode of self.iterAnodes()){
 				anode.active = false;
 				self.selectionArray.delete(anode);
 			}
@@ -1586,9 +1660,9 @@ const AudioMixerMirror = class{
 
 		DOMRoot.appendTo = async function(tgt){
 			tgt.append(DOMRoot);
-			for (const anode of [...self.busArray, ...Object.values(self.inputsDict)]){
+			for (const anode of self.iterAnodes()){
 				DOMIDX.anode_picker.append(
-					(await anode.pickerDOM).root
+					anode.pickerDOM.root
 				)
 			}
 		}
@@ -1600,6 +1674,8 @@ const AudioMixerMirror = class{
 		}
 
 		DOMIDX.timeout_icon.src = ksys.util.svgWithColor('warn_icon', 'red');
+
+		self.switchFPS.selected = self.UPDATES_PER_SECOND;
 
 		return self._DOM
 	}
@@ -1616,23 +1692,23 @@ const resync = async function(fullForce=false){
 			ksys.context.global.cache.vmix_ip, {
 				'reconnectFail': function(){
 					ksys.info_msg.send_msg(
-						'Failed to reconnect',
+						'Audio Mixer: Failed to reconnect to VMIX',
 						'warn',
-						6000
+						1000
 					);
 				},
 				'reconnectOk': function(headerData){
 					ksys.info_msg.send_msg(
 						`Connection restored: ${headerData}`,
 						'ok',
-						6000
+						1000
 					);
 				},
 				'permaDeath': function(reason){
 					ksys.info_msg.send_msg(
 						`Dead forever, because: ${reason}`,
 						'err',
-						6000
+						1000
 					);
 				},
 			}
@@ -1667,32 +1743,23 @@ const resync = async function(fullForce=false){
 
 
 
-const ___m_init = async function(){
-	if (!SYS_DATA.mixer){
-		await ksys?.KBNClient?.connectionPromise;
-		await resync();
-	}
-
-	if (qsel('audio-mixer-mirror')){
-		SYS_DATA.mixer.DOM.root.appendTo(
-			qsel('audio-mixer-mirror')
-		)
-	}
-}
-
-
 const m_init = async function(){
-	const ctrlPanel = qsel('audio-mixer-mirror');
-	if (!ctrlPanel){return};
+	try{
+		const ctrlPanel = qsel('audio-mixer-mirror');
+		if (!ctrlPanel){return};
 
-	if (!SYS_DATA.mixer){
-		await ksys?.KBNClient?.connectionPromise;
-		await resync();
+		if (!SYS_DATA.mixer){
+			await ksys?.KBNClient?.connectionPromise;
+			await resync();
+		}
+
+		SYS_DATA.mixer.DOM.root.appendTo(
+			ctrlPanel
+		)
+	}catch(e){
+		print(e)
+		console.error('Failed to initialize audio mixer mirror:', e);
 	}
-
-	SYS_DATA.mixer.DOM.root.appendTo(
-		ctrlPanel
-	)
 }
 
 

@@ -252,6 +252,8 @@ const HTTPResourceProxy = class{
 
 	static NPRINT_LEVEL = 3;
 
+	static FORCE_DUPE_BUFFERS  = false;
+
 	constructor(params=null){
 		const self = ksys.util.nprint(
 			ksys.util.cls_pwnage.remap(this),
@@ -343,10 +345,14 @@ const HTTPResourceProxy = class{
 			// important todo: this is generally fine, but duplicating buffers
 			// so much is not good
 			buf_path = str(buf_data[0]).lower().trim();
-			buf = Buffer.from(buf_data[1]);
+			buf = buf_data[1];
 		}else{
 			buf_path = str(buf_data.path).lower().trim();
-			buf = Buffer.from(buf_data.buf);
+			buf = buf_data.buf;
+		}
+
+		if (!Buffer.isBuffer(buf) || HTTPResourceProxy.FORCE_DUPE_BUFFERS){
+			buf = Buffer.from(buf);
 		}
 
 		sys_data.mem_bufs[buf_path] = buf;
@@ -499,7 +505,7 @@ const HTTPResourceProxy = class{
 			.lower()
 			.trim()
 		);
-		
+
 		(self.constructor.LOG_REQUESTS ? self.nprint('RAW:', path_raw) : null);
 
 		const mem_buf = sys_data.mem_bufs[path_raw];
@@ -514,7 +520,7 @@ const HTTPResourceProxy = class{
 			return
 		}
 
-		if (validation.fpath.existsSync()){
+		if (validation.fpath.existsSync() && !validation.fpath.isDirectorySync()){
 			res.statusCode = 200;
 			res.write(Buffer.from(
 				validation.fpath.readFileSync()
@@ -674,7 +680,8 @@ const VMIXTitle = class{
 	ADV_LETTERS_ARRAY = 'ыъэё';
 
 	// This (basically) gets multiplied by HARD_RELOAD_WAIT_CAP
-	HARD_RELOAD_SLEEP = 275;
+	// HARD_RELOAD_SLEEP = 275;
+	HARD_RELOAD_SLEEP = 150;
 
 	// Waiting forever is fucking stupid
 	HARD_RELOAD_WAIT_CAP = 50;
@@ -760,6 +767,14 @@ const VMIXTitle = class{
 		return null
 	}
 
+	$psychWardLink(self){
+		for (const title of (ksys?.psych_ward?.PsychWard?.SYSDATA?.current_editor?.titles || [])){
+			if (title.title_name.lower() == self.title_name.lower()){
+				return title
+			}
+		}
+	}
+
 	$anim_durations(self){
 		for (const title of (ksys?.psych_ward?.PsychWard?.SYSDATA?.current_editor?.titles || [])){
 			if (title.title_name.lower() == self.title_name.lower()){
@@ -829,6 +844,77 @@ const VMIXTitle = class{
 		})
 	}
 
+	async toggle_all(self, fields_match, state, srcOverride=null){
+		const potentialObjects = (
+			(srcOverride || self?.psychWardLink?.gtz_file)
+			?.doc_xml
+			?.querySelectorAll
+			?.('Layer Image[Name], Layer TextBlock[Name]')
+		)
+
+		if (!potentialObjects){
+			self.nwarn('No psych ward link');
+			return
+		}
+
+		const promises = [];
+
+		for (const tgtDom of potentialObjects){
+			const objectName = tgtDom.getAttribute('Name');
+			if (!micromatch.isMatch(objectName, fields_match)){continue};
+
+			if (tgtDom.nodeName == 'TextBlock'){
+				promises.push(
+					self.toggle_text(objectName, state)
+				)
+			}
+
+			if (tgtDom.nodeName == 'Image'){
+				promises.push(
+					self.toggle_img(objectName, state)
+				)
+			}
+		}
+
+		await Promise.all(promises)
+	}
+
+	async setContents(self, dataDict){
+		const titleXML = self?.psychWardLink?.gtz_file?.doc_xml;
+		if (!titleXML?.querySelector){
+			self.nwarn('No psych ward link');
+			return
+		}
+
+		const promiseArray = [];
+
+		for (const [fName, fData] of Object.entries(dataDict)){
+			const fType = titleXML.querySelector(`Layer [Name*="${fName}"]`)?.nodeName;
+
+			if (!fType){continue};
+
+			if (fType == 'TextBlock'){
+				promiseArray.push(
+					self.set_text(fName, fData)
+				)
+			}
+
+			if (fType == 'Image'){
+				promiseArray.push(
+					self.set_img_src(fName, fData)
+				)
+			}
+
+			if (fType == 'Rectangle'){
+				promiseArray.push(
+					self.set_shape_color(fName, fData)
+				)
+			}
+		}
+
+		await Promise.all(promiseArray);
+	}
+
 	// todo: add check to prevent exceeding 4 (max) overlays
 	// todo: check for valid overlay numbers ?
 	async overlay_in(self, overlay_num=null, wait=true){
@@ -841,13 +927,12 @@ const VMIXTitle = class{
 		await vmix.talker.talk({
 			'Function': `${overlay_variant}${target_overlay}` + suffix,
 			'Input': self.title_name,
-		})
+		});
 
 		if (self.anim_durations[null]){
 			await ksys.util.sleep(
 				self.anim_durations[null]
 			)
-
 			return
 		}
 
@@ -868,7 +953,7 @@ const VMIXTitle = class{
 			'Input': self.title_name,
 		})
 
-		if (self.anim_durations['TransitionOut']){
+		if (self.anim_durations['TransitionOut'] && wait){
 			await ksys.util.sleep(
 				self.anim_durations['TransitionOut']
 			)
@@ -929,10 +1014,11 @@ const VMIXTitle = class{
 			if (!last_overlay){break};
 
 			// Tell VMIX to remove the title from the target overlay
-			self.overlay_out(last_overlay);
+			await self.overlay_out(last_overlay);
 
 			// Wait for VMIX to do it
 			for (const i of range(35)){
+				self.nprint('Retry', i)
 				await ksys.util.sleep(500);
 				const occupied = await self.list_occupied_overlays();
 				if (!occupied.includes(last_overlay)){
@@ -1119,6 +1205,27 @@ const VMIXTitle = class{
 		})();
 
 		return [animPromise, seqTime]
+	}
+
+	async switchImage(self, switchID, switchVal, srcOverride=null){
+		const targetSwitch = (srcOverride || self?.psychWardLink?.gtz_file)?.imageSwitches?.[switchID];
+		const targetBuf = targetSwitch?.values?.[switchVal]?.buf;
+		if (!targetSwitch || !targetBuf){return};
+
+		const bufURL = `${self.title_name}-${targetSwitch.grpID}-${switchVal}`.replaceAll('.', '_');
+		vmix.util.HTTPResourceProxy.reg_buf([
+			bufURL,
+			targetBuf,
+		]);
+
+		await self.set_img_src(targetSwitch.targetImageLayer, bufURL);
+	}
+
+	async switchTextColor(self, switchID, switchVal, srcOverride=null){
+		const targetSwitch = (srcOverride || self?.psychWardLink?.gtz_file)?.textColorSwitches?.[switchID];
+		const targetColor = targetSwitch?.values?.[switchVal];
+		if (!targetSwitch || !targetColor){return};
+		await self.set_text_color(targetSwitch.targetTextLayer, targetColor);
 	}
 }
 

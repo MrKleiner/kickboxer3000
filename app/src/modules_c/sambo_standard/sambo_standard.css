@@ -108,6 +108,12 @@ tab[tabid="config"]{
 	width: 20px;
 }
 
+#pre_rendered_suffix{
+	width: 70px;
+	margin-left: 15px;
+	text-align: center;
+}
+
 
 #schema_cfg{
 	width: 700px;

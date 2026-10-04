@@ -260,6 +260,28 @@ const clear_string = function(tgt){
 	return str(tgt).replaceAll('/', '').trim();
 }
 
+
+const resourceSourceFnameToRealFname = function(fileName, stripExtension=true){
+	const resourceName = (
+		str(fileName)
+		.split('\\')
+		.at(-1)
+		.split('.')
+	);
+
+	if ((resourceName.length > 1) && stripExtension){resourceName.pop()};
+	return resourceName.join('.');
+}
+
+
+const resourceSourceToFilename = function(resourceSource){
+	return resourceSourceFnameToRealFname(
+		resourceSource.getAttribute('filename'),
+		true,
+	)
+}
+
+
 const BytesIO = class {
 	constructor(initialData) {
 		const self = ksys.util.cls_pwnage.remap(this);
@@ -619,6 +641,7 @@ const GTZipImage = class{
 
 		self.gtFile = prms.gtFile;
 		self.fileName = prms.fileName;
+		self.realName = prms.realName;
 		self._archivePointer = null;
 	}
 
@@ -645,6 +668,7 @@ const GTZipFileImageSequence = class{
 		self.resourceSource = prms.resourceSource;
 
 		self._frames = null;
+		self._name = null;
 	}
 
 	$frames(self){
@@ -660,11 +684,24 @@ const GTZipFileImageSequence = class{
 				new GTZipImage({
 					'gtFile': self.gtFile,
 					'fileName': DOM.getAttribute('guid'),
+					'realName': resourceSourceFnameToRealFname(DOM.textContent),
 				})
 			)
 		}
 
 		return self._frames;
+	}
+
+	$name(self){
+		if (self._name != null){
+			return self._name
+		}
+
+		self._name = resourceSourceToFilename(
+			self.resourceSource
+		);
+
+		return self._name
 	}
 
 	durationFromFPS(self, fps=50){
@@ -1197,18 +1234,18 @@ const GTZipFile = class{
 		// important todo: this is a BAD place for doing this
 		if (!prms.noPWN){
 			// Enable visibility toggle on everything
-			for (const tgtDOM of self.doc_xml.querySelectorAll(`Image, TextBlock`)){
+			for (const tgtDOM of self.doc_xml.querySelectorAll(`Image, TextBlock, Rectangle`)){
 				// self.nprint(tgtDOM);
-				const dataFlags = (
+				const dataFlags = new Set(
 					(tgtDOM.getAttribute('DataFlags') || '')
 					.split(',')
 					.map(function(i){return i.trim()})
 					.filter(function(i){return !!i})
 				)
 
-				if (dataFlags.includes('ShowVisible')){continue};
+				dataFlags.add('ShowVisible');
+				dataFlags.delete('Hidden');
 
-				dataFlags.push('ShowVisible');
 				tgtDOM.setAttribute('DataFlags', dataFlags.join(', '));
 			}
 		}
@@ -1308,6 +1345,108 @@ const GTZipFile = class{
 		file._fname = new_name;
 		file.meta.fname = new_name;
 		self.kb_data.files[file.fid] = file;
+	}
+
+	unpack(self, destDir){
+		destDir = Path(destDir);
+		destDir = destDir.withBasename(
+			destDir.basename.replaceAll('.gtzip', '')
+		);
+
+		// Wipe destination dir
+		fs.rmSync(str(destDir), {
+			recursive: true,
+			force: true
+		});
+
+		// Re-create the target dir
+		destDir.makeDirSync();
+
+		// Extract all
+		self.zip_buf.extractAllTo(
+			str(destDir),
+			true,
+		);
+
+		// Create category dirs
+		const miscDir = destDir.join('misc');
+		miscDir.makeDirSync();
+
+		const seqDir = destDir.join('seq');
+		seqDir.makeDirSync();
+
+		// Create file extension dict
+		const extensionDict = {};
+		let currentExtension = 'bin';
+		for (const infoDOM of self.ct_xml.querySelectorAll('Types > *')){
+			if (infoDOM.nodeName == 'Default'){
+				currentExtension = infoDOM.getAttribute('Extension') || 'bin';
+				continue
+			}
+
+			if (infoDOM.nodeName == 'Override'){
+				const guid = (
+					(infoDOM.getAttribute('PartName') || 'invalidName')
+					.split('/')
+					.at(-1)
+				);
+
+				extensionDict[guid || 'invalidGuid'] = currentExtension;
+			}
+		}
+
+		// Separate image sequences from everything else
+		const seqResourceSources = [];
+		for (const seq of Object.values(self.imageSequences)){
+			seqResourceSources.push(seq.resourceSource);
+		}
+
+		// Single-file resources
+		let dupeIndex = 0;
+
+		for (const resourceSource of self.res_xml.querySelectorAll('resources > resource')){
+			if (seqResourceSources.includes(resourceSource)){continue};
+
+			for (const src of resourceSource.querySelectorAll('source')){
+				const originalFileName = src.getAttribute('guid');
+
+				const newFileName = (
+					resourceSourceFnameToRealFname(src.textContent)
+					+ '.' + extensionDict[originalFileName]
+				);
+
+				let outputFilePath = miscDir.join(newFileName);
+
+				if (outputFilePath.isFileSync()){
+					outputFilePath = outputFilePath.withStem(
+						outputFilePath.stem + str(dupeIndex)
+					)
+				}
+
+				destDir.join(originalFileName).moveSync(outputFilePath);
+
+				dupeIndex++
+			}
+		}
+
+		// Image sequences
+		for (const seq of Object.values(self.imageSequences)){
+			const seqOutDir = seqDir.join(
+				seq.name.replaceAll('.', '_')
+			);
+			seqOutDir.makeDirSync();
+
+			for (const img of seq.frames){
+				const originalFileName = img.fileName;
+				const newFileName = (
+					img.realName + '.' + extensionDict[originalFileName]
+				);
+
+				destDir.join(originalFileName).moveSync(
+					seqOutDir.join(newFileName)
+				)
+			}
+		}
 	}
 
 

@@ -4,6 +4,7 @@ const fastq = require('fastq');
 const child_proc = require('child_process');
 const electron = require('electron')
 const http = require('http');
+const fontkit = require('fontkit');
 
 
 
@@ -718,7 +719,7 @@ const KBNConnectSocketSched = class{
 
 
 
-const KBNCMDHandler = async function(MSGData){
+const KBNCMDHandler = async function(kbn, MSGData){
 	if (MSGData.header.CMDID == 'generic.write_file'){
 		const fpath = Path(MSGData.header.fpath);
 		fpath.parent().makeDirSync();
@@ -832,6 +833,102 @@ const KBNCMDHandler = async function(MSGData){
 		return {
 			'header': true,
 			'payload': probeResult.stdout.join(''),
+		}
+	}
+
+	if (MSGData.header.CMDID == 'fonts.list_installed'){
+		const filePaths = new Set();
+
+		// Do the registry first
+		for (const hive of ['HKLM', 'HKCU']){
+			const regPath = `${hive}\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts`;
+			const stdout = child_proc.execSync(
+				`reg query "${regPath}"`,
+				{encoding: 'utf8'}
+			);
+			for (const line of stdout.split(/\r?\n/)){
+				if (!line.includes(':')){continue};
+				const lsplit = line.split(':');
+				filePaths.add(
+					[lsplit.at(-2).at(-1), lsplit.at(-1)].join(':').trim()
+				)
+			}
+		}
+
+		// Lookup basic font folders
+		const fontDirs = [
+			Path(process.env.WINDIR, 'Fonts'),
+			Path(process.env.LOCALAPPDATA, 'Microsoft', 'Windows', 'Fonts'),
+		]
+
+		for (const fdir of fontDirs){
+			for (const fpath of fdir.globSync('*.*')){
+				if (!fpath.isFileSync()){continue};
+				filePaths.add(str(fpath));
+			}
+		}
+
+		// Create family map
+		const fontMap = [];
+
+		for (const fpath of filePaths){
+			let fontData = null;
+
+			try{
+				fontData = fontkit.openSync(fpath);
+			}catch{
+				continue
+			}
+
+			for (const font of (fontData?.fonts || [fontData]) ){
+				fontMap.push([
+					[font.familyName, font.subfamilyName, font.fullName],
+					fpath,
+				])
+			}
+		}
+
+		console.log('Font map:', fontMap)
+
+		return {
+			'header': true,
+			'payload': JSON.stringify(fontMap),
+		}
+	}
+
+	if (MSGData.header.CMDID == 'winpipe.create_net'){
+		const [catchPromise, catchResolve, catchReject] = kbn_util.flatPromise();
+
+		kbn.winPipePendingPromise = catchPromise;
+		kbn.winPipePendingPromiseResolve = catchResolve;
+		kbn.winPipePendingPromiseReject = catchReject;
+
+		return {
+			'header': true,
+			'payload': '1',
+		}
+	}
+
+	if (MSGData.header.CMDID == 'winpipe.catch'){
+		const timeoutHandle = setTimeout(function(){
+			kbn.winPipePendingPromiseReject?.(
+				'Timed out waiting for data to appear in the pipe'
+			);
+		}, MSGData.header.timeout || 3500);
+
+		const result = await kbn.winPipePendingPromise;
+
+		console.log('Caught pipe stuff:', result);
+
+		clearTimeout(timeoutHandle);
+
+		kbn.winPipePendingPromise = null;
+		kbn.winPipePendingPromiseResolve = null;
+		kbn.winPipePendingPromiseReject = null;
+
+		return {
+			'header': true,
+			'payload': result,
 		}
 	}
 
@@ -1029,7 +1126,7 @@ const KBNConnectSocketServer = class{
 			}
 		}
 
-		return await KBNCMDHandler(MSGData);
+		return await KBNCMDHandler(self.kbn, MSGData);
 	}
 
 	createClientConnection(self, skt){

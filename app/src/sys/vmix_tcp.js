@@ -1885,7 +1885,9 @@ const VMIXTCP = class{
 				self.connected = false;
 
 				// If somebody's waiting for a connection - tough shit
-				self?.connectionReject?.();
+				self?.connectionReject?.(new ConnectionAborted(
+					'This connection attempt has failed'
+				));
 
 				// Create connection promise
 				[self.connectionPromise, self.connectionResolve, self.connectionReject]

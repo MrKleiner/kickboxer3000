@@ -1185,7 +1185,7 @@ hintsys-bar #hintsys_bar_msgs .kbmsg[err]{
 	outline-color: #FA4A32;
 }
 
-#ffmpeg_dl_prog{
+#ffmpeg_dl_prog, #img_magick_dl_prog{
 	font-family: 'ibm_plex';
 	outline: 1px solid #a4d3fb !important;
 	background: #283b58 !important;
@@ -1783,11 +1783,68 @@ title-sequence-editor .seq_ctrl .seq_param label{
 	font-weight: bold;
 }
 
-.psych_ward_editor > sysbtn{
+.psych_ward_editor .psych_ward_btns sysbtn{
 	width: 200px;
 	padding-top: 5px;
 	padding-bottom: 5px;
 	margin-top: 20px;
+}
+
+
+.psych_ward_editor .psych_ward_actions{
+	display: flex;
+	flex-direction: row;
+}
+
+.psych_ward_editor .flist{
+	margin-top: 20px;
+	margin-left: 75px;
+	/*width: 350px;*/
+	/*height: 400px;*/
+	font-family: 'ibm_plex';
+	font-size: 17px;
+}
+
+
+.psych_ward_editor .font_check{
+	display: flex;
+	flex-direction: column;
+
+	width: 550px;
+	margin-top: 20px;
+	margin-left: auto;
+	overflow-y: scroll;
+
+	max-height: 550px;
+}
+
+.psych_ward_editor .font_check *{
+	font-family: 'ibm_plex';
+}
+
+.psych_ward_editor .missing_font_title{
+	margin: 10px;
+	outline: 2px solid #FF3B49;
+	background: #451616;
+}
+
+.psych_ward_editor .missing_font_title .label{
+	padding: 5px;
+	border-bottom: 2px solid #FF3B49;
+	font-weight: bold;
+}
+
+.psych_ward_editor .missing_font_instance{
+	padding-left: 20px;
+}
+
+.psych_ward_editor .missing_fonts_log_entry{
+	margin: 10px;
+	padding: 5px;
+	outline: 2px solid #ffd749;
+	border-radius: 5px;
+	background: #32291c;
+	white-space: pre-line;
 }
 
 
@@ -1813,14 +1870,6 @@ title-sequence-editor .seq_ctrl .seq_param label{
 	width: 450px;
 }
 
-.psych_ward_editor .flist{
-	margin-top: 20px;
-	width: 300px;
-	height: 400px;
-	font-family: 'ibm_plex';
-	font-size: 17px;
-}
-
 .psych_ward_editor .psych_ward_viewer{
 	display: flex;
 	flex-direction: row;
@@ -1840,9 +1889,9 @@ title-sequence-editor .seq_ctrl .seq_param label{
 	margin-left: 50px;
 	margin-top: 30px;
 	position: sticky;
-	height: 400px;
-	aspect-ratio: 16 / 9;
-	/*width: 700px;*/
+	height: fit-content;
+	/* aspect-ratio: 16 / 9; */
+	width: 750px;
 }
 
 .psych_ward_editor .title_thumbnail img{
@@ -1852,10 +1901,19 @@ title-sequence-editor .seq_ctrl .seq_param label{
 	background-size: 12px;
 }
 
+.psych_ward_editor .img_sequence_facts{
+	display: flex;
+	flex-direction: column;
+	width: -webkit-fill-available;
+	white-space: pre;
+	font-family: 'ibm_plex';
+	margin-top: 5px;
+}
+
 .psych_ward_editor .title_facts{
 	display: flex;
 	flex-direction: row;
-	width: 100%;
+	width: -webkit-fill-available;
 	justify-content: space-around;
 }
 
@@ -1893,6 +1951,7 @@ title-sequence-editor .seq_ctrl .seq_param label{
 	margin-left: 20px;
 	height: 100%;
 	justify-content: space-evenly;
+	z-index: 10;
 }
 
 .psych_ward_editor .psych_ward_results .psych_ward_title .preview_img{
@@ -1936,6 +1995,113 @@ title-sequence-editor .seq_ctrl .seq_param label{
 	margin-left: 20px;
 	width: 75px !important;
 }
+
+.psych_ward_editor .unpack_as_archive{
+	margin-left: 20px;
+	width: 75px !important;
+}
+
+
+
+
+
+
+
+
+
+.psych_ward_editor .basic_text_editor *{
+	padding: 0px;
+	margin: 0px;
+}
+
+.psych_ward_editor .basic_text_editor .textarea_wrap{
+	display: flex;
+	flex-direction: column;
+	position: relative;
+	width: 500px;
+	overflow: hidden;
+}
+
+.psych_ward_editor .basic_text_editor textarea{
+	all: unset;
+	resize: none;
+	position: absolute;
+	width: 500px;
+	opacity: 0.9;
+	padding: 0px 0px 0px 10px;
+	mix-blend-mode: hard-light;
+	z-index: 10;
+	background: transparent;
+	color: white;
+	overflow: hidden;
+	font-family: monospace;
+	padding-top: 5px;
+}
+
+.psych_ward_editor .basic_text_editor textarea:active{
+	outline: none;
+}
+
+.psych_ward_editor .basic_text_editor .line{
+	width: 100%;
+	/*background: #343434;*/
+	background: #1D1D22;
+}
+
+.psych_ward_editor .basic_text_editor .line:first-of-type{
+	margin-top: 5px !important;
+}
+
+.psych_ward_editor .basic_text_editor .line.disabled{
+	background: rgba(0, 0, 0, 0.45);
+    z-index: 99;
+    pointer-events: none;
+}
+
+.psych_ward_editor .basic_text_editor .line.selected{
+	border-left: 5px solid rgba(255, 255, 255, 0.3);
+}
+
+.psych_ward_editor .basic_text_editor{
+	max-height: 600px;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	/*margin: 20px;*/
+	outline: 1px solid #757575;
+	width: fit-content;
+	/*border-radius: 10px;*/
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2423,7 +2589,7 @@ audio-mixer-mirror .slider_body{
 
 audio-mixer-mirror .slider_body[horizontal]{
 	width: 700px;
-	height: 30px;
+	height: 16px;
 }
 
 audio-mixer-mirror .slider_body[vertical]{
@@ -2534,9 +2700,15 @@ audio-mixer-mirror .slider_body[vertical] .val_display{
 audio-mixer-mirror .volume_slider{
 	display: flex;
 	flex-direction: column;
-	margin: 5px;
+	margin: 3px;
 	/*margin: 20px 0px 0px 50px;*/
 	/*padding: 15px;*/
+}
+
+audio-mixer-mirror .volume_slider.loading{
+	outline-color: #FFDF61 !important;
+	pointer-events: none !important;
+	opacity: 0.5 !important;
 }
 
 audio-mixer-mirror .volume_slider:hover{
@@ -2567,8 +2739,9 @@ audio-mixer-mirror .volume_slider .slider_instance{
 	display: flex;
 	flex-direction: row;
 	align-items: center;
-	margin: 15px 5px 5px 5px;
+	margin: 2px 1px 1px 5px;
 }
+
 
 audio-mixer-mirror .slider_body .pause_icon{
 	position: absolute;
@@ -2580,7 +2753,8 @@ audio-mixer-mirror .slider_body .pause_icon{
 audio-mixer-mirror .volume_slider .meters{
 	display: flex;
 	flex-direction: column;
-	margin-bottom: 10px;
+	margin-bottom: 1px;
+	position: relative;
 }
 
 audio-mixer-mirror .volume_slider .audio_meter{
@@ -2626,9 +2800,35 @@ audio-mixer-mirror .volume_slider .audio_meter .level_gradient{
 	);
 }
 
+audio-mixer-mirror .volume_slider .db_marker_container{
+	/*display: flex;*/
+	/*flex-direction: row;*/
+	position: absolute;
+	width: -webkit-fill-available;
+	/*height: 100%;*/
+	margin-right: 15px;
+	z-index: 99;
+	background: red;
+}
+
+audio-mixer-mirror .volume_slider .db_marker{
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+	border-left: 1px solid #676767;
+	/*background: blue;*/
+	width: 30px;
+	height: 40px;
+	/*left: 50%;*/
+	padding-left: 5px;
+	color: #c7c7c7;
+}
+
+
 
 audio-mixer-mirror .volume_slider .meters{
-	padding: 15px 15px 0px 15px;
+	padding: 2px 15px 0px 15px;
 }
 
 audio-mixer-mirror .volume_slider .slider_label{
@@ -2652,7 +2852,7 @@ audio-mixer-mirror .volume_slider.no_adv .adv_sliders{
 }
 
 audio-mixer-mirror .volume_slider.no_adv{
-	padding-bottom: 15px;
+	padding-bottom: 3px;
 }
 
 #volume_ctrl_debug{
@@ -2886,3 +3086,7 @@ audio-mixer-mirror .warn_triangle{
 	animation: timeout_blink_animation 0.1s steps(2, start) infinite;
 	opacity: 0;
 }
+
+
+
+

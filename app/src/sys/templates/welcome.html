@@ -1,0 +1,42 @@
+
+
+<template id="addr_selector">
+	<div id="addr_selector">
+		<div id="welcome_enter_info">
+			<input
+				style="color: white"
+				type="text"
+				placeholder="IP (absolute)"
+				ip
+			>
+			:
+			<input
+				style="color: white"
+				type="number"
+				value="8088"
+				placeholder="Port"
+				noctrl
+				port
+			>
+		</div>
+		<sysbtn style="margin-top: 10px" onclick="kbmodules.starting_page.save_creds()" id="welcome_apply_creds">Apply</sysbtn>
+
+		<div id="discovery_list" subtle_box></div>
+	</div>
+</template>
+
+
+<template id="discovery_entry">
+	<div class="discovery_entry" subtle_box>
+		<div class="referrer_ip"></div>
+		<div class="addr_list"></div>
+	</div>
+</template>
+
+<template id="discovery_addr">
+	<div class="discovery_addr" regular_box></div>
+</template>
+
+
+
+

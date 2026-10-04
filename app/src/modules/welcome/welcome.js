@@ -39,7 +39,7 @@ $this.edit_vmix_ip_addr = function(){
 	}
 
 	for (const num of ipNumbers){
-		if (!Number.isInteger(num)){
+		if (!Number.isInteger(int(num))){
 			ksys.info_msg.send_msg(
 				`Invalid address data: >${ip_data[0]}:${ip_data[1]}<`,
 				'warn',

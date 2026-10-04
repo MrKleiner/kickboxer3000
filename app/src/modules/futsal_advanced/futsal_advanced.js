@@ -4526,6 +4526,9 @@ $this.ClubGoals = class {
 			);
 		}
 
+
+
+
 		// get combined current time in minutes
 		// todo: is it possible for timestamp_override to be random rubbish data
 		// therefore corrupting half the data structure ?
@@ -6756,7 +6759,7 @@ $this.create_club_lineup = function(side, clubname, input_lineup_info=null){
 
 	if (clubname.lower() == $this.resource_index.side[side == 'home' ? 'guest' : 'home']?.club?.club_name?.lower?.()){
 		ksys.info_msg.send_msg(
-			`Unfortunately, the data structure does not allow clubs palying against themselves`,
+			`Unfortunately, the data structure does not allow clubs playing against themselves`,
 			'err',
 			9000
 		);
@@ -8749,18 +8752,34 @@ $this.get_current_time = function(minutes=false, tsum=false){
 			($this.ticker_time.extra.seconds)
 		)
 
+		const rnum = ksys.context.module.cache.round_num;
+		const rdur = 20*60;
+
+		let clockTime = (
+			($this.ticker_time.base.minutes * 60) + ($this.ticker_time.base.seconds || 0)
+		);
+
+		let absTime = rdur - clockTime;
+
+		if (rnum == 2){
+			absTime = rdur + (rdur - clockTime);
+		}
+
+		/*
 		let base_t =
 		Math.ceil(
 			(
 				($this.ticker_time.base.minutes * 60) +
 				($this.ticker_time.base.seconds || 0)
+				// + ((rnum == 2) ? (20 * 60) : 0)
 			)
 			/
 			divider
 		)
+		*/
 
 		return {
-			'base': base_t,
+			'base': Math.ceil(absTime / divider),
 			'extra': Math.ceil(
 				(extra_t || 0) / divider
 			),
@@ -10048,6 +10067,8 @@ $this.show_score_summary = async function(){
 			// result.push(`${score_unit.time.base}'`)
 		}
 
+		result.push(`${score_unit.time.base}'`);
+
 		// todo: use else. There could be only one flag
 		if (score_unit.flags.autogoal){
 			result.push('(АГ)')
@@ -10112,12 +10133,12 @@ $this.show_score_summary = async function(){
 			let score_string = '';
 			if (side == 'guest'){
 				score_string = 
-				`${ksys.strf.params.players.format(player.author?.player_surname || '')} ${score_times.join(', ')}`;
-				// ksys.strf.params.players.format(player.author?.player_surname || '');
+				// `${ksys.strf.params.players.format(player.author?.player_surname || '')} ${score_times.join('')}`;
+				`${score_times.join(', ')} ${ksys.strf.params.players.format(player.author?.player_surname || '')}`;
 			}else{
 				score_string = 
-				`${score_times.join(', ')} ${ksys.strf.params.players.format(player.author?.player_surname || '')}`;
-				// ksys.strf.params.players.format(player.author?.player_surname || '');
+				// `${score_times.join('')} ${ksys.strf.params.players.format(player.author?.player_surname || '')}`;
+				`${ksys.strf.params.players.format(player.author?.player_surname || '')} ${score_times.join(', ')}`;
 			}
 
 			score_summary[side].push(score_string)
@@ -10148,7 +10169,7 @@ $this.show_score_summary = async function(){
 	const score_amt_r = $this.resource_index?.score_manager?.sides?.guest?.score_list?.score_stack?.size || 0;
 	await $this.titles.final_scores.set_text(
 		'score_sum',
-		`${score_amt_l} ${score_amt_r}`
+		`${score_amt_l} - ${score_amt_r}`
 	)
 
 

@@ -1,13 +1,21 @@
 from pathlib import Path
 import json
+import shutil
+
 
 project = Path(__file__).parent.parent.parent
 
-native_version = json.loads((project / 'app' / 'package.json').read_bytes())['version_native']
+PACKAGE_JSON = json.loads(
+	(project / 'app' / 'package.json').read_bytes()
+)
 
-major_version = json.loads((project / 'app' / 'package.json').read_bytes())['version']
+native_version = PACKAGE_JSON['version_native']
 
+major_version = PACKAGE_JSON['version']
 
+LIB_NAMES = tuple(
+	PACKAGE_JSON['dependencies'].keys()
+)
 
 
 
@@ -76,22 +84,20 @@ def burn_ico_to_exe(rcedit, icon_path, exe_path):
 
 
 def pyinst_cleanup(base_name, src_folder, move_to):
-	import shutil
-
 	src_folder = Path(src_folder)
 	move_to = Path(move_to)
 
-	# move executable to the specified destination
+	# Move executable to the specified destination
 	shutil.move(
 		src_folder / 'dist' / f'{base_name}.exe',
 		move_to,
 	)
 
-	# wipe build folder
+	# Wipe build folder
 	shutil.rmtree(src_folder / 'build', ignore_errors=True)
-	# remove the dist folder
+	# Remove the dist folder
 	shutil.rmtree(src_folder / 'dist', ignore_errors=True)
-	# remove the .spec file
+	# Remove the .spec file
 	(src_folder / f'{base_name}.spec').unlink(missing_ok=True)
 
 

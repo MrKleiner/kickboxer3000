@@ -404,6 +404,17 @@ window.kbmodules.football_standard.load = async function(){
 				}
 			}),
 
+			// Subs table
+			'subs_table': new vmix.title({
+				'title_name': 'subs_table.gtzip',
+				'default_overlay': 2,
+				'timings': {
+					'fps': 10,
+					'frames_in': 10,
+					'margin': 2,
+				}
+			}),
+
 
 			// VS
 			'splash': new vmix.title({
@@ -573,6 +584,13 @@ window.kbmodules.football_standard.load = async function(){
 			window.kbmodules.football_standard.img_magick.value = window.kbmodules.football_standard.img_magick.value.replaceAll('"', '');
 			ksys.context.module.prm('img_magick', window.kbmodules.football_standard.img_magick.value);
 		}
+
+		if (!window.kbmodules.football_standard.img_magick.value || !Path(window.kbmodules.football_standard.img_magick.value).isFileSync()){
+			window.kbmodules.football_standard.img_magick.value = str(
+				Path(app_root, 'bins', 'img_magick', 'magick.exe')
+			);
+			ksys.context.module.prm('img_magick', window.kbmodules.football_standard.img_magick.value);
+		}
 	}
 
 
@@ -587,6 +605,13 @@ window.kbmodules.football_standard.load = async function(){
 			window.kbmodules.football_standard.ffmpeg.value = window.kbmodules.football_standard.ffmpeg.value.replaceAll('"', '');
 			ksys.context.module.prm('ffmpeg', window.kbmodules.football_standard.ffmpeg.value);
 		}
+
+		if (!window.kbmodules.football_standard.ffmpeg.value || !Path(window.kbmodules.football_standard.ffmpeg.value).isFileSync()){
+			window.kbmodules.football_standard.ffmpeg.value = str(
+				Path(app_root, 'bins', 'ffmpeg', 'ffmpeg.exe')
+			);
+			ksys.context.module.prm('ffmpeg', window.kbmodules.football_standard.ffmpeg.value);
+		}
 	}
 
 
@@ -599,6 +624,14 @@ window.kbmodules.football_standard.load = async function(){
 		window.kbmodules.football_standard.field_layout_template_fpath.onchange = function(){
 			window.kbmodules.football_standard.field_layout_template_fpath.value = window.kbmodules.football_standard.field_layout_template_fpath.value.replaceAll('"', '');
 			ksys.context.module.prm('field_layout_template_fpath', window.kbmodules.football_standard.field_layout_template_fpath.value);
+		}
+
+		if (!window.kbmodules.football_standard.field_layout_template_fpath.value || !Path(window.kbmodules.football_standard.field_layout_template_fpath.value).isFileSync()){
+			const templateFilePath = window.kbmodules.football_standard.titles.team_layout?.psychWardLink?.local_fpath;
+			if (templateFilePath && Path(templateFilePath).isFileSync()){
+				window.kbmodules.football_standard.field_layout_template_fpath.value = str(templateFilePath);
+				ksys.context.module.prm('field_layout_template_fpath', str(templateFilePath));
+			}
 		}
 	}
 
@@ -855,6 +888,41 @@ window.kbmodules.football_standard.load = async function(){
 
 
 	// --------------------------
+	//  Weather icons visuals
+	// --------------------------
+	{
+		window.kbmodules.football_standard.weather_icons_schema_switch = new ksys.switches.KBSwitch({
+			'multichoice': false,
+			'can_be_empty': false,
+			'set_default': mctx.cache.weather_icons_schema,
+			'dom_array': [
+				{
+					'id': 'normal',
+					'dom': qsel('#weather_icons_schema_switch [normal]'),
+				},
+				{
+					'id': 'inverted',
+					'dom': qsel('#weather_icons_schema_switch [inverted]'),
+				},
+			],
+			'callback': function(kbswitch, schema_id){
+				ksys.context.module.prm('weather_icons_schema', schema_id);
+				document.querySelector('#weather_ctrl').classList.toggle(
+					'inverted',
+					schema_id == 'inverted'
+				)
+			}
+		});
+
+		document.querySelector('#weather_ctrl').classList.toggle(
+			'inverted',
+			window.kbmodules.football_standard.weather_icons_schema_switch.selected == 'inverted'
+		)
+	}
+
+
+
+	// --------------------------
 	// Red card schema switch
 	// --------------------------
 	{
@@ -904,7 +972,7 @@ window.kbmodules.football_standard.load = async function(){
 		window.kbmodules.football_standard.pname_schema_switch = new ksys.switches.KBSwitch({
 			'multichoice': false,
 			'can_be_empty': false,
-			'set_default': mctx.cache.pname_schema,
+			'set_default': mctx.cache.pname_schema || 'auto',
 			'dom_array': [
 				{
 					'id': 'surname',
@@ -914,9 +982,22 @@ window.kbmodules.football_standard.load = async function(){
 					'id': 'prefixed',
 					'dom': document.querySelector('#pname_schema_switch [prefixed]'),
 				},
+				{
+					'id': 'auto',
+					'dom': document.querySelector('#pname_schema_switch [auto]'),
+				},
 			],
 			'callback': function(kbswitch, schema_id){
 				ksys.context.module.prm('pname_schema', schema_id);
+
+				for (
+					const player of [
+						...(window.kbmodules.football_standard.resource_index?.home_club?.playerbase || []),
+						...(window.kbmodules.football_standard.resource_index?.guest_club?.playerbase || []),
+					]
+				){
+					player.forward_update();
+				}
 			}
 		});
 	}
@@ -1481,13 +1562,14 @@ window.kbmodules.football_standard.FootballClub = class{
 		const club_struct = input_club_struct || {};
 
 		// Base info
-		self.logo_path =               club_struct.logo_path || './assets/red_cross.png';
-		self.club_name =              (club_struct.club_name || '').lower();
-		self.club_name_shorthand =     club_struct.club_name_shorthand || '';
-		self.main_coach =             (club_struct.main_coach || '').lower();
+		self.logo_path =               club_struct.logo_path              || './assets/red_cross.png';
+		self.club_name =              (club_struct.club_name              || '').lower();
+		self.club_name_shorthand =     club_struct.club_name_shorthand    || '';
+		self.main_coach =             (club_struct.main_coach             || '').lower();
 		self.main_coach_title_short = (club_struct.main_coach_title_short || '').lower();
-		self.main_coach_title_long =  (club_struct.main_coach_title_long || '').lower();
-		self.descr =                  (club_struct.descr || '').lower();
+		self.main_coach_title_long =  (club_struct.main_coach_title_long  || '').lower();
+		self.descr =                  (club_struct.descr                  || '').lower();
+		self.switch_val =             (club_struct.switch_val             || '').lower();
 
 		// important todo: this is very unreliable
 		self.is_enemy =            is_enemy;
@@ -1570,9 +1652,10 @@ window.kbmodules.football_standard.FootballClub = class{
 		// add player to the registry
 		self.playerbase.add(player);
 		// add player cfg box to the club pool
-		self.control_panel.index.player_pool.append(player.player_params_elem().elem)
+		const ctrlPanelDOM = player.player_params_elem();
+		self.control_panel.index.player_pool.append(ctrlPanelDOM.root)
 		// return the player class
-		return player
+		return [player, ctrlPanelDOM]
 	}
 
 	// Create club control panel
@@ -1595,6 +1678,7 @@ window.kbmodules.football_standard.FootballClub = class{
 				'main_coach_title_short': 'club-base-params club-param[prmname="main_coach_title_short"] input',
 				'main_coach_title_long':  'club-base-params club-param[prmname="main_coach_title_long"] input',
 				'descr':                  'club-base-params club-param[prmname="description"] input',
+				'switch_val':             'club-base-params club-param[prmname="switch_val"] input',
 
 				// Playerbase
 				'reg_player_btn':  'club-playerbase sysbtn[btname="register_player_in_club"]',
@@ -1625,6 +1709,7 @@ window.kbmodules.football_standard.FootballClub = class{
 		tplate.index.main_coach_title_short.value = self.main_coach_title_short.upper();
 		tplate.index.main_coach_title_long.value = self.main_coach_title_long.upper();
 		tplate.index.descr.value = self.descr.upper();
+		tplate.index.switch_val.value = self.switch_val.lower();
 		tplate.index.logo_feedback.src = self.logo_path;
 		tplate.index.logo_feedback.setAttribute('kbhint', self.logo_path);
 
@@ -1679,6 +1764,10 @@ window.kbmodules.football_standard.FootballClub = class{
 		tplate.index.descr.onchange = function(evt){
 			self.descr = evt.target.value.lower();
 		}
+		// Bind switch value change
+		tplate.index.switch_val.onchange = function(evt){
+			self.switch_val = evt.target.value.lower();
+		}
 
 		// todo: implement properly
 		tplate.index.init_from_url_btn.onclick = async function(evt){
@@ -1730,6 +1819,7 @@ window.kbmodules.football_standard.FootballClub = class{
 			'main_coach_title_short': self.main_coach_title_short,
 			'main_coach_title_long':  self.main_coach_title_long,
 			'descr':                  self.descr,
+			'switch_val':             self.switch_val,
 			'playerbase':             [],
 		};
 
@@ -1758,6 +1848,12 @@ window.kbmodules.football_standard.FootballClub = class{
 		// )
 
 		return null
+	}
+
+	$sideLetter(self){
+		return (
+			self.is_enemy ? 'r' : 'l'
+		)
 	}
 }
 
@@ -1793,13 +1889,36 @@ window.kbmodules.football_standard.ClubPlayer = class{
 	}
 
 	$surname(self){
-		self.nprint('Getting player surname')
-		if (window.kbmodules.football_standard.pname_schema_switch.selected == 'prefixed'){
+		const playerNameSchema = window.kbmodules.football_standard.pname_schema_switch.selected;
+
+		if (playerNameSchema == 'prefixed'){
 			const prefix = self.player_name.trim()[0] ? `${self.player_name.trim()[0]}.` : '';
-			return `${prefix} ${self.player_surname}`
-		}else{
+			return (`${prefix} ${self.player_surname}`).trim();
+		}
+
+		if (playerNameSchema == 'surname'){
 			return self.player_surname
 		}
+
+		let oneFound = false;
+		let addNameSuffix = false;
+		for (const player of self.club.playerbase){
+			if (player.player_surname == self.player_surname){
+				if (oneFound){
+					addNameSuffix = true;
+					break
+				}
+
+				oneFound = true;
+			}
+		}
+
+		if ((playerNameSchema == 'auto') && addNameSuffix){
+			const suffix = self.player_name.trim()[0] ? `${self.player_name.trim()[0]}.` : '';
+			return (`${self.player_surname} ${suffix}`).trim();
+		}
+
+		return self.player_surname
 	}
 
 	// forward player data (name, surname, number, ...)
@@ -1809,13 +1928,29 @@ window.kbmodules.football_standard.ClubPlayer = class{
 		for (const generic_list_elem of self.references){
 			generic_list_elem.index.logo.src =            self.club.logo_path;
 			generic_list_elem.index.num.textContent =     self.player_num.upper();
-			generic_list_elem.index.surname.textContent = self.player_surname.upper();
+			generic_list_elem.index.surname.textContent = self.surname.upper();
+
+			if (self.club.is_enemy && window.kbmodules.football_standard.resource_index.guest_lineup){
+				generic_list_elem.index.surname.style.border = `5px solid ${window.kbmodules.football_standard.resource_index.guest_lineup.colors.tshirt}`;
+				generic_list_elem.index.surname.style.borderWidth = '0px 0px 0px 5px';
+			}
+
+			if (!self.club.is_enemy && window.kbmodules.football_standard.resource_index.home_lineup){
+				generic_list_elem.index.surname.style.border = `5px solid ${window.kbmodules.football_standard.resource_index.home_lineup.colors.tshirt}`;
+				generic_list_elem.index.surname.style.borderWidth = '0px 0px 0px 5px';
+			}
 
 			// generic_list_elem.index.role.innerHTML = '';
 			// if (self.role){
 			// 	self.nprint('Adding role DOM:', self.role.visfeed_short_dom().root)
 			// 	generic_list_elem.index.role.append(self.role.visfeed_short_dom().root);
 			// }
+		}
+
+		for (const player of self.club.playerbase){
+			for (const genericListElement of player.references){
+				genericListElement.index.surname.textContent = player.surname.upper();
+			}
 		}
 
 		// todo: there used to be
@@ -1863,6 +1998,7 @@ window.kbmodules.football_standard.ClubPlayer = class{
 				'num':     '.player_number',
 				'surname': '.player_surname',
 				'role':    '.player_role',
+				// 'color':   '.player_tshirt_color',
 			}
 		);
 
@@ -1874,7 +2010,17 @@ window.kbmodules.football_standard.ClubPlayer = class{
 		// Write down data
 		tplate.index.logo.src = self.club.logo_path;
 		tplate.index.num.textContent = self.player_num.upper();
-		tplate.index.surname.textContent = self.player_surname.upper();
+		tplate.index.surname.textContent = self.surname.upper();
+
+		if (self.club.is_enemy && window.kbmodules.football_standard.resource_index.guest_lineup){
+			tplate.index.surname.style.border = `5px solid ${window.kbmodules.football_standard.resource_index.guest_lineup.colors.tshirt}`;
+			tplate.index.surname.style.borderWidth = '0px 0px 0px 5px';
+		}
+
+		if (!self.club.is_enemy && window.kbmodules.football_standard.resource_index.home_lineup){
+			tplate.index.surname.style.border = `5px solid ${window.kbmodules.football_standard.resource_index.home_lineup.colors.tshirt}`;
+			tplate.index.surname.style.borderWidth = '0px 0px 0px 5px';
+		}
 
 		// if (self.role){
 		// 	tplate.index.role.append(self.role.visfeed_short_dom().root);
@@ -2073,6 +2219,10 @@ window.kbmodules.football_standard.TeamLineup = class{
 
 		// Substitute stack
 		self.subs = new window.kbmodules.football_standard.PlayerSubstitutes(self);
+
+
+		self.appendTarget = null;
+		self.pickerHover = false;
 	}
 
 	$roster(self){
@@ -2109,10 +2259,15 @@ window.kbmodules.football_standard.TeamLineup = class{
 				'main_list':                 'lineup-lists lineup-main lineup-pool',
 				'reserve_list':              'lineup-lists lineup-reserve lineup-pool',
 
+				'main_list_root':            'lineup-lists lineup-main',
+				'reserve_list_root':         'lineup-lists lineup-reserve',
+
 				// buttons
 				'append_to_main_list_btn':    'lineup-lists lineup-main sysbtn[btname="append_player_to_main_lineup"]',
 				'append_to_reserve_list_btn': 'lineup-lists lineup-reserve sysbtn[btname="append_player_to_reserve_lineup"]',
 				'edit_club_btn':              'sysbtn[btname="edit_club_from_lineup"]',
+
+				'focus_toggle':               'img.focus_toggle',
 			}
 		);
 
@@ -2138,6 +2293,9 @@ window.kbmodules.football_standard.TeamLineup = class{
 			);
 		}
 
+		let appendTarget = null;
+		let pickerHover = false;
+
 		//
 		// create player picker
 		// 
@@ -2152,8 +2310,65 @@ window.kbmodules.football_standard.TeamLineup = class{
 					}
 				}
 				return true
-			}
+			},
+
+			function(listDOM, playerClass){
+				listDOM.onclick = function(evt){
+					if (!appendTarget){return};
+
+					self.add_player_to_list(
+						playerClass,
+						appendTarget,
+					)
+
+					window.kbmodules.football_standard.global_save({'lineup_lists': true});
+
+					player_picker.pull_out_selection();
+				}
+			},
 		);
+
+		ksys.binds.keydown.set(self, function(evt){
+			if (evt.ctrlKey){
+				appendTarget = 'main';
+			}
+			if (evt.altKey){
+				appendTarget = 'reserve';
+			}
+
+			if (pickerHover){
+				if (appendTarget == 'main'){
+					self.tplate.index.main_list_root.style.outline = '5px solid lime';
+				}
+				if (appendTarget == 'reserve'){
+					self.tplate.index.reserve_list_root.style.outline = '5px solid lime';
+				}
+			}
+		})
+
+		ksys.binds.keyup.set(self, function(evt){
+			appendTarget = null;
+			self.tplate.index.main_list_root.style.outline = '';
+			self.tplate.index.reserve_list_root.style.outline = '';
+		})
+
+		player_picker.box.onmouseover = function(evt){
+			pickerHover = true;
+
+			if (pickerHover){
+				if (appendTarget == 'main'){
+					self.tplate.index.main_list_root.style.outline = '5px solid lime';
+				}
+				if (appendTarget == 'reserve'){
+					self.tplate.index.reserve_list_root.style.outline = '5px solid lime';
+				}
+			}
+		}
+		player_picker.box.onmouseleave = function(evt){
+			pickerHover = false;
+			self.tplate.index.main_list_root.style.outline = '';
+			self.tplate.index.reserve_list_root.style.outline = '';
+		}
 
 		// replace the placeholder in the template with a real picker
 		self.tplate.index.player_picker_placeholder.replaceWith(player_picker.box);
@@ -2226,6 +2441,36 @@ window.kbmodules.football_standard.TeamLineup = class{
 
 			// self.redraw_pcounts();
 		}
+		// Append chosen player to the main player list
+		self.tplate.index.append_to_main_list_btn.onclick = function(){
+			self.club.control_panel_elem();
+			const [player, ctrlDOM] = self.club.register_player();
+			document.body.append(ctrlDOM.root);
+
+			ctrlDOM.root.classList.add('player_max_focus');
+
+			ksys.binds.keydown.set('max_focus', function(evt){
+				if (evt.key == 'Enter'){
+					ksys.binds.keydown.delete('max_focus');
+					ctrlDOM.root.remove();
+					self.add_player_to_list(
+						player,
+						'main'
+					)
+					window.kbmodules.football_standard.global_save({'lineup_lists': true});
+					ctrlDOM.root.classList.remove('player_max_focus');
+					self.club.control_panel.index.player_pool.append(ctrlDOM.root);
+					window.kbmodules.football_standard.save_club_to_local_db(true, self.club);
+				}
+				if (evt.key == 'Escape'){
+					ksys.binds.keydown.delete('max_focus');
+					ctrlDOM.root.remove();
+					player.disqualify();
+					window.kbmodules.football_standard.save_club_to_local_db(true, self.club);
+				}
+			})
+
+		}
 		// Append chosen player to the reserve player list
 		self.tplate.index.append_to_reserve_list_btn.onclick = function(){
 			if (!player_picker.selected_entry){
@@ -2244,13 +2489,53 @@ window.kbmodules.football_standard.TeamLineup = class{
 
 			// self.redraw_pcounts();
 		}
+		// Append chosen player to the reserve player list
+		self.tplate.index.append_to_reserve_list_btn.onclick = function(){
+			self.club.control_panel_elem();
+			const [player, ctrlDOM] = self.club.register_player();
+			document.body.append(ctrlDOM.root);
+
+			ctrlDOM.root.classList.add('player_max_focus');
+
+			ksys.binds.keydown.set('max_focus', function(evt){
+				if (evt.key == 'Enter'){
+					ksys.binds.keydown.delete('max_focus');
+					self.add_player_to_list(
+						player,
+						'reserve'
+					)
+					window.kbmodules.football_standard.global_save({'lineup_lists': true});
+					ctrlDOM.root.classList.remove('player_max_focus');
+					self.club.control_panel.index.player_pool.append(ctrlDOM.root);
+					window.kbmodules.football_standard.save_club_to_local_db(true, self.club);
+				}
+				if (evt.key == 'Escape'){
+					ksys.binds.keydown.delete('max_focus');
+					ctrlDOM.root.remove();
+					player.disqualify();
+					window.kbmodules.football_standard.save_club_to_local_db(true, self.club);
+				}
+			})
+		}
 		// Edit related club in the club panel
 		self.tplate.index.edit_club_btn.onclick = function(){
+			document.body.style.overflow = '';
+			self.tplate.root.parentElement.classList.toggle('max_focus_enabled', false);
+
 			self.club.open_panel();
 
 			// Switch to the "Clubs" tab
 			// (Standard panel from the very top)
 			$('sys-tab[match_id="club_def"]').click();
+		}
+		// Toggle maximum focus
+		self.tplate.index.focus_toggle.onclick = function(){
+			if (document.body.style.overflow == 'hidden'){
+				document.body.style.overflow = '';
+			}else{
+				document.body.style.overflow = 'hidden';
+			}
+			self.tplate.root.parentElement.classList.toggle('max_focus_enabled');
 		}
 
 
@@ -2340,13 +2625,18 @@ window.kbmodules.football_standard.TeamLineup = class{
 
 	// - player: ClubPlayer
 	// - which_list: 'main' | 'reserve'
-	remove_player_from_list(self, player, which_list){
+	remove_player_from_list(self, player, which_list=null){
 		// todo: this is stupid
 		let target_list = null;
 		if (which_list == 'main'){target_list = self.main_players};
 		if (which_list == 'reserve'){target_list = self.reserve_players};
 
-		target_list.delete(player);
+		if (target_list){
+			target_list.delete(player);
+		}else{
+			self.main_players.delete(player);
+			self.reserve_players.delete(player);
+		}
 
 		self.redraw_pcounts();
 	}
@@ -2356,8 +2646,14 @@ window.kbmodules.football_standard.TeamLineup = class{
 		return {
 			'tshirt': self.tshirt_colpick.selected_color,
 			'shorts': self.shorts_colpick.selected_color,
-			'gk': self.gk_colpick.selected_color,
+			'gk':     self.gk_colpick.selected_color,
 		}
+	}
+
+	$sideLetter(self){
+		return (
+			self.club.is_enemy ? 'r' : 'l'
+		)
 	}
 }
 
@@ -2496,6 +2792,13 @@ window.kbmodules.football_standard.TeamLineupColorPicker = class{
 		self.dom.index.color_code.value = color_code;
 
 		self?.change_callback?.('#' + color_code);
+
+		const homePlayerbase = window.kbmodules.football_standard.resource_index?.home_club?.playerbase || [];
+		const guestPlayerbase = window.kbmodules.football_standard.resource_index?.guest_club?.playerbase || [];
+
+		for (const player of [...homePlayerbase, ...guestPlayerbase]){
+			player.forward_update();
+		}
 	}
 
 	$text_color(self){
@@ -4097,9 +4400,27 @@ window.kbmodules.football_standard.CardManager = class {
 			// Do not proceed any further
 			return
 		}else{
-			// Set the player's surname
+			// Default
 			await title.set_text(
 				'player_name',
+				player.player_num + ' ' + ksys.strf.params.players.format(player.surname),
+			)
+
+			// Num + Surname
+			await title.set_text(
+				'pfull',
+				player.player_num + ' ' + ksys.strf.params.players.format(player.surname),
+			)
+
+			// Num only
+			await title.set_text(
+				'pnum',
+				str(player.player_num),
+			)
+
+			// Surname only
+			await title.set_text(
+				'psurname',
 				ksys.strf.params.players.format(player.surname),
 			)
 
@@ -4146,7 +4467,7 @@ window.kbmodules.football_standard.CardManager = class {
 				'err',
 				9000
 			);
-			console.error('Invalid side when handing a warning yellow card:', side);
+			console.error('Invalid player when handing a warning yellow card:', player);
 			return
 		}
 
@@ -4835,6 +5156,9 @@ window.kbmodules.football_standard.ScoreManager = class{
 		if (guest_score_list){
 			await title.set_text('score_r', guest_score_list.score_stack.size)
 		}
+
+		qsel('#score_feed_home').textContent = home_score_list?.score_stack?.size || '-';
+		qsel('#score_feed_guest').textContent = guest_score_list?.score_stack?.size || '-';
 		
 	}
 
@@ -4992,6 +5316,7 @@ window.kbmodules.football_standard.PenaltyManager = class{
 			}
 		}
 
+
 		await window.kbmodules.football_standard.titles.penalties.set_img_src(
 			'club_logo_l',
 			window.kbmodules.football_standard.resource_index.side.home.club.logo_path
@@ -5020,16 +5345,55 @@ window.kbmodules.football_standard.PenaltyManager = class{
 		)
 
 		await window.kbmodules.football_standard.titles.penalties.set_text(
+			'fullteam_name_r',
+			window.kbmodules.football_standard.resource_index.side.guest.club.club_name.upper()
+		)
+		await window.kbmodules.football_standard.titles.penalties.set_text(
+			'fullteam_name_l',
+			window.kbmodules.football_standard.resource_index.side.home.club.club_name.upper()
+		)
+
+		await window.kbmodules.football_standard.titles.penalties.set_text(
 			`score_l`,
 			// window.kbmodules.football_standard.resource_index.score_manager.sides['home'].score_list.score_stack.size
-			self.sides.home.sum
+			self.sides.home.sumCum
 		)
 		await window.kbmodules.football_standard.titles.penalties.set_text(
 			`score_r`,
 			// window.kbmodules.football_standard.resource_index.score_manager.sides['guest'].score_list.score_stack.size
-			self.sides.guest.sum
+			self.sides.guest.sumCum
 		)
 
+
+		await window.kbmodules.football_standard.titles.penalties.set_text(
+			`pscore_l`,
+			self.sides.home.sumCum
+		)
+		await window.kbmodules.football_standard.titles.penalties.set_text(
+			`pscore_r`,
+			self.sides.guest.sumCum
+		)
+
+	}
+
+	$complete(self){
+		return (
+			self.sides?.home?.complete && self.sides?.guest?.complete
+		)
+	}
+
+	stash(self){
+		self.sides?.home?.stash();
+		self.sides?.guest?.stash();
+
+		window.kbmodules.football_standard.save_penalties();
+	}
+
+	clearStash(self){
+		self.sides?.home?.clearStash();
+		self.sides?.guest?.clearStash();
+
+		window.kbmodules.football_standard.save_penalties();
 	}
 }
 
@@ -5051,6 +5415,7 @@ window.kbmodules.football_standard.TeamPenaltyPool = class{
 			{
 				'header': '.pool_header',
 				'table':  '.pool_table',
+				'stash':  '.pool_stash',
 			}
 		);
 
@@ -5073,29 +5438,59 @@ window.kbmodules.football_standard.TeamPenaltyPool = class{
 			self.ctrl_elems[idx] = ctrl_elem;
 			self.dom_data.index.table.append(ctrl_elem.dom_data.elem);
 		}
+
+		self.stashData = {
+			'count': input_data?.stash?.count || 0,
+			'score': input_data?.stash?.score || 0,
+		}
+
+		self.redrawStash();
 	}
 
 	to_json(self){
-		const data = {};
+		const data = {
+			'stash': self.stashData,
+		};
 		for (const penalty_idx in self.ctrl_elems){
 			const penalty = self.ctrl_elems[penalty_idx];
-			// print('Saving penalty:', penalty)
 			data[penalty.idx] = {
 				'id_bind': penalty?.associated_record?.id,
-				'state': penalty.get_state(),
+				'state':   penalty.get_state(),
 			}
 		}
 
 		return data
 	}
 
+	redrawStash(self){
+		const textElements = [
+			'Stash:',
+			str(self.stashData.count),
+			'|',
+			str(self.stashData.score),
+		]
+		self.dom_data.index.stash.textContent = textElements.join(' ');
+	}
+
 	wipe(self){
+		self.clearStash();
+
 		for (const pn_idx in self.ctrl_elems){
 			self.ctrl_elems[pn_idx].unreg();
 		}
 	}
 
-	$sum(self){
+	$complete(self){
+		for (const penalty_unit of Object.values(self.ctrl_elems)){
+			if (penalty_unit.get_state() == '?'){
+				return false
+			}
+		}
+
+		return true
+	}
+
+	$sumCur(self){
 		let sum = 0;
 
 		for (const penalty_unit of Object.values(self.ctrl_elems)){
@@ -5107,6 +5502,30 @@ window.kbmodules.football_standard.TeamPenaltyPool = class{
 		return sum
 	}
 
+	$sumCum(self){
+		return self.sumCur + self.stashData.score
+	}
+
+	stash(self){
+		self.stashData.count += 1;
+		self.stashData.score += self.sumCur;
+
+		for (const pn_idx in self.ctrl_elems){
+			self.ctrl_elems[pn_idx].unreg();
+			self.ctrl_elems[pn_idx].dom_data.index.cbox_yes.checked = false;
+			self.ctrl_elems[pn_idx].dom_data.index.cbox_no.checked = false;
+			self.ctrl_elems[pn_idx].push_to_vmix();
+		}
+
+		self.redrawStash();
+	}
+
+	clearStash(self){
+		self.stashData.count = 0;
+		self.stashData.score = 0;
+
+		self.redrawStash();
+	}
 }
 
 
@@ -6019,6 +6438,9 @@ window.kbmodules.football_standard.PlayerRolesEditor = class{
 
 
 window.kbmodules.football_standard.PlayerSubstitutes = class{
+
+	MAX_STACK_SIZE = 5;
+
 	constructor(lineup){
 		const self = ksys.util.nprint(
 			ksys.util.cls_pwnage.remap(this),
@@ -6070,9 +6492,9 @@ window.kbmodules.football_standard.PlayerSubstitutes = class{
 			return false
 		}
 
-		if (self.stack.size >= 3){
+		if (self.stack.size >= self.MAX_STACK_SIZE){
 			ksys.info_msg.send_msg(
-				`There are 3 players already`,
+				`There are ${self.MAX_STACK_SIZE} players already`,
 				'warn',
 				4000
 			);
@@ -6154,7 +6576,11 @@ window.kbmodules.football_standard.PlayerSubstitutes = class{
 				);
 				await window.kbmodules.football_standard.titles.m_subs1.set_text(
 					`pname_leaving0`,
-					`${ksys.strf.params.players.format(leaving.surname)}`
+					`${leaving.player_num} ${ksys.strf.params.players.format(leaving.surname)}`
+				);
+				await window.kbmodules.football_standard.titles.m_subs1.set_text(
+					`psur_leaving0`,
+					ksys.strf.params.players.format(leaving.surname)
 				);
 
 				// NAMES - INBOUND
@@ -6164,7 +6590,11 @@ window.kbmodules.football_standard.PlayerSubstitutes = class{
 				);
 				await window.kbmodules.football_standard.titles.m_subs1.set_text(
 					`pname_inbound0`,
-					`${ksys.strf.params.players.format(inbound.surname)}`
+					`${inbound.player_num} ${ksys.strf.params.players.format(inbound.surname)}`
+				);
+				await window.kbmodules.football_standard.titles.m_subs1.set_text(
+					`psur_inbound0`,
+					ksys.strf.params.players.format(inbound.surname)
 				);
 
 				window.kbmodules.football_standard.timeout_persistent_header_btns(
@@ -6243,6 +6673,31 @@ window.kbmodules.football_standard.PlayerSubstitutes = class{
 			return
 		}
 
+		const subsTable = window.kbmodules.football_standard.titles.subs_table.psychWardLink?.gtz_file;
+		const subsOne = window.kbmodules.football_standard.titles.m_subs1.psychWardLink?.gtz_file;
+
+		// Universal title, if present
+		if (subsTable && ((self.stack.size > 1) || !subsOne)){
+			const subsHome = window.kbmodules.football_standard.resource_index.home_lineup.subs;
+			const subsGuest = window.kbmodules.football_standard.resource_index.guest_lineup.subs;
+
+			subsHome.clearTable();
+			subsGuest.clearTable();
+
+			self.applyTable();
+
+			// Show title
+			await window.kbmodules.football_standard.titles.subs_table.overlay_in();
+
+			// Hold the title for n seconds
+			await ksys.util.sleep(window.kbmodules.football_standard.sequencer.sequences.subs_stack_match.items.hold.dur);
+
+			// Hide the title
+			await window.kbmodules.football_standard.titles.subs_table.overlay_out();
+
+			return
+		}
+
 		// Persistent header title
 		if (subs_type == 'match'){
 			if (window.kbmodules.football_standard.title_schema_switch.selected == 'paged'){
@@ -6295,6 +6750,10 @@ window.kbmodules.football_standard.PlayerSubstitutes = class{
 							`pname_leaving${idx}`,
 							`${ksys.strf.params.players.format(leaving.surname)}`
 						);
+						await tgt_title.set_text(
+							`psur_leaving${idx}`,
+							`${ksys.strf.params.players.format(leaving.surname)}`
+						);
 
 						// NAMES - INBOUND
 						await tgt_title.set_text(
@@ -6305,11 +6764,33 @@ window.kbmodules.football_standard.PlayerSubstitutes = class{
 							`pname_inbound${idx}`,
 							`${ksys.strf.params.players.format(inbound.surname)}`
 						);
+						await tgt_title.set_text(
+							`psur_inbound${idx}`,
+							`${ksys.strf.params.players.format(inbound.surname)}`
+						);
 					}
 				}
 
 				// Select the appropriate title
 				const tgt_title = window.kbmodules.football_standard.titles[`m_subs${self.stack.size}`];
+
+				ksys.btns.adv_timeout({
+					'exec_replacement_sequence_stack_match_home': (
+						(window.kbmodules.football_standard.sequencer.sequences.subs_stack_match.items.hold.dur * 2)
+						+ tgt_title.anim_durations[null]
+						+ tgt_title.anim_durations['TransitionOut']
+					),
+					'exec_replacement_sequence_stack_match_guest': (
+						(window.kbmodules.football_standard.sequencer.sequences.subs_stack_match.items.hold.dur * 2)
+						+ tgt_title.anim_durations[null]
+						+ tgt_title.anim_durations['TransitionOut']
+					),
+					'exec_replacement_sequence_match': (
+						(window.kbmodules.football_standard.sequencer.sequences.subs_stack_match.items.hold.dur * 2)
+						+ tgt_title.anim_durations[null]
+						+ tgt_title.anim_durations['TransitionOut']
+					),
+				});
 
 				// Hide red cards
 				await window.kbmodules.football_standard.hide_red_cards();
@@ -6394,6 +6875,87 @@ window.kbmodules.football_standard.PlayerSubstitutes = class{
 			// Hide the title
 			await tgt_title.overlay_out();
 		}
+	}
+
+	// Apply table data to subs_table.gtzip
+	async applyTable(self){
+		const sideLetter = self.lineup.sideLetter;
+		const stack = [...self.stack];
+
+		// Slot data
+		for (const idx of range(self.MAX_STACK_SIZE)){
+			const leaving = stack[idx]?.leaving;
+			const inbound = stack[idx]?.inbound;
+
+			self.nprint('Leaving, inboud:', leaving, inbound, sideLetter)
+
+			const eligible = !!(leaving && inbound);
+
+			// Toggle row visibility
+			await window.kbmodules.football_standard.titles.subs_table.toggle_all(
+				`r_*_${sideLetter}_${idx}`, eligible
+			);
+
+			// Apply data (if any)
+			if (!eligible){continue};
+
+			// Leaving player. Surname only
+			await window.kbmodules.football_standard.titles.subs_table.set_text(
+				`r_psur_piss_${sideLetter}_${idx}`,
+				`${ksys.strf.params.players.format(leaving.surname)}`
+			)
+
+			// Leaving player. Number only
+			await window.kbmodules.football_standard.titles.subs_table.set_text(
+				`r_pnum_piss_${sideLetter}_${idx}`,
+				leaving.player_num
+			)
+
+
+			// Inbound player. Surname only
+			await window.kbmodules.football_standard.titles.subs_table.set_text(
+				`r_psur_inb_${sideLetter}_${idx}`,
+				`${ksys.strf.params.players.format(inbound.surname)}`
+			)
+
+			// Inbound player. Number only
+			await window.kbmodules.football_standard.titles.subs_table.set_text(
+				`r_pnum_inb_${sideLetter}_${idx}`,
+				inbound.player_num
+			)
+		}
+
+		// Header data
+		if (stack.length){
+			await window.kbmodules.football_standard.titles.subs_table.set_img_src(
+				`header_logo_${sideLetter}`,
+				self.lineup.club.logo_path,
+			);
+			await window.kbmodules.football_standard.titles.subs_table.set_text(
+				`header_text_${sideLetter}`,
+				self.lineup.club.club_name,
+			);
+		}
+
+		// Toggle header visibility
+		await window.kbmodules.football_standard.titles.subs_table.toggle_all(
+			`header_*_${sideLetter}`, stack.length
+		);
+	}
+
+	async clearTable(self){
+		const sideLetter = self.lineup.sideLetter;
+		for (const idx of range(self.MAX_STACK_SIZE)){
+			// Toggle row visibility
+			await window.kbmodules.football_standard.titles.subs_table.toggle_all(
+				`r_*_${sideLetter}_${idx}`, false
+			);
+		}
+
+		// Toggle header visibility
+		await window.kbmodules.football_standard.titles.subs_table.toggle_all(
+			`header_*_${sideLetter}`, false
+		);
 	}
 
 	$stack_ctrl_dom(self){
@@ -6550,16 +7112,17 @@ window.kbmodules.football_standard.delete_current_club = function(evt){
 }
 
 
-window.kbmodules.football_standard.save_club_to_local_db = function(mute=true){
+window.kbmodules.football_standard.save_club_to_local_db = function(mute=true, tgt_club=null){
 	// Make sure there's a club to save
-	if (!window.kbmodules.football_standard.resource_index?.club_ctrl?.club_name){
+	if (!(tgt_club || window.kbmodules.football_standard.resource_index?.club_ctrl)?.club_name){
 		if (!mute){
 			ksys.info_msg.send_msg(`Invalid club name`, 'err', 5000);
 		}
+		console.log('NOT saving club')
 		return
 	};
 	// ensure that the club title is not empty
-	const club_info = window.kbmodules.football_standard.resource_index.club_ctrl.to_json();
+	const club_info = (tgt_club || window.kbmodules.football_standard.resource_index.club_ctrl).to_json();
 
 	// write file
 	ksys.db.module.write(
@@ -6647,7 +7210,7 @@ window.kbmodules.football_standard.create_club_lineup = function(side, clubname,
 
 	if (clubname.lower() == window.kbmodules.football_standard.resource_index.side[side == 'home' ? 'guest' : 'home']?.club?.club_name?.lower?.()){
 		ksys.info_msg.send_msg(
-			`Unfortunately, the data structure does not allow clubs palying against themselves`,
+			`Unfortunately, the data structure does not allow clubs playing against themselves`,
 			'err',
 			9000
 		);
@@ -7171,7 +7734,8 @@ window.kbmodules.football_standard.forward_field_layout_to_vmix = async function
 	// Coach title
 	await title.set_text(
 		'coach_title',
-		ksys.strf.params.coach.format(tgt_field.lineup.club.main_coach_title_short + ':')
+		// ksys.strf.params.coach.format(tgt_field.lineup.club.main_coach_title_short + ':')
+		ksys.strf.params.coach.format(tgt_field.lineup.club.main_coach_title_short)
 	)
 	// Club name
 	await title.set_text(
@@ -7180,6 +7744,22 @@ window.kbmodules.football_standard.forward_field_layout_to_vmix = async function
 	)
 	// Club logo
 	await title.set_img_src('club_logo', tgt_field.lineup.club.logo_path)
+	// Graphics switch
+	await title.switchImage(
+		'main_bg', window.kbmodules.football_standard.resource_index.side[tgt_side].club.switch_val,
+		// Override source
+		gtz_file,
+	)
+	await title.switchTextColor(
+		'main_names', window.kbmodules.football_standard.resource_index.side[tgt_side].club.switch_val,
+		gtz_file,
+	)
+	await title.switchTextColor(
+		'list_nums', window.kbmodules.football_standard.resource_index.side[tgt_side].club.switch_val,
+		gtz_file,
+	)
+
+
 	print('Finished forwarding layout data to VMIX')
 
 	await ksys.util.sleep(1000);
@@ -7225,7 +7805,7 @@ window.kbmodules.football_standard.show_field_layout = async function(team){
 
 	const tgt_title = window.kbmodules.football_standard.titles[`team_layout_${team}`];
 
-	await tgt_title.overlay_in()
+	await tgt_title.overlay_in();
 
 	await ksys.util.sleep(
 		window.kbmodules.football_standard.sequencer.sequences.field_layout.items.hold_main.dur
@@ -7657,15 +8237,56 @@ window.kbmodules.football_standard.show_misc_title = async function(tgt_title){
 	}
 	if (tgt_title == 'referee'){
 		for (const idx of range(1, 5)){
+			const visibilityState = !!(
+				window.kbmodules.football_standard.misc_titles
+				.referee
+				.fields[`referee_${idx}_upper`]
+				.value
+				.trim()
+			)
+
+
+			await window.kbmodules.football_standard.titles.referee.toggle_text(
+				`name_${idx}`,
+				visibilityState,
+			)
+			await window.kbmodules.football_standard.titles.referee.toggle_text(
+				`title_${idx}`,
+				visibilityState,
+			)
+			await window.kbmodules.football_standard.titles.referee.toggle_img(
+				`bg_anim_${idx}a`,
+				visibilityState,
+			)
+			await window.kbmodules.football_standard.titles.referee.toggle_img(
+				`bg_anim_${idx}b`,
+				visibilityState,
+			)
+			await window.kbmodules.football_standard.titles.referee.toggle_img(
+				`bg_${idx}a`,
+				visibilityState,
+			)
+			await window.kbmodules.football_standard.titles.referee.toggle_img(
+				`bg_${idx}b`,
+				visibilityState,
+			)
+
+
 			await window.kbmodules.football_standard.titles.referee.set_text(
 				`name_${idx}`,
-				window.kbmodules.football_standard.misc_titles.referee.fields[`referee_${idx}_upper`].value.upper()
+				window.kbmodules.football_standard.misc_titles.referee.fields[`referee_${idx}_upper`].value.trim().upper()
 			)
 			await window.kbmodules.football_standard.titles.referee.set_text(
 				`title_${idx}`,
-				window.kbmodules.football_standard.misc_titles.referee.fields[`referee_${idx}_lower`].value.upper()
+				window.kbmodules.football_standard.misc_titles.referee.fields[`referee_${idx}_lower`].value.trim().upper()
 			)
 		}
+
+		ksys.btns.adv_timeout({
+			'show_referee': window.kbmodules.football_standard.titles.referee.anim_durations[null],
+			'hide_referee': window.kbmodules.football_standard.titles.referee.anim_durations[null],
+		})
+
 		await window.kbmodules.football_standard.titles.referee.overlay_in();
 	}
 	if (tgt_title == 'water_time'){
@@ -7701,7 +8322,7 @@ window.kbmodules.football_standard.show_misc_title = async function(tgt_title){
 		)
 		await window.kbmodules.football_standard.titles.weather.set_text(
 			'wind',
-			(window.kbmodules.football_standard.misc_titles.weather.fields.weather_param_wind_speed.value || '') + ' М/С'
+			(window.kbmodules.football_standard.misc_titles.weather.fields.weather_param_wind_speed.value || '') + ' м/с'
 		)
 
 
@@ -7710,9 +8331,22 @@ window.kbmodules.football_standard.show_misc_title = async function(tgt_title){
 	}
 }
 
-window.kbmodules.football_standard.hide_misc_title = async function(tgt_title){
-	for (const t_id of (Array.isArray(tgt_title) ? tgt_title : [tgt_title])){
-		await window.kbmodules.football_standard.titles[t_id].overlay_out();
+window.kbmodules.football_standard.hide_misc_title = async function(tgt_title, boundButtons=false){
+	if (boundButtons){
+		for (const [titleID, btnIDArray] of tgt_title){
+			if (btnIDArray?.length){
+				for (btnID of btnIDArray){
+					ksys.btns.adv_timeout({
+						[btnID]: window.kbmodules.football_standard.titles?.[titleID]?.anim_durations?.[null],
+					})
+				}
+			}
+			await window.kbmodules.football_standard.titles[titleID].overlay_out_all();
+		}
+	}else{
+		for (const t_id of (Array.isArray(tgt_title) ? tgt_title : [tgt_title])){
+			await window.kbmodules.football_standard.titles[t_id].overlay_out();
+		}
 	}
 }
 
@@ -7985,6 +8619,30 @@ window.kbmodules.football_standard.exec_substitute = async function(subs_type){
 }
 
 
+// Showing substitutes for both teams
+window.kbmodules.football_standard.showSubsTable = async function(){
+	const subsHome = window.kbmodules.football_standard.resource_index.home_lineup.subs;
+	const subsGuest = window.kbmodules.football_standard.resource_index.guest_lineup.subs;
+
+	if (!subsHome.stack.size && !subsGuest.stack.size){
+		ksys.info_msg.send_msg(
+			`Nothing to display`,
+			'warn',
+			4000
+		);
+		return
+	}
+
+	await subsHome.applyTable();
+	await subsGuest.applyTable();
+
+	await window.kbmodules.football_standard.titles.subs_table.overlay_in();
+}
+
+window.kbmodules.football_standard.hideSubsTable = async function(){
+	await window.kbmodules.football_standard.titles.subs_table.overlay_out();
+}
+
 
 window.kbmodules.football_standard.stack_substitute = function(){
 	const [leaving_player, incoming_player] = window.kbmodules.football_standard.substitute_player_pair();
@@ -8026,44 +8684,53 @@ window.kbmodules.football_standard.apply_preset = function(preset_id, evt=null){
 
 	if (preset_id == 'cup'){
 		ksys.db.module.write('_psych_ward.kbcfg', JSON.stringify({
-			'remote_dir': 'C:/custom/vmix_assets/football/cup_vbet_2026/titles',
-			'local_dir':  'C:/custom/vmix_assets/football/cup_vbet_2026/titles',
+			'remote_dir': 'C:/custom/vmix_assets/football/football_cup_2026_2027/titles',
+			'local_dir':  'C:/custom/vmix_assets/football/football_cup_2026_2027/titles',
 			'flist':      [
-				'penalties',
-				'lineup_condensed',
 				'persistent_header',
-				'coach_lower_third',
-				'commenter',
-				'commenter_x2',
+				'',
 				'scored',
-				'final_scores',
-				'Half_Substitution',
-				'Half_Substitution2',
-				'Half_Substitution3',
-				'info_2',
+				'yellow_card',
+				'red_card',
+				'ycbr',
+				'',
+				'# Half_Substitution',
+				'# Half_Substitution2',
+				'# Half_Substitution3',
+				'',
 				'match_substitution1',
 				'match_substitution2',
 				'match_substitution3',
-				'red_card',
+				'',
+				'commenter',
+				'commenter_x2',
+				'',
+				'penalties',
+				'coach_lower_third',
+				'final_scores',
+				'',
+				'# info_1',
+				'info_2',
+				'',
 				'referee',
 				'splash',
-				'tape',
 				'water_time',
-				'ycbr',
-				'yellow_card',
 				'weather',
-				// 'command_layout',
+				'',
+				'# tape',
+				'# lineup_condensed',
+				'$command_layout',
 			].join('\n'),
 		}));
 
 		params = [
 			[
 				'resources_location',
-				'C:/custom/vmix_assets/football/cup_vbet_2026/res',
+				'C:/custom/vmix_assets/football/cup_07_08_2026/res',
 			],
 			[
 				'field_layout_template_fpath',
-				'C:/custom/vmix_assets/football/cup_vbet_2026/titles/command_layout.gtzip',
+				'C:/custom/vmix_assets/football/cup_07_08_2026/titles/command_layout.gtzip',
 			],
 			[
 				'red_card_schema_switch',
@@ -8103,20 +8770,25 @@ window.kbmodules.football_standard.apply_preset = function(preset_id, evt=null){
 			],
 			[
 				'timer_display_schema',
-				'fuck_shit',
+				'normal',
 			],
 			[
 				'timer_main_clock_vis_schema',
-				'extra_only',
+				'both',
+			],
+			[
+				'weather_icons_schema',
+				'inverted',
 			],
 		];
 	}
 
 	if (preset_id == 'regular'){
 		ksys.db.module.write('_psych_ward.kbcfg', JSON.stringify({
-			'remote_dir': 'C:/custom/vmix_assets/football/vbet_22_07_2025/titles',
-			'local_dir':  'C:/custom/vmix_assets/football/vbet_22_07_2025/titles',
+			'remote_dir': 'C:/custom/vmix_assets/football_1_liga_2026_2027/titles',
+			'local_dir':  'C:/custom/vmix_assets/football_1_liga_2026_2027/titles',
 			'flist':      [
+				'persistent_header',
 				'coach_lower_third',
 				'commenter',
 				'final_scores',
@@ -8126,23 +8798,20 @@ window.kbmodules.football_standard.apply_preset = function(preset_id, evt=null){
 				'info_1',
 				'info_2',
 				'lineup_condensed',
-				'penalties',
-				'persistent_header',
 				'referee',
 				'splash',
 				'tape',
 				'water_time',
+				'weather',
+				'$command_layout',
+				'# penalties',
 			].join('\n'),
 		}));
 
 		params = [
 			[
 				'resources_location',
-				'C:/custom/vmix_assets/football/vbet_22_07_2025/res',
-			],
-			[
-				'field_layout_template_fpath',
-				'C:/custom/vmix_assets/football/vbet_22_07_2025/titles/command_layout.gtzip',
+				'C:/custom/vmix_assets/football_1_liga_2026_2027/res',
 			],
 			[
 				'red_card_schema_switch',
@@ -8170,11 +8839,11 @@ window.kbmodules.football_standard.apply_preset = function(preset_id, evt=null){
 			],
 			[
 				'final_scores_color_schema',
-				'bitmap',
+				'masked',
 			],
 			[
 				'timer_team_color_schema_switch',
-				'bitmap',
+				'masked',
 			],
 			[
 				'lineup_condensed_max_players_per_page',
@@ -8187,6 +8856,10 @@ window.kbmodules.football_standard.apply_preset = function(preset_id, evt=null){
 			[
 				'timer_main_clock_vis_schema',
 				'both',
+			],
+			[
+				'weather_icons_schema',
+				'inverted',
 			],
 		];
 	}
@@ -8259,6 +8932,79 @@ window.kbmodules.football_standard.apply_preset = function(preset_id, evt=null){
 		];
 	}
 
+	if (preset_id == 'women'){
+		ksys.db.module.write('_psych_ward.kbcfg', JSON.stringify({
+			'remote_dir': 'C:/custom/vmix_assets/football_prime_liga_women_2026_2027/titles',
+			'local_dir':  'C:/custom/vmix_assets/football_prime_liga_women_2026_2027/titles',
+			'flist':      [
+				'persistent_header',
+				'yellow_card',
+				'red_card',
+				'ycbr',
+				'splash',
+				'match_substitution1',
+				'scored',
+				'referee',
+				'final_scores',
+				'penalties',
+				'subs_table',
+				'coach_lower_third',
+				'weather',
+				'$command_layout',
+			].join('\n'),
+		}));
+
+		params = [
+			[
+				'resources_location',
+				'C:/custom/vmix_assets/football_prime_liga_women_2026_2027/res',
+			],
+			[
+				'red_card_schema_switch',
+				'images',
+			],
+			[
+				'pname_schema',
+				'surname',
+			],
+			[
+				'title_schema',
+				'separate',
+			],
+			[
+				'cmd_layout_mains_schema',
+				'shared',
+			],
+			[
+				'cmd_layout_reserves_schema',
+				'shared',
+			],
+			[
+				'commenter_schema',
+				'2girls1cup',
+			],
+			[
+				'final_scores_color_schema',
+				'masked',
+			],
+			[
+				'timer_team_color_schema_switch',
+				'masked',
+			],
+			[
+				'lineup_condensed_max_players_per_page',
+				4,
+			],
+			[
+				'timer_display_schema',
+				'normal',
+			],
+			[
+				'timer_main_clock_vis_schema',
+				'both',
+			],
+		];
+	}
 
 	for (const [paramID, paramVal] of params){
 		ksys.context.module.prm(paramID, paramVal);
@@ -8520,6 +9266,26 @@ window.kbmodules.football_standard.main_timer_vis = async function(state){
 			'command_r',
 			str(window.kbmodules.football_standard.resource_index.side.guest.club.club_name_shorthand).upper()
 		)
+
+		await title.switchImage(
+			'bg_left',
+			window.kbmodules.football_standard.resource_index.side.home.club.switch_val
+		)
+		await title.switchImage(
+			'bg_right',
+			window.kbmodules.football_standard.resource_index.side.guest.club.switch_val
+		)
+
+
+		await title.set_img_src(
+			'club_logo_l',
+			window.kbmodules.football_standard.resource_index.side.home.club.logo_path
+		)
+		await title.set_img_src(
+			'club_logo_r',
+			window.kbmodules.football_standard.resource_index.side.guest.club.logo_path
+		)
+
 
 		// push current score to the title
 		window.kbmodules.football_standard.resource_index.score_manager.resync_score_on_title()
@@ -9138,14 +9904,31 @@ window.kbmodules.football_standard.timer_fset.builtin.start_base_timer = async f
 				// Otherwise - offset is 0 (first round)
 				'offset': (rnum == 2) ? dur : 0,
 				'reversed': false,
-				'vmix_fields': [{
-					'count_as': 'clock',
-					'tplate': '%mt%:%s%',
-					'gtzip_name': window.kbmodules.football_standard.titles.timer.title_name,
-					'text_field_name': 'base_ticker',
-					// pad with 2 zeroes
-					'pad': 2,
-				}],
+				// 'vmix_fields': [{
+				// 	'count_as': 'clock',
+				// 	'tplate': '%mt%:%s%',
+				// 	'gtzip_name': window.kbmodules.football_standard.titles.timer.title_name,
+				// 	'text_field_name': 'base_ticker',
+				// 	// pad with 2 zeroes
+				// 	'pad': 2,
+				// }],
+				'vmix_fields': [
+					{
+						'count_as': 'clock',
+						'tplate': '%mt%:%s%',
+						'gtzip_name': window.kbmodules.football_standard.titles.timer.title_name,
+						'text_field_name': 'base_ticker',
+						// pad with 2 zeroes
+						'pad': 2,
+					},
+					{
+						'count_as': 'clock',
+						'tplate': '%mt%:%s%',
+						'gtzip_name': window.kbmodules.football_standard.titles.final_scores.title_name,
+						'text_field_name': 'clock',
+						'pad': 2,
+					},
+				],
 			}
 		}
 	})
@@ -9289,14 +10072,31 @@ window.kbmodules.football_standard.timer_fset.builtin.resume_main_timer_from_off
 				// Otherwise - offset is 0 (first round)
 				'offset': offs,
 				'reversed': false,
-				'vmix_fields': [{
-					'count_as': 'clock',
-					'tplate': '%mt%:%s%',
-					'gtzip_name': window.kbmodules.football_standard.titles.timer.title_name,
-					'text_field_name': 'base_ticker',
-					// pad with 2 zeroes
-					'pad': 2,
-				}],
+				// 'vmix_fields': [{
+				// 	'count_as': 'clock',
+				// 	'tplate': '%mt%:%s%',
+				// 	'gtzip_name': window.kbmodules.football_standard.titles.timer.title_name,
+				// 	'text_field_name': 'base_ticker',
+				// 	// pad with 2 zeroes
+				// 	'pad': 2,
+				// }],
+				'vmix_fields': [
+					{
+						'count_as': 'clock',
+						'tplate': '%mt%:%s%',
+						'gtzip_name': window.kbmodules.football_standard.titles.timer.title_name,
+						'text_field_name': 'base_ticker',
+						// pad with 2 zeroes
+						'pad': 2,
+					},
+					{
+						'count_as': 'clock',
+						'tplate': '%mt%:%s%',
+						'gtzip_name': window.kbmodules.football_standard.titles.final_scores.title_name,
+						'text_field_name': 'clock',
+						'pad': 2,
+					},
+				],
 			}
 		}
 	})
@@ -9501,10 +10301,28 @@ window.kbmodules.football_standard.add_score_from_cards_panel = async function(a
 			player.club.logo_path
 		)
 
-		// Set player's surname
+		// Set player's number + surname
 		await window.kbmodules.football_standard.titles.gscore.set_text(
 			'player_name',
-			ksys.strf.params.players.format(player.surname)
+			player.player_num + ' ' + ksys.strf.params.players.format(player.surname)
+		)
+
+		// Set player's surname only
+		await window.kbmodules.football_standard.titles.gscore.set_text(
+			'psurname',
+			ksys.strf.params.players.format(player.surname),
+		)
+
+		// Set player's number only
+		await window.kbmodules.football_standard.titles.gscore.set_text(
+			'pnum',
+			str(player.player_num),
+		)
+
+		// Switch graphics
+		await window.kbmodules.football_standard.titles.gscore.switchImage(
+			'main_bg',
+			window.kbmodules.football_standard.resource_index.side[side].club.switch_val
 		)
 
 		// Set header text
@@ -9782,32 +10600,59 @@ window.kbmodules.football_standard.show_score_summary = async function(){
 		`${score_amt_l} ${score_amt_r}`
 	)
 
+	await window.kbmodules.football_standard.titles.final_scores.set_text(
+		'score_sum_l',
+		score_amt_l || '0',
+	)
+	await window.kbmodules.football_standard.titles.final_scores.set_text(
+		'score_sum_r',
+		score_amt_r || '0',
+	)
+
 
 	// ------------------------------
 	// Show the appropriate amount of fields
 	// ------------------------------
-	await window.kbmodules.football_standard.titles.final_scores.toggle_img('anim_full', false)
-	await window.kbmodules.football_standard.titles.final_scores.toggle_img('anim_half', false)
+	await window.kbmodules.football_standard.titles.final_scores.toggle_img('anim_full', false);
+	await window.kbmodules.football_standard.titles.final_scores.toggle_img('anim_half', false);
 
-	const need_rows = Math.max(score_summary.home.length || 0, score_summary.guest.length || 0).clamp(1, 9);
-	
-	let scores_bg_image = null;
+	const rowTargets = [
+		[
+			'upper_bg',
+			Math.max(score_summary.home.length || 0, score_summary.guest.length || 0).clamp(0, 9),
+		],
+		[
+			'upper_bg_l',
+			Math.max(score_summary.home.length || 0).clamp(0, 9),
+		],
+		[
+			'upper_bg_r',
+			Math.max(score_summary.guest.length || 0).clamp(0, 9),
+		],
+	]
 
-	for (const i of range(need_rows+1)){
-		scores_bg_image = Path(
-			window.kbmodules.football_standard.resources_location.value,
-			'final_scores',
-			`${need_rows - i}.png`
-		)
-		if (scores_bg_image.isFileSync()){
-			break
+
+	for (const [targetLayer, needRows] of rowTargets){
+		// const need_rows = Math.max(score_summary.home.length || 0, score_summary.guest.length || 0).clamp(1, 9);
+
+		let scores_bg_image = null;
+
+		for (const i of range(needRows+1)){
+			scores_bg_image = Path(
+				window.kbmodules.football_standard.resources_location.value,
+				'final_scores',
+				`${needRows - i}.png`
+			)
+			if (scores_bg_image.isFileSync()){
+				break
+			}
 		}
-	}
 
-	window.kbmodules.football_standard.titles.final_scores.set_img_src(
-		'upper_bg',
-		str(scores_bg_image)
-	)
+		window.kbmodules.football_standard.titles.final_scores.set_img_src(
+			targetLayer,
+			str(scores_bg_image)
+		)
+	}
 
 
 	// ------------------------------
@@ -10623,6 +11468,22 @@ window.kbmodules.football_standard.hide_penalty_title = async function(){
 	await tgt_title.overlay_out(2);
 }
 
+window.kbmodules.football_standard.stashPenalties = function(){
+	const penaltyManager = window.kbmodules.football_standard.resource_index.penalty_manager;
+	if (!penaltyManager.complete){
+		ksys.info_msg.send_msg(
+			`Indeterministic result`,
+			'warn',
+			9000
+		);
+	}
+
+	penaltyManager.stash();
+}
+
+window.kbmodules.football_standard.clearStashPenalties = function(){
+	window.kbmodules.football_standard.resource_index.penalty_manager.clearStash();
+}
 
 
 

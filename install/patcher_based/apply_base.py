@@ -99,6 +99,16 @@ def main():
 	shell = win32com.client.Dispatch('WScript.Shell')
 	shortcut = shell.CreateShortCut(shotcut_loc)
 	shortcut.Targetpath = shotcut_target
+	# shortcut.Arguments = '--kbnc'
+	# shortcut.IconLocation = icon
+	# shortcut.WindowStyle = 7
+	shortcut.save()
+
+	shortcut = shell.CreateShortCut(
+		shotcut_loc.replace('KickBoxer3000', 'KickBoxer3000 KBNC SERVER.lnk')
+	)
+	shortcut.Targetpath = shotcut_target
+	shortcut.Arguments = '--kbnc'
 	# shortcut.IconLocation = icon
 	# shortcut.WindowStyle = 7
 	shortcut.save()

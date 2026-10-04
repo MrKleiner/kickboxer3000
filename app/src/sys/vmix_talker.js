@@ -30,13 +30,21 @@ vtalker.create_url = function(rparams=null, with_scheme=false, with_path=true){
 
 
 // Send a command to VMIX HTTP API
-vtalker.talk = async function(rparams=null){
+vtalker.talk = async function(rparams=null, timeout=null){
 	let error_data = null;
+
+	let controller = null;
+	let timeoutId = null;
+
+	if (timeout){
+		controller = new AbortController();
+		timeoutId = setTimeout(() => controller.abort(), timeout || 1500);
+	}
 
 	// Construct and execute the request
 	const response = await fetch(
 		vtalker.create_url(rparams, true),
-		{
+		Object.assign({
 			'headers': {
 				'accept': '*/*',
 				'cache-control': 'no-cache',
@@ -49,11 +57,12 @@ vtalker.talk = async function(rparams=null){
 			'mode': 'cors',
 			'credentials': 'omit',
 			'cache': 'no-store',
-		}
+		}, controller ? {'signal': controller?.signal} : {})
 	).catch(function(err){
 		error_data = err;
 	})
 
+	clearTimeout(timeoutId);
 
 	// If there was an error while executing a response - there's nothing else
 	// to do except stopping the function execution
@@ -83,8 +92,8 @@ vtalker.talk = async function(rparams=null){
 // Simply try connecting to vmix.
 // Returns true if connection went through.
 // Otherwise returns false
-vtalker.ping = async function(){
-	const response = await vtalker.talk({'Function': ''})
+vtalker.ping = async function(timeout=null){
+	const response = await vtalker.talk({'Function': ''}, timeout)
 	if (response != false){
 		return true
 	}else{
@@ -107,19 +116,30 @@ vtalker.project = async function(raw=false) {
 }
 
 
-vtalker.presetFilePath = async function(){
-	const fpathRaw = (await vtalker.project()).querySelector('vmix > preset').textContent.trim();
+// Load the current .vmix file as XML (if any)
+vtalker.presetFilePath = async function(returnRaw=false){
+	// const fpathRaw = (await vtalker.project())?.querySelector?.('vmix > preset').textContent.trim();
+	const fpathRaw = (
+		(await vtalker.project())
+		?.querySelector?.('vmix > preset')
+		?.textContent
+		?.trim?.()
+	)
+
 	if (fpathRaw){
+		if (returnRaw){
+			return fpathRaw
+		}
 		return Path(fpathRaw)
 	}else{
 		return null
 	}
 }
 
+
 vtalker.presetXML = async function(){
 	const presetFilePath = await vtalker.presetFilePath();
-
-	if (!presetFilePath){return null};
+	if (!presetFilePath || !ksys?.KBNClient?.runCMD){return null};
 
 	const msg = await ksys.KBNClient.runCMD('generic.read_file', {
 		'header': {

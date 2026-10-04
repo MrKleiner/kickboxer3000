@@ -5,12 +5,15 @@
 	flex-direction: column;
 	/*background: green;*/
 	flex-grow: 1;
-	padding-bottom: 50px;
+	/*padding-bottom: 50px;*/
 	/*padding-top: 50px;*/
 	/*filter: grayscale(1);*/
 	/*filter: brightness(1.1);*/
 }
 
+[tabid="club_def"]{
+	padding-bottom: 50px;
+}
 
 body.emergency_break
 {
@@ -34,12 +37,12 @@ img[vis_feedback]
 	margin-top: 60px;
 	margin-right: 20px;
 	font-size: 21px;
-	/*font-family: 'ibm_plex';*/
-	font-weight: bold;
+	font-family: 'ibm_plex';
+	/*font-weight: bold;*/
 }
 
 #timer_feedback *{
-	font-family: monospace;
+	font-family: 'ibm_plex';
 }
 
 #timer_feedback_extra
@@ -50,6 +53,30 @@ img[vis_feedback]
 	padding-left: 5px;
 }
 
+#score_feedback{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	padding: 9px;
+	display: flex;
+	position: fixed;
+	top: 0px;
+	right: 0px;
+	margin-top: 60px;
+	margin-right: 190px;
+	font-size: 21px;
+	/*font-family: 'ibm_plex';*/
+	/*font-weight: bold;*/
+}
+
+#score_feedback *{
+	font-family: 'ibm_plex';
+}
+
+#score_feedback .score_feed{
+	padding: 0px 5px 0px 5px;
+}
 
 
 #ticker_service_status
@@ -178,7 +205,12 @@ player.generic_player_list_item .player_role_visfeed{
 	font-family: monospace;
 }
 
-
+player.generic_player_list_item .player_tshirt_color{
+	position: absolute;
+	right: 50px;
+	width: 20px;
+	height: 10px;
+}
 
 
 
@@ -556,6 +588,58 @@ lineup-global-control .lineup_global_ctrl_param label{
 	margin-top: 220px;
 }
 
+.max_focus_enabled{
+	position: fixed;
+	top: 0px;
+	right: 0px;
+	width: -webkit-fill-available;
+	height: -webkit-fill-available;
+	background: black;
+	z-index: 99999;
+
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+}
+
+.player_max_focus{
+	position: fixed !important;
+	z-index: 99999 !important;
+	background: rgb(20, 20, 20) !important;
+	width: 100vw !important;
+	height: 100vh !important;
+	margin: 0px !important;
+}
+
+.max_focus_enabled club-lineup{
+	margin-top: 162px !important;
+	margin-left: 0px !important;
+	height: 78vh !important;
+}
+
+.max_focus_enabled [lineup_list], .max_focus_enabled player-picker{
+	height: 600px !important;
+}
+
+.max_focus_enabled [lineup_list] lineup-pool{
+	overflow-y: scroll !important;
+}
+
+#team_lineup club-lineup .focus_toggle{
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	margin: 20px;
+}
+
+#team_lineup club-lineup .focus_toggle:hover{
+	outline: 2px solid white;
+}
+
+#team_lineup club-lineup .focus_toggle:active{
+	outline: 3px solid lime;
+}
+
 /*
 -------------------
  Side indicator
@@ -766,6 +850,8 @@ lineup-color-picker .text_color_switch{
 
 
 
+
+
 /*
 ===============================================
                 Field layout
@@ -915,6 +1001,7 @@ lineup-color-picker .text_color_switch{
 	padding: 0px;
 	font-size: 12px;
 	width: max-content;
+	padding-left: 2px;
 }
 
 #teams_layouts field-layout field-layout-grid player.is_dragging{
@@ -1237,8 +1324,8 @@ card vis feedback on list items
 }
 
 [tabid="replacement"] .subs_stack .subs_stack_ctrl vmixbtn{
-	width: auto;
-	height: 100px;
+	width: 200px;
+	height: 70px;
 	font-size: 24px;
 }
 
@@ -2631,14 +2718,37 @@ tab.tab_hidden
 	top: 50px;
 }
 
-
-
 #replacement #replacement_buttons vmixbtn
 {
 	padding: 10px;
 	width: 200px;
 	height: 200px;
 	font-size: 25px;
+}
+
+
+
+
+#replacement_table_buttons
+{
+	position: absolute;
+	display: flex;
+	flex-grow: 0;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	width: 400px;
+	top: 550px;
+	left: calc(50% - 200px);
+	z-index: 500;
+}
+
+#replacement_table_buttons vmixbtn
+{
+	padding: 10px;
+	font-size: 25px;
+	height: 60px !important;
+	width: 150px !important;
 }
 
 
@@ -3260,6 +3370,19 @@ general-cfg-ctrl .prm_preset_btn{
 	width: 100%;
 }
 
+#penalty_buttons{
+	width: 50vw;
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+
+.stash_penalties_btn{
+	margin-left: 200px;
+	padding: 10px;
+}
+
 /*
 !~~ #penalty_panel .penalty_pool
 */
@@ -3277,6 +3400,15 @@ general-cfg-ctrl .prm_preset_btn{
 	width: 100%;
 
 	padding: 20px 0px 20px 0px;
+}
+
+#penalty_panel .penalty_pool .pool_stash{
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+	font-family: 'ibm_plex';
+	font-size: 20px;
 }
 
 
@@ -3756,8 +3888,29 @@ player-param option{
 	outline: 2px solid lime;
 }
 
+
+
+#weather_ctrl.inverted #weather_clouds img:hover{
+	outline: 2px solid black;
+}
+
+#weather_ctrl.inverted #weather_clouds img:active{
+	outline: 2px solid #a200ff;
+}
+
+
+
 .weather_clouds_active{
 	outline: 2px solid cyan;
+}
+
+#weather_ctrl.inverted .weather_clouds_active{
+	outline: 2px solid #930001;
+}
+
+
+#weather_ctrl.inverted #weather_clouds img, #weather_ctrl.inverted #weather_params img{
+	filter: invert(1);
 }
 
 

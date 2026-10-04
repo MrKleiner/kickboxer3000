@@ -4,6 +4,50 @@ const msgsys = {};
 const MSG_POOL_DOM = qsel('hintsys-bar #hintsys_bar_msgs');
 
 
+const animateLinear = function({
+	from = 0,
+	to = 1,
+	duration = 1000,
+	onUpdate = () => {},
+	onComplete = () => {}
+} = {}) {
+	let start = performance.now();
+	let rafId = null;
+	let cancelled = false;
+
+	function frame(now) {
+		if (cancelled) return;
+		let t = (now - start) / duration;
+		if (t <= 0) t = 0;
+		if (t >= 1) t = 1;
+
+		const value = from + (to - from) * t; // linear interpolation
+		onUpdate(value);
+
+		if (t < 1) {
+			rafId = requestAnimationFrame(frame);
+		} else {
+			onComplete(value);
+		}
+	}
+
+	// handle zero/negative duration immediately
+	if (duration <= 0) {
+		onUpdate(to);
+		onComplete(to);
+		return { cancel: () => {} };
+	}
+
+	rafId = requestAnimationFrame(frame);
+
+	return {
+		cancel: () => {
+			cancelled = true;
+			if (rafId) cancelAnimationFrame(rafId);
+		}
+	};
+}
+
 
 // Todo: the magic circle timing is half-broken
 // It's not broken. It's simply impossible to trigger a function
@@ -72,7 +116,7 @@ const MagicCircle = class{
 		}
 	}
 
-	async launch_anim(self, dur=500){
+	async __launch_anim(self, dur=500){
 		const step = 1;
 		for (const angle of range(360)){
 			// self.tgt_path.setAttribute('d', describeArc(0, 0, 100-10, 0, angle.clamp(0, 360)));
@@ -82,6 +126,24 @@ const MagicCircle = class{
 				break
 			}
 		}
+	}
+
+	async launch_anim(self, dur=500){
+		const [animPromise, animResolve] = ksys.util.flatPromise();
+
+		animateLinear({
+			'from':     0,
+			'to':       360,
+			'duration': dur,
+			'onUpdate': function(val){
+				self.tgt_path.setAttribute(
+					'd', describeArc(0, 0, 100-10, 0, val.clamp(0, 360))
+				);
+			},
+			'onComplete': animResolve,
+		})
+
+		await animPromise;
 	}
 }
 

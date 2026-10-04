@@ -1,0 +1,109 @@
+
+
+common-util{
+	width: 100%;
+}
+
+
+[tabid='visual_basic']{
+	padding-top: 55px;
+	display: flex;
+	width: 100%;
+}
+
+.visual_basic_main{
+	height: calc(100vh - 140px);
+}
+
+.visual_basic_main .columns{
+	height: 100%;
+}
+
+.visual_basic_main .inputs_list,
+.visual_basic_main .tgt_input_ctrl
+{
+	height: 99% !important;
+}
+
+
+[tabid='properties']{
+	display: flex;
+	flex-direction: column;
+}
+
+[tabid='properties'] > *{
+	margin: 0px;
+	margin-left: 50px;
+}
+
+
+[tabid='properties'] > *:not(:first-child){
+	margin-top: 65px;
+}
+
+
+[tabid='psych_ward']{
+	display: flex;
+	flex-direction: column;
+}
+
+
+#gtzip_selector{
+	width: 600px;
+	height: 800px;
+	margin-left: 50px;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	padding: 10px;
+}
+
+
+#gtzip_selector.drag_hover{
+	outline: 5px dashed lime;
+}
+
+
+#gtzip_selector .title_preview{
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	height: 100px;
+}
+
+#gtzip_selector .title_preview:not(:first-child){
+	margin-top: 10px;
+}
+
+#gtzip_selector .title_preview img{
+	height: 100%;
+	width: 200px;
+}
+
+
+#gtzip_actions{
+	display: flex;
+	flex-direction: column;
+	margin-left: 50px;
+	padding: 0px 10px 10px 10px;
+}
+
+#define_wipe, #define_switch, #define_text_switch{
+	display: flex;
+	flex-direction: column;
+}
+
+#define_wipe input, #define_switch input, #define_text_switch input{
+	padding: 10px;
+}
+
+#define_wipe sysbtn, #define_switch sysbtn, #define_text_switch sysbtn{
+	margin-top: 15px;
+}
+
+#define_switch, #define_text_switch {
+	margin-top: 20px;
+}
+
+#gtzip_selector .selected{
+	outline: 2px solid lime;
+}

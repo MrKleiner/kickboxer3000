@@ -9,6 +9,8 @@ const crypto_em = require('crypto');
 const AdmZip = require('adm-zip');
 const fs = require('fs');
 const child_proc = require('child_process');
+const sZip = require('node-7z');
+const { path7za } = require('7zip-bin');
 
 
 // Rapid transit IPC pipe
@@ -283,6 +285,47 @@ const downloadFFMPEG = async function(params){
 	await dlFilepath.unlink();
 }
 
+const downloadImageMagick = async function(params){
+	return new Promise(async function(resolve, reject){
+		console.log('Downloading ImageMagick...');
+
+		const targetDir = Path(params.targetDir);
+		fs.rmSync(targetDir.toString(), {
+			recursive: true,
+			force: true,
+		});
+
+		fs.mkdirSync(targetDir.toString(), {
+			recursive: true
+		});
+
+		const dlFilepath = targetDir.join('dl.7z');
+
+		await dlFileProgressive({
+			'srcURL': 'https://github.com/ImageMagick/ImageMagick/releases/download/7.1.2-27/ImageMagick-7.1.2-27-portable-Q16-HDRI-x64.7z',
+			'targetFilePath': dlFilepath,
+			'dlProgressCallback': params.dlProgressCallback,
+		});
+
+
+		const archiveStream = sZip.extractFull(dlFilepath.toString(), targetDir.toString(), {
+			$bin: path7za,
+		});
+
+		archiveStream.on('end', async function(){
+			console.log('Done extracting ImageMagick')
+			await dlFilepath.unlink();
+			resolve(true);
+		})
+
+		archiveStream.on('error', async function(err){
+			console.erorr(err);
+			reject(err);
+			await dlFilepath.unlink();
+		})
+	});
+}
+
 
 const runProc = async function(bin_path, params, pipe_data, buf_only=false){
 	const text_decoder = new TextDecoder();
@@ -352,6 +395,7 @@ module.exports = {
 	isDev,
 	dlFileProgressive,
 	downloadFFMPEG,
+	downloadImageMagick,
 	runProc,
 }
 

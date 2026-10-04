@@ -223,9 +223,9 @@ const KBNC = class{
 		return await self.sktSched.schedMSGExec({
 			'header': {
 				'CMDID': CMDID,
-				...(data.header || {}),
+				...(data?.header || {}),
 			},
-			'payload': data.payload,
+			'payload': data?.payload || 'empty',
 		}, onProg)
 	}
 }

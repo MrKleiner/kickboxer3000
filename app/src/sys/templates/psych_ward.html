@@ -1,7 +1,7 @@
 
 <template id="editor">
-	<div class="psych_ward_editor" kbhint="ብቸኛው የባዶነት ብርድ የንስሐ ጊዜ አብቅቷል፣ ምክንያቱም ኃጢአታችሁ ከማንኛውም ክፉ ተልእኮ ይበልጣል። የልጅነት ስቃይ ሊሆን ይችላል ነገርግን አጋንንቶቻችንን መምረጥ አንችልም። ለዓለማት ታላላቅ ጌቶች ለሊዛርዶች።" regular_box>
-		<div class="psych_ward_header">
+	<div class="psych_ward_editor" regular_box>
+		<div class="psych_ward_header" kbhint="ብቸኛው የባዶነት ብርድ የንስሐ ጊዜ አብቅቷል፣ ምክንያቱም ኃጢአታችሁ ከማንኛውም ክፉ ተልእኮ ይበልጣል። የልጅነት ስቃይ ሊሆን ይችላል ነገርግን አጋንንቶቻችንን መምረጥ አንችልም። ለዓለማት ታላላቅ ጌቶች ለሊዛርዶች።">
 			<div class="durka">ДУРКА</div>
 			<img src="./assets/psych_ward.webp">
 		</div>
@@ -10,16 +10,27 @@
 			<input type="text" class="remote_dir" value="/" placeholder="Can NOT be empty" onchange_vis_feed>
 		</div>
 		<div class="psych_ward_cfg_item">
-			<div class="cfg_label">Local</div>
+			<div class="cfg_label">Titles Dir</div>
 			<input type="text" class="local_dir" placeholder="CAN be empty" onchange_vis_feed>
 		</div>
-		<sysbtn class="install_fonts" kbhint="Install used fonts onto VMIX PC">Install Fonts</sysbtn>
-		<sysbtn class="pack_fonts" kbhint="Pack used fonts into .gtz files">Pack Fonts</sysbtn>
-		<sysbtn class="hard_reload_all" kbhint="Hard reload all the specified titles">Ballistic Reload All</sysbtn>
-		<sysbtn class="redraw" kbhint="Redraw titles from the list">Redraw</sysbtn>
-		<sysbtn class="check_presence_all" kbhint="Check whether the target titles are present in VMIX and local PC">Check Presence All</sysbtn>
-		<sysbtn class="render_hires_previews">Render Hires Previews</sysbtn>
-		<textarea placeholder="Gtzip names without .gtzip extension" class="flist" onchange_vis_feed></textarea>
+
+		<div class="psych_ward_actions">
+			<div class="psych_ward_btns">
+				<sysbtn class="install_fonts" kbhint="Install used fonts onto VMIX PC">Install Fonts</sysbtn>
+				<sysbtn class="pack_fonts" kbhint="Pack used fonts into .gtz files">Pack Fonts</sysbtn>
+				<sysbtn class="hard_reload_all" kbhint="Hard reload all the specified titles">Ballistic Reload All</sysbtn>
+				<sysbtn class="redraw" kbhint="Redraw titles from the list">Redraw</sysbtn>
+				<sysbtn class="check_presence_all" kbhint="Check whether the target titles are present in VMIX and local PC">Check Presence All</sysbtn>
+				<sysbtn class="render_hires_previews">Render Hires Previews</sysbtn>
+				<sysbtn class="check_fonts">Check Fonts (LAGS VMIX)</sysbtn>
+			</div>
+
+			<!-- <textarea placeholder="Gtzip names without .gtzip extension" class="flist" onchange_vis_feed></textarea> -->
+			<div class="flist"></div>
+
+			<div class="font_check" subtle_box></div>
+		</div>
+
 		<div class="psych_ward_viewer">
 			<div class="psych_ward_results" subtle_box></div>
 			<div class="title_thumbnail">
@@ -28,6 +39,7 @@
 					<div class="anims"></div>
 					<div class="phantom"></div>
 				</div>
+				<div class="img_sequence_facts" regular_box></div>
 			</div>
 		</div>
 	</div>
@@ -37,6 +49,11 @@
 <template id="title_unit">
 	<div class="psych_ward_title" regular_box>
 		<img src="./assets/psych_ward.webp" class="preview_img" contain>
+		<div class="presence_icons">
+			<img contain class="presence vmix kbsys_hidden_opacity" src="./assets/vmix_icon.png">
+			<img contain class="presence pc kbsys_hidden_opacity" src="./assets/desktop_icon.svg">
+			<img contain class="presence wipe kbsys_hidden_opacity" src="./assets/playing_cards.svg">
+		</div>
 		<div class="title_data">
 			<div class="title_name"></div>
 			<div class="title_ctrl" flex_row>
@@ -45,24 +62,30 @@
 					class="hard_reload"
 				>Ballistic Reload</sysbtn>
 				<sysbtn class="edit_in_gtz_designer kbsys_hidden">Edit</sysbtn>
+				<sysbtn class="unpack_as_archive">Unpack</sysbtn>
 			</div>
-		</div>
-		<div class="presence_icons">
-			<img contain class="presence vmix kbsys_hidden_opacity" src="./assets/vmix_icon.png">
-			<img contain class="presence pc kbsys_hidden_opacity" src="./assets/desktop_icon.svg">
 		</div>
 	</div>
 </template>
 
 
+<template id="missing_font_title">
+	<div class="missing_font_title">
+		<div class="label" selectable></div>
+		<div class="font_list"></div>
+	</div>
+</template>
 
 
 
+<template id="missing_font_instance">
+	<div selectable class="missing_font_instance"></div>
+</template>
 
 
-
-
-
+<template id="missing_fonts_log_entry">
+	<div class="missing_fonts_log_entry"></div>
+</template>
 
 
 

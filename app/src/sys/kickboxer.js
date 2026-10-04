@@ -48,6 +48,12 @@ const http_em = require('http');
 // Electron's crypto module
 const crypto_em = require('crypto');
 
+// UDP discovery shite
+const Bonjour = require('bonjour');
+
+// python fnmatch
+const micromatch = require('micromatch');
+
 // Subprocess like in python
 // const { spawn } = require('child_process')
 const { spawn, execFile , execFileSync } = require('child_process')
@@ -138,10 +144,12 @@ const ksys = {
 		isDev: function(){
 			return app_root.join('isdev.fuck').isFileSync();
 		},
-		cls_pwnage: require('./sys/class_pwnage.js'),
-		str_ops:    require('./sys/string_ops.js'),
-		'Path':     Path,
+		cls_pwnage:     require('./sys/class_pwnage.js'),
+		str_ops:        require('./sys/string_ops.js'),
+		'Path':         Path,
 		color_svg_dict: {},
+		winPipePath:    '//./pipe/kickboxer3000winpipe'.replaceAll('/', '\\'),
+
 		// translit: require('./sys/transliteration.js'),
 	},
 	ticker:         require('./sys/ticker.js'),
@@ -191,7 +199,7 @@ const vmix = {
 
 
 const long_name = 'Grzegorz Brzęczyszczykiewicz';
-
+const longTitle = 'Chrząszczyżewoszyce powiat Łękołody';
 
 
 // ===================================
@@ -236,13 +244,25 @@ function close_warnings()
 //  global listener binds
 // ---------------
 document.addEventListener('mousemove', evt => {
-	ksys.binds?.mousemove?.(evt)
+	ksys.binds?.mousemove?.(evt);
 });
 document.addEventListener('mousedown', evt => {
-	ksys.binds?.mousedown?.(evt)
+	ksys.binds?.mousedown?.(evt);
 });
 document.addEventListener('mouseup', evt => {
-	ksys.binds?.mouseup?.(evt)
+	ksys.binds?.mouseup?.(evt);
+});
+document.addEventListener('keydown', evt => {
+	if (!ksys.binds?.keydown){return};
+	for (callback of ksys.binds.keydown.values()){
+		try{callback(evt)}catch(e){console.error(e)};
+	}
+});
+document.addEventListener('keyup', evt => {
+	if (!ksys.binds?.keyup){return};
+	for (callback of ksys.binds.keyup.values()){
+		try{callback(evt)}catch(e){console.error(e)};
+	}
 });
 
 
@@ -269,6 +289,13 @@ ksys.util.clamp = function(num, min, max) {
       : num
 }
 
+
+// -------------------------
+//  Round a float number
+// -------------------------
+ksys.util.roundFloat = function(targetFloat, amt=3){
+	return Number(targetFloat.toFixed(amt));
+}
 
 // -------------------------
 //          eval xml
@@ -1075,7 +1102,10 @@ const sys_load = function(nm, save_state=true)
 	ksys.audio_mixer.m_init()
 
 	// wipe binds
-	ksys.binds = {};
+	ksys.binds = {
+		'keydown': new Map(),
+		'keyup': new Map(),
+	};
 
 	// images are not draggable by default
 	// Todo: there's a chromium-only CSS property, that does this.
@@ -1149,7 +1179,7 @@ async function app_init()
 	ksys.pgview.reload()
 
 	// ping vmix
-	const reach = await vmix.talker.ping()
+	const reach = await vmix.talker.ping(1500);
 
 	// modkey hints
 	// todo: this is obsolete
@@ -1167,14 +1197,68 @@ async function app_init()
 	if (reach == false){
 		// display an error
 		$('#welcome_screen_title_2').html(
-			`Unable to reach VMIX at <addr>${ksys.util.str_ops.validate(ctx_cache.vmix_ip)}</addr> : <addr>${ksys.util.str_ops.validate(ctx_cache.vmix_port)}</addr>. Please enter a valid ip/port to proceed or ensure that the networking is not malfunctioning (aka rubbish bootleg firewalls, wrong LAN, etc...) and VMIX is running with Web Controller ONN.`
-		)
-		$('startpage').append(`
-			<div id="welcome_enter_info">
-				<input style="color: white" type="text" placeholder="IP (absolute)" ip>:<input style="color: white" type="number" value="8088" placeholder="Port" port>
-			</div>
-			<sysbtn style="margin-top: 10px" onclick="kbmodules.starting_page.save_creds()" id="welcome_apply_creds">Apply</sysbtn>
-		`)
+			`Unable to reach VMIX at <addr>${ksys.util.str_ops.validate(ctx_cache.vmix_ip)}</addr> : <addr>${ksys.util.str_ops.validate(ctx_cache.vmix_port)}</addr>.<br>Please enter a valid ip/port to proceed or ensure that the networking is not malfunctioning (aka rubbish bootleg firewalls, wrong LAN, etc...) and VMIX is running with Web Controller ONN.`
+		);
+		// $('startpage').append(`
+		// 	<div id="welcome_enter_info">
+		// 		<input style="color: white" type="text" placeholder="IP (absolute)" ip>:<input style="color: white" type="number" value="8088" placeholder="Port" port>
+		// 	</div>
+		// 	<sysbtn style="margin-top: 10px" onclick="kbmodules.starting_page.save_creds()" id="welcome_apply_creds">Apply</sysbtn>
+		// `);
+
+		const tplates = ksys.tplates.sys_tplates.welcome;
+
+		const selectorDOM = tplates.addr_selector({
+			'ip_input': '#welcome_enter_info input',
+			'discovery_list': '#discovery_list',
+		})
+
+		$('startpage').append(selectorDOM.root);
+
+		const bnjService = new Bonjour();
+		const bnjBrowser = bnjService.find({
+			type: 'kb3000-vmix-48c6-9d28-ed8e95902579',
+		});
+
+		bnjBrowser.on('up', function(service){
+			console.log('Found service', service);
+
+			// Remove existing entry
+			selectorDOM
+			.index
+			.discovery_list
+			.querySelector(`[referer="${service.referer.address}"]`)
+			?.remove?.();
+
+			// Create entry
+			const entryDOM = tplates.discovery_entry({
+				'referrer_ip': '.referrer_ip',
+				'addr_list': '.addr_list',
+			})
+
+			entryDOM.root.setAttribute('referer', service.referer.address);
+
+			// entryDOM.index.referrer_ip.textContent = service.referer.address + '\n' + service.host;
+			entryDOM.index.referrer_ip.textContent = service.host + '\n' + service.referer.address;
+
+			// Create IP array of that entry
+			for (const addr of service.addresses){
+				const addrDOM = tplates.discovery_addr({
+					'addr': '.discovery_addr',
+				})
+				addrDOM.index.addr.textContent = addr;
+
+				entryDOM.index.addr_list.append(addrDOM.root);
+
+				addrDOM.index.addr.onclick = function(){
+					selectorDOM.index.ip_input.value = addrDOM.index.addr.textContent;
+				}
+			}
+
+			selectorDOM.index.discovery_list.append(entryDOM.root);
+
+		})
+
 		return
 	}else{
 		// add ip:port to the window title
@@ -1279,6 +1363,24 @@ ipcRenderer.on('kb.ffmpeg.dl.prog', function(evt, data){
 	}
 
 	dlReportDOM.textContent = `FFMPEG DL: ${str(int(data * 100)).padEnd(3)}%`;
+})
+
+
+
+ipcRenderer.on('kb.img_magick.dl.running', function(evt, state){
+	if (!state){
+		qsel('#img_magick_dl_prog')?.remove?.();
+	}
+})
+
+ipcRenderer.on('kb.img_magick.dl.prog', function(evt, data){
+	let dlReportDOM = qsel('#img_magick_dl_prog');
+	if (!dlReportDOM){
+		dlReportDOM = ksys.tplates.sys_tplates.general.img_magick_dl_prog({}).root;
+		qsel('#hintsys_bar_msgs').append(dlReportDOM);
+	}
+
+	dlReportDOM.textContent = `ImageMagick DL: ${str(int(data * 100)).padEnd(3)}%`;
 })
 
 

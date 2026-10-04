@@ -10,8 +10,23 @@ class szip:
 		self.exe = Path(exe_loc)
 
 
-	def pack(self, input_data, output_loc, exclude=None, compression_rate=9, chunk_size=None, dict_size='12m', word_size='273', block_size='2g', append_data=False, open_as=None, echo=False):
+	def pack(
+		self,
+		input_data,
+		output_loc,
+		exclude=          None,
+		compression_rate= 9,
+		chunk_size=       None,
+		dict_size=        '12m',
+		word_size=        '273',
+		block_size=       '2g',
+		append_data=      False,
+		open_as=          None,
+		echo=             True,
+		exclude_dirs=     None
+	):
 		exclude = exclude or []
+		exclude_dirs = exclude_dirs or []
 		zip_prms = [
 			# executable
 			str(self.exe),
@@ -35,7 +50,7 @@ class szip:
 		])
 
 		# include paths
-		if isinstance(input_data, list):
+		if isinstance(input_data, (list, tuple)):
 			for incl in input_data:
 				zip_prms.append(str(incl))
 		else:
@@ -43,8 +58,13 @@ class szip:
 
 		# exclude paths
 		for excl in exclude:
-			excl = excl.replace('/', '\\')
+			excl = excl.replace('/', '\\').strip('\\')
 			zip_prms.append(f"""-xr!{excl}""")
+
+		# exclude dirs
+		for excl in exclude_dirs:
+			excl = excl.replace('/', '\\').strip('\\')
+			zip_prms.append(f"""-x!{excl}""")
 
 		if not append_data:
 			Path(output_loc).unlink(missing_ok=True)

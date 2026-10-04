@@ -1,7 +1,7 @@
 <div id="football_standard">
 
 	<tabsys>
-		<sys-tab match_id="sliders">Sliders</sys-tab>
+		<sys-tab match_id="audio_mixer">Audio Mixer</sys-tab>
 		<sys-tab match_id="quick_input">Quick Input</sys-tab>
 		<sys-tab match_id="visual_basic">Visual Basic</sys-tab>
 		<sys-tab match_id="fucking_docs">Other</sys-tab>
@@ -27,9 +27,9 @@
 		<div id="ticker_service_status_indicator"></div>
 	</div>
 
-	<tab tabid="sliders" tabname="Sliders">
-		<vmixbtn onclick="window.kbmodules.futsal_advanced.VMIXTCP_VolumeMirror()">RESYNC</vmixbtn>
-		<div id="volume_sliders_body"></div>
+	<tab tabid="audio_mixer" tabname="Audio Mixer" style="padding-top: 55px;">
+		<audio-mixer-mirror></audio-mixer-mirror>
+		<div id="volume_ctrl_debug" regular_box></div>
 	</tab>
 
 	<tab class="tab_hidden" tabid="visual_basic">
@@ -1200,7 +1200,7 @@
 			<vmixbtn seq_info="vis_hide" btname="hide_team_stats" onclick="window.kbmodules.futsal_advanced.hide_team_stats()">Hide stats</vmixbtn>
 		</div>
 
-		<div id="penalty_panel" class="kbsys_hidden">
+		<div id="penalty_panel">
 			<div id="penalty_panel_header">Penalties</div>
 			<div id="penalty_pools"></div>
 

@@ -1,10 +1,11 @@
+const fastq = require('fastq');
 
 
 ICON_DICT = Object.freeze({
 	'image':           './assets/image_icon.svg',
 	'gt':              './assets/gt_title_icon.svg',
 	'video':           './assets/video_icon.svg',
-	'videolist':       './assets/playlist_icon.svg',
+	'videolist':       './assets/playlist_icon.png',
 	'capture':         './assets/camera_icon.svg',
 	'ndi':             './assets/ndi_icon.svg',
 	'desktopcapture':  './assets/desktop_icon.svg',
@@ -13,6 +14,13 @@ ICON_DICT = Object.freeze({
 	'browser':         './assets/browser_icon.svg',
 	'replay':          './assets/replay_icon.svg',
 	'replaypreview':   './assets/replay_preview_icon.svg',
+	'audio':           './assets/microphone_icon.png',
+	'srt':             './assets/satellite_icon.png',
+	'audiofile':       './assets/audio_file_icon.svg',
+	'photos':          './assets/slideshow_icon.svg',
+	'imagesequence':   './assets/image_sequence_icon.svg',
+	'telestrator':     './assets/telestrator_icon.png',
+	'videodelay':      './assets/hourglass_icon.png',
 });
 
 
@@ -392,7 +400,7 @@ const VisualBasicItem = class{
 		if (self.input_type == 'gt'){
 			const text_field_array = new Set();
 			for (const field_data of input_xml.children){
-				if (field_data.getAttribute('name').endsWith('.Text')){
+				if (field_data.getAttribute('name')?.endsWith?.('.Text')){
 					const text_field = new VisualBasicTextField(self, {
 						'val': field_data.textContent,
 						'field_name': field_data.getAttribute('name'),
@@ -421,7 +429,7 @@ const VisualBasicItem = class{
 		}
 	}
 
-	async redraw_preview(self){
+	async _redraw_preview(self){
 		try{
 			const kbnc = ksys.kbnc.KBNC.sysData().currentClient;
 			if (!kbnc?.enabled){return};
@@ -446,7 +454,31 @@ const VisualBasicItem = class{
 		}catch(e){
 			self.nerr('Failed to redraw dynamic preview:', e);
 		}
+	}
 
+	async redraw_preview(self){
+		try{
+			const kbnc = ksys.kbnc.KBNC.sysData().currentClient;
+			if (!kbnc?.enabled){return};
+
+			await self.vb.previewRedrawSched.push('sex');
+
+			await (await kbnc.runCMD('winpipe.create_net')).result();
+
+			await vmix.talker.talk({
+				'Function': 'SnapshotInput',
+				'Value':    ksys.util.winPipePath,
+				'Input':    self.visual_name,
+			});
+
+			self.dom_ctrl.index.preview.src = URL.createObjectURL(
+				new Blob([
+					(await (await kbnc.runCMD('winpipe.catch')).result()).payload
+				])
+			);
+		}catch(e){
+			self.nerr('Failed to redraw dynamic preview:', e);
+		}
 	}
 }
 
@@ -478,6 +510,10 @@ const VisualBasic = class{
 		self._dom = null;
 
 		self.inputs = new Set();
+
+		self.previewRedrawSched = fastq.promise(async function(){
+			await ksys.util.sleep(69);
+		}, 1);
 	}
 
 	$dom(self){

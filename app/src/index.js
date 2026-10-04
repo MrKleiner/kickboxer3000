@@ -44,8 +44,16 @@ const kbn_util = require('./kbn/kbn_util.js');
 const kbnc = require('./kbn/kbn_connect.js');
 const Path = kbn_util.Path;
 
+// UDP discovery/announce
+const Bonjour = require('bonjour');
+
+// HTTP Server Electron module
+const HTTPServerNPM = require('http');
+
 // AT-AT Node
 const atat_n = require('./kbn/node_atat.js');
+
+const net = require('net');
 
 // App's root dir
 const KB_ROOT = Path(__dirname);
@@ -153,6 +161,10 @@ const KickBoxer3000 = class{
 
 	APP_ROOT = KB_ROOT;
 
+	BONJOUR_ID = 'kb3000-vmix-48c6-9d28-ed8e95902579';
+
+	WINPIPE_PATH = '//./pipe/kickboxer3000winpipe'.replaceAll('/', '\\');
+
 	constructor(){
 		const self = kbn_util.nprint(cls_pwnage.remap(this));
 
@@ -169,6 +181,10 @@ const KickBoxer3000 = class{
 		// Basic VMIX shit
 		self.vmix = new BasicVMIX(self);
 		self.vmix.init_ipc();
+
+		self.winPipePendingPromise = null;
+		self.winPipePendingPromiseResolve = null;
+		self.winPipePendingPromiseReject = null;
 	}
 
 	init_ipc(self){
@@ -283,6 +299,9 @@ const KickBoxer3000 = class{
 	async kbnc_start(self){
 		if (!self.kbnc){
 			self.kbnc = new kbnc.KBNConnectSocketServer(self);
+
+			// UDP discovery shit
+			self.announceBonjour();
 		}
 
 		return await self.kbnc.maintainConnection();
@@ -292,6 +311,15 @@ const KickBoxer3000 = class{
 		self?.main_window?.webContents?.postMessage?.(
 			'kb.ffmpeg.dl.running',
 			!!self.downloadingFFMPEG
+		);
+
+		return null
+	}
+
+	announceImageMagickStatus(self){
+		self?.main_window?.webContents?.postMessage?.(
+			'kb.img_magick.dl.running',
+			!!self.downloadingImageMagick
 		);
 
 		return null
@@ -380,6 +408,108 @@ const KickBoxer3000 = class{
 		self.announce_ffmpeg_status();
 	}
 
+	async ensureImageMagick(self){
+		self.nprint('Ensuring ImageMagick');
+
+		const imageMagickDir = KB_ROOT.join('bins', 'img_magick');
+
+		const imageMagickPresent = (
+			await imageMagickDir.join('magick.exe').isFile() &&
+			await imageMagickDir.join('composite.exe').isFile()
+		)
+
+		self.nprint('ImageMagick presence:', imageMagickPresent);
+
+		if (imageMagickPresent){return};
+
+		self.downloadingImageMagick = true;
+
+		while (true){
+			try{
+				await kbn_util.downloadImageMagick({
+					'targetDir': imageMagickDir,
+					'dlProgressCallback': function(prog){
+						self.main_window?.webContents?.postMessage?.(
+							'kb.img_magick.dl.prog',
+							prog,
+						);
+					}
+				})
+
+				break
+			}catch(e){
+				self.nprint('ImageMagick DL Error:', e);
+				console.trace(e);
+			}
+
+			await kbn_util.sleep(2000);
+		}
+
+		self.downloadingImageMagick = false;
+
+		self.announceImageMagickStatus();
+	}
+
+	announceBonjour(self){
+		const bnj = new Bonjour();
+		const HTTPServerProbe = HTTPServerNPM.createServer(function(req, res){
+			res.end('pootis');
+		});
+
+		HTTPServerProbe.listen(0, function(){
+			// const port = HTTPServerProbe.address().port;
+			console.log(
+				'Reserved a port for UDP discovery:',
+				HTTPServerProbe.address().port
+			);
+
+			const bnj = new Bonjour();
+
+			// bnj.publish({ name: 'JourBoob', type: 'boobjour', port: port, txt: { id: 'instance-1' } })
+			bnj.publish({
+				'name': 'Kickboxer3000 VMIX location',
+				'type': self.BONJOUR_ID,
+				'port': HTTPServerProbe.address().port,
+				'txt': {
+					'sandwich': 'dispenser',
+				},
+			})
+		})
+	}
+
+	// The weird "\\.\pipe\pootis" windows "pipes" shit
+	async launchWinPipeServer(self){
+		if (self.winPipeServer){
+			self.nprint('Tried launching winpipe server twice');
+		}
+
+		const [serverStartPromise, serverStartPResolve] = kbn_util.flatPromise();
+
+		self.winPipeServer = net.createServer(function(skt){
+			const chunks = [];
+
+			skt.on('data', function(chunkBuffer){
+				chunks.push(chunkBuffer);
+			});
+
+			skt.on('end', function(chunkBuffer){
+				const data = Buffer.concat(chunks);
+				self.nprint('Received pipe data:', data);
+
+				self.winPipePendingPromiseResolve?.(
+					data
+				);
+			});
+		});
+
+		self.winPipeServer.listen(self.WINPIPE_PATH, function(){
+			self.nprint('Launched winpipe server');
+			serverStartPResolve(true);
+		});
+
+		return serverStartPromise;
+	}
+
 	// Some essential shit
 	run(self){
 		// What to do when all the browser windows got closed/crashed/whatever
@@ -409,7 +539,7 @@ const KickBoxer3000 = class{
 		// This instance does the following if another instance is opened
 		electron.app.on('second-instance', function(event, argv, workDir){
 			self.nprint('Second instance attempted. Reusing this one');
-			
+
 			// important todo: this is a temp fix
 			if (process.argv.includes('--kbnc')){
 				electron.dialog.showMessageBoxSync({
@@ -456,7 +586,14 @@ const KickBoxer3000 = class{
 		// Create tray menu
 		self.create_tray();
 
+		// Ensure ffmpeg is present on this PC
 		self.ensure_ffmpeg();
+
+		// Ensure image magick is present
+		self.ensureImageMagick();
+
+		// Launch Windows pipes server
+		self.launchWinPipeServer();
 	}
 }
 
@@ -508,5 +645,3 @@ const main = async function(){
 
 
 electron.app.on('ready', main);
-
-

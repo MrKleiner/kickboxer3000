@@ -1,0 +1,76 @@
+<common-util>
+	<tabsys>
+		<sys-tab match_id="properties">Properties</sys-tab>
+		<sys-tab match_id="quick_input">Quick Input</sys-tab>
+		<sys-tab match_id="visual_basic">Visual Basic</sys-tab>
+		<sys-tab match_id="audio_mixer">Audio Mixer</sys-tab>
+		<sys-tab match_id="psych_ward">Psych Ward</sys-tab>
+		<sys-tab match_id="gtzip_util">GTZIP Util</sys-tab>
+	</tabsys>
+
+	<tab tabid="properties">
+		<http-resource-proxy-control></http-resource-proxy-control>
+
+		<kbnc-ctrl></kbnc-ctrl>
+	</tab>
+
+	<tab tabid="quick_input">
+		<remote-inputs></remote-inputs>
+	</tab>
+
+	<tab tabid="visual_basic">
+		<visual-basic></visual-basic>
+	</tab>
+
+	<tab tabid="audio_mixer" tabname="Audio Mixer" style="padding-top: 55px;">
+		<audio-mixer-mirror></audio-mixer-mirror>
+		<div id="volume_ctrl_debug" regular_box></div>
+	</tab>
+
+	<tab tabid="psych_ward">
+		<psych-ward></psych-ward>
+	</tab>
+
+	<tab tabid="gtzip_util">
+		<div id="gtzip_selector" regular_box></div>
+
+		<div id="gtzip_actions">
+			<div id="define_wipe" regular_box>
+				<input type="file">
+				<sysbtn onclick="window.kbmodules.common_util.defineWipe()">Define Wipe</sysbtn>
+			</div>
+
+			<div id="define_shift" regular_box>
+				<input type="text">
+				<sysbtn onclick="window.kbmodules.common_util.defineShift()">Define Shift</sysbtn>
+				<sysbtn onclick="window.kbmodules.common_util.clearShift()">Clear Shift</sysbtn>
+			</div>
+
+			<div id="adv_gtz_editor">
+				
+			</div>
+
+			<div id="define_switch" regular_box>
+				<input type="file">
+				<sysbtn onclick="window.kbmodules.common_util.defineSwitch()">Define Image Switch</sysbtn>
+				<sysbtn onclick="window.kbmodules.common_util.clearAllSwitches()">Clear All</sysbtn>
+			</div>
+
+			<div id="define_text_switch" regular_box>
+				<input type="file">
+				<sysbtn onclick="window.kbmodules.common_util.defineTextColorSwitch()">Define Text Colour Switch</sysbtn>
+				<sysbtn onclick="window.kbmodules.common_util.clearAllTextColorSwitches()">Clear All</sysbtn>
+			</div>
+
+			<div id="unpack">
+				<sysbtn onclick="window.kbmodules.common_util.unpack()">Unpack</sysbtn>
+			</div>
+		</div>
+	</tab>
+
+	
+
+</common-util>
+
+
+

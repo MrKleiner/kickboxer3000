@@ -356,6 +356,7 @@ $this.KBPlayerPair = class{
 	}
 
 	mark_active(self){
+		$this.active_pair = self;
 		ksys.context.module.prm('active_pair', self.index);
 		$('#player_list .player_pair').removeClass('active_pair');
 		self.dom.elem.classList.add('active_pair');
@@ -647,12 +648,37 @@ $this.update_vs_title = async function(tgt_pair){
 		label_idx += 1;
 		const [label, suffix, data_id, is_image, is_shared] = schema_data;
 
+		if (data_id.lower() == 'rounds'){
+			qsel('input[round_amount]').value = int(
+				tgt_pair.players['red'].attr_list[data_id].value.trim()
+			) || 3;
+			$this.set_round_amount();
+			label_idx -= 1;
+			continue
+		}
+
+		if (data_id.lower() == 'dur'){
+			const [minutes, seconds] = tgt_pair.players['red'].attr_list[data_id].value.trim().split(':');
+			qsel('input[minutes]').value = int(minutes) || 3;
+			qsel('input[seconds]').value = int(seconds) || 0;
+			$this.set_clock_duration();
+			label_idx -= 1;
+			continue
+		}
+
 		// todo: YET ANOTHER BOOTLEG HACK...
 		if (is_shared){
-			await $this.titles.vs.set_text(
-				`shared_attr_val`,
-				`${label} ${tgt_pair.players['red'].attr_list[data_id].value.trim()} ${suffix}`.trim(),
-			)
+			const val = tgt_pair.players['red'].attr_list[data_id].value.trim();
+			if (!val){
+				await $this.titles.vs.set_text(
+					'shared_attr_val', '',
+				)
+			}else{
+				await $this.titles.vs.set_text(
+					'shared_attr_val',
+					`${label} ${tgt_pair.players['red'].attr_list[data_id].value.trim()} ${suffix}`.trim(),
+				)
+			}
 			// label_idx -= 1;
 			continue
 		}
@@ -668,16 +694,19 @@ $this.update_vs_title = async function(tgt_pair){
 
 			if (is_image && data_id == 'flag'){
 				const tgt_player = tgt_pair.players[side_kb];
+				const flagName = tgt_player.attr_list[data_id].value.trim();
 
-				// TODO: BAD TEMP HACK
-				await $this.titles.vs.set_img_src(
-					`country_${side_vmix}`,
-					str(
-						Path(ksys.context.module.cache.resource_path)
-						.join(tgt_player.attr_list[data_id].value.trim())
+				if (flagName){
+					// TODO: BAD TEMP HACK
+					await $this.titles.vs.set_img_src(
+						`country_${side_vmix}`,
+						str(
+							Path(ksys.context.module.cache.resource_path)
+							.join(flagName)
+						)
+						.replaceAll('/', '\\')
 					)
-					.replaceAll('/', '\\')
-				)
+				}
 				continue
 			}
 
@@ -833,10 +862,12 @@ $this.vs_onn = async function(){
 		})
 		return
 	}
+	ksys.btns.toggle({'vs_onn': false});
 	ksys.btns.adv_timeout({
 		'vs_onn': $this.titles.vs.anim_durations[null],
 	})
 	await $this.titles.vs.overlay_in(1);
+	ksys.btns.toggle({'vs_onn': true});
 }
 
 $this.vs_off = async function(){
@@ -848,11 +879,14 @@ $this.vs_off = async function(){
 		return
 	}
 
+	ksys.btns.toggle({'vs_off': false});
 	ksys.btns.adv_timeout({
 		'vs_off': $this.titles.vs.anim_durations['TransitionOut'],
 	})
 
-	await $this.titles.vs.overlay_out(1);
+	await $this.titles.vs.overlay_out_all();
+
+	ksys.btns.toggle({'vs_off': true});
 }
 
 
@@ -870,11 +904,68 @@ $this.player_off = async function(){
 		'player_off': $this.titles.personal.anim_durations['TransitionOut'],
 	})
 
-	await $this.titles.personal.overlay_out(1);
+	ksys.btns.toggle({'player_off': false});
+	await $this.titles.personal.overlay_out_all();
+	ksys.btns.toggle({'player_off': true});
 }
 
 
+$this.record_seq = async function(){
+	ksys.btns.adv_timeout({
+		'record_seq': (
+			  $this.titles.personal.anim_durations[null]
+			+ $this.titles.personal.anim_durations['TransitionOut']
+			+ 1050
+		),
+	})
 
+	await $this.titles.personal.overlay_in(1);
+	await ksys.util.sleep(1000)
+	await $this.titles.personal.overlay_out();
+}
+
+
+$this.full_seq = async function(){
+	ksys.btns.adv_timeout({
+		'record_seq': (
+			  $this.titles.personal.anim_durations[null]
+			+ $this.titles.personal.anim_durations['TransitionOut']
+			+ 1050
+		),
+	})
+
+	await $this.vs_onn();
+	await ksys.util.sleep(1100);
+	await $this.vs_off();
+
+
+	await ksys.util.sleep(1000);
+
+
+	await $this.active_pair.players.red.mark_active();
+	await $this.update_personal_title(
+		$this.active_pair.players.red
+	);
+	await ksys.util.sleep(100);
+
+	await $this.titles.personal.overlay_in(1);
+	await ksys.util.sleep(1100)
+	await $this.titles.personal.overlay_out();
+
+
+	await ksys.util.sleep(1000);
+
+
+	await $this.active_pair.players.blu.mark_active();
+	await $this.update_personal_title(
+		$this.active_pair.players.blu
+	);
+	await ksys.util.sleep(100);
+
+	await $this.titles.personal.overlay_in(1);
+	await ksys.util.sleep(1100)
+	await $this.titles.personal.overlay_out();
+}
 
 
 

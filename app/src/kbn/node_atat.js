@@ -160,9 +160,29 @@ const NodeAtAtInstance = class{
 				'Function': 'SetText',
 				'Value': (
 					field.tplate
-					.replaceAll('%h%',  time[field.count_as || 'clock'].hours.toString().padStart(field.pad, '0'))
-					.replaceAll('%m%',  time[field.count_as || 'clock'].minutes.toString().padStart(field.pad, '0'))
-					.replaceAll('%s%',  time[field.count_as || 'clock'].seconds.toString().padStart(field.pad, '0'))
+					.replaceAll(
+						'%h%',
+						time[field.count_as || 'clock']
+						.hours
+						.toString()
+						.padStart(field.pad || field.pad_h, '0')
+					)
+
+					.replaceAll(
+						'%m%',
+						time[field.count_as || 'clock']
+						.minutes
+						.toString()
+						.padStart(field.pad || field.pad_m, '0')
+					)
+
+					.replaceAll(
+						'%s%',
+						time[field.count_as || 'clock']
+						.seconds
+						.toString()
+						.padStart(field.pad || field.pad_s, '0')
+					)
 
 					.replaceAll('%ht%',  time.total.hours.toString().padStart(field.pad, '0'))
 					.replaceAll('%st%',  time.total.seconds.toString().padStart(field.pad, '0'))

@@ -47,6 +47,15 @@ window.kbmodules.sambo_standard.load = function(){
 		ksys.context.module.prm('vs_as_movs', vs_as_movs.checked);
 	}
 
+	const preRenderedVSFileExtInput = document.querySelector('#pre_rendered_suffix');
+	preRenderedVSFileExtInput.value = ksys.context.module.cache.preRenderedVSFileExt || '';
+	preRenderedVSFileExtInput.onchange = function(){
+		ksys.context.module.prm(
+			'preRenderedVSFileExt',
+			preRenderedVSFileExtInput.value.trim().replaceAll('.', '').trim()
+		);
+	}
+
 	window.kbmodules.sambo_standard.titles = {
 		'personal': new vmix.title({
 			'title_name': 'personal.gtzip',
@@ -738,6 +747,26 @@ window.kbmodules.sambo_standard.update_vs_title = async function(tgt_pair){
 		label_idx += 1;
 		const [label, suffix, data_id, is_image, is_shared] = schema_data;
 
+		if (data_id.lower() == 'rounds'){
+			qsel('input[round_amount]').value = int(
+				tgt_pair.players['red'].attr_list[data_id].value.trim()
+			) || 3;
+			window.kbmodules.sambo_standard.set_round_amount();
+			label_idx -= 1;
+			continue
+		}
+
+		if (data_id.lower() == 'dur'){
+			const [minutes, seconds] = tgt_pair.players['red'].attr_list[data_id].value.trim().split(':');
+			qsel('input[minutes]').value = int(minutes) || 3;
+			qsel('input[seconds]').value = int(seconds) || 0;
+			window.kbmodules.sambo_standard.set_clock_duration();
+			label_idx -= 1;
+			continue
+		}
+
+
+
 		// todo: YET ANOTHER BOOTLEG HACK...
 		if (is_shared){
 			await window.kbmodules.sambo_standard.titles.vs.set_text(
@@ -782,10 +811,12 @@ window.kbmodules.sambo_standard.update_vs_title = async function(tgt_pair){
 
 			// todo: this is a temp solution
 			if (ksys.context.module.cache.timer_has_vs){
+				const tName = frmt.format(tgt_pair.players[side_kb].name);
+				const tSurname = frmt.format(tgt_pair.players[side_kb].surname);
 				await window.kbmodules.sambo_standard.titles.timer.set_text(
 					`player_${side_vmix}`,
 					frmt.format(
-						`${tgt_pair.players[side_kb].name} ${tgt_pair.players[side_kb].surname}`
+						`${tName} ${tSurname}`
 					),
 				)
 			}
@@ -931,10 +962,14 @@ window.kbmodules.sambo_standard.update_score = async function(tgt_pair){
 
 window.kbmodules.sambo_standard.vs_onn = async function(){
 	if (ksys.context.module.cache.vs_as_movs){
+		const pairIndex = ksys.context.module.cache.active_pair;
+		const fileExt = ksys.context.module.cache.preRenderedVSFileExt;
+
 		await vmix.talker.talk({
 			'Function': 'OverlayInput1In',
-			'Input': `kbvs_${ksys.context.module.cache.active_pair}.mov`,
+			'Input': `kbvs_${pairIndex}.${fileExt}`,
 		})
+
 		return
 	}
 	window.kbmodules.sambo_standard.titles.vs.overlay_in(1);

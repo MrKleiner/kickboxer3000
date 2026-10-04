@@ -123,16 +123,18 @@ const vmixbtn = class{
 		const self = this;
 		ksys.util.cls_pwnage.remap(self);
 
-		self.elem = $(sel)
+		self.elem = $(sel);
 		if (!self.elem[0]){
-			console.error('Button doesnt exist', sel)
-			return
+			console.warn('Button doesnt exist', sel)
+			// return
 		}
 		self.elem = self.elem[0];
 		self.enabled = true;
 	}
 
 	timeout(self, dur=null){
+		if (!self.elem){return};
+
 		return new Promise(function(resolve, reject){
 			self.toggle(false)
 			self.pause_timeout = setTimeout(function(){
@@ -143,6 +145,8 @@ const vmixbtn = class{
 	}
 
 	cancel_timeout(self, re_enable=true){
+		if (!self.elem){return};
+
 		clearTimeout(self.pause_timeout)
 		if (re_enable){
 			self.elem.vmixbtn(true)
@@ -150,6 +154,8 @@ const vmixbtn = class{
 	}
 
 	toggle(self, state=null, adv=false){
+		if (!self.elem){return};
+
 		if (state == true){
 			self.elem.vmixbtn(true, adv)
 			self.enabled = true;
@@ -233,7 +239,7 @@ const adv_timeout = function(btn_ids){
 			btn = pool[btname];
 		}
 
-		if (!btn){
+		if (!btn || !btn?.elem){
 			console.warn('Cannot find button', btname)
 			continue
 		}

@@ -1,10 +1,16 @@
 <kbstandard>
 	<tabsys>
+		<sys-tab match_id="audio_mixer">Audio Mixer</sys-tab>
 		<sys-tab match_id="visual_basic">Visual Basic</sys-tab>
 		<sys-tab match_id="experimental">Experimental</sys-tab>
 		<sys-tab match_id="config">Config</sys-tab>
 		<sys-tab match_id="ctrl" default>Control</sys-tab>
 	</tabsys>
+
+	<tab tabid="audio_mixer" tabname="Audio Mixer" style="padding-top: 55px;">
+		<audio-mixer-mirror></audio-mixer-mirror>
+		<div id="volume_ctrl_debug" regular_box></div>
+	</tab>
 
 	<tab class="tab_hidden" tabid="visual_basic">
 		<visual-basic></visual-basic>
@@ -41,6 +47,10 @@
 					Pre-Rendered VS
 					<input vs_as_movs type="checkbox">
 				</label>
+
+				<input placeholder="mov" type="text" id="pre_rendered_suffix">
+
+				<!-- <sysbtn btname="import_pre_rendered_vs" onclick="window.kbmodules.sambo_standard.importPreRenderedVS()">Import</sysbtn> -->
 			</div>
 		</div>
 

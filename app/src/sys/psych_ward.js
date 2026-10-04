@@ -4,6 +4,219 @@ const sys_data = {};
 
 
 
+const BasicTextEditor = class{
+
+	MIN_LINES = 10;
+	LINE_HEIGHT = 20;
+
+	constructor(_params){
+		const self = ksys.util.nprint(
+			ksys.util.cls_pwnage.remap(this),
+			'#FF9242',
+		);
+
+		const params = _params || {};
+
+		self._DOM = null;
+
+		self.MIN_LINES =       params.MIN_LINES || self.MIN_LINES;
+		self.LINE_HEIGHT =     params.LINE_HEIGHT || self.LINE_HEIGHT;
+
+		self.redraw();
+	}
+
+	$selectedLines(self){
+		const text =     self.realVal.replace(/\r/g, '');
+		const selStart = self.DOM.index.textarea.selectionStart;
+		const selEnd =   self.DOM.index.textarea.selectionEnd;
+
+		const lines = text.split('\n');
+		const result = [];
+
+		let index = 0;
+
+		for (let i = 0; i < lines.length; i++) {
+			const line = lines[i];
+			const lineStart = index;
+			const lineEnd = index + line.length;
+
+			let selected = false;
+
+			if (selStart === selEnd) {
+				// caret
+				selected = selStart >= lineStart && selStart <= lineEnd;
+			} else {
+				// overlap
+				selected = selStart <= lineEnd && selEnd >= lineStart;
+			}
+
+			result.push({
+				text: line,
+				selected: selected,
+				disabled: line.trim().startsWith('#'),
+			});
+
+			// +1 for newline
+			index = lineEnd + 1;
+		}
+
+		return result;
+	}
+
+	$DOM(self){
+		if (self._DOM){
+			return self._DOM
+		}
+
+		self._DOM = ksys.tplates.sys_tplates.general.basic_text_editor({
+			'textarea': 'textarea',
+			'twrap':    '.textarea_wrap',
+		});
+
+		self._DOM.root.appendTo = function(targetElement){
+			targetElement.append(self._DOM.root);
+
+			self._DOM.index.textarea.oninput = self.redraw;
+			self._DOM.index.textarea.onkeydown = function(evt){
+				if (evt.repeat){return};
+				if (evt.ctrlKey && evt.which == 81){
+					self.toogleSelectedLines();
+				}
+			}
+
+			self._DOM.index.textarea.onkeyup = self.highlightSelectedLines;
+
+			// self._DOM.index.textarea.onselectionchange = self.highlightSelectedLines;
+			self._DOM.index.textarea.onselect = self.highlightSelectedLines;
+
+			self._DOM.index.textarea.style.lineHeight = `${self.LINE_HEIGHT}px`;
+		}
+
+		return self._DOM
+	}
+
+	$realVal(self){
+		return self.DOM.index.textarea.value
+	}
+
+	$$realVal(self, val){
+		self.DOM.index.textarea.value = val;
+		self.redraw()
+	}
+
+	$computedVal(self){
+		const items = [];
+		for (let line of self.realVal.split('\n')){
+			line = line.trim();
+
+			if (!line){continue};
+			if (line.startsWith('#')){continue};
+
+			items.push(line);
+		}
+
+		return items
+	}
+
+	addLine(self, disabled=false){
+		const lineDOM = document.createElement('div');
+		lineDOM.style.height = `${self.LINE_HEIGHT}px`;
+		lineDOM.classList.add('line');
+		lineDOM.classList.toggle('disabled', disabled);
+
+		self.DOM.index.twrap.append(lineDOM);
+		return lineDOM
+	}
+
+	redraw(self){
+		const DOMIDX = self.DOM.index;
+		const DOMRoot = self.DOM.root;
+
+		for (const line of DOMIDX.twrap.querySelectorAll('.line')){
+			line.remove();
+		}
+
+		for (const line of self.realVal.split('\n')){
+			self.addLine(
+				line.trim().startsWith('#')
+			)
+		}
+
+		while (DOMRoot.querySelectorAll('.line').length < self.MIN_LINES){
+			self.addLine(false);
+		}
+
+		DOMIDX.textarea.style.height = (
+			`${DOMRoot.querySelectorAll('.line').length * self.LINE_HEIGHT}px`
+		);
+
+		self.highlightSelectedLines();
+	}
+
+	highlightSelectedLines(self){
+		return;
+
+		let i = 0;
+		const bgLines = self.DOM.root.querySelectorAll('.line');
+		for (const line of self.selectedLines){
+			bgLines[i].classList.toggle('selected', line.selected);
+			i++
+		}
+	}
+
+	toogleSelectedLines(self){
+		const textarea = self.DOM.index.textarea;
+
+		const selectionStart = textarea.selectionStart;
+		const selectionEnd = textarea.selectionEnd;
+
+		const newLines = [];
+
+		const disableStates = [];
+		for (const line of self.selectedLines){
+			if (line.text.trim() && line.selected){
+				disableStates.push(line.disabled);
+			}
+		}
+
+		const forceDisable = disableStates.includes(true) && disableStates.includes(false);
+
+		for (const line of self.selectedLines){
+			const textTrim = line.text.trim();
+
+			if (line.selected && textTrim){
+				if (forceDisable){
+					if (!textTrim.startsWith('#')){
+						line.text = '# ' + line.text;
+					}
+				}else{
+					if (textTrim.startsWith('#')){
+						line.text = line.text.replace('#', '').trim();
+					}else{
+						line.text = '# ' + line.text;
+					}
+				}
+			}
+
+			newLines.push(line.text)
+		}
+
+		self.realVal = newLines.join('\n');
+
+		textarea.selectionStart = selectionStart;
+		textarea.selectionEnd = selectionStart;
+
+		try{
+			textarea?.onchange?.();
+		}catch(e){
+			console.error(e);
+		}
+		
+	}
+}
+
+
+
 
 const PsychWardTitle = class{
 	static NPRINT_LEVEL = 5;
@@ -15,6 +228,14 @@ const PsychWardTitle = class{
 	HARD_RELOAD_WAIT_CAP = 50;
 
 	HARD_RELOAD_RETRY_CAP = 2;
+
+	// For how long to wait for titles to appear in VMIX
+	HARD_RELOAD_ADD_WAIT_CAP = 15;
+
+	STORYBOARD_SHORTER_NAMES = Object.freeze({
+		[null]:            'IN',
+		['TransitionOut']: 'OUT',
+	})
 
 	constructor(psych_ward, cfg){
 		const self = ksys.util.nprint(
@@ -28,6 +249,8 @@ const PsychWardTitle = class{
 		}else{
 			self.local_fpath = null;
 		}
+
+		self.noVMIX = cfg.noVMIX;
 
 		self.title_name = self.remote_fpath.basename;
 
@@ -63,7 +286,9 @@ const PsychWardTitle = class{
 			'hard_reload':    'sysbtn.hard_reload',
 			'vmix_presence':  '.presence.vmix',
 			'local_presence': '.presence.pc',
+			'wipe_icon':      '.presence.wipe',
 			'edit':           '.edit_in_gtz_designer',
+			'unpack':         '.unpack_as_archive',
 		})
 
 		self._dom.index.hard_reload.onclick = async function(){
@@ -89,6 +314,8 @@ const PsychWardTitle = class{
 			self._dom.index.edit.onclick = self.gtz_edit;
 		}
 
+		self._dom.index.unpack.onclick = self.unpack;
+
 		self._dom.root.onmouseover = self.display_vis_info;
 
 		return self._dom
@@ -102,6 +329,7 @@ const PsychWardTitle = class{
 			[' ',   ' '],
 		];
 
+		// Pages
 		let page_idx = 1;
 		while (self.gtz_file.doc_xml.querySelector(`[Type="Page${page_idx}"]`)){
 			anims_info_lines.push([
@@ -111,6 +339,47 @@ const PsychWardTitle = class{
 			page_idx += 1;
 		}
 
+		// Image sequences
+		const imageSequenceFactsLines = [];
+
+		for (const storyboardEntry of self.gtz_file.doc_xml.querySelectorAll('Storyboard ImageSequence')){
+			const objectID = storyboardEntry.getAttribute('Object');
+			const objectData = self.gtz_file.doc_xml.querySelector(`Layer [Name="${objectID}"]`);
+			if (!objectID || !objectData){continue};
+
+			const storyboardType = storyboardEntry.closest('Storyboard').getAttribute('Type');
+			// The same image sequence can be used by multiple items
+			// with different duration in seconds
+			const declaredSeconds = float(storyboardEntry.getAttribute('Duration') || 1);
+			const targetSequence = self.gtz_file.imageSequences[
+				objectData.querySelector('Bitmap')?.getAttribute?.('Source')
+			];
+			if (!targetSequence){continue};
+
+			// Total amount of frames in this sequence
+			const frameAmount = targetSequence.frames.length;
+			// Guess FPS based on declared animation duration
+			const FPSGuess = targetSequence.FPSFromDuration(declaredSeconds);
+			// This sequence should animate for this amount of time in seconds IF
+			// the duration was calculated by dividing the frame amount by 50
+			const sampleDuration = targetSequence.durationFromFPS(50);
+
+			// Resulting description chunks
+			const descrStringElements = [
+				`${frameAmount}f`.padEnd(4),
+				// Guessed FPS
+				`@${declaredSeconds}s`.padEnd(6), '=', `~${FPSGuess}fps`.padEnd(9), '/',
+				// Sample FPS
+				`@${50}fps`.padEnd(3), '=', `~${sampleDuration}s`.padEnd(7),
+			]
+
+			imageSequenceFactsLines.push([
+				`SEQ | ${objectID.padEnd(15)} | ${self.STORYBOARD_SHORTER_NAMES[storyboardType]}`,
+				descrStringElements.join(' '),
+			])
+		}
+
+		// Set text for general facts
 		self.psych_ward.editor_dom.index.facts_anims.textContent = (
 			anims_info_lines
 			.map(function(line){
@@ -120,6 +389,17 @@ const PsychWardTitle = class{
 			.join('\n')
 		);
 
+		// Set text for image sequence facts
+		self.psych_ward.editor_dom.index.img_sequence_facts.textContent = (
+			imageSequenceFactsLines
+			.map(function(line){
+				const [label, line_data] = line;
+				return `${label.padEnd(32)}:  ${line_data}`;
+			})
+			.join('\n')
+		);
+
+		// Phantom files total size
 		let phantom_len = 0;
 		for (const file of Object.values(self.gtz_file.kb_data.files)){
 			phantom_len += file.buf.length;
@@ -143,20 +423,66 @@ const PsychWardTitle = class{
 		)
 	}
 
-	async hard_reload(self, wait_factor=1, retries_factor=1){
+	async hard_reload(self, params){
+		if (!self.local_fpath.isFileSync()){return false};
+		if (self.noVMIX){return true};
+
 		const kbnc = ksys.kbnc.KBNC.sysData().currentClient;
 
 		const remotePath = Path(
 			'C:/custom/vmix_assets/current_titles',
+			ksys.context.module_name || 'unknown_module',
+			(new Date()).toDateString().replaceAll(' ', '_'),
 			self.local_fpath.basename
 		)
+
+		const GTZFile = new ksys.gtzip_wrangler.GTZipFile({
+			'fpath': self.local_fpath,
+		});
+
+		// Wipe fields IF there's wipe definition
+		const wipeDefinition = self.gtz_file.kb_data.files['kbsys/wipeParams']?.buf;
+		if (wipeDefinition && !params?.nowipe){
+			for (const fieldParams of (JSON.parse(wipeDefinition)?.fields || [])){
+				try{
+					if (!fieldParams.fieldID){continue};
+					const tgtDOM = GTZFile.doc_xml.querySelector(
+						`[Name="${fieldParams.fieldID}"]`
+					);
+					if (!tgtDOM){continue};
+
+					if (tgtDOM.nodeName == 'TextBlock'){
+						tgtDOM.setAttribute('Text', fieldParams.wipeTo || '');
+					}
+					if (tgtDOM.nodeName == 'Rectangle'){
+						tgtDOM.querySelector('Rectangle\\.Fill Brush')
+						?.setAttribute
+						?.('Color', fieldParams.wipeTo || '00000000');
+					}
+					if (tgtDOM.nodeName == 'Image'){
+						const fileUID = GTZFile.res_xml.querySelector(
+							`[filename="${tgtDOM.querySelector('Bitmap').getAttribute('Source').replaceAll('\\', '\\\\')}"]`
+						)?.querySelector?.('source')?.getAttribute?.('guid');
+
+						if (fileUID){
+							GTZFile.zip_buf.getEntry(fileUID).setData(
+								app_root.join('assets', 'phantom_transparent.png').readFileSync()
+							)
+						}
+					}
+				}catch(e){
+					self.nerr(e);
+				}
+			}
+		}
 
 		const kbncResult = await kbnc.runCMD('generic.write_file', {
 			'header': {
 				'fpath': str(remotePath),
 			},
-			'payload': self.local_fpath.readFileSync(),
-		})
+			'payload': GTZFile.to_zip_buf(),
+		});
+
 		await kbncResult.result();
 
 		let count_last = await self.count_duplicates();
@@ -166,7 +492,7 @@ const PsychWardTitle = class{
 		while (count_last > 0){
 			self.nprint('Removing', self.title_name);
 
-			if (retries >= Math.ceil(self.HARD_RELOAD_RETRY_CAP * retries_factor)){
+			if (retries >= Math.ceil(self.HARD_RELOAD_RETRY_CAP * (params?.retries_factor || 1))){
 				return false
 			}
 
@@ -177,7 +503,7 @@ const PsychWardTitle = class{
 			})
 
 			// Wait for VMIX to remove this duplicate
-			const retry_cap = Math.ceil(self.HARD_RELOAD_WAIT_CAP * wait_factor);
+			const retry_cap = Math.ceil(self.HARD_RELOAD_WAIT_CAP * (params?.wait_factor || 1));
 			for (const i of range(retry_cap)){
 				await ksys.util.sleep(self.HARD_RELOAD_SLEEP);
 				const new_count = await self.count_duplicates();
@@ -197,6 +523,29 @@ const PsychWardTitle = class{
 			'Function': `AddInput`,
 			'Value': `Title|${str(remotePath)}`,
 		})
+
+		// Wait for the title to appear
+		for (const i of range(self.HARD_RELOAD_ADD_WAIT_CAP)){
+			if (await self.count_duplicates()){
+				break
+			}
+
+			await ksys.util.sleep(125);
+		}
+
+		// Apply shift
+		if (GTZFile.kb_data.meta.shift && !params?.nowipe){
+			await vmix.talker.talk({
+				'Function': `SetPanX`,
+				'Input': self.title_name,
+				'Value': GTZFile.kb_data.meta.shift.x,
+			})
+			await vmix.talker.talk({
+				'Function': `SetPanY`,
+				'Input': self.title_name,
+				'Value': GTZFile.kb_data.meta.shift.y,
+			})
+		}
 
 		return true
 	}
@@ -219,6 +568,12 @@ const PsychWardTitle = class{
 		self.dom.index.preview_img.src = URL.createObjectURL(
 			new Blob([self.gtz_file.zip_buf.readFile('thumbnail.png')])
 		);
+
+		if (self.gtz_file.kb_data.files['kbsys/wipeParams']){
+			self.dom.index.wipe_icon.classList.remove('kbsys_hidden_opacity');
+		}else{
+			self.dom.index.wipe_icon.classList.add('kbsys_hidden_opacity');
+		}
 
 		// self.nprint(self.gtz_file, self.gtz_file.kb_data);
 	}
@@ -247,14 +602,14 @@ const PsychWardTitle = class{
 				const durations = [];
 				for (const item of storyboard.querySelectorAll('[Delay], [Duration]')){
 					if (item.nodeName == 'None'){continue};
-
 					durations.push(
 						float(item.getAttribute('Delay') || 0) +
-						float(item.getAttribute('Duration') || 0)
+						float(item.getAttribute('Duration') || 1)
 					)
 				}
 
-				return (durations.sort().pop() || 0.5) * 1000
+				// return (durations.sort().pop() || 0.5) * 1000
+				return (durations.sort().pop() || 1.0) * 1000
 			}
 		}
 
@@ -272,6 +627,14 @@ const PsychWardTitle = class{
 
 		// Detach from parent so the parent can exit and Node will not wait
 		child.unref()
+	}
+
+	unpack(self){
+		self.gtz_file.unpack(
+			self.local_fpath.parent().join(
+				self.local_fpath.basename.replaceAll('.gtzip', '')
+			)
+		)
 	}
 }
 
@@ -310,13 +673,14 @@ const PsychWard = class{
 			'remote_dir': 'input.remote_dir',
 
 			// Textarea with gtzip names
-			'flist':      'textarea.flist',
+			'flist':      '.flist',
 
 			// Visual output
-			'results':       '.psych_ward_results',
-			'thumbnail':     '.title_thumbnail img',
-			'facts_anims':   '.title_facts .anims',
-			'facts_phantom': '.title_facts .phantom',
+			'results':            '.psych_ward_results',
+			'thumbnail':          '.title_thumbnail img',
+			'facts_anims':        '.title_facts .anims',
+			'facts_phantom':      '.title_facts .phantom',
+			'img_sequence_facts': '.img_sequence_facts',
 
 			// Buttons
 			'install_fonts':         'sysbtn.install_fonts',
@@ -325,7 +689,19 @@ const PsychWard = class{
 			'redraw':                'sysbtn.redraw',
 			'check_presence':        'sysbtn.check_presence_all',
 			'render_hires_previews': 'sysbtn.render_hires_previews',
-		})
+			'check_missing_fonts':   'sysbtn.check_fonts',
+			'missing_fonts_box':     '.font_check',
+		});
+
+		self.fileListTextEditor = new BasicTextEditor();
+		self.fileListTextEditor.DOM.root.appendTo(
+			self._editor_dom.index.flist
+		)
+
+		self.fileListTextEditor.DOM.index.textarea.onchange = function(){
+			self.redraw();
+			self.save();
+		}
 
 		self._editor_dom.index.local_dir.onchange = function(){
 			self.local_dir = self.editor_dom.index.local_dir.value;
@@ -340,8 +716,8 @@ const PsychWard = class{
 		}
 
 		self._editor_dom.index.flist.onchange = function(){
-			self.redraw();
-			self.save();
+			// self.redraw();
+			// self.save();
 		}
 
 		self._editor_dom.index.hard_reload_all.onclick = async function(){
@@ -393,6 +769,10 @@ const PsychWard = class{
 			await self.render_hires_previews();
 		}
 
+		self._editor_dom.index.check_missing_fonts.onclick = async function(){
+			await self.checkMissingFonts();
+		}
+
 		self._editor_dom.index.thumbnail.onmousedown = function(){
 			const pootis = $(`
 				<img
@@ -406,6 +786,38 @@ const PsychWard = class{
 				pootis?.remove?.();
 			}
 		}
+
+		// const logWarn = function(){
+		// 	const tplate = self.tplates.missing_fonts_log_entry({});
+		// 	tplate.root.textContent = [...arguments].join(' ');
+		// 	self.editor_dom.index.missing_fonts_box.append(tplate.root);
+		// };
+
+		// logWarn(
+		// 	`Current .vmix file doesn't contain info for input`,
+		// 	'fuck_shit.gtzip'
+		// )
+
+		// for (const _ of range(20)){
+		// 	const inputTemplate = self.tplates.missing_font_title({
+		// 		'label':     '.label',
+		// 		'font_list': '.font_list',
+		// 	});
+
+		// 	inputTemplate.index.label.textContent = 'fuck_shit.gtzip';
+
+		// 	for (const missingFontName of ['Pootis Regular', 'Bebra Neue', 'Fuck Shit', 'Pootis Medic']){
+		// 		const fontTemplate = self.tplates.missing_font_instance({});
+
+		// 		fontTemplate.root.textContent = missingFontName;
+
+		// 		inputTemplate.index.font_list.append(fontTemplate.root);
+		// 	}
+
+		// 	self.editor_dom.index.missing_fonts_box.append(
+		// 		inputTemplate.root
+		// 	)
+		// }
 
 		return self._editor_dom
 	}
@@ -460,7 +872,7 @@ const PsychWard = class{
 		ksys.db.module.write('_psych_ward.kbcfg', JSON.stringify({
 			'remote_dir': str(self.remote_dir),
 			'local_dir':  str(self.local_dir),
-			'flist':      self.editor_dom.index.flist.value,
+			'flist':      self.fileListTextEditor.realVal,
 		}));
 	}
 
@@ -470,7 +882,7 @@ const PsychWard = class{
 
 		self.remote_dir = cfg.remote_dir;
 		self.local_dir = cfg.local_dir;
-		self.editor_dom.index.flist.value = cfg.flist;
+		self.fileListTextEditor.realVal = cfg.flist;
 
 		self.redraw();
 
@@ -479,7 +891,7 @@ const PsychWard = class{
 
 	read_input(self){
 		// textarea value
-		const input_text = self.editor_dom.index.flist.value;
+		const input_text = self.fileListTextEditor.realVal;
 
 		// Absolute paths to gtzip titles
 		const done = [];
@@ -491,9 +903,15 @@ const PsychWard = class{
 			if (!line){continue};
 			if (line.startsWith('#')){continue};
 			if (done.includes(line)){continue};
-			done.push(line);
 
-			const paths = [null, null];
+			const paths = [null, null, false];
+
+			if (line.startsWith('$')){
+				paths[2] = true;
+				line = line.replaceAll('$', '');
+			};
+
+			done.push(line);
 
 			if (self.remote_dir){
 				paths[0] = Path(self.remote_dir, `${line}.gtzip`);
@@ -503,7 +921,7 @@ const PsychWard = class{
 				paths[1] = Path(self.local_dir, `${line}.gtzip`);
 			}
 
-			titles.push(paths)
+			titles.push(paths);
 		}
 
 		return titles
@@ -529,10 +947,11 @@ const PsychWard = class{
 
 		if (self.remote_dir || self.local_dir){
 			for (const fpath_data of fpath_list){
-				const [remote_fpath, local_fpath] = fpath_data;
+				const [remote_fpath, local_fpath, noVMIX] = fpath_data;
 				const psych_ward_title = new PsychWardTitle(self, {
 					remote_fpath,
 					local_fpath,
+					noVMIX,
 				})
 
 				psych_ward_title.redraw();
@@ -668,7 +1087,8 @@ const PsychWard = class{
 			if (!kbnc?.enabled){return};
 
 			for (const title of self.titles){
-				if ( !!(await title.hard_reload()) ){
+				if (title.noVMIX){continue};
+				if ( !!(await title.hard_reload({'nowipe': true})) ){
 					await ksys.util.sleep(1000);
 
 					const titleControl = new vmix.title(title.title_name);
@@ -724,6 +1144,160 @@ const PsychWard = class{
 			self.nerr(e);
 		}finally{
 			self.unlock_gui();
+		}
+	}
+
+	async checkMissingFonts(self){
+		self.editor_dom.index.missing_fonts_box.innerHTML = '';
+
+		const logWarn = function(){
+			const tplate = self.tplates.missing_fonts_log_entry({});
+			tplate.root.textContent = [...arguments].join(' ');
+			self.editor_dom.index.missing_fonts_box.append(tplate.root);
+		};
+
+		const fontsPresent = null;
+
+		const kbncRequest = await ksys.KBNClient.runCMD('fonts.list_installed', {
+			'header': {},
+			'payload': null,
+		});
+
+		const remoteFontMap = JSON.parse(
+			(await kbncRequest.result()).payload
+		);
+
+		ksys.info_msg.send_msg(
+			`Loaded remote PC's installed fonts map`,
+			'ok',
+			7000
+		);
+
+		self.nprint('Loaded remote installed fonts map:', remoteFontMap);
+
+		const presetXML = await vmix.talker.presetXML();
+
+		const missing = {};
+
+		for (
+			const titleDOM of
+
+			(await vmix.talker.project())
+			.querySelectorAll('inputs input[type="GT"]')
+		){
+			const titleRemoteFilePath = (
+				presetXML
+				?.querySelector?.(`[Key="${titleDOM.getAttribute('key')}"]`)
+				?.textContent
+			);
+
+			self.nprint('Loading', titleRemoteFilePath);
+
+			if (!titleRemoteFilePath){
+				// ksys.info_msg.send_msg(
+				// 	`Current .vmix file doesn't contain info for input ${titleDOM.getAttribute('title')}`,
+				// 	'warn',
+				// 	7000
+				// );
+
+				logWarn(
+					`Current .vmix file doesn't contain info for input`,
+					titleDOM.getAttribute('title'),
+				)
+
+				continue
+			}
+
+			let GTZFile = await ksys.KBNClient.runCMD('generic.read_file', {
+				'header': {
+					'fpath': str(titleRemoteFilePath),
+				},
+			});
+
+			try{
+				GTZFile = new ksys.gtzip_wrangler.GTZipFile({
+					'buf': (await GTZFile.result()).payload,
+				});
+			}catch(e){
+				// ksys.info_msg.send_msg(
+				// 	`Could not scan ${titleDOM.getAttribute('title')}`,
+				// 	'warn',
+				// 	7000
+				// );
+
+				logWarn(
+					`Couldn't load`,
+					`${titleDOM.getAttribute('title')}, skipping.`, '\n',
+					'See console for details.', '\n',
+					'(target .gtzip is likely missing OR fucked)',
+				)
+
+				self.nwarn(e);
+
+				continue
+			}
+
+			for (const fontFamilyName of ksys.gtzip_wrangler.fontPacker.listTitleFonts(GTZFile)){
+				let found = false;
+				for (let [nameVariants, fontFilePath] of remoteFontMap){
+					for (const variantName of nameVariants){
+						if (variantName.includes(fontFamilyName)){
+							found = true;
+							break
+						}
+					}
+
+					if (found){break};
+				}
+
+				if (!found){
+					(missing[titleDOM.getAttribute('title')] ??= []).push(
+						fontFamilyName
+					);
+
+					self.nwarn(
+						'Missing remote font',
+						fontFamilyName,
+						'from input',
+						titleDOM.getAttribute('title')
+					)
+				}
+			}
+		}
+
+		for (const [inputName, missingFonts] of Object.entries(missing)){
+			const inputTemplate = self.tplates.missing_font_title({
+				'label':     '.label',
+				'font_list': '.font_list',
+			});
+
+			inputTemplate.index.label.textContent = inputName;
+
+			for (const missingFontName of missingFonts){
+				const fontTemplate = self.tplates.missing_font_instance({});
+
+				fontTemplate.root.textContent = missingFontName;
+
+				inputTemplate.index.font_list.append(fontTemplate.root);
+			}
+
+			self.editor_dom.index.missing_fonts_box.append(
+				inputTemplate.root
+			)
+		}
+
+		if (!Object.keys(missing).length){
+			ksys.info_msg.send_msg(
+				`All fonts present`,
+				'ok',
+				13_500
+			);
+		}else{
+			ksys.info_msg.send_msg(
+				`Missing fonts found`,
+				'warn',
+				13_500
+			);
 		}
 	}
 }

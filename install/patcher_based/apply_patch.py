@@ -8,7 +8,10 @@ def main():
 		# Display the instructions
 		ctypes.windll.user32.MessageBoxW(
 			None,
-			"""To apply the patch you have to drag-n-drop the root folder of the controller on this exe file. The folder is called something like "KickBoxer3000-win32-x64" and has a bunch of files inside.""",
+			'''To apply the patch you have to drag-n-drop the root folder '''
+			'''of the controller onto this exe file. '''
+			'''The folder is called something like "KickBoxer3000-win32-x64" '''
+			'''and has a bunch of files inside.''',
 			'INFO',
 			0,
 		)
@@ -23,7 +26,10 @@ def main():
 	# Make sure the controller is closed
 	ctypes.windll.user32.MessageBoxW(
 		None,
-		"""Make sure the target controller is NOT running (close the controller and press OK or close this message with a cross - the patch will continue). If you still apply the patch after this message with controller running - your software license will be permanently revoked and never granted to you again.""",
+		'''Make sure the target controller is NOT running '''
+		'''(close the controller and press OK or close this message with a cross - the patch will continue). '''
+		'''If you still apply the patch after this message with controller running - '''
+		'''your software license will be permanently revoked and never granted to you again.''',
 		'WARNING',
 		0,
 	)
@@ -32,7 +38,10 @@ def main():
 	if not (patch_target / 'resources' / 'app' / 'src').is_dir():
 		ctypes.windll.user32.MessageBoxW(
 			None,
-			"""The target folder does not look like a kickboxer controller. Tech support: megaadrenaline1055@gmail.com 24/7, avg response time +-5 hrs. Warranty valid till 2025. If investigation shows that you were dragging C:/User/OneDrive/Documents or other rubbish like this - your software license will be permanently revoked.""",
+			'''The target folder does not look like a kickboxer controller. '''
+			'''If investigation reveals that you were dragging '''
+			'''C:/User/OneDrive/Documents or other rubbish like this - '''
+			'''your software license will be permanently revoked.''',
 			'ERROR',
 			0,
 		)
@@ -44,7 +53,7 @@ def main():
 	szipper.unpack(
 		bin_root / 'patch_data.7z',
 		patch_target / 'resources' / 'app',
-		['src'],
+		['src', 'node_modules'],
 	)
 
 	# unpack the file containing current version
